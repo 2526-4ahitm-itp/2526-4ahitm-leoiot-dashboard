@@ -1,44 +1,97 @@
 /*https://github.com/asciidoctor/asciidoctor-reveal.js/issues/199*/
-.reveal section img {
-    border: 0;
-    box-shadow: none;
-}
-.font-smaller {
-    font-size: smaller;
-}
-.font-larger {
-    font-size: larger;
+:root {
+    --leo-green: #2e7d32;
+    --leo-green-dark: #1b5e20;
+    --bg-light: #f9fbf9;
+    --text-color: #222;
+    --card-bg: rgba(255, 255, 255, 0.92);
+    --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.reveal .lightbg { background: #fff8f1d0; }
+.reveal {
+    font-size: 32px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: var(--text-color);
+}
 
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+    font-weight: 700;
+    color: var(--leo-green-dark);
+    margin-bottom: 1.2em;
+}
+
+.reveal .slides section {
+    background-color: white;
+    padding: 20px 40px;
+    box-sizing: border-box;
+}
+
+.reveal .slides section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--leo-green);
+    opacity: 0.15;
+}
 
 .card {
-    background: rgba(255, 255, 255, 0.85);
-    padding: 1.2em 1.5em;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin: 0 auto 1.5em;
-    max-width: 800px;
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 1.4em 1.8em;
+    margin: 0 auto 1.8em;
+    max-width: 850px;
+    box-shadow: var(--card-shadow);
     line-height: 1.6;
-    font-size: 1.1em;
+    font-size: 1.05em;
+}
+
+.card ul {
+    padding-left: 1.4em;
+    margin: 0.6em 0;
 }
 
 .card li {
-    margin-bottom: 0.6em;
+    margin-bottom: 0.7em;
+}
+
+.card li strong {
+    color: var(--leo-green);
+}
+
+.reveal p > img,
+.reveal .imageblock img {
+    display: block;
+    margin: 1.2em auto;
+    max-width: 90%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    object-fit: contain;
+}
+
+.reveal p > img[width="800"],
+.reveal p > img[width="700"] {
+    max-height: 65vh;
+    width: auto;
 }
 
 .title-slide h1 {
-    font-size: 3.8em;
-    color: #2e7d32;
-    font-weight: 700;
-    margin-bottom: 0.8em;
+    font-size: 4.2em;
+    color: var(--leo-green);
+    margin-bottom: 0.6em;
+    text-shadow: none;
 }
 
 .subtitle {
-    font-size: 1.4em;
+    font-size: 1.6em;
     color: #555;
-    margin-top: -0.5em;
+    margin-top: -0.4em;
+    font-weight: 500;
 }
 
 .footer {
@@ -46,14 +99,31 @@
     bottom: 20px;
     width: 100%;
     text-align: center;
-    font-size: 0.85em;
+    font-size: 0.8em;
     color: #777;
+    z-index: 10;
 }
 
-.reveal .lightbg {
-    background-color: #f8f9fa;
+.team-list,
+.center .card {
+    text-align: center;
 }
 
-.reveal .lightbg h2 {
-    color: #1b5e20;
+.team-list li,
+.center .card li {
+    display: block;
+    margin: 0.5em 0;
+}
+
+@media (max-width: 1024px) {
+    .reveal {
+        font-size: 28px;
+    }
+    .card {
+        padding: 1.2em 1.4em;
+        font-size: 1em;
+    }
+    .reveal p > img {
+        max-width: 95%;
+    }
 }
