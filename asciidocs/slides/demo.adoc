@@ -1,78 +1,86 @@
-[.title]
 = LeoGreen
-[.center]
-:author: Jonas Leitner
-:email: x.y@htl.at
 :revnumber: 1.0
 :revdate: {docdate}
 :revremark: SLIDEDEMO @ HTL Leonding
 :encoding: utf-8
 :lang: de
 :doctype: article
-//:icons: font
 :customcss: css/presentation.css
-//:revealjs_customtheme: css/sky.css
-//:revealjs_customtheme: css/black.css
 :revealjs_width: 1408
 :revealjs_height: 792
 :source-highlighter: highlightjs
-//:revealjs_parallaxBackgroundImage: images/background-landscape-light-orange.jpg
-//:revealjs_parallaxBackgroundSize: 4936px 2092px
-//:highlightjs-theme: css/atom-one-light.css
-// we want local served font-awesome fonts
+:highlightjs-theme: css/atom-one-light.css
 :iconfont-remote!:
 :iconfont-name: fonts/fontawesome/css/all
-//:revealjs_parallaxBackgroundImage: background-landscape-light-orange.jpg
-//:revealjs_parallaxBackgroundSize: 4936px 2092px
-ifdef::env-ide[]
-:imagesdir: ../images
-endif::[]
-ifndef::env-ide[]
-:imagesdir: images
-endif::[]
-//:revealjs_theme: sky
-//:title-slide-background-image: img.png
 :title-slide-transition: zoom
 :title-slide-transition-speed: fast
 
+//--------------------
+// TITLE SLIDE
+//--------------------
+[.center, .title-slide]
+== LeoGreen 🌿
+
+[.subtitle]
 Dashboard zur Veranschaulichung von
 Messwerten bezüglich HTL Leonding
 
+[.footer]
+Version 1.0 — HTL Leonding — 2025
 
-// [.stretch]
-// image::img.png[]
 
-[.lightbg,background-opacity="0.7"]
+//--------------------
+// TEAM
+//--------------------
+[.lightbg, .center]
 == Team
-[.center]
 
-// image::img.png[background, size="contain"]
-
-
+[.team-list]
 * Daniel Lettner
-* Paul Kreinecker
 * Elias Pointinger
 * Stefan Schachner
+* Paul Kreinecker
 * Jonas Leitner
 
-[%auto-animate]
-== Was ist Leogreen
 
-*   Dashboard zur Veranschaulichung des Energieverbrauchs der Schule,
-    der Temperatur und des Sauerstoffgehalts pro Klasse
-*   Warnsystem bei zu geringem Sauerstoffgehalt oder zu niedriger Temparatur in Klassenräumen
+//--------------------
+// WHAT IS LEOGREEN
+//--------------------
+[.lightbg]
+== Was ist LeoGreen?
 
-
-[%auto-animate]
-== Warum
-
-* Den Energieverbrauch übersichtlich darzustellen
-* Temparatur und Luftreinheit in Klassenräumen messen
+[.card]
+* Dashboard zur Veranschaulichung des Energieverbrauchs der Schule
+* Anzeige der Temperatur und des Sauerstoffgehalts pro Klasse
+* Warnsystem bei zu geringem Sauerstoffgehalt oder niedriger Temperatur
 
 
-[%auto-animate]
+//--------------------
+// WHY
+//--------------------
+[.lightbg]
+== Warum?
+
+[.card]
+* Den Energieverbrauch übersichtlich darstellen
+* Luftqualität und Temperatur in Klassenräumen verbessern
+* Bewusstsein für nachhaltiges Energieverhalten fördern
+
+
+//--------------------
+// TECHNOLOGIES
+//--------------------
+[.center]
 == Technologien
 
 * Grafana
 * InfluxDB
 * MQTT
+
+
+
+//--------------------
+// END SLIDE
+//--------------------
+[.center, .lightbg]
+== Danke für Ihre Aufmerksamkeit
