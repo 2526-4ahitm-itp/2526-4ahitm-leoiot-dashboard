@@ -1,123 +1,13 @@
-/* ---------------------------------
-   LeoGreen Presentation Theme
-   Clean, modern, professional
----------------------------------- */
-
-.reveal {
-    font-family: "Inter", "Poppins", "Segoe UI", sans-serif;
-    color: #f0f0f0;
-    background: linear-gradient(145deg, #0e1b14 0%, #123b2b 100%);
-    background-attachment: fixed;
+/*https://github.com/asciidoctor/asciidoctor-reveal.js/issues/199*/
+.reveal section img {
+    border: 0;
+    box-shadow: none;
+}
+.font-smaller {
+    font-size: smaller;
+}
+.font-larger {
+    font-size: larger;
 }
 
-.reveal section {
-    padding: 2.5em;
-}
-
-/* Headings */
-.reveal h1, .reveal h2, .reveal h3 {
-    color: #8ee088;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-}
-
-/* Body text */
-.reveal p, .reveal li {
-    color: #e8e8e8;
-    font-size: 1.1rem;
-    line-height: 1.6;
-}
-
-/* Title slide */
-.title-slide {
-    background: radial-gradient(circle at top left, #145c3d, #0e1b14);
-    color: #fff;
-    border-radius: 1rem;
-    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.6);
-    padding: 3em;
-}
-.title-slide h1 {
-    font-size: 3rem;
-    color: #a4f7a1;
-    margin-bottom: 0.3em;
-}
-.subtitle {
-    font-size: 1.3rem;
-    color: #d7ffd7;
-    opacity: 0.9;
-}
-.footer {
-    font-size: 0.9rem;
-    margin-top: 1.5em;
-    color: #ccc;
-}
-
-/* Light background slides (for contrast) */
-.lightbg {
-    background: rgba(255, 255, 255, 0.07);
-    border-radius: 1rem;
-    box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.3);
-    padding: 2em;
-}
-
-/* Card content */
-.card {
-    background: rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(8px);
-    border-radius: 1rem;
-    padding: 1.6em 2em;
-    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.4);
-    text-align: left;
-}
-
-/* Team list */
-.team-list {
-    list-style: none;
-    padding: 0;
-}
-.team-list li {
-    margin: 0.5em 0;
-    font-size: 1.2rem;
-    color: #f5f5f5;
-    font-weight: 500;
-}
-
-/* Tech list */
-.reveal ul {
-    margin: 0 auto;
-    text-align: left;
-    display: inline-block;
-}
-.reveal li::marker {
-    color: #8ee088;
-}
-
-/* Slide transition smoothing */
-.reveal .slides section {
-    transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-/* Code blocks */
-.hljs {
-    background: #1c1c1c !important;
-    color: #e0e0e0 !important;
-    border-radius: 0.5rem;
-    padding: 1em !important;
-    font-size: 0.9rem;
-}
-
-/* Links */
-.reveal a {
-    color: #9af59a;
-    text-decoration: none;
-}
-.reveal a:hover {
-    color: #c0ffc0;
-    text-decoration: underline;
-}
-
-/* Center alignment helpers */
-.center {
-    text-align: center;
-}
+.reveal .lightbg { background: #fff8f1d0; }
