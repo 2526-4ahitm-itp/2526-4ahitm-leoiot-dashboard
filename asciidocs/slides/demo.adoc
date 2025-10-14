@@ -93,7 +93,7 @@ image::schueler.png[width=600,align=center]
 [.center]
 == Unsere Sensoren
 
-image::sensor_setup.jpg[width=500,align=center]
+image::sensor.png[width=500,align=center]
 
 //------------------------------
 // TECHNOLOGIESTACK

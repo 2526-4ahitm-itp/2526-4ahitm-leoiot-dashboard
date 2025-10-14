@@ -26,7 +26,6 @@ ifndef::backend[:backend: html5]
 [source,java,highlight=13;20]
 ----
 public class FileRenamer {
-...
     private static void renameFiles() {
         try (Stream<Path> walk = Files.walk(Paths.get(DIRECTORY + File.separator + "styles"))) {
             walk
@@ -50,7 +49,7 @@ public class FileRenamer {
             e.printStackTrace();
         }
     }
-...
+
 }
 ----
 

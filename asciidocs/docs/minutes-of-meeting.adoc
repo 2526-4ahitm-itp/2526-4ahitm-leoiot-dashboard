@@ -15,25 +15,24 @@ icon:github-square[link=https://github.com/htl-leonding-college/asciidoctor-dock
 icon:home[link=https://htl-leonding.github.io/]
 endif::backend-html5[]
 
-
 .Teilnehmer
 |===
-|anwesend |Verteiler
+|Vorname |Nachname
 
-|Vorname Nachname
-|
+|Elias
+|Pointinger
 
-|A. Anton (teilweise)
-|A. Anton
+|Daniel
+|Lettner
 
-|B. Berta
-|B. Berta
+|Stefan
+|Schachner
 
-|C. Cäsar
-|C. Cäsar
+|Paul
+|Kreinecker
 
-|
-|D. Dora
+|Jonas
+|Leitner
 |===
 
 .Ort und Zeit
@@ -53,12 +52,6 @@ endif::backend-html5[]
 == Besprochene Themen
 
 * Thema 1
-* Thema 2
-* Thema 3
-* Thema 4 +
-Ev. mit Erläuterungen
-* Thema 5
-
 
 == Vereinbarungen und Entscheidungen
 
