@@ -18,15 +18,6 @@
 :imagesdir: images
 
 //------------------------------
-// TITLE SLIDE
-//------------------------------
-[.center, .title-slide]
-== LeoGreen 🌿
-
-[.footer]
-Version 1.0 — HTL Leonding — 2025
-
-//------------------------------
 // ÜBERNAHME DES PROJEKTS
 //------------------------------
 [.lightbg]
