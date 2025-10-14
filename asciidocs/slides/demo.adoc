@@ -1,10 +1,11 @@
-= LeoGreen
+= LeoGreen 🌿
 :revnumber: 1.0
 :revdate: {docdate}
 :revremark: SLIDEDEMO @ HTL Leonding
 :encoding: utf-8
 :lang: de
 :doctype: article
+:backend: revealjs
 :customcss: css/presentation.css
 :revealjs_width: 1408
 :revealjs_height: 792
@@ -14,26 +15,34 @@
 :iconfont-name: fonts/fontawesome/css/all
 :title-slide-transition: zoom
 :title-slide-transition-speed: fast
+:imagesdir: images
 
-//--------------------
+//------------------------------
 // TITLE SLIDE
-//--------------------
+//------------------------------
 [.center, .title-slide]
 == LeoGreen 🌿
-
-[.subtitle]
-Dashboard zur Veranschaulichung von
-Messwerten bezüglich HTL Leonding
 
 [.footer]
 Version 1.0 — HTL Leonding — 2025
 
+//------------------------------
+// ÜBERNAHME DES PROJEKTS
+//------------------------------
+[.lightbg]
+== Projektübernahme
 
-//--------------------
+[.card]
+* Ursprünglich von einem früheren Team gestartet
+* Wir haben das Projekt übernommen
+
+image::images/project_handover.jpg[width=600,align=center]
+
+//------------------------------
 // TEAM
-//--------------------
+//------------------------------
 [.lightbg, .center]
-== Team
+== Unser Team
 
 [.team-list]
 * Daniel Lettner
@@ -42,45 +51,73 @@ Version 1.0 — HTL Leonding — 2025
 * Paul Kreinecker
 * Jonas Leitner
 
+image::images/team.jpg[width=500,align=center]
 
-//--------------------
-// WHAT IS LEOGREEN
-//--------------------
+//------------------------------
+// PV-ANLAGEN
+//------------------------------
+[.center]
+== Photovoltaik (PV)
+
+* Über **190 PV-Module** auf dem Schuldach
+* Erzeugen **grünen Strom** für die Schule
+* Bisher: Daten nur in Rohform verfügbar
+* **Unser Ziel**: Echtzeit-Dashboard mit Ertrag, Einspeisung, CO₂-Einsparung
+
+image::images/pv_anlage.png[width=700,align=center]
+
+//------------------------------
+// DASHBOARD
+//------------------------------
 [.lightbg]
-== Was ist LeoGreen?
+== Das LeoGreen-Dashboard
 
 [.card]
-* Dashboard zur Veranschaulichung des Energieverbrauchs der Schule
-* Anzeige der Temperatur und des Sauerstoffgehalts pro Klasse
-* Warnsystem bei zu geringem Sauerstoffgehalt oder niedriger Temperatur
+* Zentrale Plattform zur **Visualisierung aller Messdaten**
+* **Zwei Hauptbereiche**:
+  **1.** PV-Ertragsdaten
+  **2.** Raumklima (Temperatur, Sauerstoff/CO₂)
+* Basierend auf **Grafana + InfluxDB + MQTT**
 
+image::images/daten_grafana.png[width=800,align=center]
 
-//--------------------
-// WHY
-//--------------------
+//------------------------------
+// KLASSENRAUM
+//------------------------------
 [.lightbg]
-== Warum?
+== Klassenraum – Warum messen?
 
 [.card]
-* Den Energieverbrauch übersichtlich darstellen
-* Luftqualität und Temperatur in Klassenräumen verbessern
-* Bewusstsein für nachhaltiges Energieverhalten fördern
+* Bis zu **30 Schüler:innen** in einem Raum
+* Bei geschlossenen Fenstern: **CO₂-Werte > 2000 ppm** möglich
+* **Folgen**: Müdigkeit, Konzentrationsschwäche
+* **Lösung**: Automatische Überwachung + Warnsystem
 
+image::images/schueler.png[width=600,align=center]
 
-//--------------------
-// TECHNOLOGIES
-//--------------------
+//------------------------------
+// SENSOREN
+//------------------------------
+[.center]
+== Unsere Sensoren
+
+image::images/sensor_setup.jpg[width=500,align=center]
+
+//------------------------------
+// TECHNOLOGIESTACK
+//------------------------------
 [.center]
 == Technologien
 
-* Grafana
-* InfluxDB
-* MQTT
+* **Grafana** – Visualisierung
+* **InfluxDB** – Zeitreihendatenbank
+* **MQTT** – Echtzeit-Datenübertragung
+* **Telegraf** - Daten sammeln
 
+image::images/tech_stack.jpg[width=600,align=center]
 
-
-//--------------------
+//------------------------------
 // END SLIDE
-//--------------------
+//------------------------------
 [.center, .lightbg]
-== Danke für Ihre Aufmerksamkeit
+== Danke für Ihre Aufmerksamkeit 🌱
