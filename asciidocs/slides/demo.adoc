@@ -59,6 +59,7 @@ image::images/team.jpg[width=500,align=center]
 [.center]
 == Photovoltaik (PV)
 
+[.card]
 * Über **190 PV-Module** auf dem Schuldach
 * Erzeugen **grünen Strom** für die Schule
 * Bisher: Daten nur in Rohform verfügbar
@@ -109,10 +110,11 @@ image::images/sensor_setup.jpg[width=500,align=center]
 [.center]
 == Technologien
 
+[.card]
 * **Grafana** – Visualisierung
 * **InfluxDB** – Zeitreihendatenbank
 * **MQTT** – Echtzeit-Datenübertragung
-* **Telegraf** - Daten sammeln
+* **Telegraf** – Daten sammeln
 
 image::images/tech_stack.jpg[width=600,align=center]
 
