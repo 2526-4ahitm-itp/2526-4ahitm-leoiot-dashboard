@@ -1,5 +1,7 @@
-= Some Slide
-:author: firstname lastname
+[.title]
+= LeoGreen
+[.center]
+:author: Jonas Leitner
 :email: x.y@htl.at
 :revnumber: 1.0
 :revdate: {docdate}
@@ -33,106 +35,44 @@ endif::[]
 :title-slide-transition: zoom
 :title-slide-transition-speed: fast
 
-Testing filter by changing documentation file
+Dashboard zur Veranschaulichung von
+Messwerten bezüglich HTL Leonding
 
-== Slide w/ image
 
-[.stretch]
-image::img.png[]
+// [.stretch]
+// image::img.png[]
 
 [.lightbg,background-opacity="0.7"]
-== Slide w/ text and background image
+== Team
+[.center]
 
-image::img.png[background, size="contain"]
+// image::img.png[background, size="contain"]
 
 
-* Topic 1
-* Topic 2
-* Topic 3
-
-[%auto-animate]
-== !
-
-Matched element will be animated automatically!
+* Daniel Lettner
+* Paul Kreinecker
+* Elias Pointinger
+* Stefan Schachner
+* Jonas Leitner
 
 [%auto-animate]
-== !
+== Was ist Leogreen
 
-[.highlight]
-Matched element will be animated automatically!
-
-And move to the right position!
-
-[%hardbreaks]
-⬆️
-⬆️
-⬆️
+*   Dashboard zur Veranschaulichung des Energieverbrauchs der Schule,
+    der Temperatur und des Sauerstoffgehalts pro Klasse
+*   Warnsystem bei zu geringem Sauerstoffgehalt oder zu niedriger Temparatur in Klassenräumen
 
 
 [%auto-animate]
-== !
+== Warum
 
-[source%linenums,js,data-id=planets]
-----
-let planets = [
-  { name: 'mars', diameter: 6779 },
-]
-----
+* Den Energieverbrauch übersichtlich darzustellen
+* Temparatur und Luftreinheit in Klassenräumen messen
+
 
 [%auto-animate]
-== !
+== Technologien
 
-[source%linenums,js,data-id=planets]
-----
-let planets = [
-  { name: 'mars', diameter: 6779 },
-  { name: 'earth', diameter: 12742 },
-  { name: 'jupiter', diameter: 139820 }
-]
-----
-
-[%auto-animate]
-== !
-
-[source%linenums,js,data-id=planets]
-----
-let circumferenceReducer = ( c, planet ) => {
-  return c + planet.diameter * Math.PI;
-}
-
-let planets = [
-  { name: 'mars', diameter: 6779 },
-  { name: 'earth', diameter: 12742 },
-  { name: 'jupiter', diameter: 139820 }
-]
-
-let c = planets.reduce( circumferenceReducer, 0 )
-----
-
-
-[%auto-animate,auto-animate-unmatched=false]
-== Unmatched
-
-Introduction. (matched)
-
-[%auto-animate,auto-animate-unmatched=false]
-== Unmatched
-
-Introduction. (matched)
-
-This will be shown instantly ⚡ (unmatched)
-
-
-[%auto-animate,auto-animate-duration=5]
-== Duration
-
-This animation...
-
-[%auto-animate,auto-animate-duration=5]
-== Duration
-
-This animation...
-
-...will take 5 seconds! ⌚
-
-
+* Grafana
+* InfluxDB
+* MQTT
