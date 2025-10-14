@@ -19,7 +19,7 @@
 // TITLE SLIDE
 //--------------------
 [.center, .title-slide]
-== LeoGreen 🌿
+== LeoGreen
 
 [.subtitle]
 Dashboard zur Veranschaulichung von
