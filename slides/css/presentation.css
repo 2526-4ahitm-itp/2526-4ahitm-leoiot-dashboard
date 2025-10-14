@@ -4,14 +4,15 @@
     --leo-green-dark: #1b5e20;
     --bg-light: #f9fbf9;
     --text-color: #222;
-    --card-bg: rgba(255, 255, 255, 0.92);
-    --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .reveal {
     font-size: 32px;
     font-family: 'Segoe UI', system-ui, sans-serif;
     color: var(--text-color);
+    background-color: var(--bg-light);
 }
 
 .reveal h1,
@@ -23,20 +24,9 @@
 }
 
 .reveal .slides section {
-    background-color: white;
     padding: 20px 40px;
     box-sizing: border-box;
-}
-
-.reveal .slides section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: var(--leo-green);
-    opacity: 0.15;
+    background-color: var(--bg-light);
 }
 
 .card {
@@ -70,7 +60,7 @@
     max-width: 90%;
     height: auto;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     object-fit: contain;
 }
 
@@ -84,7 +74,6 @@
     font-size: 4.2em;
     color: var(--leo-green);
     margin-bottom: 0.6em;
-    text-shadow: none;
 }
 
 .subtitle {
