@@ -56,7 +56,7 @@ image::team.jpg[width=500,align=center]
 * Bisher: Daten nur in Rohform verfügbar
 * **Unser Ziel**: Echtzeit-Dashboard mit Ertrag, Einspeisung, CO₂-Einsparung
 
-image::pv_anlage.png[width=700,align=center]
+image::pv-anlage.png[width=700,align=center]
 
 //------------------------------
 // DASHBOARD
