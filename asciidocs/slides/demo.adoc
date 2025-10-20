@@ -88,7 +88,7 @@ image::daten_grafana.png[width=100%,align=center]
 //------------------------------
 [.lightbg]
 == Klassenraum – Warum messen?
-image::schueler.png[background, size=cover, role="overlay"]
+image::student.png[background, size=cover, role="overlay"]
 
 * Bis zu **30 Schüler:innen** in einem Raum
 * Bei geschlossenen Fenstern: **CO₂-Werte > 2000 ppm** möglich
