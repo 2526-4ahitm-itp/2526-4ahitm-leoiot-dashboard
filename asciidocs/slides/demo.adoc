@@ -116,10 +116,18 @@ image::sensor.png[width=500,align=center]
 * **MQTT** – Echtzeit-Datenübertragung
 * **Telegraf** – Daten sammeln
 
-image::grafana-logo.png[width=100,align=center]
-image::influx-db-logo.png[width=350,align=center]
+[cols="1,1,1,1"]
+|===
+a|
+image::grafana-logo.png[width=50,align=center]
+a|
+image::influx-db-logo.png[width=150,align=center]
+a|
 image::mqtt-logo.png[width=150,align=center]
+a|
 image::telegraf-logo.png[width=150,align=center]
+|===
+
 
 //------------------------------
 // END SLIDE
