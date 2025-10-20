@@ -100,7 +100,7 @@ image::student.png[background, size=cover, role="overlay"]
 // SENSOREN
 //------------------------------
 [.center]
-== Unsere Sensoren
+== Unsere Sensor
 
 image::sensor.png[width=500,align=center]
 
