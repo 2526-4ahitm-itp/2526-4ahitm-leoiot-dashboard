@@ -53,19 +53,17 @@
 //------------------------------
 // PV-ANLAGEN
 //------------------------------
-[.center]
 == Photovoltaik (PV)
 :revealjs_background: images/pv-anlage.png
 :revealjs_background_size: cover
 :revealjs_background_position: center
+:revealjs_background_opacity: 0.4
 
 [.card]
 * Über **190 PV-Module** auf dem Schuldach
 * Erzeugen **grünen Strom** für die Schule
 * Bisher: Daten nur in Rohform verfügbar
 * **Unser Ziel**: Echtzeit-Dashboard mit Ertrag, Einspeisung, CO₂-Einsparung
-
-image::pv-anlage.png[width=700,align=center]
 
 //------------------------------
 // DASHBOARD
