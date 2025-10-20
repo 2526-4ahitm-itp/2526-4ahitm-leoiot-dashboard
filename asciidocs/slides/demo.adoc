@@ -54,8 +54,8 @@
 // PV-ANLAGEN
 //------------------------------
 == Photovoltaik (PV)
-:revealjs_background: images/pv-anlage.png
-:revealjs_background_opacity: 0.4
+image::pv-anlage.png[background, size=cover]
+
 
 [.card]
 * Über **190 PV-Module** auf dem Schuldach
