@@ -25,9 +25,13 @@
 
 [.card]
 * Ursprünglich von einem früheren Team gestartet
-* Wir haben das Projekt übernommen
+* Wir haben das Projekt übernommen von:
+** Balint Balazs
+** Said Nurceski
+** Erik Seifried
+** Markus Breinesberger
 
-image::images/project_handover.jpg[width=600,align=center]
+//image::images/project_handover.jpg[width=600,align=center]
 
 //------------------------------
 // TEAM
@@ -42,13 +46,18 @@ image::images/project_handover.jpg[width=600,align=center]
 * Paul Kreinecker
 * Jonas Leitner
 
-image::team.jpg[width=500,align=center]
+//image::team.jpg[width=500,align=center]
+//TODO: paste photos here
+
 
 //------------------------------
 // PV-ANLAGEN
 //------------------------------
 [.center]
 == Photovoltaik (PV)
+:revealjs_background: images/pv-anlage.png
+:revealjs_background_size: cover
+:revealjs_background_position: center
 
 [.card]
 * Über **190 PV-Module** auf dem Schuldach
