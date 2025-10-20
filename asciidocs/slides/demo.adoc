@@ -54,14 +54,12 @@
 // PV-ANLAGEN
 //------------------------------
 == Photovoltaik (PV)
-image::pv-anlage.png[background, size=cover]
+image::pv-anlage.png[background, size=cover, role="overlay"]
 
-
-[.card]
-* Über **190 PV-Module** auf dem Schuldach
-* Erzeugen **grünen Strom** für die Schule
-* Bisher: Daten nur in Rohform verfügbar
-* **Unser Ziel**: Echtzeit-Dashboard mit Ertrag, Einspeisung, CO₂-Einsparung
+* :sun: Über **190 PV-Module** auf dem Schuldach
+* :zap: Erzeugen **grünen Strom** für die Schule
+* :bar_chart: Bisher: Daten nur in Rohform verfügbar
+* :dart: **Ziel**: Echtzeit-Dashboard mit Ertrag, Einspeisung, CO₂-Einsparung
 
 
 //------------------------------
