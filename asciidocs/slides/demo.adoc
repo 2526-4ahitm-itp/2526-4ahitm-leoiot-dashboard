@@ -54,7 +54,7 @@
 // PV-ANLAGEN
 //------------------------------
 == Photovoltaik (PV)
-:revealjs_background: images/pv-anlage.png
+:revealjs_background: pv-anlage.png
 :revealjs_background_size: cover
 :revealjs_background_position: center
 :revealjs_background_opacity: 0.4
