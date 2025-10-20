@@ -23,7 +23,6 @@
 [.lightbg]
 == Projektübernahme
 
-[.card]
 * Ursprünglich von einem früheren Team gestartet
 * Wir haben das Projekt übernommen von:
 ** Balint Balazs
@@ -39,7 +38,6 @@
 [.lightbg, .center]
 == Unser Team
 
-[.team-list]
 * Daniel Lettner
 * Elias Pointinger
 * Stefan Schachner
@@ -100,7 +98,7 @@ image::student.png[background, size=cover, role="overlay"]
 // SENSOREN
 //------------------------------
 [.center]
-== Unsere Sensor
+== Unser Sensor
 
 image::sensor.png[width=500,align=center]
 
