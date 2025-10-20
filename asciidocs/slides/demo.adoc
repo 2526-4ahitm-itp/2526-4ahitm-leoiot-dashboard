@@ -68,17 +68,29 @@ image::pv-anlage.png[background, size=cover, role="overlay"]
 [.lightbg]
 == Das LeoGreen-Dashboard
 
-// * Zentrale Plattform zur **Visualisierung aller Messdaten**
-// * Zwei Hauptbereiche
-// ** PV-Ertragsdaten
-// ** Raumklima (Temperatur, Sauerstoff/CO₂)
-// * Basierend auf **Grafana + InfluxDB + MQTT**
-//
-// image::daten_grafana.png[width=100%,align=center]
-
 [cols="1,1"]
 |===
 a|
+* Zentrale Plattform zur **Visualisierung aller Messdaten**
+* Zwei Hauptbereiche
+** PV-Ertragsdaten
+** Raumklima (Temperatur, Sauerstoff/CO₂)
+* Basierend auf **Grafana + InfluxDB + MQTT**
+
+a|
+
+
+image::daten_grafana.png[width=100%,align=center]
+|===
+
+[.lightbg]
+== Das LeoGreen-Dashboard
+
+[cols="1.5,1"]
+|===
+a|
+
+
 * Zentrale Plattform zur **Visualisierung aller Messdaten**
 * Zwei Hauptbereiche
 ** PV-Ertragsdaten
