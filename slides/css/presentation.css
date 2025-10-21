@@ -104,10 +104,15 @@
     margin: 0.5em 0;
 }
 
-
 .transparent-box {
-    background-color: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(3px);
+    background-color: rgba(0, 0, 0, 0.3); /* leicht transparentes Schwarz */
+    color: #fff;
+    padding: 1.4em 1.8em;
+    border-radius: 14px;
+    max-width: 80%;
+    margin: 2em auto;
+    backdrop-filter: blur(4px); /* „Glas“-Effekt */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 1024px) {
