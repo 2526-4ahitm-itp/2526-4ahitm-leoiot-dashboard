@@ -38,13 +38,24 @@
 [.lightbg, .center]
 == Unser Team
 
+
+
+
+[cols="1,1"]
+|===
+a|
 * Daniel Lettner
 * Elias Pointinger
 * Stefan Schachner
 * Paul Kreinecker
 * Jonas Leitner
 
-image::WhatsApp Image 2025-10-21 at 07.57.48.jpeg[width=500,align=center]
+a|
+
+
+image::WhatsApp Image 2025-10-21 at 07.57.48.jpeg[width=100%,align=center]
+|===
+
 //TODO: paste photos here
 
 
