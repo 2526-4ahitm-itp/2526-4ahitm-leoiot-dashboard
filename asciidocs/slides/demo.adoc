@@ -100,7 +100,7 @@ image::daten_grafana.png[width=100%,align=center]
 [.title-overlay]
 == Klassenraum – Warum messen?
 image::student.png[background, size=cover, role="overlay"]
-[.transparent-box%block]
+//[.transparent-box%block]
 
 
 * Bis zu **30 Schüler:innen** in einem Raum
