@@ -44,9 +44,8 @@
 * Paul Kreinecker
 * Jonas Leitner
 
-//image::team.jpg[width=500,align=center]
+image::WhatsApp Image 2025-10-21 at 07.57.48.jpeg[width=500,align=center]
 //TODO: paste photos here
-image::WhatsApp Image 2025-10-21 at 07.57.48.jpeg[background, size=cover, role="overlay"]
 
 
 //------------------------------
