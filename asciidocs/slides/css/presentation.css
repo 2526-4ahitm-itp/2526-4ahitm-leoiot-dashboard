@@ -104,6 +104,17 @@
     margin: 0.5em 0;
 }
 
+
+.transparent-box {
+    background-color: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    padding: 1.2em 1.5em;
+    border-radius: 15px;
+    max-width: 70%;
+    margin: 2em auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 @media (max-width: 1024px) {
     .reveal {
         font-size: 28px;
