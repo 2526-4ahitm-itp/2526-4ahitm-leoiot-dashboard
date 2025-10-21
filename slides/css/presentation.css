@@ -115,6 +115,14 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.title-overlay {
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff !important;
+    padding: 0.2em 0.6em;
+    border-radius: 8px;
+    backdrop-filter: blur(3px);
+}
+
 @media (max-width: 1024px) {
     .reveal {
         font-size: 28px;
