@@ -106,13 +106,8 @@
 
 
 .transparent-box {
-    background-color: rgba(255, 255, 255, 0.2); /* nur 20 % Weiß – fast durchsichtig */
-    color: #000;
-    padding: 1.2em 1.5em;
-    border-radius: 15px;
-    max-width: 75%;
-    margin: 2em auto;
-    backdrop-filter: blur(3px); /* leichtes Glas-Effekt für Lesbarkeit */
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(3px);
 }
 
 @media (max-width: 1024px) {
