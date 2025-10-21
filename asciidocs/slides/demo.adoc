@@ -97,6 +97,7 @@ image::daten_grafana.png[width=100%,align=center]
 // KLASSENRAUM
 //------------------------------
 [.lightbg]
+[.title-overlay]
 == Klassenraum – Warum messen?
 image::student.png[background, size=cover, role="overlay"]
 [.transparent-box%block]
