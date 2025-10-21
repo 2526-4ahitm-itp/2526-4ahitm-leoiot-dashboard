@@ -62,9 +62,9 @@ image::WhatsApp Image 2025-10-21 at 07.57.48.jpeg[width=100%,align=center]
 //------------------------------
 // PV-ANLAGEN
 //------------------------------
-[.transparent-box]
 == Photovoltaik (PV)
 image::pv-anlage.png[background, size=cover, role="overlay"]
+[.transparent-box%block]
 
 
 * Über **190 PV-Module** auf dem Schuldach
