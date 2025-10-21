@@ -116,7 +116,7 @@
 }
 
 .title-overlay {
-    background: rgba(140, 140, 140, 0.8);
+    background: rgba(140, 140, 140, 0.4);
     color: #fff !important;
     padding: 0.2em 0.6em;
     border-radius: 8px;
