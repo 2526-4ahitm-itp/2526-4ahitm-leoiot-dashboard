@@ -56,9 +56,6 @@ a|
 image::WhatsApp Image 2025-10-21 at 07.57.48.jpeg[width=100%,align=center]
 |===
 
-//TODO: paste photos here
-
-
 //------------------------------
 // PV-ANLAGEN
 //------------------------------
@@ -66,11 +63,18 @@ image::WhatsApp Image 2025-10-21 at 07.57.48.jpeg[width=100%,align=center]
 image::pv-anlage.png[background, size=cover, role="overlay"]
 [.transparent-box%block]
 
-
+//! sind keine 190 pv module
+//! -> "große pv-anlage auf dem schuldach"
 * Über **190 PV-Module** auf dem Schuldach
 * Erzeugen **grünen Strom** für die Schule
+//! "rohform" stimmt auch nicht
+//! ->
 * Bisher: Daten nur in Rohform verfügbar
+// ! begriff "dashboard" auch nicht optimal
 * **Ziel**: Echtzeit-Dashboard mit Ertrag, Einspeisung, CO₂-Einsparung
+//! insgesamt zu "detailiert"
+//! ergebnis des bisherigen projekts zeigen, was war die aufgabe...?
+
 
 //------------------------------
 // DASHBOARD
@@ -85,10 +89,12 @@ a|
 * Zwei Hauptbereiche
 ** PV-Ertragsdaten
 ** Raumklima (Temperatur, Sauerstoff/CO₂)
+//! raumklima hat mit pv ertragsdaten nicht wirklich was zu tun
+//!// unser projekt unterteilt sich in:
+//! 1. gute lernumgebung für schüler schaffen
+//! 2.  pv daten verwerten
 * Basierend auf **Grafana + InfluxDB + MQTT**
-
 a|
-
 
 image::daten_grafana.png[width=100%,align=center]
 |===
@@ -102,9 +108,11 @@ image::daten_grafana.png[width=100%,align=center]
 image::student.png[background, size=cover, role="overlay"]
 //[.transparent-box%block]
 
+// bild gut - menschen zu sehen, macht die präsentation persönlicher
 
 * Bis zu **30 Schüler:innen** in einem Raum
 * Bei geschlossenen Fenstern: **CO₂-Werte > 2000 ppm** möglich
+//! "hohe co2 werte verhindern" besser; wert stimmt natürlich
 * **Folgen**: Müdigkeit, Konzentrationsschwäche
 * **Lösung**: Automatische Überwachung + Warnsystem
 
@@ -114,8 +122,12 @@ image::student.png[background, size=cover, role="overlay"]
 //------------------------------
 [.center]
 == Unser Sensor
+//! ist nicht 1 sensor, sondern z.b. 5
+//! architektur-diagramm wäre gut -> umsetzung
+//! stütz will einen pitch quasi wie ein pflichtenheft haben
 
 image::sensor.png[width=500,align=center]
+
 
 //------------------------------
 // TECHNOLOGIESTACK
@@ -140,6 +152,7 @@ image::mqtt-logo.png[width=150,align=center]
 a|
 image::telegraf-logo.png[width=150,align=center]
 |===
+
 
 
 //------------------------------
