@@ -105,7 +105,8 @@ image::daten_grafana.png[width=100%,align=center]
 [.lightbg]
 == Architektur Diagramm
 
-image::architektur.png[width=90%,align=center]
+[.image-container]
+image::architektur.png[width=70%,align=center]
 
 [.bottom-left.small]
 aus dem alten Projekt
