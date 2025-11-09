@@ -101,16 +101,13 @@ image::daten_grafana.png[width=100%,align=center]
 
 
 // architektur Diagramm
+
 [.lightbg]
-
-[.title-overlay.top-left.text-shadow]
-
 == Architektur Diagramm
 
-image::architektur.png[background, size=cover, role="overlay"]
-[.top-left.text-shadow]
+image::architektur.png[width=90%,align=center]
 
-[.bottom-left.small.text-shadow]
+[.bottom-left.small]
 aus dem alten Projekt
 
 //------------------------------
