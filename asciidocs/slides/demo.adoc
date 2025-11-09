@@ -108,8 +108,9 @@ image::daten_grafana.png[width=100%,align=center]
 [.image-container]
 image::architektur.png[width=70%,align=center]
 
-[.caption.bottom-left.small]
-aus dem alten Projekt
+++++
+<p class="caption bottom-left small">aus dem alten Projekt</p>
+++++
 
 
 
