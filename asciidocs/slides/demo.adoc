@@ -108,8 +108,10 @@ image::daten_grafana.png[width=100%,align=center]
 [.image-container]
 image::architektur.png[width=70%,align=center]
 
-[.bottom-left.small]
+[.caption.bottom-left.small]
 aus dem alten Projekt
+
+
 
 //------------------------------
 // KLASSENRAUM
