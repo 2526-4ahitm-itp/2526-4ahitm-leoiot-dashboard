@@ -103,6 +103,9 @@ image::daten_grafana.png[width=100%,align=center]
 // architektur Diagramm
 [.lightbg]
 
+[.title-overlay]
+== Architektur Diagramm
+
 image::architektur.png[background, size=cover, role="overlay"]
 [.top-left.text-shadow]
 === Architektur Diagramm
