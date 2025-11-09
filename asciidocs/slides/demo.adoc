@@ -103,11 +103,13 @@ image::daten_grafana.png[width=100%,align=center]
 // architektur Diagramm
 [.lightbg]
 
-== Architektur Diagramm
+image::architektur.png[width=70% align=center]
 
-image::architektur.png[width=100%, align=center]
+[.top-left.text-shadow]
+=== Architektur Diagramm
 
-* aus dem alten Projekt
+[.bottom-left.small.text-shadow]
+aus dem alten Projekt
 
 //------------------------------
 // KLASSENRAUM
