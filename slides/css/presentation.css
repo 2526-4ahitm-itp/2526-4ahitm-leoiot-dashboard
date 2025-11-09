@@ -138,21 +138,21 @@
 
 .reveal .slides section .image-container img {
     display: block;
-    margin: 30px auto;      /* adds space above and below */
-    max-width: 70%;         /* keeps it comfortably sized */
-    height: auto;           /* maintain aspect ratio */
-    border-radius: 6px;     /* optional: makes it look polished */
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    margin: 40px auto;
+    max-width: 70%;
+    height: auto;
 }
 
-.reveal .slides section .bottom-left {
+.reveal .slides section .caption {
     position: absolute;
     bottom: 30px;
     left: 40px;
     color: #333;
-}
-
-.reveal .slides section .small {
     font-size: 0.9em;
     opacity: 0.8;
+    z-index: 5;
+}
+
+.reveal .slides section .caption.small {
+    text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
 }
