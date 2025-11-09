@@ -136,12 +136,15 @@
     }
 }
 
-.reveal .slides section img {
+.reveal .slides section .image-container img {
     display: block;
-    margin: 40px auto;
+    margin: 30px auto;      /* adds space above and below */
+    max-width: 70%;         /* keeps it comfortably sized */
+    height: auto;           /* maintain aspect ratio */
+    border-radius: 6px;     /* optional: makes it look polished */
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
 }
 
-/* Bottom-left caption */
 .reveal .slides section .bottom-left {
     position: absolute;
     bottom: 30px;
@@ -149,7 +152,6 @@
     color: #333;
 }
 
-/* Make caption smaller and subtle */
 .reveal .slides section .small {
     font-size: 0.9em;
     opacity: 0.8;
