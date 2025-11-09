@@ -99,6 +99,16 @@ a|
 image::daten_grafana.png[width=100%,align=center]
 |===
 
+
+// architektur Diagramm
+[.lightbg]
+
+== Architektur Diagramm
+
+image::architektur.png[width=100%, align=center]
+
+* aus dem alten Projekt
+
 //------------------------------
 // KLASSENRAUM
 //------------------------------
