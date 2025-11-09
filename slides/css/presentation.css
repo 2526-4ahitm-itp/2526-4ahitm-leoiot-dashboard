@@ -147,12 +147,8 @@
     position: absolute;
     bottom: 30px;
     left: 40px;
-    color: #333;
     font-size: 0.9em;
     opacity: 0.8;
-    z-index: 5;
-}
-
-.reveal .slides section .caption.small {
-    text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
+    color: #333;
+    z-index: 10;
 }
