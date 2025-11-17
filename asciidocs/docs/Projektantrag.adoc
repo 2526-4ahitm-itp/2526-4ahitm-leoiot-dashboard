@@ -1,0 +1,52 @@
+= Projektantrag LeoIOT
+:encoding: utf-8
+:lang: de
+:doctype: article
+:revnumber: 1.0
+:revdate: {docdate}
+:imagesdir: images
+:toc: macro
+
+// Platzhalter für Klasse & Schuljahr – bitte anpassen
+Klasse: 4AHITM             Schuljahr: 2025/26
+
+toc::[]
+
+[cols="1,3", options="header"]
+|===
+| Feld | Inhalt
+
+| Projektbezeichnung
+| LeoGreen – Intelligente Visualisierung von PV-Ertrag und Raumklima an der HTL Leonding
+
+| Projektauftraggeber
+| Professor Thomas Stütz
+
+| Projekthintergrund / Motivation für das Projekt
+| Die HTL Leonding verfügt über eine Photovoltaikanlage mit **über 60 Modulen** auf dem Schuldach, die regenerativen Strom für den Schulbetrieb erzeugt. Zudem bauen wir Sensoren zur Erfassung des Raumklimas (CO₂, Temperatur) in ausgewählten Klassenräumen ein. Bislang werden diese Daten noch nicht erfasst oder für die Schulgemeinschaft sichtbar gemacht. Ziel dieses Projekts ist es, Nachhaltigkeit und Gesundheit im Schulalltag durch ein digitales Echtzeit-Dashboard greifbar zu machen.
+
+| Technologien
+| – Kommunikation: MQTT (IoT-Protokoll) +
+– Datenspeicherung: InfluxDB (Zeitreihendatenbank) +
+– Visualisierung: Grafana
+
+| Projektorganisation
+| **Projektleiter**: Daniel Lettner +
+**Team**: Daniel Lettner, Elias Pointinger, Stefan Schachner, Paul Kreinecker, Jonas Leitner
+
+| Sinn / Zweck / USP – Wozu soll das Endergebnis dienen?
+| Das Dashboard schafft Transparenz über erzeugten Solarstrom und Raumluftqualität – ideal für Bewusstseinsbildung, Unterricht und Gesundheitsschutz. Der **USP** liegt in der Kombination aus **Energie-Monitoring** und **Gesundheits-Monitoring** an einer Schule – vollständig auf **Open-Source-Technologien** basierend.
+
+| Kunde / Beteiligte – Für wen tun wir das?
+| – Primär: HTL Leonding (Schüler:innen, Lehrkräfte, Schulleitung) +
+– Sekundär: Besucher, Partnerorganisationen, andere Schulen als Vorbild
+
+| Endergebnis – Welches Ergebnis soll bis … erreicht werden?
+| Bis **Ende Juni 2026** liegt ein vollständig funktionstüchtiges, dokumentiertes und wartbares Dashboard vor, das sowohl PV-Ertragsdaten als auch Raumklimadaten in Echtzeit anzeigt und bei kritischen CO₂-Werten visuell warnt.
+
+| Kriterien – Woran kann das Ergebnis gemessen werden?
+| – Dashboard ist im Schulnetzwerk über Browser erreichbar +
+– PV-Daten (kWh, eingespartes CO₂) werden periodisch aktualisiert +
+– Raumklimadaten (CO₂ in ppm, Temperatur) werden alle live Minuten angezeigt +
+– Warnschwelle bei CO₂ > 1000 ppm ist aktiv und sichtbar
+|===
