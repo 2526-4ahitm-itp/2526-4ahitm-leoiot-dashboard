@@ -1,0 +1,48 @@
+substitutions:
+  name: "led_blink"
+
+
+esphome:
+  name: ${name}_esphome
+
+esp32:
+  #board: esp32doit-devkit-v1
+  #board: wemos_d1_mini32
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+
+# WiFi Konfiguration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# Enable logging
+logger:
+
+mqtt:
+  broker: !secret mqtt_broker
+  username: !secret mqtt_user
+  password: !secret mqtt_password
+  topic_prefix: ${name}
+
+
+# Blinken der LED
+interval:
+  - interval: 1s
+    then:
+      - switch.toggle: led
+
+# Konfiguration des LED-Pins
+switch:
+  - platform: gpio
+    pin: GPIO8
+    id: led
+    on_turn_on:
+      - mqtt.publish:
+          topic: blink
+          payload: "LED is ON"
+    on_turn_off:
+      - mqtt.publish:
+          topic: blink
+          payload: "LED is OFF"
