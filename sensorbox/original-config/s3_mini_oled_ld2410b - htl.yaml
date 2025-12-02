@@ -1,0 +1,208 @@
+substitutions:
+  name: "s3_mini_sensorbox"
+  
+esphome:
+  name: ${name}
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  framework:
+    type: arduino
+
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  
+  ap:
+    ssid: ${name}
+    password: "12345678"
+
+captive_portal:
+
+logger:
+
+ota:
+  password: "585353d758e3f126d2f4982f0695d956"
+  platform: esphome
+
+web_server:
+  port: 80
+
+# api:
+#   encryption:
+#     key: "18T6rbg6kRjpusDhj2opiK2Rr9jksMd7ikNJ7IwsSeE="
+
+mqtt:
+  broker: !secret mqtt_broker
+  username: !secret mqtt_user
+  password: !secret mqtt_password
+
+i2c:
+  sda: GPIO09  
+  scl: GPIO08  
+  scan: true
+  id: bus_a
+  frequency: 400kHz
+  timeout: 200ms
+
+uart:
+  id: ld2410_uart
+  rx_pin: GPIO11
+  tx_pin: GPIO10
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+spi:
+  clk_pin: GPIO01
+  mosi_pin: GPIO02
+
+ld2410:
+  uart_id: ld2410_uart
+
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      name: ${name}_Presence
+      id: presence
+      on_press: # This is now correctly nested under the 'presence' binary sensor
+        - light.turn_on:
+            id: tft_light
+            brightness: 100% # Set to 100% when someone is present
+      on_release: # This is now correctly nested under the 'presence' binary sensor
+        - light.turn_on:
+            id: tft_light
+            brightness: 20% # Dim to 20% when no one is present      
+    has_moving_target:
+      name: ${name}_Moving_Target
+    has_still_target:
+      name: ${name}_Still_Target
+
+sensor:
+  - platform: ld2410
+    light:
+      name: ${name}_light
+    moving_distance:
+      name: ${name}_Moving_Distance
+      id: ld2410_distance
+    still_distance:
+      name: ${name}_Still_Distance
+    moving_energy:
+      name: ${name}_Move_Energy
+    still_energy:
+      name: ${name}_Still_Energy
+    detection_distance:
+      name: ${name}_Detection_Distance
+
+  - platform: scd4x
+    co2:
+      name: ${name}_scd41_CO2
+      id: co2
+    temperature:
+      name: ${name}_scd41_Temperature
+      id: scd41_temperature
+    humidity:
+      name: ${name}_scd41_Humidity
+      id: scd41_humidity
+    temperature_offset: 6.5
+    update_interval: 60s 
+
+  - platform: tsl2591
+    name: ${name}_TSL2591
+    id: my_tsl2591
+    address: 0x29
+    update_interval: 10s
+    gain: auto
+    device_factor: 53
+    glass_attenuation_factor: 14.4
+    visible:
+      name: ${name}_TSL2591_visible_light
+    infrared:
+      name: ${name}_TSL2591_infrared_light
+    full_spectrum:
+      name: ${name}_TSL2591_full_spectrum_light
+    calculated_lux:
+      id: i_lux
+      name: ${name}_TSL2591_Lux
+    actual_gain:
+      id: actual_gain
+      name: ${name}_TSL2591_actual_gain
+
+text_sensor:
+  - platform: ld2410
+    version:
+      name: ${name}_LD2410_Firmware_Version
+
+font:
+  - file: "fonts/Arial.ttf"
+    id: font1
+    size: 40
+
+display:
+  - platform: ili9xxx
+    model: ST7789V
+    dc_pin: GPIO04
+    reset_pin: GPIO05
+    cs_pin: GPIO03
+    data_rate: 40MHz
+    update_interval: 2s
+    invert_colors: true
+    rotation: 270
+    dimensions:
+      width: 240
+      height: 320
+    lambda: |-
+      Color background_color;
+      Color text_color = Color::WHITE;
+
+      // CO2-abhängige Hintergrundfarbe
+      if (id(co2).state <= 700) {
+        background_color = Color(0, 255, 0);     // Grün
+        text_color = Color::BLACK;
+      } else if (id(co2).state <= 1000) {
+        background_color = Color(255, 255, 0);   // Gelb
+        text_color = Color::BLACK;
+      } else {
+        background_color = Color(255, 0, 0);     // Rot
+      }
+
+      it.fill(background_color);
+      it.printf(0, 10, id(font1), text_color, "Co2:     %d ppm", (int)id(co2).state);
+      it.printf(0, 60, id(font1), text_color, "%.1f°", id(scd41_temperature).state);
+      it.printf(160, 60, id(font1), text_color, "%d%%", (int)id(scd41_humidity).state);
+      it.printf(0, 110, id(font1), text_color, "Helligkeit: %d Lux", (int)id(i_lux).state);
+      if (id(presence).state) {
+        it.printf(0, 160, id(font1), text_color, "Anwesend");
+      } else {
+        it.printf(0, 160, id(font1), text_color, "Frei");
+      }
+      it.printf(200, 160, id(font1), text_color, "%dcm", (int)id(ld2410_distance).state);
+
+output:
+  - platform: ledc
+    pin: GPIO06
+    id: backlight_pwm
+    frequency: 20000Hz  
+
+  - platform: gpio
+    pin: GPIO07
+    id: buzzer_output
+
+switch:
+  - platform: output
+    name: ${name}_Buzzer
+    output: buzzer_output
+    id: buzzer_switch
+
+light:
+  - platform: monochromatic
+    output: backlight_pwm
+    name: ${name}_TFT_Backlight
+    id: tft_light
+    default_transition_length: 0s
+    restore_mode: ALWAYS_ON
+
+
