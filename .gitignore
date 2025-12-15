@@ -36,4 +36,3 @@ Temporary Items
 dist/
 docs/slides/revealjs
 .idea/
-secrets.yaml

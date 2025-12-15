@@ -178,7 +178,7 @@ sensor:
                         # return brightness_local;
                     red: 0%
                     green: 100%
-                    blue: 0%    
+                    blue: 0%
           - if:
               condition:
                 lambda: |-
@@ -188,9 +188,9 @@ sensor:
                 - light.turn_on:
                     id: neopixel
                     brightness: !lambda return id(brightness_neopixel);
-                    red: 0%
-                    green: 0%
-                    blue: 100%    
+                    red: 100%
+                    green: 78%
+                    blue: 0%
           - if:
               condition:
                 lambda: |-
@@ -202,7 +202,7 @@ sensor:
                     brightness: 100%
                     red: 100%
                     green: 0%
-                    blue: 0%    
+                    blue: 0%
 
 
 # Variante 2 mit sensor.in_range funktioniert nicht mit variablen range-werten
