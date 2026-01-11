@@ -1,0 +1,71 @@
+= Local MQTT Setup for Quarkus (Anonymous Publishing)
+:toc:
+
+== Download the project
+
+Download the project and move into the sinus-generator folder
+
+[source,bash]
+----
+git clone https://github.com/2526-4ahitm-itp/2526-4ahitm-leoiot-dashboard.git
+----
+
+== Startup Order
+
+. Start Mosquitto
+. Start the subscriber
+. Start Quarkus
+
+
+== Install Mosquitto
+
+Install Mosquitto:
+
+
+Arch:
+[source,bash]
+----
+sudo pacman -S mosquitto
+----
+
+Debian & Ubuntu:
+[source,bash]
+----
+sudo apt install mosquitto
+----
+
+== Start Mosquitto
+
+Start the broker:
+
+[source,bash]
+----
+mosquitto -v -p 1883
+----
+
+The broker listens on port 1883.
+
+== Verify Message Flow
+
+Open a subscriber terminal:
+
+[source,bash]
+----
+mosquitto_sub -h localhost -t sine -v
+----
+
+Published messages should appear immediately.
+
+
+== Start Quarkus
+
+Start the Quarkus application:
+
+[source,bash]
+----
+mvn quarkus:dev
+----
+
+Quarkus will connect to the local MQTT broker at `localhost:1883`.
+
+
