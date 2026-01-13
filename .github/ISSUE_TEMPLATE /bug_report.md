@@ -2,7 +2,7 @@
 name: 🐛 Bug Report / Normal Issue
 about: Create a report to help us improve or fix an error.
 title: "[BUG] "
-labels: bug, triage
+labels: bug
 assignees: ''
 
 ---
