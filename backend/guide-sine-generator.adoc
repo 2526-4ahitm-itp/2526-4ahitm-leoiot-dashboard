@@ -69,3 +69,24 @@ mvn quarkus:dev
 Quarkus will connect to the local MQTT broker at `localhost:1883`.
 
 
+// TODO: guide update für Telgraf und InfluxDB
+
+== Telegraf
+[source,bash]
+----
+sudo systemctl restart telegraf
+----
+`https://xxx[text][`]
+== InfluxDB
+[source,bash]
+----
+influxd
+----
+
+== InfluxDB
+[source,bash]
+----
+influxd
+----
+
+
