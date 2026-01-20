@@ -36,3 +36,5 @@ Temporary Items
 dist/
 docs/slides/revealjs
 .idea/
+sensorbox/nili-ldr/secrets.yaml
+sensorbox/nili-ldr/.esphome/
