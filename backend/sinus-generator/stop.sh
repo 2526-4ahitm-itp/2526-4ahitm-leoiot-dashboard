@@ -16,3 +16,5 @@ echo "=== Stopping Grafana ==="
 sudo systemctl stop grafana.service
 
 echo "=== All services stopped ==="
+
+#docker compose stop

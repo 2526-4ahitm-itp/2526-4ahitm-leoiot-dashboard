@@ -53,3 +53,5 @@ sleep 2
 
 echo "=== Starting Quarkus (MQTT publisher) ==="
 mvn clean quarkus:dev
+
+# docker compose up -d
