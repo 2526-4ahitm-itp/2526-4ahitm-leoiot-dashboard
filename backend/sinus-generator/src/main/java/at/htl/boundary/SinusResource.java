@@ -1,6 +1,7 @@
+// at.htl.boundary.SinusResource.java
 package at.htl.boundary;
 
-import at.htl.service.SinusService;
+import at.htl.service.SensorService;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,7 +16,7 @@ import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 public class SinusResource {
 
     @Inject
-    SinusService sinusService;
+    SensorService sensorService;
 
     @Inject
     @Channel("sine-out")
@@ -24,7 +25,7 @@ public class SinusResource {
 
     @Scheduled(every = "1s")
     void publish() {
-        double value = sinusService.next().value();
+        double value = sensorService.readValue();
         emitter.send(Double.toString(value));
     }
 }
