@@ -3,6 +3,7 @@ package at.htl.boundary;
 
 import at.htl.service.SensorService;
 
+import at.htl.service.UsbSensorService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -16,7 +17,7 @@ import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 public class SinusResource {
 
     @Inject
-    SensorService sensorService;
+    UsbSensorService sensorService;
 
     @Inject
     @Channel("sine-out")

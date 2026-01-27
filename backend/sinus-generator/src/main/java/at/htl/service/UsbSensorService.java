@@ -1,3 +1,5 @@
+package at.htl.service;
+
 import com.fazecast.jSerialComm.SerialPort;
 import jakarta.enterprise.context.ApplicationScoped;
 

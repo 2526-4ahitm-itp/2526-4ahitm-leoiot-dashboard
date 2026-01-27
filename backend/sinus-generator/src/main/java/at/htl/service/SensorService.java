@@ -1,3 +1,5 @@
+package at.htl.service;
+
 public interface SensorService {
-    double readCurrentValue();
+    double readValue();
 }

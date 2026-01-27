@@ -16,7 +16,6 @@ public class SinusService {
                 value
         );
 
-
         angle = (angle + 10) % 360;
         return data;
     }
