@@ -13,10 +13,10 @@ services:
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=password1234
+      - DOCKER_INFLUXDB_INIT_PASSWORD=leogreen
       - DOCKER_INFLUXDB_INIT_ORG=leoiot
       - DOCKER_INFLUXDB_INIT_BUCKET=server_data
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-token
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==
     volumes:
       - influxdb_data:/var/lib/influxdb2
 
@@ -36,7 +36,9 @@ services:
       - influxdb
 
   quarkus-app:
-    build: ./backend/sinus-generator/docker
+    build:
+      context: ./backend/sinus-generator
+      dockerfile: src/main/docker/Dockerfile
     environment:
       - MQTT_HOST=mosquitto
     depends_on:
