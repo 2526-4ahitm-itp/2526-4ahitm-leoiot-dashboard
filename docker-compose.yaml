@@ -5,6 +5,9 @@ services:
       - "1883:1883"
     volumes:
       - mosquitto_data:/mosquitto/data
+      - ./config:/mosquitto/config
+    networks:
+      - leoiot
 
   influxdb:
     image: influxdb:2.7
@@ -19,6 +22,8 @@ services:
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==
     volumes:
       - influxdb_data:/var/lib/influxdb2
+    networks:
+      - leoiot
 
   telegraf:
     image: telegraf:latest
@@ -27,6 +32,8 @@ services:
     depends_on:
       - mosquitto
       - influxdb
+    networks:
+      - leoiot
 
   grafana:
     image: grafana/grafana:latest
@@ -34,6 +41,8 @@ services:
       - "3000:3000"
     depends_on:
       - influxdb
+    networks:
+      - leoiot
 
   quarkus-app:
     build:
@@ -43,9 +52,13 @@ services:
       - MQTT_HOST=mosquitto
     depends_on:
       - mosquitto
+    networks:
+      - leoiot
+
+networks:
+  leoiot:
+    driver: bridge
 
 volumes:
   mosquitto_data:
   influxdb_data:
-
-
