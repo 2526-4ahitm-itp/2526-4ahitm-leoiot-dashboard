@@ -41,6 +41,7 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  reboot_timeout: 0s
   ap:
     ssid: substitutions.name
     password: "g0MuFWdXxO2k"
@@ -50,8 +51,9 @@ web_server:
 
 mqtt:
   broker: !secret mqtt_broker
-  username: !secret mqtt_user
-  password: !secret mqtt_password
+  port: !secret mqtt_port
+#  username: !secret mqtt_user
+#  password: !secret mqtt_password
 
 captive_portal:
 
