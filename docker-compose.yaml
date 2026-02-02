@@ -1,6 +1,6 @@
 services:
   mosquitto:
-    image: eclipse-mosquitto:latest
+    image: eclipse-mosquitto:2.1.0-alpine
     ports:
       - "1883:1883"
     volumes:
@@ -43,6 +43,11 @@ services:
       - influxdb
     networks:
       - leoiot
+    environment:
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_CONTENT_SECURITY_POLICY=false
 
   quarkus-app:
     build:
