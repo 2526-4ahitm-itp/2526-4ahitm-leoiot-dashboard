@@ -54,6 +54,8 @@ mqtt:
   port: !secret mqtt_port
 #  username: !secret mqtt_user
 #  password: !secret mqtt_password
+  client_id: "nili3_usb"
+  discovery: false
 
 captive_portal:
 
