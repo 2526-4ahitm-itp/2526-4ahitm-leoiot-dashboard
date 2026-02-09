@@ -37,4 +37,6 @@ dist/
 docs/slides/revealjs
 .idea/
 sensorbox/nili-ldr/secrets.yaml
+sensorbox/s3-mini-oled/secrets.yaml
+
 sensorbox/nili-ldr/.esphome/
