@@ -10,6 +10,7 @@ services:
       - leoiot
 
   influxdb:
+    container_name: influxdb
     image: influxdb:2.7
     ports:
       - "8086:8086"
@@ -43,6 +44,10 @@ services:
       - influxdb
     networks:
       - leoiot
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
 
   quarkus-app:
     build:
