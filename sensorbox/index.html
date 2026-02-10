@@ -1,17 +1,50 @@
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sensor Data</title>
-</head>
-<body>
-
-<iframe src="http://localhost:3000/d-solo/adkcss5/sensor-data?orgId=1&from=1770044592410&to=1770045492410&timezone=browser&panelId=1&__feature.dashboardSceneSolo=true" width="800" height="450" frameborder="0"></iframe>
-<iframe
-        src="http://localhost:3000/d-solo/adkcss5/sensor-data?orgId=1&from=now-15m&to=now&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true&refresh=5s"
-        width="800"
-        height="450"
-        frameborder="0">
-</iframe>
-</body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Sensor Data</title>
+		<script
+			type="module"
+			src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+		<style>
+			.bg {
+				background-color: grey;
+				/* background-color: black; */
+				width: 100vw;
+				height: 50vh;
+			}
+			.wrap {
+				display: flex;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrap">
+			<div class="dashboards">
+				<iframe
+					src="http://localhost:3000/d-solo/adkcss5/sensor-data?orgId=1&from=1770044592410&to=1770045492410&timezone=browser&panelId=1&__feature.dashboardSceneSolo=true"
+					width="800"
+					height="450"
+					frameborder="0"></iframe>
+				<iframe
+					src="http://localhost:3000/d-solo/adkcss5/sensor-data?orgId=1&from=now-15m&to=now&timezone=browser&panelId=panel-1&__feature.dashboardSceneSolo=true&refresh=5s"
+					width="800"
+					height="450"
+					frameborder="0">
+				</iframe>
+			</div>
+			<div class="bg">
+				<div class="model">
+					<model-viewer
+						src="./ModelOhneStairs.glb"
+						auto-rotate
+						shadow-intensity="1"
+						environment-image="neutral"
+						exposure="1"
+						style="width: 100%; height: 500px">
+					</model-viewer>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>
