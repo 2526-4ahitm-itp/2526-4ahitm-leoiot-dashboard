@@ -1,6 +1,6 @@
 services:
   mosquitto:
-    image: eclipse-mosquitto:latest
+    image: eclipse-mosquitto:2.1.0-alpine
     ports:
       - "1883:1883"^
     volumes:
@@ -10,7 +10,6 @@ services:
       - leoiotq
 
   influxdb:
-    container_name: influxdb
     image: influxdb:2.7
     ports:
       - "8086:8086"
@@ -44,10 +43,11 @@ services:
       - influxdb
     networks:
       - leoiot
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-
+    environment:
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_CONTENT_SECURITY_POLICY=false
 
   quarkus-app:
     build:
