@@ -26,7 +26,7 @@ services:
       - leoiot
 
   telegraf:
-    image: telegraf:latest
+    image: telegraf:1.35
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
     depends_on:
@@ -36,7 +36,7 @@ services:
       - leoiot
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.3
     ports:
       - "3000:3000"
     depends_on:
