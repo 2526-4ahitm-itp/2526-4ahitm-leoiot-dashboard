@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>3D Building Explorer</title>
+		<style>
+			body {
+				margin: 0;
+				overflow: hidden;
+				background: #111;
+				font-family: sans-serif;
+			}
+			#ui {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				color: white;
+				background: rgba(0, 0, 0, 0.7);
+				padding: 15px;
+				border-radius: 8px;
+				pointer-events: none;
+			}
+			#controls {
+				position: absolute;
+				bottom: 20px;
+				left: 20px;
+			}
+			button {
+				padding: 10px 20px;
+				cursor: pointer;
+				background: #007bff;
+				color: white;
+				border: none;
+				border-radius: 5px;
+			}
+			button:hover {
+				background: #0056b3;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="ui">
+			<h2>Building Dashboard</h2>
+
+			<div id="status">Select a floor...</div>
+		</div>
+
+		<div id="controls">
+			<button onclick="window.resetBuilding()">Collapse Building</button>
+			<button onclick="window.explodeBuilding()">Explode Layers</button>
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+					"three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+				}
+			}
+		</script>
+
+		<script type="module" src="logic.js" defer></script>
+		<script src="click.js" defer></script>
+
+		<div
+			style="
+				position: fixed;
+				top: 20px;
+				left: 20px;
+				z-index: 999;
+				display: flex;
+				gap: 10px;
+			">
+			<button onclick="showOnly('ModelBasement.gltf')">Basement</button>
+			<button onclick="showOnly('ModelE.gltf')">Ground</button>
+			<button onclick="showOnly('Model1F.gltf')">Floor 1</button>
+			<button onclick="showOnly('Model2F.gltf')">Floor 2</button>
+			<button onclick="resetBuilding()" style="background: red; color: white">
+				RESET ALL
+			</button>
+		</div>
+	</body>
+</html>
