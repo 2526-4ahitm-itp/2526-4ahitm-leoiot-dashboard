@@ -40,16 +40,7 @@
 		</style>
 	</head>
 	<body>
-		<div id="ui">
-			<h2>Building Dashboard</h2>
 
-			<div id="status">Select a floor...</div>
-		</div>
-
-		<div id="controls">
-			<button onclick="window.resetBuilding()">Collapse Building</button>
-			<button onclick="window.explodeBuilding()">Explode Layers</button>
-		</div>
 
 		<script type="importmap">
 			{
@@ -63,22 +54,70 @@
 		<script type="module" src="logic.js" defer></script>
 		<script src="click.js" defer></script>
 
-		<div
-			style="
+		<style>
+			.model-controls {
 				position: fixed;
-				top: 20px;
-				left: 20px;
+				bottom: 30px;
+				left: 50%;
+				transform: translateX(-50%);
 				z-index: 999;
 				display: flex;
-				gap: 10px;
-			">
-			<button onclick="showOnly('ModelBasement.gltf')">Basement</button>
-			<button onclick="showOnly('ModelE.gltf')">Ground</button>
-			<button onclick="showOnly('Model1F.gltf')">Floor 1</button>
-			<button onclick="showOnly('Model2F.gltf')">Floor 2</button>
-			<button onclick="resetBuilding()" style="background: red; color: white">
-				RESET ALL
-			</button>
+				gap: 12px;
+				background: rgba(255, 255, 255, 0.05);
+				padding: 10px 20px;
+				border-radius: 50px;
+				backdrop-filter: blur(10px);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+			}
+
+			.model-controls button {
+				background: rgba(255, 255, 255, 0.1);
+				color: white;
+				border: none;
+				padding: 10px 18px;
+				border-radius: 25px;
+				cursor: pointer;
+				font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+				font-size: 13px;
+				font-weight: 500;
+				transition: all 0.2s ease;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+			}
+
+			.model-controls button:hover {
+				background: rgba(255, 255, 255, 0.2);
+				transform: translateY(-2px);
+			}
+
+			.model-controls button:active {
+				transform: translateY(0);
+			}
+
+			.model-controls button.reset-btn {
+				background: #e74c3c;
+				color: white;
+			}
+
+			.model-controls button.reset-btn:hover {
+				background: #ff5e4d;
+				box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
+			}
+			.model-controls button.active {
+				background: rgba(255, 255, 255, 0.4); /* Brighter background */
+				box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+				color: #fff;
+				border: 1px solid rgba(255, 255, 255, 0.5);
+			}
+		</style>
+
+		<div class="model-controls" id="button-container">
+			<button onclick="handleButtonClick(this, 'ModelBasement.gltf')">Basement</button>
+			<button onclick="handleButtonClick(this, 'ModelE.gltf')">Ground</button>
+			<button onclick="handleButtonClick(this, 'Model1F.gltf')">Floor 1</button>
+			<button onclick="handleButtonClick(this, 'Model2F.gltf')">Floor 2</button>
+			<button onclick="handleButtonClick(this, 'ModelFull.gltf')" class="reset-btn active">Reset View</button>
 		</div>
 	</body>
 </html>
