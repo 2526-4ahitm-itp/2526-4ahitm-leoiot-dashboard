@@ -25,6 +25,7 @@ let buildingParts = [];
 const modelIds = ['ModelBasement.gltf', 'ModelE.gltf', 'Model1F.gltf', 'Model2F.gltf']
 const modelCache = {};
 let currentModel = null;
+let clickedObject = null;
 
 
 const loader = new GLTFLoader();
@@ -32,6 +33,12 @@ const loader = new GLTFLoader();
 modelIds.forEach(id => {
     loader.load(`./${id}`, (gltf) => {
         modelCache[id] = gltf.scene;
+
+        modelCache[id].traverse((child) => {
+            if (child.isMesh) {
+                child.material.color.set(0xffffff);
+            }
+        });
 
         // Set the default model ONLY once it's actually finished loading
         if (id === 'ModelE.gltf') {
@@ -88,15 +95,24 @@ window.addEventListener('click', (event) => {
     const intersects = raycaster.intersectObjects(scene.children, true);
 
     if (intersects.length > 0) {
-        const clickedObject = intersects[0].object;
+        const currentClickedObject = intersects[0].object;
 
-        if (clickedObject.name.startsWith('E') ||
-            clickedObject.name.startsWith('U') ||
-            clickedObject.name.startsWith('1') ||
-            clickedObject.name.startsWith('2')) {
+        if (currentClickedObject.name.startsWith('E') ||
+            currentClickedObject.name.startsWith('U') ||
+            currentClickedObject.name.startsWith('1') ||
+            currentClickedObject.name.startsWith('2')) {
+
+            if (clickedObject != null) {
+                clickedObject.material.color.set(0xffffff)
+            }
+
+            clickedObject = currentClickedObject;
+
             console.log('You clicked on: ' + clickedObject.name);
 
+
             // Example: Change color of the clicked classroom
+
             clickedObject.material.color.set(0xff0000);
         }
 
