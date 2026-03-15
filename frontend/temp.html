@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>3D Building Explorer</title>
+		<style>
+			body {
+				margin: 0;
+				overflow: hidden;
+				background: #111;
+				font-family: sans-serif;
+			}
+			#ui {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				color: white;
+				background: rgba(0, 0, 0, 0.7);
+				padding: 15px;
+				border-radius: 8px;
+				pointer-events: none;
+			}
+			#controls {
+				position: absolute;
+				bottom: 20px;
+				left: 20px;
+			}
+			button {
+				padding: 10px 20px;
+				cursor: pointer;
+				background: #007bff;
+				color: white;
+				border: none;
+				border-radius: 5px;
+			}
+			button:hover {
+				background: #0056b3;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="ui">
+			<h2>Building Dashboard</h2>
+			<div id="status">Select a floor...</div>
+		</div>
+
+		<div id="controls">
+			<button onclick="window.resetBuilding()">Collapse Building</button>
+			<button onclick="window.explodeBuilding()">Explode Layers</button>
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+					"three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+			import * as THREE from "three";
+			import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+			import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+			const scene = new THREE.Scene();
+			scene.background = new THREE.Color(0x222222);
+
+			const camera = new THREE.PerspectiveCamera(
+				75,
+				window.innerWidth / window.innerHeight,
+				0.1,
+				20000,
+			);
+			camera.position.set(1000, 1000, 1000); // Start further out based on your coordinates
+
+			const renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+
+			const controls = new OrbitControls(camera, renderer.domElement);
+			scene.add(new THREE.AmbientLight(0xffffff, 2.0));
+
+			let floorLayers = {
+				basement: [],
+				ground: [],
+				first: [],
+				second: [],
+				ceiling: [],
+			};
+
+			const loader = new GLTFLoader();
+			loader.load("./building.glb", (gltf) => {
+				scene.add(gltf.scene);
+
+				gltf.scene.traverse((child) => {
+					const name = child.name.toLowerCase();
+					// Crucial: Capture original world position for reset
+					child.userData.originalPosition = child.position.clone();
+
+					if (name.includes("u")) floorLayers["basement"].push(child);
+					else if (name.includes("e")) floorLayers["ground"].push(child);
+					else if (name.includes("1")) floorLayers["first"].push(child);
+					else if (name.includes("2")) floorLayers["second"].push(child);
+					else if (name.includes("ceiling")) floorLayers["ceiling"].push(child);
+				});
+				console.log("Mapping Successful. Objects found:", floorLayers);
+			});
+
+			window.showOnly = (target) => {
+				const key = target.replace("_floor", "");
+				let targetCenter = new THREE.Vector3();
+				let count = 0;
+
+				Object.keys(floorLayers).forEach((fKey) => {
+					const isMatch = fKey === key;
+					floorLayers[fKey].forEach((obj) => {
+						obj.visible = isMatch;
+						if (isMatch && obj.isMesh) {
+							// Calculate average center of the meshes manually
+							const worldPos = new THREE.Vector3();
+							obj.getWorldPosition(worldPos);
+							targetCenter.add(worldPos);
+							count++;
+						}
+					});
+				});
+
+				if (count > 0) {
+					targetCenter.divideScalar(count);
+					console.log(`Manually Centering on:`, targetCenter);
+
+					// Move camera to a fixed distance from the found center
+					camera.position.set(
+						targetCenter.x + 800,
+						targetCenter.y + 800,
+						targetCenter.z + 800,
+					);
+					controls.target.copy(targetCenter);
+					controls.update();
+				}
+			};
+
+			window.resetBuilding = () => {
+				Object.keys(floorLayers).forEach((key) => {
+					floorLayers[key].forEach((obj) => {
+						obj.visible = true;
+						// Restore original positions from userData
+						if (obj.userData.originalPosition) {
+							obj.position.copy(obj.userData.originalPosition);
+						}
+					});
+				});
+				camera.position.set(1000, 1000, 1000);
+				controls.target.set(0, 0, 0);
+				controls.update();
+			};
+
+			function animate() {
+				requestAnimationFrame(animate);
+				renderer.render(scene, camera);
+			}
+			animate();
+		</script>
+
+		<div id="controls">
+			<button onclick="showOnly('second')">2nd Floor Only</button>
+			<button onclick="showOnly('first')">1st Floor Only</button>
+			<button onclick="showOnly('ground')">Ground Only</button>
+			<button onclick="showOnly('basement')">Basement Only</button>
+			<hr />
+			<button style="background: #dc3545" onclick="resetBuilding()">
+				RESET ALL
+			</button>
+		</div>
+	</body>
+</html>

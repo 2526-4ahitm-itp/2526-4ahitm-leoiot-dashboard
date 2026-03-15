@@ -82,7 +82,106 @@ animate();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-window.addEventListener('click', (event) => {
+// InfluxDB configuration
+const INFLUXDB_URL = 'http://localhost:8086';
+const INFLUXDB_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==';
+const INFLUXDB_ORG = 'leoiot';
+const INFLUXDB_BUCKET = 'server_data';
+
+// Function to query room temperature from InfluxDB
+async function getRoomTemperature(roomName) {
+    const query = `from(bucket: "${INFLUXDB_BUCKET}")
+  |> range(start: -10m)
+  |> filter(fn: (r) => r._measurement == "room_temperature" and r.room == "${roomName}")
+  |> last()`;
+
+    try {
+        const response = await fetch(`${INFLUXDB_URL}/api/v2/query?org=${INFLUXDB_ORG}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Token ${INFLUXDB_TOKEN}`,
+                'Content-Type': 'application/vnd.flux',
+                'Accept': 'application/csv'
+            },
+            body: query
+        });
+
+        if (!response.ok) {
+            throw new Error(`InfluxDB query failed: ${response.status}`);
+        }
+
+        const csvData = await response.text();
+        const lines = csvData.trim().split('\n');
+        
+        // CSV format: header line, then data lines
+        // We want the last data line with the temperature value
+        if (lines.length > 1) {
+            const dataLine = lines[lines.length - 1];
+            const columns = dataLine.split(',');
+            
+            // Find the _value column (temperature)
+            const headerLine = lines[0];
+            const headers = headerLine.split(',');
+            const valueIndex = headers.indexOf('_value');
+            
+            if (valueIndex !== -1 && columns[valueIndex]) {
+                return parseFloat(columns[valueIndex]);
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error fetching temperature:', error);
+        return null;
+    }
+}
+
+function normalizeRoomName(objectName) {
+    if (!objectName) return objectName;
+
+    let name = String(objectName).trim();
+
+    // Common pattern in glTF exports: "134_1", "E07_2", etc.
+    if (name.includes('_')) {
+        name = name.split('_')[0];
+    }
+
+    // Some basement meshes appear as "U741" (likely "U74" + part "1")
+    if (/^U\d{3}$/.test(name)) {
+        name = `U${name.substring(1, 3)}`;
+    }
+
+    return name;
+}
+
+// Function to display temperature info
+function displayTemperature(objectName, roomTag, temperature) {
+    let infoDiv = document.getElementById('room-info');
+    
+    if (!infoDiv) {
+        infoDiv = document.createElement('div');
+        infoDiv.id = 'room-info';
+        infoDiv.style.position = 'fixed';
+        infoDiv.style.top = '20px';
+        infoDiv.style.right = '20px';
+        infoDiv.style.padding = '15px';
+        infoDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        infoDiv.style.color = 'white';
+        infoDiv.style.borderRadius = '8px';
+        infoDiv.style.fontFamily = 'Arial, sans-serif';
+        infoDiv.style.fontSize = '16px';
+        infoDiv.style.zIndex = '1000';
+        document.body.appendChild(infoDiv);
+    }
+    
+    if (temperature !== null) {
+        infoDiv.innerHTML = `<strong>Room:</strong> ${objectName}<br><strong>Influx tag:</strong> ${roomTag}<br><strong>Temperature:</strong> ${temperature.toFixed(1)}°C`;
+    } else {
+        infoDiv.innerHTML = `<strong>Room:</strong> ${objectName}<br><strong>Influx tag:</strong> ${roomTag}<br><strong>Temperature:</strong> No data available`;
+    }
+}
+
+window.addEventListener('click', async (event) => {
     // 1. Calculate mouse position in normalized device coordinates (-1 to +1)
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -110,10 +209,17 @@ window.addEventListener('click', (event) => {
 
             console.log('You clicked on: ' + clickedObject.name);
 
-
-            // Example: Change color of the clicked classroom
-
+            // Change color of the clicked classroom
             clickedObject.material.color.set(0xff0000);
+            
+            // Fetch and display temperature data
+            const objectName = clickedObject.name;
+            const roomTag = normalizeRoomName(objectName);
+            let temperature = await getRoomTemperature(objectName);
+            if (temperature === null && roomTag !== objectName) {
+                temperature = await getRoomTemperature(roomTag);
+            }
+            displayTemperature(objectName, roomTag, temperature);
         }
 
 

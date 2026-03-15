@@ -51,7 +51,7 @@ services:
 
   quarkus-app:
     build:
-      context: ./backend/sinus-generator
+      context: ./backend/sensor-data-generator
       dockerfile: src/main/docker/Dockerfile
     environment:
       - MQTT_HOST=mosquitto
