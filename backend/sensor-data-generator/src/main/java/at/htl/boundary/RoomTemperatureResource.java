@@ -33,7 +33,7 @@ public class RoomTemperatureResource {
     @OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 200)
     Emitter<String> emitter;
 
-    @Scheduled(every = "5m", delay = 5, delayUnit = TimeUnit.SECONDS)
+    @Scheduled(every = "10s", delay = 5, delayUnit = TimeUnit.SECONDS)
     void publish() {
         try {
             Map<String, Double> temps = roomTemperatureService.getAllRoomTemperatures();
