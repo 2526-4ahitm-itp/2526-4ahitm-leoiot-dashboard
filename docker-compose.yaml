@@ -73,6 +73,19 @@ services:
     networks:
       - leoiot
 
+  fake-sensors:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./fake-sensors:/app
+    command: sh -c "npm install && node index.js"
+    environment:
+      - MQTT_HOST=mosquitto
+    depends_on:
+      - mosquitto
+    networks:
+      - leoiot
+
 networks:
   leoiot:
     driver: bridge
