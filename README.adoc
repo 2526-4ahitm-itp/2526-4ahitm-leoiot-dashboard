@@ -28,20 +28,6 @@ docker compose up -d
 | *InfluxDB* | http://localhost:8086 | Time-series database UI
 |===
 
-== Architecture
-
-----
-+-------------+     +----------+     +-------------+
-|   Sensors   |---->|  MQTT    |---->|  Telegraf   |
-| (Real/Fake) |     | Mosquitto|     |             |
-+-------------+     +----------+     +------+------+
-                                      |
-                                      v
-+-------------+     +----------+     +-------------+
-|  Frontend   |<----|  Quarkus |<----|  InfluxDB   |
-|  Dashboard  |     |  Backend |     |  Database   |
-+-------------+     +----------+     +-------------+
-----
 
 == Components
 
