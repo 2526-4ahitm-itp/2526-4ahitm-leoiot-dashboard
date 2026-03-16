@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Sensor Dashboard</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<div id="loading">
+			<div class="loading-text">Loading Dashboard</div>
+			<div class="loading-bar-container">
+				<div class="loading-bar-progress"></div>
+			</div>
+		</div>
+
+		<header class="dashboard-header">
+			<h1>🏢 Building Sensor Dashboard</h1>
+			<div class="time-range-selector">
+				<button onclick="setTimeRange('1h')" class="time-btn">1h</button>
+				<button onclick="setTimeRange('6h')" class="time-btn active">6h</button>
+				<button onclick="setTimeRange('24h')" class="time-btn">24h</button>
+				<button onclick="setTimeRange('7d')" class="time-btn">7d</button>
+			</div>
+		</header>
+
+		<main class="dashboard-content">
+			<!-- Sensor Selector -->
+			<section class="sensor-selector-section">
+				<div class="sensor-selector-card">
+					<h2>Select Sensor</h2>
+					<div class="sensor-search-container">
+						<input 
+							type="text" 
+							id="sensorSearch" 
+							class="sensor-search" 
+							placeholder="🔍 Search room (e.g., 105, E10, U07)..."
+							oninput="filterSensors()"
+						/>
+					</div>
+					<div class="sensor-filter-tabs">
+						<button class="filter-tab active" onclick="filterByFloor('all')" data-floor="all">All</button>
+						<button class="filter-tab" onclick="filterByFloor('1')" data-floor="1">Floor 1</button>
+						<button class="filter-tab" onclick="filterByFloor('2')" data-floor="2">Floor 2</button>
+						<button class="filter-tab" onclick="filterByFloor('E')" data-floor="E">Floor E</button>
+						<button class="filter-tab" onclick="filterByFloor('U')" data-floor="U">Basement</button>
+					</div>
+					<div class="sensor-buttons-scroll">
+						<div class="sensor-buttons" id="sensorButtons">
+							<button class="sensor-btn active" onclick="selectSensor('all')" data-sensor="all">
+								📊 All Rooms (Average)
+							</button>
+							<!-- Dynamically populated -->
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Current Value Cards -->
+			<section class="summary-cards">
+				<div class="card summary-card">
+					<div class="card-icon">🌡️</div>
+					<div class="card-content">
+						<h3>Temperature</h3>
+						<div class="value" id="currentTemp">--°C</div>
+						<div class="sensor-label" id="tempSensorLabel">All Rooms</div>
+					</div>
+				</div>
+				<div class="card summary-card">
+					<div class="card-icon">💨</div>
+					<div class="card-content">
+						<h3>CO₂ Level</h3>
+						<div class="value" id="currentCo2">-- ppm</div>
+						<div class="sensor-label" id="co2SensorLabel">All Rooms</div>
+					</div>
+				</div>
+				<div class="card summary-card">
+					<div class="card-icon">📈</div>
+					<div class="card-content">
+						<h3>24h Average</h3>
+						<div class="value" id="avgTemp24h">--°C</div>
+						<div class="sensor-label">Temperature</div>
+					</div>
+				</div>
+				<div class="card summary-card">
+					<div class="card-icon">📊</div>
+					<div class="card-content">
+						<h3>Active Sensors</h3>
+						<div class="value" id="activeSensors">--</div>
+						<div class="sensor-label">Online</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Main Charts -->
+			<section class="charts-grid">
+				<div class="chart-card full-width">
+					<div class="chart-header">
+						<h2>Temperature History</h2>
+						<span class="chart-subtitle" id="tempChartSubtitle">All Rooms</span>
+					</div>
+					<div class="chart-container">
+						<canvas id="tempChart"></canvas>
+					</div>
+					<div class="chart-placeholder" id="tempPlaceholder">
+						<div class="placeholder-icon">📊</div>
+						<div class="placeholder-text">Select a specific room to view its temperature history</div>
+					</div>
+				</div>
+
+				<div class="chart-card full-width">
+					<div class="chart-header">
+						<h2>CO₂ History</h2>
+						<span class="chart-subtitle" id="co2ChartSubtitle">All Rooms</span>
+					</div>
+					<div class="chart-container">
+						<canvas id="co2Chart"></canvas>
+					</div>
+					<div class="chart-placeholder" id="co2Placeholder">
+						<div class="placeholder-icon">💨</div>
+						<div class="placeholder-text">Select a specific room to view its CO₂ history</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Room Details Table -->
+			<section class="table-card">
+				<div class="chart-header">
+					<h2>All Sensors Overview</h2>
+					<span class="chart-subtitle">Latest Readings</span>
+				</div>
+				<div class="table-container">
+					<table id="roomTable">
+						<thead>
+							<tr>
+								<th>Room</th>
+								<th>Temperature</th>
+								<th>CO₂</th>
+								<th>Last Update</th>
+								<th>Status</th>
+							</tr>
+						</thead>
+						<tbody id="roomTableBody">
+							<!-- Populated by JS -->
+						</tbody>
+					</table>
+				</div>
+				<div class="table-pagination">
+					<button id="showMoreBtn" class="show-more-btn" onclick="showMoreRooms()">
+						Show More <span id="showMoreCount">(10/117)</span>
+					</button>
+				</div>
+			</section>
+		</main>
+
+		<script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+		<script src="dashboard.js" type="module"></script>
+	</body>
+</html>
