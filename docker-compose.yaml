@@ -60,6 +60,19 @@ services:
     networks:
       - leoiot
 
+  dashboard-v2:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./dashboard-v2:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - influxdb
+    networks:
+      - leoiot
+
 networks:
   leoiot:
     driver: bridge
