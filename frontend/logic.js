@@ -133,6 +133,11 @@ Promise.all(loadPromises).then(() => {
 window.showOnly = (id)=>{
     if(!modelCache[id]) return;
     if(currentModel) scene.remove(currentModel);
+    clearHeatmap();
+    isHeatmapActive = false;
+    document.getElementById('heatMapButton').innerHTML = 'show Heatmap'
+
+
     if(id === 'ModelFull.gltf') {
         camera.position.set(100, 80, 100);
         camera.lookAt(0, 0, 0);
@@ -180,7 +185,28 @@ window.addEventListener('click', async (event) => {
                 clickedObject.material = clickedObject.material.clone();
 
                 // 3. Now change the color safely
-                clickedObject.material.color.set(0xff0000);
+
+                currentModel.traverse(child => {
+                    if (child.isMesh && (
+                        child.name.startsWith('E') ||
+                        child.name.startsWith('U') ||
+                        child.name.startsWith('1') ||
+                        child.name.startsWith('2')
+                    )) {
+                        if (child !== clickedObject) {
+                            child.material = baseMaterial;
+
+                        }
+                        // Revert to the shared baseMaterial (this removes the unique colors)
+                    }
+                });
+
+
+                isHeatmapActive = false;
+                document.getElementById('heatMapButton').innerHTML = 'show Heatmap'
+
+
+                clickedObject.material.color.set(0xf1c40f);
             }
 
             // Fetch and display temperature data
@@ -190,6 +216,7 @@ window.addEventListener('click', async (event) => {
             if (temperature === null && roomTag !== objectName) {
                 temperature = await getRoomTemperature(roomTag);
             }
+
             displayTemperature(objectName, roomTag, temperature);
 
             console.log('You clicked on: ' + clickedObject.name);
@@ -320,4 +347,103 @@ function displayTemperature(objectName, roomTag, temperature) {
     }
 }
 
+/**
+ * Maps a temperature value to a color and applies it to the room mesh.
+ * @param {THREE.Mesh} mesh - The room mesh object
+ * @param {number} temp - Temperature in Celsius
+ */
+function applyHeatmapColor(mesh, temp) {
+    if (!mesh || temp === null) return;
 
+    // Define range (e.g., 15°C is blue, 25°C is red)
+    const minTemp = 20;
+    const maxTemp = 25;
+
+    // Normalize temperature to a 0-1 range
+    const t = Math.max(0, Math.min(1, (temp - minTemp) / (maxTemp - minTemp)));
+
+    // Create a color: Blue (0,0,1) to Red (1,0,0)
+    // You can use lerp for a smoother transition
+    const colorHot = new THREE.Color(0xd68d8d);  // Muted Coral/Red
+    const colorCold = new THREE.Color(0x8da1d6);
+    const finalColor = colorCold.clone().lerp(colorHot, t);
+
+    // Ensure material is unique so we don't color the whole building
+    mesh.material = mesh.material.clone();
+    mesh.material.color.copy(finalColor);
+
+    // Optional: make rooms slightly more opaque when heatmapped
+    mesh.material.opacity = 0.8;
+}
+
+let isHeatmapActive = false; // Track the state globally
+
+window.updateBuildingHeatmap = async () => {
+    if (!currentModel) return;
+
+
+    const btn = document.getElementById('heatMapButton')
+
+    // TOGGLE OFF: If it's already on, clear it and stop
+    if (isHeatmapActive) {
+
+        btn.innerHTML = 'show Heatmap'
+        clearHeatmap();
+        isHeatmapActive = false;
+
+        return;
+    } else {
+        let infoDiv = document.getElementById('room-info');
+        if (infoDiv) {
+            infoDiv.remove()
+            console.log(infoDiv)
+            clickedObject = null;
+        }
+        btn.innerHTML = 'clear Heatmap'
+    }
+
+    // TOGGLE ON: Proceed with fetching data
+    isHeatmapActive = true;
+    console.log("Activating Heatmap...");
+
+    const roomMeshes = [];
+    currentModel.traverse(child => {
+        if (child.isMesh && (
+            child.name.startsWith('E') ||
+            child.name.startsWith('U') ||
+            child.name.startsWith('1') ||
+            child.name.startsWith('2')
+        )) {
+            roomMeshes.push(child);
+        }
+    });
+
+    // Use Promise.all for faster parallel loading so the user doesn't wait
+    const heatmapPromises = roomMeshes.map(async (mesh) => {
+        const roomTag = normalizeRoomName(mesh.name);
+        const temp = await getRoomTemperature(roomTag);
+
+        // Only apply if the user hasn't toggled it off while loading
+        if (temp !== null && isHeatmapActive) {
+            applyHeatmapColor(mesh, temp);
+        }
+    });
+
+    await Promise.all(heatmapPromises);
+};
+function clearHeatmap() {
+    if (!currentModel) return;
+
+    currentModel.traverse(child => {
+        if (child.isMesh && (
+            child.name.startsWith('E') ||
+            child.name.startsWith('U') ||
+            child.name.startsWith('1') ||
+            child.name.startsWith('2')
+        )) {
+            // Revert to the shared baseMaterial (this removes the unique colors)
+            child.material = baseMaterial;
+        }
+    });
+    console.log("Heatmap cleared.");
+}
