@@ -278,7 +278,11 @@ window.addEventListener('click', async (event) => {
 
             const roomTag = normalizeRoomName(obj.name);
             const temp = await getRoomTemperature(roomTag);
-            displayTemperature(obj.name, roomTag, temp);
+            let co2 = null;
+            if (roomTag === '105') {
+                co2 = await getRoomCO2();
+            }
+            displayRoomInfo(obj.name, roomTag, temp, co2);
         }
     }
 });
@@ -292,8 +296,43 @@ const INFLUXDB_BUCKET = 'server_data';
 
 async function getRoomTemperature(roomName) {
     const query = `from(bucket: "${INFLUXDB_BUCKET}")
-      |> range(start: -10m)
+      |> range(start: -24h)
       |> filter(fn: (r) => r._measurement == "room_temperature" and r.room == "${roomName}")
+      |> filter(fn: (r) => r._field == "temperature")
+      |> last()`;
+
+    try {
+        const response = await fetch(`${INFLUXDB_URL}/api/v2/query?org=${INFLUXDB_ORG}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Token ${INFLUXDB_TOKEN}`,
+                'Content-Type': 'application/vnd.flux',
+                'Accept': 'application/csv'
+            },
+            body: query
+        });
+        if (!response.ok) return null;
+        const csvData = await response.text();
+        const lines = csvData.trim().split('\n');
+        if (lines.length > 1) {
+            const dataLine = lines[lines.length - 1];
+            const columns = dataLine.split(',');
+            const headers = lines[0].split(',');
+            const valueIndex = headers.indexOf('_value');
+            if (valueIndex !== -1 && columns[valueIndex]) return parseFloat(columns[valueIndex]);
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
+}
+
+async function getRoomCO2() {
+    const topic = "nili3/sensor/nili3_co2/state";
+    const query = `from(bucket: "${INFLUXDB_BUCKET}")
+      |> range(start: -5s)
+      |> filter(fn: (r) => r._measurement == "mqtt_consumer" and r.topic == "${topic}")
+      |> filter(fn: (r) => r._field == "value")
       |> last()`;
 
     try {
@@ -329,7 +368,7 @@ function normalizeRoomName(objectName) {
     return name;
 }
 
-function displayTemperature(objectName, roomTag, temperature) {
+function displayRoomInfo(objectName, roomTag, temperature, co2) {
     let infoDiv = document.getElementById('room-info');
     if (!infoDiv) {
         infoDiv = document.createElement('div');
@@ -347,7 +386,15 @@ function displayTemperature(objectName, roomTag, temperature) {
         document.body.appendChild(infoDiv);
     }
     const tempText = temperature !== null ? `${temperature.toFixed(1)}°C` : 'No data';
-    infoDiv.innerHTML = `<strong>Room:</strong> ${objectName}<br><strong>Tag:</strong> ${roomTag}<br><strong>Temp:</strong> ${tempText}`;
+    let content = `<strong>Room:</strong> ${objectName}<br><strong>Tag:</strong> ${roomTag}<br><strong>Temp:</strong> ${tempText}`;
+    
+    if (co2 !== null) {
+        content += `<br><strong>CO2:</strong> ${co2.toFixed(0)} ppm`;
+    } else if (roomTag === '105') {
+        content += `<br><strong>CO2:</strong> No data`;
+    }
+    
+    infoDiv.innerHTML = content;
 }
 
 /** * 9. RENDER LOOP
