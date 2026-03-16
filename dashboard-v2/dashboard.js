@@ -514,17 +514,38 @@ function updateRoomTable(roomData) {
 	tbody.innerHTML = '';
 	visibleRooms.forEach(room => {
 		const row = document.createElement('tr');
-		const tempStatus = room.temperature > 24 ? '⚠️ Warm' : room.temperature < 19 ? '❄️ Cold' : '✅ OK';
+		
+		// Temperature status
+		const tempValue = room.temperature !== null ? room.temperature.toFixed(1) + '°C' : '--';
 		const tempClass = room.temperature > 24 ? 'status-warning' : room.temperature < 19 ? 'status-cold' : 'status-ok';
 		
-		const co2Status = room.co2 > 1000 ? '⚠️ High' : room.co2 > 800 ? '⚡ Medium' : '✅ Good';
+		// CO2 status
+		const co2Value = room.co2 !== null ? room.co2.toFixed(0) + ' ppm' : '--';
 		const co2Class = room.co2 > 1000 ? 'status-warning' : room.co2 > 800 ? 'status-medium' : 'status-ok';
+		
+		// Combined status for STATUS column
+		const tempBad = room.temperature > 24 || room.temperature < 19;
+		const co2Bad = room.co2 > 1000;
+		const co2Medium = room.co2 > 800 && room.co2 <= 1000;
+		
+		let statusText, statusClass;
+		if (tempBad || co2Bad) {
+			statusText = '⚠️ Alert';
+			statusClass = 'status-warning';
+		} else if (co2Medium) {
+			statusText = '⚡ Medium';
+			statusClass = 'status-medium';
+		} else {
+			statusText = '✅ OK';
+			statusClass = 'status-ok';
+		}
 
 		row.innerHTML = `
 			<td><strong>${room.room}</strong></td>
-			<td class="${tempClass}">${room.temperature !== null ? room.temperature.toFixed(1) + '°C' : '--'} ${tempStatus}</td>
-			<td class="${co2Class}">${room.co2 !== null ? room.co2.toFixed(0) + ' ppm' : '--'} ${co2Status}</td>
+			<td class="${tempClass}">${tempValue}</td>
+			<td class="${co2Class}">${co2Value}</td>
 			<td>${formatRelativeTime(room.time)}</td>
+			<td class="${statusClass}">${statusText}</td>
 		`;
 		tbody.appendChild(row);
 	});
