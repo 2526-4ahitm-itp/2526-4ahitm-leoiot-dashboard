@@ -133,9 +133,8 @@ Promise.all(loadPromises).then(() => {
 window.showOnly = (id)=>{
     if(!modelCache[id]) return;
     if(currentModel) scene.remove(currentModel);
-    clearHeatmap();
-    isHeatmapActive = false;
-    document.getElementById('heatMapButton').innerHTML = 'show Heatmap'
+
+
 
 
     if(id === 'ModelFull.gltf') {
@@ -144,6 +143,14 @@ window.showOnly = (id)=>{
     }
     currentModel = modelCache[id];
     scene.add(currentModel);
+
+    if (isHeatmapActive) {
+        isHeatmapActive = false;
+        updateBuildingHeatmap()
+    } else {
+        isHeatmapActive = true;
+        updateBuildingHeatmap()
+    }
 };
 
 // Handle window resizing
