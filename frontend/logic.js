@@ -1,272 +1,300 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-// Scene
+/** * 1. SCENE SETUP
+ **/
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x222428); // Matched the dark grey from the image
+scene.background = new THREE.Color(0x3a3d42); // Lightened architectural grey
 
-// Camera
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
-camera.position.set(100,80, 100);
-camera.lookAt(0, 0, 0);
+camera.position.set(100, 80, 100);
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
 document.body.appendChild(renderer.domElement);
 
-// Controls
+// Label Renderer (for 3D Text)
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0px';
+labelRenderer.domElement.style.pointerEvents = 'none'; // Allows clicking through labels
+document.body.appendChild(labelRenderer.domElement);
+
 const controls = new OrbitControls(camera, renderer.domElement);
 
-// Lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
+/** * 2. LIGHTING
+ **/
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
 scene.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
 directionalLight.position.set(200, 300, 100);
 directionalLight.castShadow = true;
+directionalLight.shadow.bias = -0.0005;
 directionalLight.shadow.mapSize.width = 2048;
 directionalLight.shadow.mapSize.height = 2048;
-directionalLight.shadow.camera.near = 1;
-directionalLight.shadow.camera.far = 2000;
-directionalLight.shadow.camera.left = -500;
-directionalLight.shadow.camera.right = 500;
-directionalLight.shadow.camera.top = 500;
-directionalLight.shadow.camera.bottom = -500;
-directionalLight.shadow.bias = -0.0005;
-directionalLight.shadow.radius = 2;
 scene.add(directionalLight);
 
-const fillLight = new THREE.PointLight(0xffffff, 0.2);
-fillLight.position.set(-200, 100, -200);
-scene.add(fillLight);
-
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2; // Adjust this number to globally brighten/darken everything
-
-
-const metalMaterial = new THREE.MeshStandardMaterial({
-    color: 0xbcbcbc,      // A solid medium-light grey (not white)
-    metalness: 0.35,      // Provides a subtle metallic sheen
-    roughness: 0.4,       // Softens reflections so it looks like "brushed" metal
-    envMapIntensity: 1.0  // Helps it react to your scene lights better
-});
-
-// Materials
+/** * 3. MATERIALS
+ **/
 const baseMaterial = new THREE.MeshStandardMaterial({
-    color: 0xdddddd, // Flat light grey for the clay look
+    color: 0xdddddd,
     roughness: 0.9,
     metalness: 0.0
 });
 
-// Restored original glass material
-const glassMaterial = new THREE.MeshStandardMaterial({
-    color: 0x88aabb,      // Light grey-blue tint (looks more like glass)
-    roughness: 0.1,       // Low roughness for sharp, clean reflections
-    metalness: 0.5,       // Adds a bit of "sheen" to the surface
-    transparent: true,
-    opacity: 0.3,         // More transparent, but the color/reflections keep it visible
+const metalMaterial = new THREE.MeshStandardMaterial({
+    color: 0xbcbcbc,
+    metalness: 0.35,
+    roughness: 0.4
 });
 
-// Load models
-const modelIds = ['ModelBasement.gltf','ModelE.gltf','Model1F.gltf','Model2F.gltf','ModelFull.gltf'];
+const glassMaterial = new THREE.MeshStandardMaterial({
+    color: 0x88aabb,
+    roughness: 0.1,
+    metalness: 0.5,
+    transparent: true,
+    opacity: 0.3
+});
+
+/** * 4. MODEL LOADING & CACHE
+ **/
+const modelIds = ['ModelU.gltf','ModelE.gltf','Model1F.gltf','Model2F.gltf','ModelFull.gltf'];
 const modelCache = {};
 let currentModel = null;
 let clickedObject = null;
+let isHeatmapActive = false;
 
 const loader = new GLTFLoader();
 
-// 1. Create an array of Promises for each model
 const loadPromises = modelIds.map(id => {
     return new Promise((resolve, reject) => {
-        loader.load(
-            `./${id}`,
-            (gltf) => {
-                modelCache[id] = gltf.scene;
-
-                modelCache[id].traverse(child => {
-                    if(child.isMesh){
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-
-                        if(child.name.includes('GLAS')){
-                            child.material = glassMaterial;
-                        }
-                        // Example: logic to catch metal parts
-                        else if(child.name.includes('METALL') || child.name.includes('FENSTERRAHMEN')){
-                            child.material = metalMaterial;
-                        }
-                        else {
-                            child.material = baseMaterial;
-                        }
-                    }
-                });
-
-                if (id === 'ModelFull.gltf') {
-                    currentModel = gltf.scene;
-                    scene.add(currentModel);
+        loader.load(`./${id}`, (gltf) => {
+            modelCache[id] = gltf.scene;
+            modelCache[id].traverse(child => {
+                if(child.isMesh){
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    if(child.name.includes('GLAS')) child.material = glassMaterial;
+                    else if(child.name.includes('METALL') || child.name.includes('FENSTERRAHMEN')) child.material = metalMaterial;
+                    else child.material = baseMaterial;
                 }
-
-                resolve(); // Tell the promise this specific file is done
-            },
-            undefined, // onProgress callback (optional)
-            (error) => reject(error) // Handle loading errors
-        );
+            });
+            if (id === 'ModelFull.gltf') {
+                currentModel = gltf.scene;
+                scene.add(currentModel);
+            }
+            resolve();
+        }, undefined, reject);
     });
 });
 
-// 2. Wait for ALL promises to finish
 Promise.all(loadPromises).then(() => {
-    console.log("All models loaded!");
-
-    // Hide the loading element
-    document.getElementById('loading').style.display = 'none'
-
-}).catch(err => {
-    console.error("An error occurred while loading models:", err);
+    document.getElementById('loading').style.display = 'none';
 });
 
-// Switch models function
-window.showOnly = (id)=>{
-    if(!modelCache[id]) return;
-    if(currentModel) scene.remove(currentModel);
+/** * 5. HEATMAP & LABELS
+ **/
+function addTempLabel(mesh, temp) {
+    const tempDiv = document.createElement('div');
+    tempDiv.className = 'temp-label';
+    tempDiv.style.color = '#ffffff';
+    tempDiv.style.backgroundColor = 'rgba(0,0,0,0.6)';
+    tempDiv.style.padding = '2px 6px';
+    tempDiv.style.borderRadius = '4px';
+    tempDiv.style.fontFamily = 'sans-serif';
+    tempDiv.style.fontSize = '12px';
+    tempDiv.textContent = `${temp.toFixed(1)}°C`;
 
+    const label = new CSS2DObject(tempDiv);
+    label.name = 'tempLabel';
 
+    const box = new THREE.Box3().setFromObject(mesh);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    label.position.copy(center);
+    mesh.add(label);
+}
 
+function applyHeatmapColor(mesh, temp) {
+    const minTemp = 20;
+    const maxTemp = 25;
+    const t = Math.max(0, Math.min(1, (temp - minTemp) / (maxTemp - minTemp)));
 
-    if(id === 'ModelFull.gltf') {
-        camera.position.set(100, 80, 100);
-        camera.lookAt(0, 0, 0);
+    const colorHot = new THREE.Color(0xd68d8d); // Muted Red
+    const colorCold = new THREE.Color(0x8da1d6); // Muted Blue
+    const finalColor = colorCold.clone().lerp(colorHot, t);
+
+    mesh.material = baseMaterial.clone();
+    mesh.material.color.copy(finalColor);
+    mesh.material.transparent = false;
+    mesh.material.opacity = 1.0;
+
+    addTempLabel(mesh, temp);
+}
+
+window.updateBuildingHeatmap = async () => {
+    if (!currentModel) return;
+    const btn = document.getElementById('heatMapButton');
+
+    if (isHeatmapActive) {
+        btn.innerHTML = 'show Heatmap';
+        clearHeatmap();
+        isHeatmapActive = false;
+        return;
     }
+
+    // Determine which floor prefix to look for based on the current model's ID
+    // We look for the first character of the filename (U, E, 1, 2)
+    // If it's ModelFull, we show everything.
+    let activePrefix = null;
+    const currentModelId = Object.keys(modelCache).find(key => modelCache[key] === currentModel);
+
+    if (currentModelId && currentModelId !== 'ModelFull.gltf') {
+        // Extracts 'E' from 'ModelE.gltf' or '1' from 'Model1F.gltf'
+        activePrefix = currentModelId.replace('Model', '').charAt(0);
+    }
+
+    let infoDiv = document.getElementById('room-info');
+    if (infoDiv) infoDiv.remove();
+    clickedObject = null;
+
+    isHeatmapActive = true;
+    btn.innerHTML = 'clear Heatmap';
+
+    const roomMeshes = [];
+    currentModel.traverse(child => {
+        if (child.isMesh) {
+            const name = child.name;
+            // Filter: Must be a room mesh AND match the current floor prefix
+            const isRoom = /^[EU12]/.test(name);
+            const matchesFloor = !activePrefix || name.startsWith(activePrefix);
+
+            if (isRoom && matchesFloor) {
+                roomMeshes.push(child);
+            }
+        }
+    });
+
+    await Promise.all(roomMeshes.map(async (mesh) => {
+        const roomTag = normalizeRoomName(mesh.name);
+        const temp = await getRoomTemperature(roomTag);
+        if (temp !== null && isHeatmapActive) {
+            applyHeatmapColor(mesh, temp);
+        }
+    }));
+};
+
+function clearHeatmap() {
+    if (!currentModel) return;
+    // We traverse everything to ensure all labels are nuked
+    currentModel.traverse(child => {
+        if (child.isMesh) {
+            // If it has a cloned material, reset it
+            if (child.material !== baseMaterial && child.material !== glassMaterial && child.material !== metalMaterial) {
+                child.material = baseMaterial;
+            }
+            // Remove the 3D label
+            const label = child.getObjectByName('tempLabel');
+            if (label) child.remove(label);
+        }
+    });
+}
+
+/** * 6. UI & NAVIGATION
+ **/
+window.showOnly = (id) => {
+    if(!modelCache[id]) return;
+
+    // Clear old labels first
+    clearHeatmap();
+
+    if(currentModel) scene.remove(currentModel);
     currentModel = modelCache[id];
     scene.add(currentModel);
 
-    if (isHeatmapActive) {
-        isHeatmapActive = false;
-        updateBuildingHeatmap()
-    } else {
-        isHeatmapActive = true;
-        updateBuildingHeatmap()
+    if (id === 'ModelFull.gltf') {
+        camera.position.set(100, 80, 100);
+        isHeatmapActive = true; // Reset state so the toggle turns it back "on"
+        window.updateBuildingHeatmap();
+        clickedObject = null;
+        document.getElementById('room-info').remove()
+
     }
+
+    // If heatmap was already on, refresh it for the new floor
+    if (isHeatmapActive) {
+        isHeatmapActive = false; // Reset state so the toggle turns it back "on"
+        window.updateBuildingHeatmap();
+    }
+
 };
 
-// Handle window resizing
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-window.addEventListener('click', async (event) => {
-    // 1. Calculate mouse position in normalized device coordinates (-1 to +1)
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    // 2. Update the raycaster with the camera and mouse position
-    raycaster.setFromCamera(mouse, camera);
-
-    // 3. Calculate objects intersecting the picking ray // "true" allows it to search deep into the model groups
-    const intersects = raycaster.intersectObjects(scene.children, true);
-    if (intersects.length > 0) {
-        const currentClickedObject = intersects[0].object;
-
-        if (currentClickedObject.name.startsWith('E')
-            || currentClickedObject.name.startsWith('U')
-            || currentClickedObject.name.startsWith('1')
-            || currentClickedObject.name.startsWith('2')) {
-            // 1. Reset the previous object if it exists
-            if (clickedObject != null) {
-                clickedObject.material.color.set(0xdddddd); // Use your base gray color
-            }
-
-            clickedObject = currentClickedObject;
-
-            // 2. CLONE the material so this object has its own private copy
-            // This prevents the "red" from spreading to other meshes
-            if (clickedObject.material) {
-                clickedObject.material = clickedObject.material.clone();
-
-                // 3. Now change the color safely
-
-                currentModel.traverse(child => {
-                    if (child.isMesh && (
-                        child.name.startsWith('E') ||
-                        child.name.startsWith('U') ||
-                        child.name.startsWith('1') ||
-                        child.name.startsWith('2')
-                    )) {
-                        if (child !== clickedObject) {
-                            child.material = baseMaterial;
-
-                        }
-                        // Revert to the shared baseMaterial (this removes the unique colors)
-                    }
-                });
-
-
-                isHeatmapActive = false;
-                document.getElementById('heatMapButton').innerHTML = 'show Heatmap'
-
-
-                clickedObject.material.color.set(0xf1c40f);
-            }
-
-            // Fetch and display temperature data
-            const objectName = clickedObject.name;
-            const roomTag = normalizeRoomName(objectName);
-            let temperature = await getRoomTemperature(objectName);
-            if (temperature === null && roomTag !== objectName) {
-                temperature = await getRoomTemperature(roomTag);
-            }
-
-            displayTemperature(objectName, roomTag, temperature);
-
-            console.log('You clicked on: ' + clickedObject.name);
-        }
-    }
-
-});
-
 window.handleButtonClick = (buttonElement, modelId) => {
-    // 1. Remove 'active' class from all buttons in the container
     const container = document.getElementById('button-container');
     const buttons = container.querySelectorAll('button');
     buttons.forEach(btn => btn.classList.remove('active'));
-
-    // 2. Add 'active' class to the clicked button
-    if (modelId !== 'ModelFull.gltf') {
-        buttonElement.classList.add('active');
-    }
-    // 3. Call your existing 3D logic
+    if (modelId !== 'ModelFull.gltf') buttonElement.classList.add('active');
     window.showOnly(modelId);
 };
 
+/** * 7. INTERACTION (RAYCASTING)
+ **/
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
-// Animate
-function animate(){
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-}
-animate();
+window.addEventListener('click', async (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
 
-// InfluxDB configuration
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    if (intersects.length > 0) {
+        const obj = intersects[0].object;
+
+        if (/^[EU12]/.test(obj.name)) {
+            // Reset previous room
+            if (clickedObject) clickedObject.material = baseMaterial;
+
+            // Kill heatmap if user clicks a specific room
+            if (isHeatmapActive) {
+                clearHeatmap();
+                isHeatmapActive = false;
+                const heatBtn = document.getElementById('heatMapButton');
+                if(heatBtn) heatBtn.innerHTML = 'show Heatmap';
+            }
+
+            clickedObject = obj;
+            clickedObject.material = baseMaterial.clone();
+            clickedObject.material.color.set(0xf1c40f); // Normal Yellow Highlight
+
+            const roomTag = normalizeRoomName(obj.name);
+            const temp = await getRoomTemperature(roomTag);
+            displayTemperature(obj.name, roomTag, temp);
+        }
+    }
+});
+
+/** * 8. DATA FETCHING (INFLUXDB)
+ **/
 const INFLUXDB_URL = 'http://localhost:8086';
 const INFLUXDB_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==';
 const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
-// Function to query room temperature from InfluxDB
 async function getRoomTemperature(roomName) {
     const query = `from(bucket: "${INFLUXDB_BUCKET}")
-  |> range(start: -10m)
-  |> filter(fn: (r) => r._measurement == "room_temperature" and r.room == "${roomName}")
-  |> last()`;
+      |> range(start: -10m)
+      |> filter(fn: (r) => r._measurement == "room_temperature" and r.room == "${roomName}")
+      |> last()`;
 
     try {
         const response = await fetch(`${INFLUXDB_URL}/api/v2/query?org=${INFLUXDB_ORG}`, {
@@ -278,59 +306,31 @@ async function getRoomTemperature(roomName) {
             },
             body: query
         });
-
-        if (!response.ok) {
-            throw new Error(`InfluxDB query failed: ${response.status}`);
-        }
-
+        if (!response.ok) return null;
         const csvData = await response.text();
         const lines = csvData.trim().split('\n');
-
-        // CSV format: header line, then data lines
-        // We want the last data line with the temperature value
         if (lines.length > 1) {
             const dataLine = lines[lines.length - 1];
             const columns = dataLine.split(',');
-
-            // Find the _value column (temperature)
-            const headerLine = lines[0];
-            const headers = headerLine.split(',');
+            const headers = lines[0].split(',');
             const valueIndex = headers.indexOf('_value');
-
-            if (valueIndex !== -1 && columns[valueIndex]) {
-                return parseFloat(columns[valueIndex]);
-            }
+            if (valueIndex !== -1 && columns[valueIndex]) return parseFloat(columns[valueIndex]);
         }
-
         return null;
     } catch (error) {
-        console.error('Error fetching temperature:', error);
         return null;
     }
 }
 
 function normalizeRoomName(objectName) {
     if (!objectName) return objectName;
-
-    let name = String(objectName).trim();
-
-    // Common pattern in glTF exports: "134_1", "E07_2", etc.
-    if (name.includes('_')) {
-        name = name.split('_')[0];
-    }
-
-    // Some basement meshes appear as "U741" (likely "U74" + part "1")
-    if (/^U\d{3}$/.test(name)) {
-        name = `U${name.substring(1, 3)}`;
-    }
-
+    let name = String(objectName).trim().split('_')[0];
+    if (/^U\d{3}$/.test(name)) name = `U${name.substring(1, 3)}`;
     return name;
 }
 
-// Function to display temperature info
 function displayTemperature(objectName, roomTag, temperature) {
     let infoDiv = document.getElementById('room-info');
-
     if (!infoDiv) {
         infoDiv = document.createElement('div');
         infoDiv.id = 'room-info';
@@ -338,119 +338,32 @@ function displayTemperature(objectName, roomTag, temperature) {
         infoDiv.style.top = '20px';
         infoDiv.style.right = '20px';
         infoDiv.style.padding = '15px';
-        infoDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        infoDiv.style.color = 'white';
+        infoDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        infoDiv.style.color = '#333';
         infoDiv.style.borderRadius = '8px';
-        infoDiv.style.fontFamily = 'Arial, sans-serif';
-        infoDiv.style.fontSize = '16px';
+        infoDiv.style.fontFamily = 'sans-serif';
         infoDiv.style.zIndex = '1000';
+        infoDiv.style.border = '1px solid #ccc';
         document.body.appendChild(infoDiv);
     }
-
-    if (temperature !== null) {
-        infoDiv.innerHTML = `<strong>Room:</strong> ${objectName}<br><strong>Influx tag:</strong> ${roomTag}<br><strong>Temperature:</strong> ${temperature.toFixed(1)}°C`;
-    } else {
-        infoDiv.innerHTML = `<strong>Room:</strong> ${objectName}<br><strong>Influx tag:</strong> ${roomTag}<br><strong>Temperature:</strong> No data available`;
-    }
+    const tempText = temperature !== null ? `${temperature.toFixed(1)}°C` : 'No data';
+    infoDiv.innerHTML = `<strong>Room:</strong> ${objectName}<br><strong>Tag:</strong> ${roomTag}<br><strong>Temp:</strong> ${tempText}`;
 }
 
-/**
- * Maps a temperature value to a color and applies it to the room mesh.
- * @param {THREE.Mesh} mesh - The room mesh object
- * @param {number} temp - Temperature in Celsius
- */
-function applyHeatmapColor(mesh, temp) {
-    if (!mesh || temp === null) return;
-
-    // Define range (e.g., 15°C is blue, 25°C is red)
-    const minTemp = 20;
-    const maxTemp = 25;
-
-    // Normalize temperature to a 0-1 range
-    const t = Math.max(0, Math.min(1, (temp - minTemp) / (maxTemp - minTemp)));
-
-    // Create a color: Blue (0,0,1) to Red (1,0,0)
-    // You can use lerp for a smoother transition
-    const colorHot = new THREE.Color(0xd68d8d);  // Muted Coral/Red
-    const colorCold = new THREE.Color(0x8da1d6);
-    const finalColor = colorCold.clone().lerp(colorHot, t);
-
-    // Ensure material is unique so we don't color the whole building
-    mesh.material = mesh.material.clone();
-    mesh.material.color.copy(finalColor);
-
-    // Optional: make rooms slightly more opaque when heatmapped
-    mesh.material.opacity = 0.8;
+/** * 9. RENDER LOOP
+ **/
+function animate(){
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera); // Render the 3D labels
 }
 
-let isHeatmapActive = false; // Track the state globally
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+});
 
-window.updateBuildingHeatmap = async () => {
-    if (!currentModel) return;
-
-
-    const btn = document.getElementById('heatMapButton')
-
-    // TOGGLE OFF: If it's already on, clear it and stop
-    if (isHeatmapActive) {
-
-        btn.innerHTML = 'show Heatmap'
-        clearHeatmap();
-        isHeatmapActive = false;
-
-        return;
-    } else {
-        let infoDiv = document.getElementById('room-info');
-        if (infoDiv) {
-            infoDiv.remove()
-            console.log(infoDiv)
-            clickedObject = null;
-        }
-        btn.innerHTML = 'clear Heatmap'
-    }
-
-    // TOGGLE ON: Proceed with fetching data
-    isHeatmapActive = true;
-    console.log("Activating Heatmap...");
-
-    const roomMeshes = [];
-    currentModel.traverse(child => {
-        if (child.isMesh && (
-            child.name.startsWith('E') ||
-            child.name.startsWith('U') ||
-            child.name.startsWith('1') ||
-            child.name.startsWith('2')
-        )) {
-            roomMeshes.push(child);
-        }
-    });
-
-    // Use Promise.all for faster parallel loading so the user doesn't wait
-    const heatmapPromises = roomMeshes.map(async (mesh) => {
-        const roomTag = normalizeRoomName(mesh.name);
-        const temp = await getRoomTemperature(roomTag);
-
-        // Only apply if the user hasn't toggled it off while loading
-        if (temp !== null && isHeatmapActive) {
-            applyHeatmapColor(mesh, temp);
-        }
-    });
-
-    await Promise.all(heatmapPromises);
-};
-function clearHeatmap() {
-    if (!currentModel) return;
-
-    currentModel.traverse(child => {
-        if (child.isMesh && (
-            child.name.startsWith('E') ||
-            child.name.startsWith('U') ||
-            child.name.startsWith('1') ||
-            child.name.startsWith('2')
-        )) {
-            // Revert to the shared baseMaterial (this removes the unique colors)
-            child.material = baseMaterial;
-        }
-    });
-    console.log("Heatmap cleared.");
-}
+animate();
