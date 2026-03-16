@@ -45,6 +45,13 @@ fillLight.position.set(-200, 100, -200);
 scene.add(fillLight);
 
 
+const metalMaterial = new THREE.MeshStandardMaterial({
+    color: 0x888888,      // A solid medium-light grey (not white)
+    metalness: 0.35,      // Provides a subtle metallic sheen
+    roughness: 0.4,       // Softens reflections so it looks like "brushed" metal
+    envMapIntensity: 1.0  // Helps it react to your scene lights better
+});
+
 // Materials
 const baseMaterial = new THREE.MeshStandardMaterial({
     color: 0xdddddd, // Flat light grey for the clay look
@@ -54,11 +61,11 @@ const baseMaterial = new THREE.MeshStandardMaterial({
 
 // Restored original glass material
 const glassMaterial = new THREE.MeshStandardMaterial({
-    color: 0x111111,  // dark glass
-    roughness: 0.9,
-    metalness: 0,
+    color: 0x88aabb,      // Light grey-blue tint (looks more like glass)
+    roughness: 0.1,       // Low roughness for sharp, clean reflections
+    metalness: 0.5,       // Adds a bit of "sheen" to the surface
     transparent: true,
-    opacity: 0.5
+    opacity: 0.3,         // More transparent, but the color/reflections keep it visible
 });
 
 // Load models
@@ -78,15 +85,19 @@ const loadPromises = modelIds.map(id => {
                 modelCache[id] = gltf.scene;
 
                 modelCache[id].traverse(child => {
-                    if (child.isMesh) {
+                    if(child.isMesh){
                         child.castShadow = true;
                         child.receiveShadow = true;
 
-                        if (child.name.toLowerCase().includes('window') || child.name.includes('GLAS')) {
+                        if(child.name.includes('GLAS')){
                             child.material = glassMaterial;
-                        } else {
-                            // Important: Use .clone() here if you plan to click/color individual rooms later
-                            child.material = baseMaterial.clone();
+                        }
+                        // Example: logic to catch metal parts
+                        else if(child.name.includes('METALL') || child.name.includes('FENSTERRAHMEN')){
+                            child.material = metalMaterial;
+                        }
+                        else {
+                            child.material = baseMaterial;
                         }
                     }
                 });
