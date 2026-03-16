@@ -163,8 +163,9 @@ window.handleButtonClick = (buttonElement, modelId) => {
     buttons.forEach(btn => btn.classList.remove('active'));
 
     // 2. Add 'active' class to the clicked button
-    buttonElement.classList.add('active');
-
+    if (modelId !== 'ModelFull.gltf') {
+        buttonElement.classList.add('active');
+    }
     // 3. Call your existing 3D logic
     window.showOnly(modelId);
 };
