@@ -64,32 +64,37 @@
 				animation: pulse 2s infinite ease-in-out;
 			}
 
-			/* Simple animated loading bar */
+			/* The track */
 			.loading-bar-container {
-				width: 200px;
-				height: 2px;
-				background: rgba(255, 255, 255, 0.1);
+				width: 250px;
+				height: 3px;
+				background: rgba(255, 255, 255, 0.05); /* Very subtle track */
 				position: relative;
 				overflow: hidden;
+				border-radius: 4px;
 			}
 
+			/* The animated highlight */
 			.loading-bar-progress {
-				width: 100%;
+				width: 40%; /* Length of the "glow" */
 				height: 100%;
-				background: white;
 				position: absolute;
-				left: -100%;
-				animation: loading-slide 1.5s infinite linear;
+				background: linear-gradient(
+						90deg,
+						rgba(255,255,255,0) 0%,
+						rgba(255,255,255,0.8) 50%,
+						rgba(255,255,255,0) 100%
+				);
+				animation: smooth-sweep 1.8s infinite linear;
 			}
 
-			@keyframes pulse {
-				0%, 100% { opacity: 0.5; }
-				50% { opacity: 1; }
-			}
-
-			@keyframes loading-slide {
-				0% { left: -100%; }
-				100% { left: 100%; }
+			@keyframes smooth-sweep {
+				0% {
+					transform: translateX(-150%);
+				}
+				100% {
+					transform: translateX(250%);
+				}
 			}
 		</style>
 
