@@ -44,9 +44,12 @@ const fillLight = new THREE.PointLight(0xffffff, 0.2);
 fillLight.position.set(-200, 100, -200);
 scene.add(fillLight);
 
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2; // Adjust this number to globally brighten/darken everything
+
 
 const metalMaterial = new THREE.MeshStandardMaterial({
-    color: 0x888888,      // A solid medium-light grey (not white)
+    color: 0xbcbcbc,      // A solid medium-light grey (not white)
     metalness: 0.35,      // Provides a subtle metallic sheen
     roughness: 0.4,       // Softens reflections so it looks like "brushed" metal
     envMapIntensity: 1.0  // Helps it react to your scene lights better
@@ -316,3 +319,5 @@ function displayTemperature(objectName, roomTag, temperature) {
         infoDiv.innerHTML = `<strong>Room:</strong> ${objectName}<br><strong>Influx tag:</strong> ${roomTag}<br><strong>Temperature:</strong> No data available`;
     }
 }
+
+
