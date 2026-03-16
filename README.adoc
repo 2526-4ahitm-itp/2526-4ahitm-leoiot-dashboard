@@ -1,93 +1,83 @@
-= asciidoctor-html-template
-Thomas Stütz
-1.0.0, {docdate}
-:imagesdir: img
+= LeoIoT Dashboard
 :icons: font
-:sectnums:    // Nummerierung der Überschriften / section numbering
-// :toc:
-// :toclevels: 1
-:experimental:
-//https://gist.github.com/dcode/0cfbf2699a1fe9b46ff04c41721dda74?permalink_comment_id=3948218
-ifdef::env-github[]
-:tip-caption: :bulb:
-:note-caption: :information_source:
-:important-caption: :heavy_exclamation_mark:
-:caution-caption: :fire:
-:warning-caption: :warning:
-endif::[]
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
 
-image::https://img.shields.io/badge/version-1.0.0-blue[]
+IoT sensor monitoring dashboard for building management. Tracks temperature and CO2 levels across multiple rooms in real-time.
 
-== doc-as-code
-
-=== Overview
-
-The purpose of this template is to convert adoc-Files to html-Files
-These files are divided in html-documents and html-slides. The slides are rendered using https://revealjs.com/[revealjs^].
-
-The convertion of the adoc-files is processed in a docker-container.
-
-
-image::/img/adoc-to-html.png[]
-
-=== Usage
-
-==== Initial Configuration
-
-* After templating this repo commit and push the demo page
-
-* Set Settings - Pages - Branch: gh-pages - Folder: / (root)
-+
-[%collapsible]
-====
-image::/img/permissions-for-asciidoc-2.png[]
-====
-
-==== Accessing the Website(s) for docs
-
-* https://*<github-repo-owner>*.github.io/*<github-repo-name>*
-
-** ie https://htl-leonding-college.github.io/asciidoctor-html-template
-
-==== Accessing the Website(s) for slides
-
-* https://*<github-repo-owner>*.github.io/*<github-repo-name>*/demo/*<file-name>*
-
-** ie https://htl-leonding-college.github.io/asciidoctor-html-template/slides/demo.html
-
-
-
-==== Remote Rendering by github-actions
-
-When commiting and pushing the adoc-files into github, they are automatically rendered by github-actions to html in a (new) branch `gh-pages`. All sub-folders with adoc-files are included.
-
-==== Local Rendering
-
-Because the rendering with gh-actions on a gh-runner takes time, it is possible to create a local dist-folder with
+== Quick Start
 
 [source,bash]
 ----
-./local-convert.sh
+# Start all services
+docker compose up
+
+# Or start in background
+docker compose up -d
 ----
 
-IMPORTANT: You need docker installed locally.
+== Access Points
 
-You even can publish your locally created html-slides with
+[cols="^.^1,^.^3,^.<3", options="header"]
+|===
+| Service | URL | Description
+| *3D Building View* | http://localhost:8080 | Interactive 3D building with room temperatures
+| *Sensor Dashboard* | http://localhost:8081 | Clean dashboard with charts and sensor data
+| *Grafana* | http://localhost:3000 | Advanced analytics and visualizations
+| *InfluxDB* | http://localhost:8086 | Time-series database UI
+|===
+
+== Architecture
+
+----
++-------------+     +----------+     +-------------+
+|   Sensors   |---->|  MQTT    |---->|  Telegraf   |
+| (Real/Fake) |     | Mosquitto|     |             |
++-------------+     +----------+     +------+------+
+                                      |
+                                      v
++-------------+     +----------+     +-------------+
+|  Frontend   |<----|  Quarkus |<----|  InfluxDB   |
+|  Dashboard  |     |  Backend |     |  Database   |
++-------------+     +----------+     +-------------+
+----
+
+== Components
+
+* **Mosquitto** - MQTT broker for sensor data
+* **InfluxDB 2.7** - Time-series database
+* **Telegraf** - MQTT to InfluxDB pipeline
+* **Grafana** - Analytics dashboards
+* **Quarkus Backend** - Sensor data generator
+* **Frontend** - 3D building explorer (Three.js)
+* **Dashboard-v2** - Modern sensor dashboard (Chart.js)
+* **Fake Sensors** - Simulated sensor data for testing
+
+== Development
 
 [source,bash]
 ----
-./publish.sh
+# View logs
+docker compose logs -f dashboard-v2
+docker compose logs -f fake-sensors
+
+# Stop all services
+docker compose down
 ----
 
+== Configuration
 
+[cols="^.^1,^.^1,^.<2", options="header"]
+|===
+| Service | Port | Environment
+| Mosquitto | 1883 | -
+| InfluxDB | 8086 | Auto-configured
+| Grafana | 3000 | Admin / leogreen
+| Frontend | 8080 | -
+| Dashboard-v2 | 8081 | -
+|===
 
-=== Customizing
+---
 
-IMPORTANT: You should not change the scripts in the `asciidocs`-folder, unless you really know what to do.
-
-* The script are available in the `asciidocs`-Folder. So you could change the options for the asciidoctor-engine or the version of revealjs.
-
-=== Docs
-** https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[Asciidoctor Quick Reference]
-** https://asciidoctor.org/docs/asciidoc-writers-guide/[AsciiDoc Writer’s Guide^]
-** https://docs.asciidoctor.org/reveal.js-converter/latest/converter/features/[Slides with Asciidoctor for revealjs^]
+*Built with* MQTT, InfluxDB, Grafana, Quarkus, Three.js, Chart.js

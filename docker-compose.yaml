@@ -36,6 +36,19 @@ services:
     networks:
       - leoiot
 
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - influxdb
+    networks:
+      - leoiot
+
   grafana:
     image: grafana/grafana:latest
     ports:
