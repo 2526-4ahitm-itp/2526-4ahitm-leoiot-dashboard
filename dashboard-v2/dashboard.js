@@ -150,14 +150,28 @@ window.showMoreRooms = () => {
 
 // Refresh all data
 window.refreshAllData = async () => {
-	const [tempData, co2Data, allRoomData] = await Promise.all([
+	const [tempData, co2Data, allRoomData, room105CO2] = await Promise.all([
 		fetchTemperatureData(),
 		fetchCO2Data(),
-		fetchAllRoomData()
+		fetchAllRoomData(),
+		fetchRoom105CO2() // Special fetch for Room 105 latest CO2
 	]);
 
+	// Apply the specific 20s Room 105 query to the general room data array
+	let room105 = allRoomData.find(r => r.room === '105');
+	if (room105 && room105CO2.length > 0) {
+		room105.co2 = room105CO2[0].co2;
+	} else if (!room105 && room105CO2.length > 0) {
+		allRoomData.push({
+			room: '105',
+			temperature: null,
+			co2: room105CO2[0].co2,
+			time: room105CO2[0].time
+		});
+	}
+
 	updateRoomSelector(tempData);
-	updateSummaryCards(tempData, co2Data);
+	updateSummaryCards(tempData, co2Data, room105CO2);
 	updateTemperatureChart(tempData);
 	updateCO2Chart(co2Data);
 	updateRoomTable(allRoomData);
@@ -173,11 +187,11 @@ function updateRoomSelector(tempData) {
 	const searchTerm = document.getElementById('sensorSearch')?.value.toLowerCase().trim() || '';
 
 	container.innerHTML = `
-		<button class="sensor-btn ${selectedSensor === 'all' ? 'active' : ''}" 
-				onclick="selectSensor('all')" data-sensor="all">
-			📊 All Rooms (Average)
-		</button>
-	`;
+       <button class="sensor-btn ${selectedSensor === 'all' ? 'active' : ''}" 
+             onclick="selectSensor('all')" data-sensor="all">
+          📊 All Rooms (Average)
+       </button>
+    `;
 
 	rooms.forEach(room => {
 		const btn = document.createElement('button');
@@ -205,11 +219,11 @@ function updateRoomSelector(tempData) {
 // Fetch temperature data
 async function fetchTemperatureData() {
 	const query = `from(bucket: "${INFLUXDB_BUCKET}")
-		|> range(start: -${currentTimeRange})
-		|> filter(fn: (r) => r._measurement == "room_temperature")
-		|> filter(fn: (r) => r._field == "temperature")
-		|> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
-		|> yield(name: "mean")`;
+       |> range(start: -${currentTimeRange})
+       |> filter(fn: (r) => r._measurement == "room_temperature")
+       |> filter(fn: (r) => r._field == "temperature")
+       |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+       |> yield(name: "mean")`;
 
 	try {
 		const response = await fetchInfluxDB(query);
@@ -223,12 +237,12 @@ async function fetchTemperatureData() {
 // Fetch CO2 data
 async function fetchCO2Data() {
 	const query = `from(bucket: "${INFLUXDB_BUCKET}")
-		|> range(start: -${currentTimeRange})
-		|> filter(fn: (r) => r._measurement == "mqtt_consumer")
-		|> filter(fn: (r) => r.topic =~ /co2/)
-		|> filter(fn: (r) => r._field == "value")
-		|> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
-		|> yield(name: "mean")`;
+       |> range(start: -${currentTimeRange})
+       |> filter(fn: (r) => r._measurement == "mqtt_consumer")
+       |> filter(fn: (r) => r.topic =~ /co2/)
+       |> filter(fn: (r) => r._field == "value")
+       |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+       |> yield(name: "mean")`;
 
 	try {
 		const response = await fetchInfluxDB(query);
@@ -239,23 +253,40 @@ async function fetchCO2Data() {
 	}
 }
 
+// Custom Fetch for Room 105 latest CO2
+async function fetchRoom105CO2() {
+	const topic = "nili3/sensor/nili3_co2/state";
+	const query = `from(bucket: "${INFLUXDB_BUCKET}")
+      |> range(start: -20s)
+      |> filter(fn: (r) => r._measurement == "mqtt_consumer" and r.topic == "${topic}")
+      |> filter(fn: (r) => r._field == "value")
+      |> last()`;
+
+	try {
+		const response = await fetchInfluxDB(query);
+		return parseCO2RoomData(response);
+	} catch (error) {
+		console.error('Error fetching Room 105 CO2 data:', error);
+		return [];
+	}
+}
 
 // Fetch all room data for table
 async function fetchAllRoomData() {
 	const tempQuery = `from(bucket: "${INFLUXDB_BUCKET}")
-		|> range(start: -1h)
-		|> filter(fn: (r) => r._measurement == "room_temperature")
-		|> filter(fn: (r) => r._field == "temperature")
-		|> last()
-		|> group(columns: ["room"])`;
+       |> range(start: -1h)
+       |> filter(fn: (r) => r._measurement == "room_temperature")
+       |> filter(fn: (r) => r._field == "temperature")
+       |> last()
+       |> group(columns: ["room"])`;
 
 	const co2Query = `from(bucket: "${INFLUXDB_BUCKET}")
-		|> range(start: -1h)
-		|> filter(fn: (r) => r._measurement == "mqtt_consumer")
-		|> filter(fn: (r) => r.topic =~ /co2/)
-		|> filter(fn: (r) => r._field == "value")
-		|> last()
-		|> group(columns: ["topic"])`;
+       |> range(start: -1h)
+       |> filter(fn: (r) => r._measurement == "mqtt_consumer")
+       |> filter(fn: (r) => r.topic =~ /co2/)
+       |> filter(fn: (r) => r._field == "value")
+       |> last()
+       |> group(columns: ["topic"])`;
 
 	try {
 		const [tempResponse, co2Response] = await Promise.all([
@@ -279,7 +310,9 @@ async function fetchAllRoomData() {
 		co2Data.forEach(co2 => {
 			const match = co2.topic.match(/sensor\/([a-zA-Z0-9.]+)_co2/);
 			if (match) {
-				const roomId = match[1].toUpperCase();
+				let roomId = match[1].toUpperCase();
+				if (roomId === 'NILI3') roomId = '105'; // Maps 'nili3_co2' specifically to Room 105
+
 				if (rooms[roomId]) {
 					rooms[roomId].co2 = co2.co2;
 				}
@@ -391,8 +424,7 @@ function parseCO2RoomData(csvData) {
 }
 
 // Update summary cards
-// Update summary cards
-function updateSummaryCards(tempData, co2Data) {
+function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
 	let currentTemp, avgTemp24h;
 
 	if (selectedSensor === 'all') {
@@ -430,10 +462,24 @@ function updateSummaryCards(tempData, co2Data) {
 		// Calculate Average CO2 for filtered rooms
 		let co2Sum = 0, co2Count = 0;
 		filteredRooms.forEach(room => {
-			const topic = `nili3/sensor/${room.toLowerCase()}_co2/state`;
-			const roomCo2Data = co2Data[topic] || [];
-			if (roomCo2Data.length > 0) {
-				co2Sum += roomCo2Data[roomCo2Data.length - 1].value;
+			let currentCo2Val = null;
+
+			if (room === '105') {
+				if (room105CO2.length > 0) {
+					currentCo2Val = room105CO2[0].co2;
+				} else {
+					const topic = "nili3/sensor/nili3_co2/state";
+					const roomCo2Data = co2Data[topic] || [];
+					if (roomCo2Data.length > 0) currentCo2Val = roomCo2Data[roomCo2Data.length - 1].value;
+				}
+			} else {
+				const topic = `nili3/sensor/${room.toLowerCase()}_co2/state`;
+				const roomCo2Data = co2Data[topic] || [];
+				if (roomCo2Data.length > 0) currentCo2Val = roomCo2Data[roomCo2Data.length - 1].value;
+			}
+
+			if (currentCo2Val !== null) {
+				co2Sum += currentCo2Val;
 				co2Count++;
 			}
 		});
@@ -447,7 +493,6 @@ function updateSummaryCards(tempData, co2Data) {
 		document.getElementById('activeSensors').textContent = filteredRooms.length;
 
 	} else {
-		// ... (Keep your existing single-sensor logic here)
 		const roomData = tempData[selectedSensor] || [];
 		currentTemp = roomData.length > 0 ? roomData[roomData.length - 1].value : 0;
 		let sum = 0;
@@ -457,9 +502,22 @@ function updateSummaryCards(tempData, co2Data) {
 		document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
 		document.getElementById('avgTemp24h').textContent = `${avgTemp24h.toFixed(1)}°C`;
 
-		const topic = `nili3/sensor/${selectedSensor.toLowerCase()}_co2/state`;
-		const roomCo2Data = co2Data[topic] || [];
-		const currentCo2 = roomCo2Data.length > 0 ? roomCo2Data[roomCo2Data.length - 1].value : 0;
+		// Setup correct CO2 logic for custom room mapping
+		let currentCo2 = 0;
+		if (selectedSensor === '105') {
+			if (room105CO2.length > 0) {
+				currentCo2 = room105CO2[0].co2;
+			} else {
+				const topic = "nili3/sensor/nili3_co2/state";
+				const roomCo2Data = co2Data[topic] || [];
+				currentCo2 = roomCo2Data.length > 0 ? roomCo2Data[roomCo2Data.length - 1].value : 0;
+			}
+		} else {
+			const topic = `nili3/sensor/${selectedSensor.toLowerCase()}_co2/state`;
+			const roomCo2Data = co2Data[topic] || [];
+			currentCo2 = roomCo2Data.length > 0 ? roomCo2Data[roomCo2Data.length - 1].value : 0;
+		}
+
 		document.getElementById('currentCo2').textContent = `${currentCo2.toFixed(0)} ppm`;
 		document.getElementById('activeSensors').textContent = Object.keys(tempData).length;
 	}
@@ -511,8 +569,11 @@ function updateCO2Chart(co2Data) {
 	co2Canvas.style.display = '';
 	co2Placeholder.classList.remove('visible');
 
-	// Show CO2 for selected room
-	const topic = `nili3/sensor/${selectedSensor.toLowerCase()}_co2/state`;
+	// Map Room 105 history correctly
+	let topic = `nili3/sensor/${selectedSensor.toLowerCase()}_co2/state`;
+	if (selectedSensor === '105') {
+		topic = "nili3/sensor/nili3_co2/state";
+	}
 	const roomCo2Data = co2Data[topic] || [];
 
 	co2Chart.data.labels = roomCo2Data.map(({ time }) => formatTime(time));
@@ -569,12 +630,12 @@ function updateRoomTable(roomData) {
 		}
 
 		row.innerHTML = `
-			<td><strong>${room.room}</strong></td>
-			<td class="${tempClass}">${tempValue}</td>
-			<td class="${co2Class}">${co2Value}</td>
-			<td>${formatRelativeTime(room.time)}</td>
-			<td class="${statusClass}">${statusText}</td>
-		`;
+          <td><strong>${room.room}</strong></td>
+          <td class="${tempClass}">${tempValue}</td>
+          <td class="${co2Class}">${co2Value}</td>
+          <td>${formatRelativeTime(room.time)}</td>
+          <td class="${statusClass}">${statusText}</td>
+       `;
 		tbody.appendChild(row);
 	});
 
