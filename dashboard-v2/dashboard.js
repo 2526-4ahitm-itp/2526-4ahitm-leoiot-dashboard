@@ -88,13 +88,18 @@ window.setTimeRange = async (range) => {
 };
 
 // Filter by floor
-window.filterByFloor = (floor) => {
+window.filterByFloor = async (floor) => {
 	currentFloorFilter = floor;
 	document.querySelectorAll('.filter-tab').forEach(btn => {
 		btn.classList.remove('active');
 		if (btn.dataset.floor === floor) btn.classList.add('active');
 	});
+
+	// 1. Visually filter the buttons
 	filterSensors();
+
+	// 2. Re-run the calculations for the summary cards
+	await refreshAllData();
 };
 
 // Select sensor
@@ -127,7 +132,7 @@ window.filterSensors = () => {
 		}
 
 		const matchesSearch = !searchTerm || room.toLowerCase().includes(searchTerm);
-		const matchesFloor = currentFloorFilter === 'all' || 
+		const matchesFloor = currentFloorFilter === 'all' ||
 			(currentFloorFilter === '1' && /^\d{3}$/.test(room)) ||
 			(currentFloorFilter === '2' && /^2\d{2}$/.test(room)) ||
 			(currentFloorFilter === 'E' && room.startsWith('E')) ||
@@ -166,7 +171,7 @@ function updateRoomSelector(tempData) {
 
 	const container = document.getElementById('sensorButtons');
 	const searchTerm = document.getElementById('sensorSearch')?.value.toLowerCase().trim() || '';
-	
+
 	container.innerHTML = `
 		<button class="sensor-btn ${selectedSensor === 'all' ? 'active' : ''}" 
 				onclick="selectSensor('all')" data-sensor="all">
@@ -180,10 +185,10 @@ function updateRoomSelector(tempData) {
 		btn.dataset.sensor = room;
 		btn.onclick = () => selectSensor(room);
 		btn.innerHTML = `🏠 ${room}`;
-		
+
 		// Apply filters
 		const matchesSearch = !searchTerm || room.toLowerCase().includes(searchTerm);
-		const matchesFloor = currentFloorFilter === 'all' || 
+		const matchesFloor = currentFloorFilter === 'all' ||
 			(currentFloorFilter === '1' && /^\d{3}$/.test(room)) ||
 			(currentFloorFilter === '2' && /^2\d{2}$/.test(room)) ||
 			(currentFloorFilter === 'E' && room.startsWith('E')) ||
@@ -192,7 +197,7 @@ function updateRoomSelector(tempData) {
 		if (!matchesSearch || !matchesFloor) {
 			btn.style.display = 'none';
 		}
-		
+
 		container.appendChild(btn);
 	});
 }
@@ -233,6 +238,7 @@ async function fetchCO2Data() {
 		return {};
 	}
 }
+
 
 // Fetch all room data for table
 async function fetchAllRoomData() {
@@ -385,74 +391,96 @@ function parseCO2RoomData(csvData) {
 }
 
 // Update summary cards
+// Update summary cards
 function updateSummaryCards(tempData, co2Data) {
 	let currentTemp, avgTemp24h;
 
 	if (selectedSensor === 'all') {
+		// Get only rooms that match the current floor filter
+		const filteredRooms = Object.keys(tempData).filter(room => {
+			return currentFloorFilter === 'all' ||
+				(currentFloorFilter === '1' && /^\d{3}$/.test(room)) ||
+				(currentFloorFilter === '2' && /^2\d{2}$/.test(room)) ||
+				(currentFloorFilter === 'E' && room.startsWith('E')) ||
+				(currentFloorFilter === 'U' && room.startsWith('U'));
+		});
+
+		// Calculate Average Temperature for filtered rooms
 		let tempSum = 0, tempCount = 0;
-		Object.values(tempData).forEach(values => {
+		let historySum = 0, historyCount = 0;
+
+		filteredRooms.forEach(room => {
+			const values = tempData[room] || [];
 			if (values.length > 0) {
+				// Latest value for "Current"
 				tempSum += values[values.length - 1].value;
 				tempCount++;
+
+				// All values in range for "24h Average"
+				values.forEach(v => {
+					historySum += v.value;
+					historyCount++;
+				});
 			}
 		});
-		currentTemp = tempCount > 0 ? tempSum / tempCount : 0;
 
-		let allTempSum = 0, allTempCount = 0;
-		Object.values(tempData).forEach(values => {
-			values.forEach(({ value }) => {
-				allTempSum += value;
-				allTempCount++;
-			});
+		currentTemp = tempCount > 0 ? tempSum / tempCount : 0;
+		avgTemp24h = historyCount > 0 ? historySum / historyCount : 0;
+
+		// Calculate Average CO2 for filtered rooms
+		let co2Sum = 0, co2Count = 0;
+		filteredRooms.forEach(room => {
+			const topic = `nili3/sensor/${room.toLowerCase()}_co2/state`;
+			const roomCo2Data = co2Data[topic] || [];
+			if (roomCo2Data.length > 0) {
+				co2Sum += roomCo2Data[roomCo2Data.length - 1].value;
+				co2Count++;
+			}
 		});
-		avgTemp24h = allTempCount > 0 ? allTempSum / allTempCount : 0;
+
+		const currentCo2 = co2Count > 0 ? co2Sum / co2Count : 0;
+
+		// Update UI
+		document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
+		document.getElementById('avgTemp24h').textContent = `${avgTemp24h.toFixed(1)}°C`;
+		document.getElementById('currentCo2').textContent = `${currentCo2.toFixed(0)} ppm`;
+		document.getElementById('activeSensors').textContent = filteredRooms.length;
+
 	} else {
+		// ... (Keep your existing single-sensor logic here)
 		const roomData = tempData[selectedSensor] || [];
 		currentTemp = roomData.length > 0 ? roomData[roomData.length - 1].value : 0;
 		let sum = 0;
 		roomData.forEach(({ value }) => { sum += value; });
 		avgTemp24h = roomData.length > 0 ? sum / roomData.length : 0;
-	}
 
-	document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
-	document.getElementById('avgTemp24h').textContent = `${avgTemp24h.toFixed(1)}°C`;
+		document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
+		document.getElementById('avgTemp24h').textContent = `${avgTemp24h.toFixed(1)}°C`;
 
-	let currentCo2;
-	if (selectedSensor === 'all') {
-		const co2Values = Object.values(co2Data).flat();
-		if (co2Values.length > 0) {
-			let sum = 0;
-			co2Values.forEach(({ value }) => { sum += value; });
-			currentCo2 = sum / co2Values.length;
-		} else {
-			currentCo2 = 0;
-		}
-	} else {
 		const topic = `nili3/sensor/${selectedSensor.toLowerCase()}_co2/state`;
 		const roomCo2Data = co2Data[topic] || [];
-		currentCo2 = roomCo2Data.length > 0 ? roomCo2Data[roomCo2Data.length - 1].value : 0;
+		const currentCo2 = roomCo2Data.length > 0 ? roomCo2Data[roomCo2Data.length - 1].value : 0;
+		document.getElementById('currentCo2').textContent = `${currentCo2.toFixed(0)} ppm`;
+		document.getElementById('activeSensors').textContent = Object.keys(tempData).length;
 	}
-	
-	document.getElementById('currentCo2').textContent = `${currentCo2.toFixed(0)} ppm`;
-	document.getElementById('activeSensors').textContent = Object.keys(tempData).length;
 }
 
 // Update temperature chart
 function updateTemperatureChart(tempData) {
 	const tempCanvas = document.getElementById('tempChart');
 	const tempPlaceholder = document.getElementById('tempPlaceholder');
-	
+
 	if (selectedSensor === 'all') {
 		// Hide chart, show placeholder
 		tempCanvas.style.display = 'none';
 		tempPlaceholder.classList.add('visible');
 		return;
 	}
-	
+
 	// Show chart, hide placeholder
 	tempCanvas.style.display = '';
 	tempPlaceholder.classList.remove('visible');
-	
+
 	// Show single room
 	const roomData = tempData[selectedSensor] || [];
 	tempChart.data.labels = roomData.map(({ time }) => formatTime(time));
@@ -471,22 +499,22 @@ function updateTemperatureChart(tempData) {
 function updateCO2Chart(co2Data) {
 	const co2Canvas = document.getElementById('co2Chart');
 	const co2Placeholder = document.getElementById('co2Placeholder');
-	
+
 	if (selectedSensor === 'all') {
 		// Hide chart, show placeholder
 		co2Canvas.style.display = 'none';
 		co2Placeholder.classList.add('visible');
 		return;
 	}
-	
+
 	// Show chart, hide placeholder
 	co2Canvas.style.display = '';
 	co2Placeholder.classList.remove('visible');
-	
+
 	// Show CO2 for selected room
 	const topic = `nili3/sensor/${selectedSensor.toLowerCase()}_co2/state`;
 	const roomCo2Data = co2Data[topic] || [];
-	
+
 	co2Chart.data.labels = roomCo2Data.map(({ time }) => formatTime(time));
 	co2Chart.data.datasets = [{
 		label: `Room ${selectedSensor}`,
@@ -504,30 +532,30 @@ function updateRoomTable(roomData) {
 	const tbody = document.getElementById('roomTableBody');
 	const showMoreBtn = document.getElementById('showMoreBtn');
 	const showMoreCount = document.getElementById('showMoreCount');
-	
+
 	// Sort rooms
 	roomData.sort((a, b) => a.room.localeCompare(b.room));
-	
+
 	// Show only displayedRoomsCount
 	const visibleRooms = roomData.slice(0, displayedRoomsCount);
-	
+
 	tbody.innerHTML = '';
 	visibleRooms.forEach(room => {
 		const row = document.createElement('tr');
-		
+
 		// Temperature status
 		const tempValue = room.temperature !== null ? room.temperature.toFixed(1) + '°C' : '--';
 		const tempClass = room.temperature > 24 ? 'status-warning' : room.temperature < 19 ? 'status-cold' : 'status-ok';
-		
+
 		// CO2 status
 		const co2Value = room.co2 !== null ? room.co2.toFixed(0) + ' ppm' : '--';
 		const co2Class = room.co2 > 1000 ? 'status-warning' : room.co2 > 800 ? 'status-medium' : 'status-ok';
-		
+
 		// Combined status for STATUS column
 		const tempBad = room.temperature > 24 || room.temperature < 19;
 		const co2Bad = room.co2 > 1000;
 		const co2Medium = room.co2 > 800 && room.co2 <= 1000;
-		
+
 		let statusText, statusClass;
 		if (tempBad || co2Bad) {
 			statusText = '⚠️ Alert';
