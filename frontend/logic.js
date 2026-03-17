@@ -330,7 +330,7 @@ async function getRoomTemperature(roomName) {
 async function getRoomCO2() {
     const topic = "nili3/sensor/nili3_co2/state";
     const query = `from(bucket: "${INFLUXDB_BUCKET}")
-      |> range(start: -5s)
+      |> range(start: -20s)
       |> filter(fn: (r) => r._measurement == "mqtt_consumer" and r.topic == "${topic}")
       |> filter(fn: (r) => r._field == "value")
       |> last()`;
