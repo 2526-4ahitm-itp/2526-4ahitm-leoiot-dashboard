@@ -99,6 +99,22 @@ services:
     networks:
       - leoiot
 
+  mqtt-ws-bridge:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./mqtt-ws-bridge:/app
+    command: sh -c "npm install && npm start"
+    environment:
+      - MQTT_HOST=mosquitto
+      - WS_PORT=8090
+    ports:
+      - "8090:8090"
+    depends_on:
+      - mosquitto
+    networks:
+      - leoiot
+
 networks:
   leoiot:
     driver: bridge
@@ -106,4 +122,3 @@ networks:
 volumes:
   mosquitto_data:
   influxdb_data:
-
