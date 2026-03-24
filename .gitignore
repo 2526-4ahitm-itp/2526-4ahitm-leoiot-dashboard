@@ -40,3 +40,10 @@ sensorbox/nili-ldr/secrets.yaml
 sensorbox/s3-mini-oled/secrets.yaml
 
 sensorbox/nili-ldr/.esphome/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
