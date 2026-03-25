@@ -73,6 +73,27 @@ let currentModel = null;
 let clickedObject = null;
 let isHeatmapActive = false;
 
+function setHeatmapButtonState(modelId) {
+    const btn = document.getElementById('heatMapButton');
+    if (!btn) return;
+
+    const enabled = modelId !== 'ModelFull.gltf';
+    btn.disabled = !enabled;
+
+    btn.classList.toggle('heatmap-enabled', enabled);
+    btn.classList.toggle('heatmap-disabled', !enabled);
+    btn.title = enabled ? '' : 'Heatmap is available on single-floor views only';
+
+    if (!enabled) {
+        // Force heatmap off for full-building view.
+        if (isHeatmapActive) {
+            clearHeatmap();
+            isHeatmapActive = false;
+        }
+        btn.innerHTML = 'Show Heatmap';
+    }
+}
+
 const loader = new GLTFLoader();
 
 const loadPromises = modelIds.map(id => {
@@ -99,6 +120,9 @@ const loadPromises = modelIds.map(id => {
 
 Promise.all(loadPromises).then(() => {
     document.getElementById('loading').style.display = 'none';
+
+    // Initial view is the full building model.
+    setHeatmapButtonState('ModelFull.gltf');
 });
 
 /** * 5. HEATMAP & LABELS
@@ -188,9 +212,17 @@ window.updateBuildingHeatmap = async () => {
         activePrefix = currentModelId.replace('Model', '').charAt(0);
     }
 
-    let infoDiv = document.getElementById('room-info');
+    // Entering heatmap mode hides the single-room panel/selection.
+    const infoDiv = document.getElementById('room-info');
     if (infoDiv) infoDiv.remove();
+    if (clickedObject) clickedObject.material = baseMaterial;
     clickedObject = null;
+    selectedRoomTag = null;
+    selectedObjectName = null;
+
+    // Heatmap should only stream rooms for the active floor.
+    wantedRooms.clear();
+    reconcileRoomSubscriptions();
 
     isHeatmapActive = true;
     btn.innerHTML = 'clear Heatmap';
@@ -268,6 +300,19 @@ function clearHeatmap() {
 window.showOnly = (id) => {
     if(!modelCache[id]) return;
 
+    setHeatmapButtonState(id);
+
+    // Clear room selection and panel when switching floors.
+    if (clickedObject) clickedObject.material = baseMaterial;
+    clickedObject = null;
+    selectedRoomTag = null;
+    selectedObjectName = null;
+    const infoDiv = document.getElementById('room-info');
+    if (infoDiv) infoDiv.remove();
+    // Unsubscribe from any previously selected room.
+    wantedRooms.clear();
+    reconcileRoomSubscriptions();
+
     // Clear old labels first
     clearHeatmap();
 
@@ -277,11 +322,6 @@ window.showOnly = (id) => {
 
     if (id === 'ModelFull.gltf') {
         camera.position.set(100, 80, 100);
-        isHeatmapActive = true; // Reset state so the toggle turns it back "on"
-        window.updateBuildingHeatmap();
-        clickedObject = null;
-        document.getElementById('room-info').remove()
-
     }
 
     // If heatmap was already on, refresh it for the new floor
@@ -431,17 +471,27 @@ window.addEventListener('click', async (event) => {
         const obj = intersects[0].object;
 
         if (/^[EU12]/.test(obj.name)) {
-            // Reset previous room
-            if (clickedObject && !isHeatmapActive) clickedObject.material = baseMaterial;
+            const roomTag = normalizeRoomName(obj.name);
 
-            clickedObject = obj;
-            // If heatmap is active, don't overwrite heatmap material/colors.
-            if (!isHeatmapActive) {
-                clickedObject.material = baseMaterial.clone();
-                clickedObject.material.color.set(0xf1c40f); // Normal Yellow Highlight
+            // If heatmap is active, clicking a room should behave like "Clear Heatmap"
+            // and then switch to single-room highlight/value view.
+            if (isHeatmapActive) {
+                clearHeatmap();
+                isHeatmapActive = false;
+                const heatBtn = document.getElementById('heatMapButton');
+                if (heatBtn) heatBtn.innerHTML = 'Show Heatmap';
+
+                // Drop all heatmap room subscriptions; we'll re-add the clicked room below.
+                wantedRooms.clear();
+                reconcileRoomSubscriptions();
             }
 
-            const roomTag = normalizeRoomName(obj.name);
+            // Reset previous room
+            if (clickedObject) clickedObject.material = baseMaterial;
+
+            clickedObject = obj;
+            clickedObject.material = baseMaterial.clone();
+            clickedObject.material.color.set(0xf1c40f); // Normal Yellow Highlight
 
             // Live pub/sub: keep updating while selected.
             if (selectedRoomTag) {
