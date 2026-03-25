@@ -80,15 +80,11 @@ function setHeatmapButtonState(modelId) {
 
     if (tempBtn) {
         tempBtn.disabled = !enabled;
-        tempBtn.classList.toggle('heatmap-enabled', enabled);
-        tempBtn.classList.toggle('heatmap-disabled', !enabled);
         tempBtn.title = enabled ? '' : 'Heatmap is available on single-floor views only';
     }
     if (co2Btn) {
         co2Btn.disabled = !enabled;
-        co2Btn.classList.toggle('heatmap-enabled', enabled);
-        co2Btn.classList.toggle('heatmap-disabled', !enabled);
-        co2Btn.title = enabled ? '' : 'Heatmap is available on single-floor views only';
+        co2Btn.title = enabled ? '' : 'CO2 Heatmap is available on single-floor views only';
     }
 
     if (!enabled) {
@@ -96,6 +92,28 @@ function setHeatmapButtonState(modelId) {
             clearHeatmap();
             activeHeatmapType = null;
         }
+    }
+
+    updateHeatmapButtonClasses();
+}
+
+function updateHeatmapButtonClasses() {
+    const tempBtn = document.getElementById('heatMapButton');
+    const co2Btn = document.getElementById('co2HeatmapButton');
+
+    // Reset all classes
+    if (tempBtn) {
+        tempBtn.classList.remove('heatmap-active', 'co2-active');
+    }
+    if (co2Btn) {
+        co2Btn.classList.remove('heatmap-active', 'co2-active');
+    }
+
+    // Only the active heatmap type should be colored
+    if (activeHeatmapType === 'temp') {
+        if (tempBtn) tempBtn.classList.add('heatmap-active');
+    } else if (activeHeatmapType === 'co2') {
+        if (co2Btn) co2Btn.classList.add('co2-active');
     }
 }
 
@@ -217,13 +235,28 @@ function addCO2Label(mesh, co2) {
 }
 
 function getCO2Color(co2) {
-    // 400-800: green, 800-1000: yellow, >1000: red
+    // 400-800: dark green to light green
+    // 800-1000: yellow to orange
+    // 1000+: orange to red
+    
+    const colorDarkGreen = new THREE.Color(0x1e6f50);
+    const colorLightGreen = new THREE.Color(0x27ae60);
+    const colorYellow = new THREE.Color(0xf1c40f);
+    const colorOrange = new THREE.Color(0xe67e22);
+    const colorRed = new THREE.Color(0xe74c3c);
+    
     if (co2 <= 800) {
-        return new THREE.Color(0x27ae60); // Green
+        // 400-800: dark green to light green
+        const t = (co2 - 400) / 400;
+        return colorDarkGreen.clone().lerp(colorLightGreen, t);
     } else if (co2 <= 1000) {
-        return new THREE.Color(0xf1c40f); // Yellow
+        // 800-1000: yellow to orange
+        const t = (co2 - 800) / 200;
+        return colorYellow.clone().lerp(colorOrange, t);
     } else {
-        return new THREE.Color(0xe74c3c); // Red
+        // 1000+: orange to red
+        const t = Math.min(1, (co2 - 1000) / 700);
+        return colorOrange.clone().lerp(colorRed, t);
     }
 }
 
@@ -251,9 +284,10 @@ window.updateBuildingHeatmap = async () => {
 
     // Toggle temp heatmap
     if (activeHeatmapType === 'temp') {
-        btn.innerHTML = 'Temp Heatmap';
+        btn.innerHTML = 'Heatmap';
         clearHeatmap();
         activeHeatmapType = null;
+        updateHeatmapButtonClasses();
         return;
     }
 
@@ -287,7 +321,8 @@ window.updateBuildingHeatmap = async () => {
     reconcileRoomSubscriptions();
 
     activeHeatmapType = 'temp';
-    btn.innerHTML = 'Clear Heatmap';
+    btn.innerHTML = 'Heatmap';
+    updateHeatmapButtonClasses();
 
     const roomMeshes = [];
     currentModel.traverse(child => {
@@ -339,9 +374,10 @@ window.updateCO2Heatmap = async () => {
 
     // Toggle CO2 heatmap
     if (activeHeatmapType === 'co2') {
-        btn.innerHTML = 'CO2 Heatmap';
+        btn.innerHTML = 'CO2';
         clearHeatmap();
         activeHeatmapType = null;
+        updateHeatmapButtonClasses();
         return;
     }
 
@@ -372,7 +408,8 @@ window.updateCO2Heatmap = async () => {
     reconcileRoomSubscriptions();
 
     activeHeatmapType = 'co2';
-    btn.innerHTML = 'Clear CO2';
+    btn.innerHTML = 'CO2';
+    updateHeatmapButtonClasses();
 
     const roomMeshes = [];
     currentModel.traverse(child => {
@@ -426,7 +463,15 @@ function clearHeatmap() {
     const tempBtn = document.getElementById('heatMapButton');
     const co2Btn = document.getElementById('co2HeatmapButton');
     if (tempBtn) tempBtn.innerHTML = 'Heatmap';
-    if (co2Btn) co2Btn.innerHTML = 'CO2 Heatmap';
+    if (co2Btn) co2Btn.innerHTML = 'CO2';
+
+    // Update button classes to show inactive state
+    if (tempBtn) {
+        tempBtn.classList.remove('heatmap-active', 'co2-active');
+    }
+    if (co2Btn) {
+        co2Btn.classList.remove('heatmap-active', 'co2-active');
+    }
 
     // Drop heatmap subscriptions, but keep the selected room.
     for (const room of Array.from(wantedRooms)) {
