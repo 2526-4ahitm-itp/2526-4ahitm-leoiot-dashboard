@@ -719,9 +719,6 @@ window.addEventListener('click', async (event) => {
             // Keep existing Influx path (do not remove/change it)
             const temp = await getRoomTemperature(roomTag);
             let co2 = null;
-            if (roomTag === '105') {
-                co2 = await getRoomCO2();
-            }
 
             // Prefer live cached values if present; otherwise show Influx result.
             const live = latestLive.get(roomTag);
