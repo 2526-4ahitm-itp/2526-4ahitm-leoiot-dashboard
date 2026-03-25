@@ -71,26 +71,49 @@ const modelIds = ['ModelU.gltf','ModelE.gltf','Model1F.gltf','Model2F.gltf','Mod
 const modelCache = {};
 let currentModel = null;
 let clickedObject = null;
-let isHeatmapActive = false;
+let activeHeatmapType = null; // null, 'temp', 'co2'
 
 function setHeatmapButtonState(modelId) {
-    const btn = document.getElementById('heatMapButton');
-    if (!btn) return;
-
+    const tempBtn = document.getElementById('heatMapButton');
+    const co2Btn = document.getElementById('co2HeatmapButton');
     const enabled = modelId !== 'ModelFull.gltf';
-    btn.disabled = !enabled;
 
-    btn.classList.toggle('heatmap-enabled', enabled);
-    btn.classList.toggle('heatmap-disabled', !enabled);
-    btn.title = enabled ? '' : 'Heatmap is available on single-floor views only';
+    if (tempBtn) {
+        tempBtn.disabled = !enabled;
+        tempBtn.title = enabled ? '' : 'Heatmap is available on single-floor views only';
+    }
+    if (co2Btn) {
+        co2Btn.disabled = !enabled;
+        co2Btn.title = enabled ? '' : 'CO2 Heatmap is available on single-floor views only';
+    }
 
     if (!enabled) {
-        // Force heatmap off for full-building view.
-        if (isHeatmapActive) {
+        if (activeHeatmapType) {
             clearHeatmap();
-            isHeatmapActive = false;
+            activeHeatmapType = null;
         }
-        btn.innerHTML = 'Show Heatmap';
+    }
+
+    updateHeatmapButtonClasses();
+}
+
+function updateHeatmapButtonClasses() {
+    const tempBtn = document.getElementById('heatMapButton');
+    const co2Btn = document.getElementById('co2HeatmapButton');
+
+    // Reset all classes
+    if (tempBtn) {
+        tempBtn.classList.remove('heatmap-active', 'co2-active');
+    }
+    if (co2Btn) {
+        co2Btn.classList.remove('heatmap-active', 'co2-active');
+    }
+
+    // Only the active heatmap type should be colored
+    if (activeHeatmapType === 'temp') {
+        if (tempBtn) tempBtn.classList.add('heatmap-active');
+    } else if (activeHeatmapType === 'co2') {
+        if (co2Btn) co2Btn.classList.add('co2-active');
     }
 }
 
@@ -190,15 +213,88 @@ function updateHeatmapMesh(mesh, temp) {
     }
 }
 
+function addCO2Label(mesh, co2) {
+    const co2Div = document.createElement('div');
+    co2Div.className = 'co2-label';
+    co2Div.style.color = '#ffffff';
+    co2Div.style.backgroundColor = 'rgba(0,0,0,0.6)';
+    co2Div.style.padding = '2px 6px';
+    co2Div.style.borderRadius = '4px';
+    co2Div.style.fontFamily = 'sans-serif';
+    co2Div.style.fontSize = '12px';
+    co2Div.textContent = `${co2.toFixed(0)} ppm`;
+
+    const label = new CSS2DObject(co2Div);
+    label.name = 'co2Label';
+
+    const box = new THREE.Box3().setFromObject(mesh);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    label.position.copy(center);
+    mesh.add(label);
+}
+
+function getCO2Color(co2) {
+    // 400-800: dark green to light green
+    // 800-1000: yellow to orange
+    // 1000+: orange to red
+    
+    const colorDarkGreen = new THREE.Color(0x1e6f50);
+    const colorLightGreen = new THREE.Color(0x27ae60);
+    const colorYellow = new THREE.Color(0xf1c40f);
+    const colorOrange = new THREE.Color(0xe67e22);
+    const colorRed = new THREE.Color(0xe74c3c);
+    
+    if (co2 <= 800) {
+        // 400-800: dark green to light green
+        const t = (co2 - 400) / 400;
+        return colorDarkGreen.clone().lerp(colorLightGreen, t);
+    } else if (co2 <= 1000) {
+        // 800-1000: yellow to orange
+        const t = (co2 - 800) / 200;
+        return colorYellow.clone().lerp(colorOrange, t);
+    } else {
+        // 1000+: orange to red
+        const t = Math.min(1, (co2 - 1000) / 700);
+        return colorOrange.clone().lerp(colorRed, t);
+    }
+}
+
+function updateCO2HeatmapMesh(mesh, co2) {
+    const finalColor = getCO2Color(co2);
+
+    if (mesh.material === baseMaterial || mesh.material === glassMaterial || mesh.material === metalMaterial) {
+        mesh.material = baseMaterial.clone();
+    }
+    mesh.material.color.copy(finalColor);
+    mesh.material.transparent = false;
+    mesh.material.opacity = 1.0;
+
+    const label = mesh.getObjectByName('co2Label');
+    if (label && label.element) {
+        label.element.textContent = `${co2.toFixed(0)} ppm`;
+    } else {
+        addCO2Label(mesh, co2);
+    }
+}
+
 window.updateBuildingHeatmap = async () => {
     if (!currentModel) return;
     const btn = document.getElementById('heatMapButton');
 
-    if (isHeatmapActive) {
-        btn.innerHTML = 'show Heatmap';
+    // Toggle temp heatmap
+    if (activeHeatmapType === 'temp') {
+        btn.innerHTML = 'Heatmap';
         clearHeatmap();
-        isHeatmapActive = false;
+        activeHeatmapType = null;
+        updateHeatmapButtonClasses();
         return;
+    }
+
+    // If CO2 heatmap is active, clear it first
+    if (activeHeatmapType === 'co2') {
+        clearHeatmap();
+        activeHeatmapType = null;
     }
 
     // Determine which floor prefix to look for based on the current model's ID
@@ -224,8 +320,9 @@ window.updateBuildingHeatmap = async () => {
     wantedRooms.clear();
     reconcileRoomSubscriptions();
 
-    isHeatmapActive = true;
-    btn.innerHTML = 'clear Heatmap';
+    activeHeatmapType = 'temp';
+    btn.innerHTML = 'Heatmap';
+    updateHeatmapButtonClasses();
 
     const roomMeshes = [];
     currentModel.traverse(child => {
@@ -265,15 +362,117 @@ window.updateBuildingHeatmap = async () => {
 
         const live = latestLive.get(roomTag);
         const temp = (live && live.temp != null) ? live.temp : await getRoomTemperature(roomTag);
-        if (temp !== null && isHeatmapActive) {
+        if (temp !== null && activeHeatmapType === 'temp') {
             updateHeatmapMesh(mesh, temp);
         }
     }));
 };
 
+window.updateCO2Heatmap = async () => {
+    if (!currentModel) return;
+    const btn = document.getElementById('co2HeatmapButton');
+
+    // Toggle CO2 heatmap
+    if (activeHeatmapType === 'co2') {
+        btn.innerHTML = 'CO2';
+        clearHeatmap();
+        activeHeatmapType = null;
+        updateHeatmapButtonClasses();
+        return;
+    }
+
+    // If temp heatmap is active, clear it first
+    if (activeHeatmapType === 'temp') {
+        clearHeatmap();
+        activeHeatmapType = null;
+    }
+
+    // Determine which floor prefix to look for based on the current model's ID
+    let activePrefix = null;
+    const currentModelId = Object.keys(modelCache).find(key => modelCache[key] === currentModel);
+
+    if (currentModelId && currentModelId !== 'ModelFull.gltf') {
+        activePrefix = currentModelId.replace('Model', '').charAt(0);
+    }
+
+    // Entering heatmap mode hides the single-room panel/selection.
+    const infoDiv = document.getElementById('room-info');
+    if (infoDiv) infoDiv.remove();
+    if (clickedObject) clickedObject.material = baseMaterial;
+    clickedObject = null;
+    selectedRoomTag = null;
+    selectedObjectName = null;
+
+    // Heatmap should only stream rooms for the active floor.
+    wantedRooms.clear();
+    reconcileRoomSubscriptions();
+
+    activeHeatmapType = 'co2';
+    btn.innerHTML = 'CO2';
+    updateHeatmapButtonClasses();
+
+    const roomMeshes = [];
+    currentModel.traverse(child => {
+        if (child.isMesh) {
+            const name = child.name;
+            const isRoom = /^[EU12]/.test(name);
+            const matchesFloor = !activePrefix || name.startsWith(activePrefix);
+
+            if (isRoom && matchesFloor) {
+                roomMeshes.push(child);
+            }
+        }
+    });
+
+    co2MeshesByRoom.clear();
+
+    const roomsToSubscribe = new Set();
+    for (const mesh of roomMeshes) {
+        const roomTag = normalizeRoomName(mesh.name);
+        if (!roomTag) continue;
+
+        const list = co2MeshesByRoom.get(roomTag) || [];
+        list.push(mesh);
+        co2MeshesByRoom.set(roomTag, list);
+        roomsToSubscribe.add(roomTag);
+    }
+
+    for (const room of roomsToSubscribe) wantedRooms.add(room);
+    reconcileRoomSubscriptions();
+
+    // For CO2, we need to wait for live data or show initial state
+    // Since there's no Influx query for CO2 per room, we rely on live data
+    // Show a placeholder until data arrives
+    for (const mesh of roomMeshes) {
+        const roomTag = normalizeRoomName(mesh.name);
+        if (!roomTag) continue;
+
+        const live = latestLive.get(roomTag);
+        if (live && live.co2 != null && activeHeatmapType === 'co2') {
+            updateCO2HeatmapMesh(mesh, live.co2);
+        }
+    }
+};
+
 function clearHeatmap() {
     if (!currentModel) return;
     heatmapMeshesByRoom.clear();
+    co2MeshesByRoom.clear();
+
+    // Reset button text
+    const tempBtn = document.getElementById('heatMapButton');
+    const co2Btn = document.getElementById('co2HeatmapButton');
+    if (tempBtn) tempBtn.innerHTML = 'Heatmap';
+    if (co2Btn) co2Btn.innerHTML = 'CO2';
+
+    // Update button classes to show inactive state
+    if (tempBtn) {
+        tempBtn.classList.remove('heatmap-active', 'co2-active');
+    }
+    if (co2Btn) {
+        co2Btn.classList.remove('heatmap-active', 'co2-active');
+    }
+
     // Drop heatmap subscriptions, but keep the selected room.
     for (const room of Array.from(wantedRooms)) {
         if (room !== selectedRoomTag) {
@@ -288,9 +487,12 @@ function clearHeatmap() {
             if (child.material !== baseMaterial && child.material !== glassMaterial && child.material !== metalMaterial) {
                 child.material = baseMaterial;
             }
-            // Remove the 3D label
-            const label = child.getObjectByName('tempLabel');
-            if (label) child.remove(label);
+            // Remove the temp label
+            const tempLabel = child.getObjectByName('tempLabel');
+            if (tempLabel) child.remove(tempLabel);
+            // Remove the CO2 label
+            const co2Label = child.getObjectByName('co2Label');
+            if (co2Label) child.remove(co2Label);
         }
     });
 }
@@ -325,9 +527,12 @@ window.showOnly = (id) => {
     }
 
     // If heatmap was already on, refresh it for the new floor
-    if (isHeatmapActive) {
-        isHeatmapActive = false; // Reset state so the toggle turns it back "on"
+    if (activeHeatmapType === 'temp') {
+        activeHeatmapType = null;
         window.updateBuildingHeatmap();
+    } else if (activeHeatmapType === 'co2') {
+        activeHeatmapType = null;
+        window.updateCO2Heatmap();
     }
 
 };
@@ -356,8 +561,10 @@ const wantedRooms = new Set();
 const subscribedRooms = new Set();
 
 // Heatmap live update support
-// heatmapMeshesByRoom[room] = Mesh[] currently displayed in heatmap
+// heatmapMeshesByRoom[room] = Mesh[] currently displayed in temp heatmap
 const heatmapMeshesByRoom = new Map();
+// co2MeshesByRoom[room] = Mesh[] currently displayed in CO2 heatmap
+const co2MeshesByRoom = new Map();
 
 // latestLive[room] = { temp: number|null, co2: number|null, ts: number|null }
 const latestLive = new Map();
@@ -403,8 +610,8 @@ function ensureLiveWs() {
             state.ts = msg.ts || Date.now();
             latestLive.set(room, state);
 
-            // If heatmap is active, update any meshes for this room.
-            if (isHeatmapActive) {
+            // If temp heatmap is active, update any meshes for this room.
+            if (activeHeatmapType === 'temp') {
                 const meshes = heatmapMeshesByRoom.get(room);
                 if (meshes && meshes.length) {
                     for (const mesh of meshes) {
@@ -416,6 +623,16 @@ function ensureLiveWs() {
             state.co2 = msg.value;
             state.ts = msg.ts || Date.now();
             latestLive.set(room, state);
+
+            // If CO2 heatmap is active, update any meshes for this room.
+            if (activeHeatmapType === 'co2') {
+                const meshes = co2MeshesByRoom.get(room);
+                if (meshes && meshes.length) {
+                    for (const mesh of meshes) {
+                        updateCO2HeatmapMesh(mesh, msg.value);
+                    }
+                }
+            }
         } else {
             return;
         }
@@ -475,11 +692,9 @@ window.addEventListener('click', async (event) => {
 
             // If heatmap is active, clicking a room should behave like "Clear Heatmap"
             // and then switch to single-room highlight/value view.
-            if (isHeatmapActive) {
+            if (activeHeatmapType) {
                 clearHeatmap();
-                isHeatmapActive = false;
-                const heatBtn = document.getElementById('heatMapButton');
-                if (heatBtn) heatBtn.innerHTML = 'Show Heatmap';
+                activeHeatmapType = null;
 
                 // Drop all heatmap room subscriptions; we'll re-add the clicked room below.
                 wantedRooms.clear();
@@ -495,10 +710,7 @@ window.addEventListener('click', async (event) => {
 
             // Live pub/sub: keep updating while selected.
             if (selectedRoomTag) {
-                // If heatmap is active and the previous selection is part of the heatmap,
-                // keep it subscribed for heatmap live updates.
-                const keepForHeatmap = isHeatmapActive && heatmapMeshesByRoom.has(selectedRoomTag);
-                if (!keepForHeatmap) unwantRoom(selectedRoomTag);
+                unwantRoom(selectedRoomTag);
             }
             selectedRoomTag = roomTag;
             selectedObjectName = obj.name;
@@ -507,9 +719,6 @@ window.addEventListener('click', async (event) => {
             // Keep existing Influx path (do not remove/change it)
             const temp = await getRoomTemperature(roomTag);
             let co2 = null;
-            if (roomTag === '105') {
-                co2 = await getRoomCO2();
-            }
 
             // Prefer live cached values if present; otherwise show Influx result.
             const live = latestLive.get(roomTag);

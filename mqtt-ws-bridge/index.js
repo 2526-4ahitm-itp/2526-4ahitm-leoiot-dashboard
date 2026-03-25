@@ -39,12 +39,25 @@ function parseRoomFromCo2Topic(topic) {
   // fake-sensors: nili3/sensor/<roomid lower>_co2/state
   // Example: nili3/sensor/105_co2/state -> room 105
   // Example: nili3/sensor/e10_co2/state -> room E10
+  // Example: nili3/sensor/1aula_co2/state -> room 1Aula
   const m = topic.match(/^nili3\/sensor\/([^/]+)_co2\/state$/);
   if (!m) return null;
   const raw = m[1];
   if (!raw) return null;
-  const upper = raw.toUpperCase();
-  return upper;
+  
+  // Normalize room name:
+  // - "1aula" -> "1Aula" (digit prefix, capitalize first letter group)
+  // - "e10" -> "E10" (letter prefix, uppercase)
+  // - "105" -> "105" (digits only, unchanged)
+  if (/^\d/.test(raw)) {
+    // Starts with digit - capitalize first letter group
+    const match = raw.match(/^(\d+)([a-z]*)$/i);
+    if (match) {
+      return match[1] + (match[2] ? match[2].charAt(0).toUpperCase() + match[2].slice(1).toLowerCase() : '');
+    }
+  }
+  // Starts with letter or is just digits
+  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
 }
 
 function parseFloatPayload(payload) {
