@@ -202,6 +202,32 @@
 				background: rgba(255, 255, 255, 0.08);
 				transform: none;
 			}
+			#co2HeatmapButton.heatmap-enabled {
+				background: #27ae60;
+				color: #fff;
+				border: 1px solid rgba(255, 255, 255, 0.2);
+			}
+			#co2HeatmapButton.heatmap-enabled:hover {
+				background: #2ecc71;
+				transform: translateY(-2px);
+			}
+			#co2HeatmapButton.heatmap-enabled:active {
+				transform: translateY(0);
+			}
+			#co2HeatmapButton:disabled,
+			#co2HeatmapButton.heatmap-disabled {
+				background: rgba(255, 255, 255, 0.08);
+				color: rgba(255, 255, 255, 0.35);
+				border: 1px solid rgba(255, 255, 255, 0.08);
+				cursor: not-allowed;
+				box-shadow: none;
+				transform: none;
+				filter: grayscale(0.9);
+			}
+			#co2HeatmapButton:disabled:hover {
+				background: rgba(255, 255, 255, 0.08);
+				transform: none;
+			}
 		</style>
 
 		<div class="model-controls" id="button-container">
@@ -210,7 +236,8 @@
 			<button onclick="handleButtonClick(this, 'Model1F.gltf')">Floor 1</button>
 			<button onclick="handleButtonClick(this, 'Model2F.gltf')">Floor 2</button>
 			<button onclick="handleButtonClick(this, 'ModelFull.gltf')" class="reset-btn">Reset View</button>
-			<button onclick="updateBuildingHeatmap()" id="heatMapButton">Show Heatmap</button>
+			<button onclick="updateBuildingHeatmap()" id="heatMapButton">Heatmap</button>
+			<button onclick="updateCO2Heatmap()" id="co2HeatmapButton">CO2 Heatmap</button>
 		</div>
 	</body>
 </html>
