@@ -210,13 +210,26 @@ window.updateBuildingHeatmap = async () => {
     });
 
     heatmapMeshesByRoom.clear();
-    await Promise.all(roomMeshes.map(async (mesh) => {
+
+    // Build room -> meshes mapping first so we can batch subscriptions.
+    const roomsToSubscribe = new Set();
+    for (const mesh of roomMeshes) {
         const roomTag = normalizeRoomName(mesh.name);
-        if (!roomTag) return;
+        if (!roomTag) continue;
 
         const list = heatmapMeshesByRoom.get(roomTag) || [];
         list.push(mesh);
         heatmapMeshesByRoom.set(roomTag, list);
+        roomsToSubscribe.add(roomTag);
+    }
+
+    // Ensure we receive live updates for all heatmap rooms (batch).
+    for (const room of roomsToSubscribe) wantedRooms.add(room);
+    reconcileRoomSubscriptions();
+
+    await Promise.all(roomMeshes.map(async (mesh) => {
+        const roomTag = normalizeRoomName(mesh.name);
+        if (!roomTag) return;
 
         const live = latestLive.get(roomTag);
         const temp = (live && live.temp != null) ? live.temp : await getRoomTemperature(roomTag);
@@ -229,6 +242,13 @@ window.updateBuildingHeatmap = async () => {
 function clearHeatmap() {
     if (!currentModel) return;
     heatmapMeshesByRoom.clear();
+    // Drop heatmap subscriptions, but keep the selected room.
+    for (const room of Array.from(wantedRooms)) {
+        if (room !== selectedRoomTag) {
+            wantedRooms.delete(room);
+        }
+    }
+    reconcileRoomSubscriptions();
     // We traverse everything to ensure all labels are nuked
     currentModel.traverse(child => {
         if (child.isMesh) {
@@ -292,7 +312,8 @@ const mouse = new THREE.Vector2();
 const LIVE_WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8090';
 let liveWs = null;
 let liveWsConnected = false;
-let liveRoomSubscribed = null;
+const wantedRooms = new Set();
+const subscribedRooms = new Set();
 
 // Heatmap live update support
 // heatmapMeshesByRoom[room] = Mesh[] currently displayed in heatmap
@@ -309,9 +330,9 @@ function ensureLiveWs() {
 
     liveWs.addEventListener('open', () => {
         liveWsConnected = true;
-        if (liveRoomSubscribed) {
-            liveWs.send(JSON.stringify({ type: 'subscribe', room: liveRoomSubscribed }));
-        }
+        // Reconcile subscriptions after reconnect.
+        subscribedRooms.clear();
+        reconcileRoomSubscriptions();
     });
 
     liveWs.addEventListener('close', () => {
@@ -366,21 +387,35 @@ function ensureLiveWs() {
     });
 }
 
-function liveSubscribeRoom(room) {
-    if (!room) return;
+function reconcileRoomSubscriptions() {
     ensureLiveWs();
-    liveRoomSubscribed = room;
-    if (liveWsConnected && liveWs && liveWs.readyState === WebSocket.OPEN) {
+    if (!liveWsConnected || !liveWs || liveWs.readyState !== WebSocket.OPEN) return;
+
+    // Subscribe new rooms
+    for (const room of wantedRooms) {
+        if (subscribedRooms.has(room)) continue;
         liveWs.send(JSON.stringify({ type: 'subscribe', room }));
+        subscribedRooms.add(room);
+    }
+
+    // Unsubscribe removed rooms
+    for (const room of Array.from(subscribedRooms)) {
+        if (wantedRooms.has(room)) continue;
+        liveWs.send(JSON.stringify({ type: 'unsubscribe', room }));
+        subscribedRooms.delete(room);
     }
 }
 
-function liveUnsubscribeRoom(room) {
+function wantRoom(room) {
     if (!room) return;
-    if (liveRoomSubscribed === room) liveRoomSubscribed = null;
-    if (liveWsConnected && liveWs && liveWs.readyState === WebSocket.OPEN) {
-        liveWs.send(JSON.stringify({ type: 'unsubscribe', room }));
-    }
+    wantedRooms.add(room);
+    reconcileRoomSubscriptions();
+}
+
+function unwantRoom(room) {
+    if (!room) return;
+    wantedRooms.delete(room);
+    reconcileRoomSubscriptions();
 }
 
 let selectedRoomTag = null;
@@ -397,27 +432,27 @@ window.addEventListener('click', async (event) => {
 
         if (/^[EU12]/.test(obj.name)) {
             // Reset previous room
-            if (clickedObject) clickedObject.material = baseMaterial;
-
-            // Kill heatmap if user clicks a specific room
-            if (isHeatmapActive) {
-                clearHeatmap();
-                isHeatmapActive = false;
-                const heatBtn = document.getElementById('heatMapButton');
-                if(heatBtn) heatBtn.innerHTML = 'show Heatmap';
-            }
+            if (clickedObject && !isHeatmapActive) clickedObject.material = baseMaterial;
 
             clickedObject = obj;
-            clickedObject.material = baseMaterial.clone();
-            clickedObject.material.color.set(0xf1c40f); // Normal Yellow Highlight
+            // If heatmap is active, don't overwrite heatmap material/colors.
+            if (!isHeatmapActive) {
+                clickedObject.material = baseMaterial.clone();
+                clickedObject.material.color.set(0xf1c40f); // Normal Yellow Highlight
+            }
 
             const roomTag = normalizeRoomName(obj.name);
 
-            // Live pub/sub: subscribe on click and keep updating while selected.
-            if (selectedRoomTag) liveUnsubscribeRoom(selectedRoomTag);
+            // Live pub/sub: keep updating while selected.
+            if (selectedRoomTag) {
+                // If heatmap is active and the previous selection is part of the heatmap,
+                // keep it subscribed for heatmap live updates.
+                const keepForHeatmap = isHeatmapActive && heatmapMeshesByRoom.has(selectedRoomTag);
+                if (!keepForHeatmap) unwantRoom(selectedRoomTag);
+            }
             selectedRoomTag = roomTag;
             selectedObjectName = obj.name;
-            liveSubscribeRoom(roomTag);
+            wantRoom(roomTag);
 
             // Keep existing Influx path (do not remove/change it)
             const temp = await getRoomTemperature(roomTag);
