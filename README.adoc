@@ -66,4 +66,28 @@ docker compose down
 
 ---
 
+
+== Deployment (School VM)
+The project is deployed on `vm23.htl-leonding.ac.at`.
+
+=== Remote Access (from home)
+To access the services from outside the school network, use an SSH tunnel:
+[source,bash]
+----
+ssh -L 8080:localhost:8080 -L 8081:localhost:8081 -L 3000:localhost:3000 solmqadmin@vm23.htl-leonding.ac.at
+----
+
+
+Once connected, you can reach the services at:
+
+* **3D View:** http://localhost:8080
+* **Dashboard:** http://localhost:8081
+* **Grafana:** http://localhost:3000
+
+=== Local Access (at school)
+When connected to the school network (or VPN), access the services directly via the VM's hostname:
+
+`http://vm23.htl-leonding.ac.at:<PORT>`
+
+
 *Built with* MQTT, InfluxDB, Grafana, Quarkus, Three.js, Chart.js
