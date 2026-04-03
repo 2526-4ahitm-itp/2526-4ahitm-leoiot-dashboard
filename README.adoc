@@ -70,6 +70,10 @@ docker compose down
 == Deployment (School VM)
 The project is deployed on `vm23.htl-leonding.ac.at`.
 
+(username: `solmqadmin`)
+
+(password: `L4Sun@leo24.vm`)
+
 === Remote Access (from home)
 To access the services from outside the school network, use an SSH tunnel:
 [source,bash]
