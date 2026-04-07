@@ -6,6 +6,25 @@
 
 IoT sensor monitoring dashboard for building management. Tracks temperature and CO2 levels across multiple rooms in real-time.
 
+
+
+
+== Architecture Diagram
+
+
+[plantuml]
+----
+@startuml
+[Quarkus Backend] --> [MQTT]
+[Sensoren] --> [MQTT]
+[MQTT] --> [Telegraf]
+[MQTT] --> [3D-Model-Daten]
+[Telegraf] --> [InfluxDB]
+[InfluxDB] --> [Grafana]
+[InfluxDB] --> [Dashboard-History]
+@enduml
+----
+
 == Quick Start
 
 [source,bash]
