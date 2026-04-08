@@ -316,6 +316,8 @@ class FakeSensorSimulator {
 
     return new Promise((resolve, reject) => {
       this.client = mqtt.connect(url, {
+        username: 'leoiot',
+        password: 'leogreen',
         clientId: `fake-sensor-${Date.now()}`,
         clean: true,
         reconnectPeriod: 5000,

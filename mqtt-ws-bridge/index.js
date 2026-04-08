@@ -138,6 +138,8 @@ console.log(`[mqtt-ws-bridge] WS server listening on :${WS_PORT}`);
 
 // MQTT client
 const mqttClient = mqtt.connect(MQTT_URL, {
+  username: 'leoiot',
+  password: 'leogreen',
   reconnectPeriod: 1000,
 });
 
