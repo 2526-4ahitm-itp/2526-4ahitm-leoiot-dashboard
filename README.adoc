@@ -41,10 +41,10 @@ docker compose up -d
 [cols="^.^1,^.^3,^.<3", options="header"]
 |===
 | Service | URL | Description
-| *3D Building View* | http://localhost:8080 | Interactive 3D building with room temperatures
-| *Sensor Dashboard* | http://localhost:8081 | Clean dashboard with charts and sensor data
-| *Grafana* | http://localhost:3000 | Advanced analytics and visualizations
-| *InfluxDB* | http://localhost:8086 | Time-series database UI
+| *3D Building View* | http://vm23.htl-leonding.ac.at/ | Interactive 3D building with room temperatures
+| *Sensor Dashboard* | http://vm23.htl-leonding.ac.at/dashboard/ | Clean dashboard with charts and sensor data
+| *Grafana* | http://vm23.htl-leonding.ac.at:3000 | Advanced analytics and visualizations
+| *InfluxDB* | http://vm23.htl-leonding.ac.at/influx/ | Time-series database UI
 |===
 
 
@@ -86,31 +86,55 @@ docker compose down
 ---
 
 
+== Security (MQTT)
+The MQTT Broker (Mosquitto) is **password protected**. Anonymous access is disabled.
+
+* **Username:** `leoiot`
+* **Password:** `leogreen`
+
+This configuration is active on `vm23.htl-leonding.ac.at`.
+
 == Deployment (School VM)
-The project is deployed on `vm23.htl-leonding.ac.at`.
 
-(username: `solmqadmin`)
+The project is hosted on `vm23.htl-leonding.ac.at`.
+A **Reverse Proxy (Nginx)** is used to route all traffic through **Port 80**, bypassing school firewall restrictions for internal ports.
 
-(password: `L4Sun@leo24.vm`)
+* `/` -> 3D Building Explorer (Port 8080)
+* `/dashboard/` -> Dashboard-v2 (Port 8081)
+* `/influx/` -> InfluxDB API & UI (Port 8086)
+* `/ws` -> WebSocket Bridge (Port 8090)
 
-=== Remote Access (from home)
-To access the services from outside the school network, use an SSH tunnel:
+=== Console Access (SSH)
+To manage the VM or restart services, connect via SSH:
 [source,bash]
 ----
-ssh -L 8080:localhost:8080 -L 8081:localhost:8081 -L 3000:localhost:3000 -L 8086:localhost:8086 -L 8090:localhost:8090 solmqadmin@vm23.htl-leonding.ac.at
+ssh solmqadmin@vm23.htl-leonding.ac.at
+----
+* **User:** `solmqadmin`
+* **Password:** `L4Sun@leo24.vm`
+
+=== Updating the Deployment
+When changes are pushed to GitHub, update the VM with these commands:
+[source,bash]
+----
+cd 2526-4ahitm-leoiot-dashboard
+git pull
+docker compose up -d --build
 ----
 
+=== Infrastructure Note
+The project uses a **System-level Nginx** as a reverse proxy.
+* Config location: `/etc/nginx/sites-available/leoiot`
+* To reload after config changes: `sudo systemctl reload nginx`
 
-Once connected, you can reach the services at:
+=== Remote Access (from home)
+If you need to access internal ports (like 3000 for Grafana or 8086 for InfluxDB UI) from outside the school network, use an SSH tunnel:
 
-* **3D View:** http://localhost:8080
-* **Dashboard:** http://localhost:8081
-* **Grafana:** http://localhost:3000
-
-=== Local Access (at school)
-When connected to the school network (or VPN), access the services directly via the VM's hostname:
-
-`http://vm23.htl-leonding.ac.at:<PORT>`
+[source,bash]
+----
+ssh -L 3000:localhost:3000 -L 8086:localhost:8086 solmqadmin@vm23.htl-leonding.ac.at
+----
+Once connected, you can reach the services at `http://localhost:<PORT>`.
 
 
 *Built with* MQTT, InfluxDB, Grafana, Quarkus, Three.js, Chart.js
