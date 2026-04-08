@@ -554,7 +554,7 @@ const mouse = new THREE.Vector2();
  * Live pub/sub (WebSocket) for hover updates.
  * This is additive; existing InfluxDB fetch-on-click stays in place.
  */
-const LIVE_WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8090';
+const LIVE_WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + '/ws';
 let liveWs = null;
 let liveWsConnected = false;
 const wantedRooms = new Set();
@@ -733,7 +733,7 @@ window.addEventListener('click', async (event) => {
 
 /** * 8. DATA FETCHING (INFLUXDB)
  **/
-const INFLUXDB_URL = 'http://localhost:8086';
+const INFLUXDB_URL = '/influx';
 const INFLUXDB_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==';
 const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';

@@ -1,5 +1,5 @@
 // InfluxDB Configuration
-const INFLUXDB_URL = 'http://localhost:8086';
+const INFLUXDB_URL = '/influx';
 const INFLUXDB_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==';
 const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
