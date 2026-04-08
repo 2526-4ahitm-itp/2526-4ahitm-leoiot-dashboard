@@ -127,14 +127,5 @@ The project uses a **System-level Nginx** as a reverse proxy.
 * Config location: `/etc/nginx/sites-available/leoiot`
 * To reload after config changes: `sudo systemctl reload nginx`
 
-=== Remote Access (from home)
-If you need to access internal ports (like 3000 for Grafana or 8086 for InfluxDB UI) from outside the school network, use an SSH tunnel:
-
-[source,bash]
-----
-ssh -L 3000:localhost:3000 -L 8086:localhost:8086 solmqadmin@vm23.htl-leonding.ac.at
-----
-Once connected, you can reach the services at `http://localhost:<PORT>`.
-
 
 *Built with* MQTT, InfluxDB, Grafana, Quarkus, Three.js, Chart.js
