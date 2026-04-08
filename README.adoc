@@ -41,10 +41,10 @@ docker compose up -d
 [cols="^.^1,^.^3,^.<3", options="header"]
 |===
 | Service | URL | Description
-| *3D Building View* | http://vm23.htl-leonding.ac.at/ | Interactive 3D building with room temperatures
-| *Sensor Dashboard* | http://vm23.htl-leonding.ac.at/dashboard/ | Clean dashboard with charts and sensor data
-| *Grafana* | http://vm23.htl-leonding.ac.at:3000 | Advanced analytics and visualizations
-| *InfluxDB* | http://vm23.htl-leonding.ac.at/influx/ | Time-series database UI
+| *3D Building View* | https://vm23.htl-leonding.ac.at/ | Interactive 3D building with room temperatures
+| *Sensor Dashboard* | https://vm23.htl-leonding.ac.at/dashboard/ | Clean dashboard with charts and sensor data
+| *Grafana* | https://vm23.htl-leonding.ac.at:3000 | Advanced analytics and visualizations
+| *InfluxDB* | https://vm23.htl-leonding.ac.at/influx/ | Time-series database UI
 |===
 
 
