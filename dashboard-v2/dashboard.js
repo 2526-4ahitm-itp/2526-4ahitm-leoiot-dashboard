@@ -297,8 +297,7 @@ async function fetchRoom105Temperature() {
       |> yield(name: "mean")`;
 
 	try {
-		const response = await fetchInfluxDB(query);
-		const csvData = await response.text();
+		const csvData = await fetchInfluxDB(query);
 		const lines = csvData.trim().split('\n');
 		if (lines.length < 2) return [];
 
