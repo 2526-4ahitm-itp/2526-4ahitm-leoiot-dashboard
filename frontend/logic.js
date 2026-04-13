@@ -739,13 +739,13 @@ const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
 async function getRoomTemperature(roomName) {
-    // For Room 105, also check nili3_temperature measurement
+    // For Room 105, also check mqtt_consumer measurement with nili3_temperature topic
     if (roomName === '105') {
         const query = `from(bucket: "${INFLUXDB_BUCKET}")
           |> range(start: -24h)
-          |> filter(fn: (r) => r._measurement == "room_temperature")
-          |> filter(fn: (r) => r._field == "temperature")
-          |> filter(fn: (r) => r.room == "${roomName}" or r.topic == "nili3_temperature/state")
+          |> filter(fn: (r) => r._measurement == "mqtt_consumer")
+          |> filter(fn: (r) => r.topic == "nili3/sensor/nili3_temperature/state")
+          |> filter(fn: (r) => r._field == "value")
           |> last()`;
 
         try {

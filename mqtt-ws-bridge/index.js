@@ -148,9 +148,9 @@ const mqttClient = mqtt.connect(MQTT_URL, {
 
 mqttClient.on('connect', () => {
   console.log(`[mqtt-ws-bridge] Connected to MQTT at ${MQTT_URL}`);
-  mqttClient.subscribe(['room-temperature', 'nili3/sensor/#', 'nili3_temperature/state'], { qos: 0 }, (err) => {
+  mqttClient.subscribe(['room-temperature', 'nili3/sensor/#', 'nili3/sensor/nili3_temperature/state'], { qos: 0 }, (err) => {
     if (err) console.error('[mqtt-ws-bridge] Subscribe error:', err.message);
-    else console.log('[mqtt-ws-bridge] Subscribed to room-temperature + nili3/sensor/# + nili3_temperature/state');
+    else console.log('[mqtt-ws-bridge] Subscribed to room-temperature + nili3/sensor/# + nili3/sensor/nili3_temperature/state');
   });
 });
 
@@ -181,8 +181,8 @@ mqttClient.on('message', (topic, payloadBuf) => {
     return;
   }
 
-  // Handle nili3_temperature/state -> Room 105
-  if (topic === 'nili3_temperature/state') {
+  // Handle nili3/sensor/nili3_temperature/state -> Room 105
+  if (topic === 'nili3/sensor/nili3_temperature/state') {
     const value = parseFloatPayload(payload);
     if (value === null) return;
 

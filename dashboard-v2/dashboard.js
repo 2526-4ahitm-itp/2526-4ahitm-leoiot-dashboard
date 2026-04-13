@@ -295,12 +295,12 @@ async function fetchAllRoomData() {
        |> last()
        |> group(columns: ["topic"])`;
 
-	// Also fetch Room 105 temperature from nili3_temperature topic
+	// Also fetch Room 105 temperature from nili3/sensor/nili3_temperature/state topic
 	const room105TempQuery = `from(bucket: "${INFLUXDB_BUCKET}")
        |> range(start: -1h)
-       |> filter(fn: (r) => r._measurement == "room_temperature")
-       |> filter(fn: (r) => r._field == "temperature")
-       |> filter(fn: (r) => r.topic == "nili3_temperature/state")
+       |> filter(fn: (r) => r._measurement == "mqtt_consumer")
+       |> filter(fn: (r) => r._field == "value")
+       |> filter(fn: (r) => r.topic == "nili3/sensor/nili3_temperature/state")
        |> last()`;
 
 	try {
@@ -313,7 +313,7 @@ async function fetchAllRoomData() {
 		const tempData = parseRoomData(tempResponse, 'room');
 		const co2Data = parseCO2RoomData(co2Response);
 
-		// Parse Room 105 temperature from nili3_temperature topic
+		// Parse Room 105 temperature from nili3/sensor/nili3_temperature/state topic
 		let room105Temp = null;
 		let room105Time = new Date();
 		try {
@@ -352,7 +352,7 @@ async function fetchAllRoomData() {
 			}
 		});
 
-		// Ensure Room 105 always appears in the table with temperature from nili3_temperature
+		// Ensure Room 105 always appears in the table with temperature from nili3/sensor/nili3_temperature/state
 		if (!rooms['105']) {
 			rooms['105'] = {
 				room: '105',
