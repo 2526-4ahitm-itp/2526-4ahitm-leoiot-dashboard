@@ -32,7 +32,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 	await refreshAllData();
 
 	// Auto-refresh every 30 seconds
-	setInterval(refreshAllData, 30000);
+	let lastRefresh = Date.now();
+	setInterval(async () => {
+		await refreshAllData();
+		lastRefresh = Date.now();
+	}, 30000);
+
+	// Update countdown every second
+	setInterval(() => {
+		const elapsed = Math.floor((Date.now() - lastRefresh) / 1000);
+		const remaining = Math.max(0, 30 - elapsed);
+		const refreshEl = document.getElementById('tableLastRefresh');
+		if (refreshEl) {
+			const now = new Date(lastRefresh);
+			const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+			refreshEl.textContent = `Refreshed: ${timeStr} · Next in ${remaining}s`;
+		}
+	}, 1000);
 });
 
 // Initialize Chart.js charts
@@ -416,12 +432,14 @@ async function fetchAllRoomData() {
 
 // Fetch from InfluxDB
 async function fetchInfluxDB(query) {
-	const response = await fetch(`${INFLUXDB_URL}/api/v2/query?org=${INFLUXDB_ORG}`, {
+	const response = await fetch(`${INFLUXDB_URL}/api/v2/query?org=${INFLUXDB_ORG}&t=${Date.now()}`, {
 		method: 'POST',
 		headers: {
 			'Authorization': `Token ${INFLUXDB_TOKEN}`,
 			'Content-Type': 'application/vnd.flux',
-			'Accept': 'application/csv'
+			'Accept': 'application/csv',
+			'Cache-Control': 'no-cache, no-store, must-revalidate',
+			'Pragma': 'no-cache'
 		},
 		body: query
 	});
