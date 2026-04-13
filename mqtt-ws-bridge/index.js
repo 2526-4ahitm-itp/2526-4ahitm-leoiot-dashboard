@@ -6,6 +6,9 @@ const MQTT_PORT = process.env.MQTT_PORT || '1883';
 const WS_PORT = parseInt(process.env.WS_PORT || '8090', 10);
 
 const MQTT_URL = `mqtt://${MQTT_HOST}:${MQTT_PORT}`;
+const ROOM_105 = '105';
+const ROOM_105_CO2_TOPIC_PREFIX = 'nili3_co2/';
+const ROOM_105_TEMP_TOPIC = 'nili3_temperature';
 
 // Cache latest values per room
 // rooms[room] = { temp: { value, ts }, co2: { value, ts } }
@@ -63,6 +66,20 @@ function parseRoomFromCo2Topic(topic) {
 function parseFloatPayload(payload) {
   const v = Number(String(payload).trim());
   return Number.isFinite(v) ? v : null;
+}
+
+function parseTemperaturePayload(payload) {
+  const asFloat = parseFloatPayload(payload);
+  if (asFloat !== null) return asFloat;
+
+  try {
+    const obj = JSON.parse(payload);
+    if (!obj || typeof obj !== 'object') return null;
+    const value = typeof obj.temperature === 'number' ? obj.temperature : Number(obj.temperature);
+    return Number.isFinite(value) ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 // WS: room subscriptions
@@ -143,9 +160,9 @@ const mqttClient = mqtt.connect(MQTT_URL, {
 
 mqttClient.on('connect', () => {
   console.log(`[mqtt-ws-bridge] Connected to MQTT at ${MQTT_URL}`);
-  mqttClient.subscribe(['room-temperature', 'nili3/sensor/#'], { qos: 0 }, (err) => {
+  mqttClient.subscribe(['room-temperature', 'nili3/sensor/#', `${ROOM_105_CO2_TOPIC_PREFIX}#`, ROOM_105_TEMP_TOPIC], { qos: 0 }, (err) => {
     if (err) console.error('[mqtt-ws-bridge] Subscribe error:', err.message);
-    else console.log('[mqtt-ws-bridge] Subscribed to room-temperature + nili3/sensor/#');
+    else console.log('[mqtt-ws-bridge] Subscribed to room-temperature + nili3/sensor/# + nili3_co2/# + nili3_temperature');
   });
 });
 
@@ -153,11 +170,32 @@ mqttClient.on('message', (topic, payloadBuf) => {
   const payload = payloadBuf.toString('utf8');
   const ts = nowTs();
 
+  if (topic.startsWith(ROOM_105_CO2_TOPIC_PREFIX)) {
+    const value = parseFloatPayload(payload);
+    if (value === null) return;
+
+    const state = getRoomState(ROOM_105);
+    state.co2 = { value, ts };
+    broadcastToRoom(ROOM_105, { type: 'co2', room: ROOM_105, value, ts, topic });
+    return;
+  }
+
+  if (topic === ROOM_105_TEMP_TOPIC) {
+    const value = parseTemperaturePayload(payload);
+    if (value === null) return;
+
+    const state = getRoomState(ROOM_105);
+    state.temp = { value, ts };
+    broadcastToRoom(ROOM_105, { type: 'temp', room: ROOM_105, value, ts, topic });
+    return;
+  }
+
   if (topic === 'room-temperature') {
     const parsed = parseRoomTemperatureMessage(payload);
     if (!parsed) return;
 
     const { room, value } = parsed;
+    if (room === ROOM_105) return;
     const state = getRoomState(room);
     state.temp = { value, ts };
 
@@ -167,6 +205,7 @@ mqttClient.on('message', (topic, payloadBuf) => {
 
   const co2Room = parseRoomFromCo2Topic(topic);
   if (co2Room) {
+    if (co2Room === ROOM_105) return;
     const value = parseFloatPayload(payload);
     if (value === null) return;
 
