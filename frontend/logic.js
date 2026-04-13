@@ -739,6 +739,41 @@ const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
 async function getRoomTemperature(roomName) {
+    // For Room 105, also check nili3_temperature measurement
+    if (roomName === '105') {
+        const query = `from(bucket: "${INFLUXDB_BUCKET}")
+          |> range(start: -24h)
+          |> filter(fn: (r) => r._measurement == "room_temperature")
+          |> filter(fn: (r) => r._field == "temperature")
+          |> filter(fn: (r) => r.room == "${roomName}" or r.topic == "nili3_temperature/state")
+          |> last()`;
+
+        try {
+            const response = await fetch(`${INFLUXDB_URL}/api/v2/query?org=${INFLUXDB_ORG}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${INFLUXDB_TOKEN}`,
+                    'Content-Type': 'application/vnd.flux',
+                    'Accept': 'application/csv'
+                },
+                body: query
+            });
+            if (!response.ok) return null;
+            const csvData = await response.text();
+            const lines = csvData.trim().split('\n');
+            if (lines.length > 1) {
+                const dataLine = lines[lines.length - 1];
+                const columns = dataLine.split(',');
+                const headers = lines[0].split(',');
+                const valueIndex = headers.indexOf('_value');
+                if (valueIndex !== -1 && columns[valueIndex]) return parseFloat(columns[valueIndex]);
+            }
+            return null;
+        } catch (error) {
+            return null;
+        }
+    }
+
     const query = `from(bucket: "${INFLUXDB_BUCKET}")
       |> range(start: -24h)
       |> filter(fn: (r) => r._measurement == "room_temperature" and r.room == "${roomName}")

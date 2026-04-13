@@ -183,6 +183,13 @@ function updateRoomSelector(tempData) {
 	const rooms = Object.keys(tempData).sort();
 	availableRooms = rooms;
 
+	// Ensure Room 105 always appears in the selector (live WS feed may have data even if InfluxDB doesn't)
+	if (!rooms.includes('105')) {
+		tempData['105'] = [];
+		rooms.push('105');
+		rooms.sort();
+	}
+
 	const container = document.getElementById('sensorButtons');
 	const searchTerm = document.getElementById('sensorSearch')?.value.toLowerCase().trim() || '';
 
@@ -288,14 +295,40 @@ async function fetchAllRoomData() {
        |> last()
        |> group(columns: ["topic"])`;
 
+	// Also fetch Room 105 temperature from nili3_temperature topic
+	const room105TempQuery = `from(bucket: "${INFLUXDB_BUCKET}")
+       |> range(start: -1h)
+       |> filter(fn: (r) => r._measurement == "room_temperature")
+       |> filter(fn: (r) => r._field == "temperature")
+       |> filter(fn: (r) => r.topic == "nili3_temperature/state")
+       |> last()`;
+
 	try {
-		const [tempResponse, co2Response] = await Promise.all([
+		const [tempResponse, co2Response, room105TempResponse] = await Promise.all([
 			fetchInfluxDB(tempQuery),
-			fetchInfluxDB(co2Query)
+			fetchInfluxDB(co2Query),
+			fetchInfluxDB(room105TempQuery)
 		]);
 
 		const tempData = parseRoomData(tempResponse, 'room');
 		const co2Data = parseCO2RoomData(co2Response);
+
+		// Parse Room 105 temperature from nili3_temperature topic
+		let room105Temp = null;
+		let room105Time = new Date();
+		try {
+			const lines = room105TempResponse.trim().split('\n');
+			if (lines.length > 1) {
+				const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+				const valueIndex = headers.indexOf('_value');
+				const timeIndex = headers.indexOf('_time');
+				const columns = lines[lines.length - 1].split(',').map(c => c.trim().replace(/"/g, ''));
+				if (columns[valueIndex]) {
+					room105Temp = parseFloat(columns[valueIndex]);
+					if (columns[timeIndex]) room105Time = new Date(columns[timeIndex]);
+				}
+			}
+		} catch (e) { /* ignore */ }
 
 		const rooms = {};
 		tempData.forEach(r => {
@@ -318,6 +351,20 @@ async function fetchAllRoomData() {
 				}
 			}
 		});
+
+		// Ensure Room 105 always appears in the table with temperature from nili3_temperature
+		if (!rooms['105']) {
+			rooms['105'] = {
+				room: '105',
+				temperature: room105Temp,
+				co2: rooms['105']?.co2 || null,
+				time: room105Time
+			};
+		} else if (room105Temp !== null) {
+			// Override with nili3_temperature data if available
+			rooms['105'].temperature = room105Temp;
+			rooms['105'].time = room105Time;
+		}
 
 		return Object.values(rooms);
 	} catch (error) {
@@ -499,7 +546,12 @@ function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
 		roomData.forEach(({ value }) => { sum += value; });
 		avgTemp24h = roomData.length > 0 ? sum / roomData.length : 0;
 
-		document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
+		// For Room 105, show "No data" if no InfluxDB data exists
+		if (selectedSensor === '105' && roomData.length === 0) {
+			document.getElementById('currentTemp').textContent = 'No data';
+		} else {
+			document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
+		}
 		document.getElementById('avgTemp24h').textContent = `${avgTemp24h.toFixed(1)}°C`;
 
 		// Setup correct CO2 logic for custom room mapping
