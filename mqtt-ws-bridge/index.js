@@ -44,7 +44,10 @@ function parseRoomFromCo2Topic(topic) {
   if (!m) return null;
   const raw = m[1];
   if (!raw) return null;
-  
+
+  // Map 'nili3' to Room 105 (matches dashboard-v2 mapping)
+  if (raw.toLowerCase() === 'nili3') return '105';
+
   // Normalize room name:
   // - "1aula" -> "1Aula" (digit prefix, capitalize first letter group)
   // - "e10" -> "E10" (letter prefix, uppercase)
