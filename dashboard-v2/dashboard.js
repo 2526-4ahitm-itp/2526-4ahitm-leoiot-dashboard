@@ -150,12 +150,20 @@ window.showMoreRooms = () => {
 
 // Refresh all data
 window.refreshAllData = async () => {
-	const [tempData, co2Data, allRoomData, room105CO2] = await Promise.all([
+	const [tempData, co2Data, allRoomData, room105CO2, room105Temp] = await Promise.all([
 		fetchTemperatureData(),
 		fetchCO2Data(),
 		fetchAllRoomData(),
-		fetchRoom105CO2() // Special fetch for Room 105 latest CO2
+		fetchRoom105CO2(), // Special fetch for Room 105 latest CO2
+		fetchRoom105Temperature() // Special fetch for Room 105 latest temperature
 	]);
+
+	// Inject Room 105 temperature into tempData so chart/summary cards work
+	if (room105Temp.length > 0) {
+		tempData['105'] = room105Temp;
+	} else if (!tempData['105']) {
+		tempData['105'] = [];
+	}
 
 	// Apply the specific 20s Room 105 query to the general room data array
 	let room105 = allRoomData.find(r => r.room === '105');
@@ -274,6 +282,40 @@ async function fetchRoom105CO2() {
 		return parseCO2RoomData(response);
 	} catch (error) {
 		console.error('Error fetching Room 105 CO2 data:', error);
+		return [];
+	}
+}
+
+// Custom Fetch for Room 105 temperature history (from nili3/sensor/nili3_temperature/state)
+async function fetchRoom105Temperature() {
+	const topic = "nili3/sensor/nili3_temperature/state";
+	const query = `from(bucket: "${INFLUXDB_BUCKET}")
+      |> range(start: -${currentTimeRange})
+      |> filter(fn: (r) => r._measurement == "mqtt_consumer" and r.topic == "${topic}")
+      |> filter(fn: (r) => r._field == "value")
+      |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+      |> yield(name: "mean")`;
+
+	try {
+		const response = await fetchInfluxDB(query);
+		const csvData = await response.text();
+		const lines = csvData.trim().split('\n');
+		if (lines.length < 2) return [];
+
+		const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+		const valueIndex = headers.indexOf('_value');
+		const timeIndex = headers.indexOf('_time');
+
+		const data = [];
+		for (let i = 1; i < lines.length; i++) {
+			const columns = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
+			if (!columns[valueIndex] || !columns[timeIndex]) continue;
+			data.push({ time: new Date(columns[timeIndex]), value: parseFloat(columns[valueIndex]) });
+		}
+		data.sort((a, b) => a.time - b.time);
+		return data;
+	} catch (error) {
+		console.error('Error fetching Room 105 temperature data:', error);
 		return [];
 	}
 }
@@ -546,12 +588,7 @@ function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
 		roomData.forEach(({ value }) => { sum += value; });
 		avgTemp24h = roomData.length > 0 ? sum / roomData.length : 0;
 
-		// For Room 105, show "No data" if no InfluxDB data exists
-		if (selectedSensor === '105' && roomData.length === 0) {
-			document.getElementById('currentTemp').textContent = 'No data';
-		} else {
-			document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
-		}
+		document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
 		document.getElementById('avgTemp24h').textContent = `${avgTemp24h.toFixed(1)}°C`;
 
 		// Setup correct CO2 logic for custom room mapping
