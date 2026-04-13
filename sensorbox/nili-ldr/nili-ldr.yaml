@@ -52,8 +52,8 @@ web_server:
 mqtt:
   broker: !secret mqtt_broker
   port: !secret mqtt_port
-#  username: !secret mqtt_user
-#  password: !secret mqtt_password
+  username: !secret mqtt_user
+  password: !secret mqtt_password
   client_id: "nili3_usb"
   discovery: false
 
