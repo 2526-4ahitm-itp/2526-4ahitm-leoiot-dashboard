@@ -102,6 +102,46 @@ body {
 	gap: 20px;
 }
 
+/* Tab Navigation */
+.tab-navigation {
+	display: flex;
+	gap: 8px;
+	background: rgba(255, 255, 255, 0.05);
+	padding: 5px;
+	border-radius: 25px;
+}
+
+.tab-btn {
+	background: transparent;
+	color: rgba(255, 255, 255, 0.6);
+	border: none;
+	padding: 8px 16px;
+	border-radius: 20px;
+	cursor: pointer;
+	font-size: 13px;
+	transition: all 0.2s ease;
+	white-space: nowrap;
+}
+
+.tab-btn:hover {
+	color: white;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn.active {
+	background: rgba(255, 255, 255, 0.3);
+	color: white;
+}
+
+/* Tab Content */
+.tab-content {
+	display: none;
+}
+
+.tab-content.active {
+	display: block;
+}
+
 .time-range-selector {
 	display: flex;
 	gap: 8px;
@@ -498,6 +538,36 @@ tbody td.status-medium {
 	color: rgba(255, 255, 255, 0.6);
 	font-size: 12px;
 	margin-left: 4px;
+}
+
+/* PV Error Banner */
+.pv-error-banner {
+	display: none;
+	background: rgba(251, 191, 36, 0.1);
+	border: 1px solid rgba(251, 191, 36, 0.3);
+	border-radius: 12px;
+	padding: 20px;
+	margin-bottom: 20px;
+	gap: 15px;
+	align-items: flex-start;
+}
+
+.pv-error-icon {
+	font-size: 32px;
+	flex-shrink: 0;
+}
+
+.pv-error-content h3 {
+	font-size: 16px;
+	font-weight: 500;
+	color: #fbbf24;
+	margin-bottom: 8px;
+}
+
+.pv-error-content p {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.7);
+	line-height: 1.5;
 }
 
 /* Responsive */
