@@ -185,6 +185,7 @@
 				transition: all 0.2s ease;
 				text-transform: uppercase;
 				letter-spacing: 1px;
+				white-space: nowrap;
 			}
 
 			.model-controls button:hover {
@@ -261,10 +262,10 @@
 		<div class="model-controls" id="button-container">
 			<button onclick="handleButtonClick(this, 'ModelU.gltf')">Basement</button>
 			<button onclick="handleButtonClick(this, 'ModelE.gltf')">Ground</button>
-			<button onclick="handleButtonClick(this, 'Model1F.gltf')">Floor 1</button>
-			<button onclick="handleButtonClick(this, 'Model2F.gltf')">Floor 2</button>
+			<button onclick="handleButtonClick(this, 'Model1F.gltf')">Floor&nbsp;1</button>
+			<button onclick="handleButtonClick(this, 'Model2F.gltf')">Floor&nbsp;2</button>
 			<button onclick="handleButtonClick(this, 'ModelFull.gltf')" class="reset-btn">Reset View</button>
-			<button onclick="updateBuildingHeatmap()" id="heatMapButton">Heatmap</button>
+			<button onclick="updateBuildingHeatmap()" id="heatMapButton">Temperature</button>
 			<button onclick="updateCO2Heatmap()" id="co2HeatmapButton">CO2</button>
 		</div>
 	</body>
