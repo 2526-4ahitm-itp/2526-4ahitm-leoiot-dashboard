@@ -284,7 +284,7 @@ window.updateBuildingHeatmap = async () => {
 
     // Toggle temp heatmap
     if (activeHeatmapType === 'temp') {
-        btn.innerHTML = 'Heatmap';
+        btn.innerHTML = 'Temperature';
         clearHeatmap();
         activeHeatmapType = null;
         updateHeatmapButtonClasses();
@@ -321,7 +321,7 @@ window.updateBuildingHeatmap = async () => {
     reconcileRoomSubscriptions();
 
     activeHeatmapType = 'temp';
-    btn.innerHTML = 'Heatmap';
+    btn.innerHTML = 'Temperature';
     updateHeatmapButtonClasses();
 
     const roomMeshes = [];
@@ -462,7 +462,7 @@ function clearHeatmap() {
     // Reset button text
     const tempBtn = document.getElementById('heatMapButton');
     const co2Btn = document.getElementById('co2HeatmapButton');
-    if (tempBtn) tempBtn.innerHTML = 'Heatmap';
+    if (tempBtn) tempBtn.innerHTML = 'Temperature';
     if (co2Btn) co2Btn.innerHTML = 'CO2';
 
     // Update button classes to show inactive state
