@@ -282,8 +282,8 @@ function updateRoomSelector(tempData) {
 	rooms.forEach(room => {
 		// Apply floor filters
 		const matchesFloor = currentFloorFilter === 'all' ||
-			(currentFloorFilter === '1' && /^\d{3}$/.test(room)) ||
-			(currentFloorFilter === '2' && /^2\d{2}$/.test(room)) ||
+			(currentFloorFilter === '1' && room.startsWith('1')) ||
+			(currentFloorFilter === '2' && room.startsWith('2')) ||
 			(currentFloorFilter === 'E' && room.startsWith('E')) ||
 			(currentFloorFilter === 'U' && room.startsWith('U'));
 
@@ -595,8 +595,8 @@ function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
 		// Get only rooms that match the current floor filter
 		const filteredRooms = Object.keys(tempData).filter(room => {
 			return currentFloorFilter === 'all' ||
-				(currentFloorFilter === '1' && /^\d{3}$/.test(room)) ||
-				(currentFloorFilter === '2' && /^2\d{2}$/.test(room)) ||
+				(currentFloorFilter === '1' && room.startsWith('1')) ||
+				(currentFloorFilter === '2' && room.startsWith('2')) ||
 				(currentFloorFilter === 'E' && room.startsWith('E')) ||
 				(currentFloorFilter === 'U' && room.startsWith('U'));
 		});
