@@ -121,10 +121,12 @@ window.filterByFloor = async (floor) => {
 // Select sensor
 window.selectSensor = async (sensor) => {
 	selectedSensor = sensor;
-	document.querySelectorAll('.sensor-btn').forEach(btn => {
-		btn.classList.remove('active');
-		if (btn.dataset.sensor === sensor) btn.classList.add('active');
-	});
+	
+	// Update dropdown if not already set (for programmatic calls)
+	const dropdown = document.getElementById('sensorDropdown');
+	if (dropdown && dropdown.value !== sensor) {
+		dropdown.value = sensor;
+	}
 
 	const label = sensor === 'all' ? 'All Rooms' : `Room ${sensor}`;
 	document.getElementById('tempChartSubtitle').textContent = label;
@@ -138,12 +140,12 @@ window.selectSensor = async (sensor) => {
 // Filter sensors based on search and floor
 window.filterSensors = () => {
 	const searchTerm = document.getElementById('sensorSearch').value.toLowerCase().trim();
-	const buttons = document.querySelectorAll('.sensor-btn[data-sensor]');
+	const options = document.querySelectorAll('#sensorDropdown option');
 
-	buttons.forEach(btn => {
-		const room = btn.dataset.sensor;
+	options.forEach(opt => {
+		const room = opt.value;
 		if (room === 'all') {
-			btn.style.display = '';
+			opt.style.display = '';
 			return;
 		}
 
@@ -154,7 +156,10 @@ window.filterSensors = () => {
 			(currentFloorFilter === 'E' && room.startsWith('E')) ||
 			(currentFloorFilter === 'U' && room.startsWith('U'));
 
-		btn.style.display = (matchesSearch && matchesFloor) ? '' : 'none';
+		opt.style.display = (matchesSearch && matchesFloor) ? '' : 'none';
+		
+		// If the currently selected option is now hidden, we might want to reset to 'all'
+		// but usually it's better to let the user see what they selected even if it doesn't match current filter
 	});
 };
 
@@ -202,7 +207,7 @@ window.refreshAllData = async () => {
 	window.lastRoomData = allRoomData;
 };
 
-// Update room selector buttons
+// Update room selector dropdown
 function updateRoomSelector(tempData) {
 	const rooms = Object.keys(tempData).sort();
 	availableRooms = rooms;
@@ -214,22 +219,23 @@ function updateRoomSelector(tempData) {
 		rooms.sort();
 	}
 
-	const container = document.getElementById('sensorButtons');
+	const dropdown = document.getElementById('sensorDropdown');
 	const searchTerm = document.getElementById('sensorSearch')?.value.toLowerCase().trim() || '';
+	
+	// Keep current selection
+	const currentVal = dropdown.value;
 
-	container.innerHTML = `
-       <button class="sensor-btn ${selectedSensor === 'all' ? 'active' : ''}" 
-             onclick="selectSensor('all')" data-sensor="all">
+	dropdown.innerHTML = `
+       <option value="all" ${selectedSensor === 'all' ? 'selected' : ''}>
           📊 All Rooms (Average)
-       </button>
+       </option>
     `;
 
 	rooms.forEach(room => {
-		const btn = document.createElement('button');
-		btn.className = `sensor-btn ${selectedSensor === room ? 'active' : ''}`;
-		btn.dataset.sensor = room;
-		btn.onclick = () => selectSensor(room);
-		btn.innerHTML = `🏠 ${room}`;
+		const opt = document.createElement('option');
+		opt.value = room;
+		opt.selected = (selectedSensor === room);
+		opt.textContent = `🏠 Room ${room}`;
 
 		// Apply filters
 		const matchesSearch = !searchTerm || room.toLowerCase().includes(searchTerm);
@@ -240,11 +246,19 @@ function updateRoomSelector(tempData) {
 			(currentFloorFilter === 'U' && room.startsWith('U'));
 
 		if (!matchesSearch || !matchesFloor) {
-			btn.style.display = 'none';
+			opt.style.display = 'none';
 		}
 
-		container.appendChild(btn);
+		dropdown.appendChild(opt);
 	});
+	
+	// If the selection changed because of the update, re-select
+	if (dropdown.value !== currentVal && currentVal !== '') {
+		// Only re-select if it still exists
+		if (rooms.includes(currentVal) || currentVal === 'all') {
+			dropdown.value = currentVal;
+		}
+	}
 }
 
 // Fetch temperature data

@@ -146,25 +146,25 @@ body {
 .sensor-selector-card {
 	background: rgba(255, 255, 255, 0.05);
 	border-radius: 12px;
-	padding: 20px;
+	padding: 15px 20px;
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	backdrop-filter: blur(10px);
 }
 
-.sensor-selector-card h2 {
-	font-size: 16px;
-	font-weight: 500;
-	margin-bottom: 15px;
-	color: rgba(255, 255, 255, 0.8);
+.sensor-selector-header {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	flex-wrap: wrap;
 }
 
 .sensor-search-container {
-	margin-bottom: 15px;
+	flex: 0 1 250px;
 }
 
 .sensor-search {
 	width: 100%;
-	padding: 12px 16px;
+	padding: 10px 16px;
 	background: rgba(255, 255, 255, 0.05);
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	border-radius: 8px;
@@ -186,7 +186,6 @@ body {
 .sensor-filter-tabs {
 	display: flex;
 	gap: 8px;
-	margin-bottom: 15px;
 	flex-wrap: wrap;
 }
 
@@ -212,60 +211,37 @@ body {
 	border-color: #3b82f6;
 }
 
-.sensor-buttons-scroll {
-	max-height: 200px;
-	overflow-y: auto;
+.sensor-dropdown-container {
+	flex: 1;
+	min-width: 200px;
+}
+
+.sensor-dropdown {
+	width: 100%;
+	padding: 10px 16px;
+	background: rgba(255, 255, 255, 0.05);
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	border-radius: 8px;
-	padding: 8px;
-	background: rgba(255, 255, 255, 0.02);
-}
-
-.sensor-buttons-scroll::-webkit-scrollbar {
-	width: 8px;
-}
-
-.sensor-buttons-scroll::-webkit-scrollbar-track {
-	background: rgba(255, 255, 255, 0.05);
-	border-radius: 4px;
-}
-
-.sensor-buttons-scroll::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.2);
-	border-radius: 4px;
-}
-
-.sensor-buttons-scroll::-webkit-scrollbar-thumb:hover {
-	background: rgba(255, 255, 255, 0.3);
-}
-
-.sensor-buttons {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-}
-
-.sensor-btn {
-	background: rgba(255, 255, 255, 0.05);
-	color: rgba(255, 255, 255, 0.7);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	padding: 12px 20px;
-	border-radius: 8px;
-	cursor: pointer;
+	color: white;
 	font-size: 14px;
+	outline: none;
+	cursor: pointer;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	background-size: 16px;
 	transition: all 0.2s ease;
 }
 
-.sensor-btn:hover {
-	background: rgba(255, 255, 255, 0.1);
-	color: white;
-	border-color: rgba(255, 255, 255, 0.2);
+.sensor-dropdown:focus {
+	border-color: #3b82f6;
+	background-color: rgba(255, 255, 255, 0.08);
 }
 
-.sensor-btn.active {
-	background: rgba(59, 130, 246, 0.3);
+.sensor-dropdown option {
+	background-color: #1a1c20;
 	color: white;
-	border-color: #3b82f6;
 }
 
 /* Summary Cards */
@@ -523,13 +499,5 @@ tbody td.status-medium {
 	.header-controls {
 		flex-wrap: wrap;
 		justify-content: center;
-	}
-
-	.sensor-buttons {
-		flex-direction: column;
-	}
-
-	.sensor-btn {
-		width: 100%;
 	}
 }

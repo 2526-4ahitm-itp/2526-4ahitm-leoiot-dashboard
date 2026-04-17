@@ -28,29 +28,28 @@
 			<!-- Sensor Selector -->
 			<section class="sensor-selector-section">
 				<div class="sensor-selector-card">
-					<h2>Select Sensor</h2>
-					<div class="sensor-search-container">
-						<input 
-							type="text" 
-							id="sensorSearch" 
-							class="sensor-search" 
-							placeholder="🔍 Search room (e.g., 105, E10, U07)..."
-							oninput="filterSensors()"
-						/>
-					</div>
-					<div class="sensor-filter-tabs">
-						<button class="filter-tab active" onclick="filterByFloor('all')" data-floor="all">All</button>
-						<button class="filter-tab" onclick="filterByFloor('1')" data-floor="1">Floor 1</button>
-						<button class="filter-tab" onclick="filterByFloor('2')" data-floor="2">Floor 2</button>
-						<button class="filter-tab" onclick="filterByFloor('E')" data-floor="E">Floor E</button>
-						<button class="filter-tab" onclick="filterByFloor('U')" data-floor="U">Basement</button>
-					</div>
-					<div class="sensor-buttons-scroll">
-						<div class="sensor-buttons" id="sensorButtons">
-							<button class="sensor-btn active" onclick="selectSensor('all')" data-sensor="all">
-								📊 All Rooms (Average)
-							</button>
-							<!-- Dynamically populated -->
+					<div class="sensor-selector-header">
+						<div class="sensor-search-container">
+							<input 
+								type="text" 
+								id="sensorSearch" 
+								class="sensor-search" 
+								placeholder="🔍 Search room..."
+								oninput="filterSensors()"
+							/>
+						</div>
+						<div class="sensor-filter-tabs">
+							<button class="filter-tab active" onclick="filterByFloor('all')" data-floor="all">All</button>
+							<button class="filter-tab" onclick="filterByFloor('1')" data-floor="1">Floor 1</button>
+							<button class="filter-tab" onclick="filterByFloor('2')" data-floor="2">Floor 2</button>
+							<button class="filter-tab" onclick="filterByFloor('E')" data-floor="E">Floor E</button>
+							<button class="filter-tab" onclick="filterByFloor('U')" data-floor="U">Basement</button>
+						</div>
+						<div class="sensor-dropdown-container">
+							<select id="sensorDropdown" class="sensor-dropdown" onchange="selectSensor(this.value)">
+								<option value="all">📊 All Rooms (Average)</option>
+								<!-- Dynamically populated -->
+							</select>
 						</div>
 					</div>
 				</div>
