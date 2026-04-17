@@ -38,24 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// Setup MQTT over WebSocket
 	setupMQTT();
 
-	// Auto-refresh historical data every 5 minutes (much less frequent now with live MQTT)
-	let lastRefresh = Date.now();
-	setInterval(async () => {
-		await refreshAllData();
-		lastRefresh = Date.now();
-	}, 300000); // 5 minutes
-
-	// Update countdown every second
-	setInterval(() => {
-		const elapsed = Math.floor((Date.now() - lastRefresh) / 1000);
-		const remaining = Math.max(0, 300 - elapsed);
-		const refreshEl = document.getElementById('tableLastRefresh');
-		if (refreshEl) {
-			const now = new Date(lastRefresh);
-			const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-			refreshEl.textContent = `Sync: ${timeStr} · Next in ${remaining}s`;
-		}
-	}, 1000);
+	// Set status to Live
+	const refreshEl = document.getElementById('tableLastRefresh');
+	if (refreshEl) {
+		refreshEl.innerHTML = '<span style="color: #4ade80">●</span> Live MQTT Stream';
+	}
 });
 
 function setupMQTT() {
