@@ -440,18 +440,23 @@ window.updateCO2Heatmap = async () => {
     for (const room of roomsToSubscribe) wantedRooms.add(room);
     reconcileRoomSubscriptions();
 
-    // For CO2, we need to wait for live data or show initial state
-    // Since there's no Influx query for CO2 per room, we rely on live data
-    // Show a placeholder until data arrives
-    for (const mesh of roomMeshes) {
+    // For CO2, we first show live data if we have it, 
+    // otherwise we fetch the latest value from InfluxDB for each room.
+    await Promise.all(roomMeshes.map(async (mesh) => {
         const roomTag = normalizeRoomName(mesh.name);
-        if (!roomTag) continue;
+        if (!roomTag) return;
 
         const live = latestLive.get(roomTag);
-        if (live && live.co2 != null && activeHeatmapType === 'co2') {
-            updateCO2HeatmapMesh(mesh, live.co2);
+        let co2 = (live && live.co2 != null) ? live.co2 : null;
+        
+        if (co2 === null) {
+            co2 = await getRoomCO2ForRoom(roomTag);
         }
-    }
+
+        if (co2 !== null && activeHeatmapType === 'co2') {
+            updateCO2HeatmapMesh(mesh, co2);
+        }
+    }));
 };
 
 function clearHeatmap() {
@@ -778,6 +783,44 @@ async function getRoomTemperature(roomName) {
       |> range(start: -24h)
       |> filter(fn: (r) => r._measurement == "room_temperature" and r.room == "${roomName}")
       |> filter(fn: (r) => r._field == "temperature")
+      |> last()`;
+
+    try {
+        const response = await fetch(`${INFLUXDB_URL}/api/v2/query?org=${INFLUXDB_ORG}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Token ${INFLUXDB_TOKEN}`,
+                'Content-Type': 'application/vnd.flux',
+                'Accept': 'application/csv'
+            },
+            body: query
+        });
+        if (!response.ok) return null;
+        const csvData = await response.text();
+        const lines = csvData.trim().split('\n');
+        if (lines.length > 1) {
+            const dataLine = lines[lines.length - 1];
+            const columns = dataLine.split(',');
+            const headers = lines[0].split(',');
+            const valueIndex = headers.indexOf('_value');
+            if (valueIndex !== -1 && columns[valueIndex]) return parseFloat(columns[valueIndex]);
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
+}
+
+async function getRoomCO2ForRoom(roomName) {
+    let topic = `nili3/sensor/${roomName.toLowerCase()}_co2/state`;
+    if (roomName === '105') {
+        topic = "nili3/sensor/nili3_co2/state";
+    }
+    
+    const query = `from(bucket: "${INFLUXDB_BUCKET}")
+      |> range(start: -24h)
+      |> filter(fn: (r) => r._measurement == "mqtt_consumer" and r.topic == "${topic}")
+      |> filter(fn: (r) => r._field == "value")
       |> last()`;
 
     try {
