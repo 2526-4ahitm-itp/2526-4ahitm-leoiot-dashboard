@@ -38,22 +38,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// Setup MQTT over WebSocket
 	setupMQTT();
 
-	// Auto-refresh historical data every 60 seconds (less frequent now with live MQTT)
+	// Auto-refresh historical data every 5 minutes (much less frequent now with live MQTT)
 	let lastRefresh = Date.now();
 	setInterval(async () => {
 		await refreshAllData();
 		lastRefresh = Date.now();
-	}, 60000);
+	}, 300000); // 5 minutes
 
 	// Update countdown every second
 	setInterval(() => {
 		const elapsed = Math.floor((Date.now() - lastRefresh) / 1000);
-		const remaining = Math.max(0, 60 - elapsed);
+		const remaining = Math.max(0, 300 - elapsed);
 		const refreshEl = document.getElementById('tableLastRefresh');
 		if (refreshEl) {
 			const now = new Date(lastRefresh);
 			const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-			refreshEl.textContent = `Refreshed: ${timeStr} · Next in ${remaining}s`;
+			refreshEl.textContent = `Sync: ${timeStr} · Next in ${remaining}s`;
 		}
 	}, 1000);
 });
@@ -67,10 +67,8 @@ function setupMQTT() {
 
 	ws.onopen = () => {
 		console.log('[MQTT] Connected to WebSocket bridge');
-		// Subscribe to current room
-		if (selectedSensor !== 'all') {
-			subscribeToRoom(selectedSensor);
-		}
+		// Subscribe to ALL available rooms to keep the overview table and averages live
+		subscribeToAllRooms();
 	};
 
 	ws.onmessage = (event) => {
@@ -84,9 +82,12 @@ function setupMQTT() {
 	};
 }
 
-function subscribeToRoom(room) {
-	if (ws && ws.readyState === WebSocket.OPEN) {
-		ws.send(JSON.stringify({ type: 'subscribe', room }));
+function subscribeToAllRooms() {
+	if (ws && ws.readyState === WebSocket.OPEN && availableRooms.length > 0) {
+		console.log(`[MQTT] Subscribing to ${availableRooms.length} rooms...`);
+		availableRooms.forEach(room => {
+			ws.send(JSON.stringify({ type: 'subscribe', room }));
+		});
 	}
 }
 
@@ -295,12 +296,6 @@ window.selectSensor = async (sensor) => {
 	// Clear popups
 	document.getElementById('searchResults')?.classList.remove('visible');
 	document.getElementById('roomDropdownPopup')?.classList.remove('visible');
-
-	// MQTT Subscribe/Unsubscribe
-	if (ws && ws.readyState === WebSocket.OPEN) {
-		if (oldSensor !== 'all') ws.send(JSON.stringify({ type: 'unsubscribe', room: oldSensor }));
-		if (sensor !== 'all') ws.send(JSON.stringify({ type: 'subscribe', room: sensor }));
-	}
 
 	// Trigger animation
 	triggerRoomAnimation();
