@@ -147,35 +147,57 @@ window.selectSensor = async (sensor) => {
 	document.getElementById('co2ChartSubtitle').textContent = label;
 	document.getElementById('tempSensorLabel').textContent = label;
 	document.getElementById('co2SensorLabel').textContent = label;
+	
+	// Clear search results popup
+	const resultsPopup = document.getElementById('searchResults');
+	if (resultsPopup) {
+		resultsPopup.classList.remove('visible');
+		resultsPopup.innerHTML = '';
+	}
+	
+	// Optional: Clear search input when a room is selected from search
+	// document.getElementById('sensorSearch').value = '';
 
 	await refreshAllData();
 };
 
-// Filter sensors based on search and floor
+// Filter sensors based on search (shows popup, ignores floor filters)
 window.filterSensors = () => {
 	const searchTerm = document.getElementById('sensorSearch').value.toLowerCase().trim();
-	const options = document.querySelectorAll('#sensorDropdown option');
+	const resultsPopup = document.getElementById('searchResults');
+	
+	if (!searchTerm) {
+		resultsPopup.classList.remove('visible');
+		resultsPopup.innerHTML = '';
+		return;
+	}
 
-	options.forEach(opt => {
-		const room = opt.value;
-		if (room === 'all') {
-			opt.style.display = '';
-			return;
-		}
+	// Filter all available rooms, ignoring the current floor filter
+	const matches = availableRooms.filter(room => 
+		room.toLowerCase().includes(searchTerm)
+	);
 
-		const matchesSearch = !searchTerm || room.toLowerCase().includes(searchTerm);
-		const matchesFloor = currentFloorFilter === 'all' ||
-			(currentFloorFilter === '1' && /^\d{3}$/.test(room)) ||
-			(currentFloorFilter === '2' && /^2\d{2}$/.test(room)) ||
-			(currentFloorFilter === 'E' && room.startsWith('E')) ||
-			(currentFloorFilter === 'U' && room.startsWith('U'));
-
-		opt.style.display = (matchesSearch && matchesFloor) ? '' : 'none';
-		
-		// If the currently selected option is now hidden, we might want to reset to 'all'
-		// but usually it's better to let the user see what they selected even if it doesn't match current filter
-	});
+	if (matches.length > 0) {
+		resultsPopup.innerHTML = matches.map(room => `
+			<div class="search-result-item" onclick="selectSensor('${room}')">
+				<span class="room-id">🏠 Room ${room}</span>
+			</div>
+		`).join('');
+		resultsPopup.classList.add('visible');
+	} else {
+		resultsPopup.innerHTML = '<div class="search-result-item">No rooms found</div>';
+		resultsPopup.classList.add('visible');
+	}
 };
+
+// Close search results when clicking outside
+document.addEventListener('click', (e) => {
+	const searchContainer = document.querySelector('.sensor-search-container');
+	const resultsPopup = document.getElementById('searchResults');
+	if (searchContainer && !searchContainer.contains(e.target)) {
+		resultsPopup?.classList.remove('visible');
+	}
+});
 
 // Show more rooms in table
 window.showMoreRooms = () => {
@@ -234,7 +256,6 @@ function updateRoomSelector(tempData) {
 	}
 
 	const dropdown = document.getElementById('sensorDropdown');
-	const searchTerm = document.getElementById('sensorSearch')?.value.toLowerCase().trim() || '';
 	
 	// Keep current selection
 	const currentVal = dropdown.value;
@@ -246,24 +267,20 @@ function updateRoomSelector(tempData) {
     `;
 
 	rooms.forEach(room => {
-		const opt = document.createElement('option');
-		opt.value = room;
-		opt.selected = (selectedSensor === room);
-		opt.textContent = `🏠 Room ${room}`;
-
-		// Apply filters
-		const matchesSearch = !searchTerm || room.toLowerCase().includes(searchTerm);
+		// Apply floor filters only to the dropdown
 		const matchesFloor = currentFloorFilter === 'all' ||
 			(currentFloorFilter === '1' && /^\d{3}$/.test(room)) ||
 			(currentFloorFilter === '2' && /^2\d{2}$/.test(room)) ||
 			(currentFloorFilter === 'E' && room.startsWith('E')) ||
 			(currentFloorFilter === 'U' && room.startsWith('U'));
 
-		if (!matchesSearch || !matchesFloor) {
-			opt.style.display = 'none';
+		if (matchesFloor) {
+			const opt = document.createElement('option');
+			opt.value = room;
+			opt.selected = (selectedSensor === room);
+			opt.textContent = `🏠 Room ${room}`;
+			dropdown.appendChild(opt);
 		}
-
-		dropdown.appendChild(opt);
 	});
 	
 	// If the selection changed because of the update, re-select

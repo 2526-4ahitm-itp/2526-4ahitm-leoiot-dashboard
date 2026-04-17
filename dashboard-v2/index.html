@@ -36,7 +36,10 @@
 								class="sensor-search" 
 								placeholder="🔍 Search room..."
 								oninput="filterSensors()"
+								onfocus="filterSensors()"
+								autocomplete="off"
 							/>
+							<div id="searchResults" class="search-results-popup"></div>
 						</div>
 						<div class="sensor-filter-tabs">
 							<button class="filter-tab active" onclick="filterByFloor('all')" data-floor="all">All</button>

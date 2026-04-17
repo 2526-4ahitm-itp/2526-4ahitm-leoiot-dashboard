@@ -162,6 +162,48 @@ body {
 .sensor-search-container {
 	flex: 1;
 	min-width: 200px;
+	position: relative;
+}
+
+.search-results-popup {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background: #1a1c20;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 8px;
+	margin-top: 5px;
+	max-height: 250px;
+	overflow-y: auto;
+	z-index: 1000;
+	display: none;
+	box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.search-results-popup.visible {
+	display: block;
+}
+
+.search-result-item {
+	padding: 10px 16px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: background 0.2s ease;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.search-result-item:last-child {
+	border-bottom: none;
+}
+
+.search-result-item:hover {
+	background: rgba(59, 130, 246, 0.2);
+}
+
+.search-result-item .room-id {
+	font-weight: 600;
+	color: #3b82f6;
 }
 
 .sensor-search {
