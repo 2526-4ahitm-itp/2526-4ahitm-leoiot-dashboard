@@ -47,25 +47,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function setupMQTT() {
 	const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-	const wsUrl = `${wsProtocol}//${window.location.hostname}:8090`;
+	const wsUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+		? `${wsProtocol}//${window.location.hostname}:8090`
+		: `${wsProtocol}//${window.location.hostname}/ws`;
 	
-	console.log(`[MQTT] Connecting to ${wsUrl}...`);
+	console.log(`[MQTT] Attempting connection to ${wsUrl}...`);
 	ws = new WebSocket(wsUrl);
 
 	ws.onopen = () => {
-		console.log('[MQTT] Connected to WebSocket bridge');
-		// Subscribe to ALL available rooms to keep the overview table and averages live
+		console.log('[MQTT] Successfully connected to WebSocket bridge');
 		subscribeToAllRooms();
 	};
 
 	ws.onmessage = (event) => {
-		const msg = JSON.parse(event.data);
-		handleLiveUpdate(msg);
+		try {
+			const msg = JSON.parse(event.data);
+			if (msg.type !== 'hello' && msg.type !== 'subscribed') {
+				handleLiveUpdate(msg);
+			}
+		} catch (e) {
+			console.error('[MQTT] Error parsing message:', e);
+		}
 	};
 
-	ws.onclose = () => {
-		console.log('[MQTT] Disconnected, retrying in 5s...');
+	ws.onclose = (e) => {
+		console.log(`[MQTT] Connection closed (${e.code}). Retrying in 5s...`);
 		setTimeout(setupMQTT, 5000);
+	};
+
+	ws.onerror = (err) => {
+		console.error('[MQTT] WebSocket error:', err);
 	};
 }
 
@@ -79,24 +90,26 @@ function subscribeToAllRooms() {
 }
 
 function handleLiveUpdate(msg) {
+	if (!msg || !msg.room) return;
+	
 	// Update global room data state for the table and "all" calculations
-	if (window.lastRoomData) {
-		let room = window.lastRoomData.find(r => r.room === msg.room);
-		if (!room) {
-			room = { room: msg.room, temperature: null, co2: null, time: new Date(msg.ts) };
-			window.lastRoomData.push(room);
-		}
-		
-		if (msg.type === 'temp') {
-			room.temperature = msg.value;
-		} else if (msg.type === 'co2') {
-			room.co2 = msg.value;
-		}
-		room.time = new Date(msg.ts);
-		
-		// Update table immediately if visible
-		updateRoomTable(window.lastRoomData);
+	if (!window.lastRoomData) window.lastRoomData = [];
+	
+	let room = window.lastRoomData.find(r => r.room === msg.room);
+	if (!room) {
+		room = { room: msg.room, temperature: null, co2: null, time: new Date(msg.ts) };
+		window.lastRoomData.push(room);
 	}
+	
+	if (msg.type === 'temp') {
+		room.temperature = msg.value;
+	} else if (msg.type === 'co2') {
+		room.co2 = msg.value;
+	}
+	room.time = new Date(msg.ts);
+	
+	// Update table immediately if visible
+	updateRoomTable(window.lastRoomData);
 
 	// Update summary cards for "All Rooms" view or specific room
 	updateSummaryFromLive(msg);
@@ -395,7 +408,6 @@ window.refreshAllData = async () => {
 // Update room selector custom dropdown
 function updateRoomSelector(tempData) {
 	const rooms = Object.keys(tempData).sort();
-	availableRooms = rooms;
 
 	// Ensure Room 105 always appears in the selector (live WS feed may have data even if InfluxDB doesn't)
 	if (!rooms.includes('105')) {
@@ -403,6 +415,8 @@ function updateRoomSelector(tempData) {
 		rooms.push('105');
 		rooms.sort();
 	}
+	
+	availableRooms = rooms;
 
 	const popup = document.getElementById('roomDropdownPopup');
 	if (!popup) return;
