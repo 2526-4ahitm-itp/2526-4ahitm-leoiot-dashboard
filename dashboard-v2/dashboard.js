@@ -14,6 +14,7 @@ const ROOMS_PER_PAGE = 15;
 
 // Chart instances
 let tempChart, co2Chart;
+let ws;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
@@ -30,18 +31,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// Load initial data
 	await refreshAllData();
+	
+	// Initial animation for the first room
+	triggerRoomAnimation();
 
-	// Auto-refresh every 30 seconds
+	// Setup MQTT over WebSocket
+	setupMQTT();
+
+	// Auto-refresh historical data every 60 seconds (less frequent now with live MQTT)
 	let lastRefresh = Date.now();
 	setInterval(async () => {
 		await refreshAllData();
 		lastRefresh = Date.now();
-	}, 30000);
+	}, 60000);
 
 	// Update countdown every second
 	setInterval(() => {
 		const elapsed = Math.floor((Date.now() - lastRefresh) / 1000);
-		const remaining = Math.max(0, 30 - elapsed);
+		const remaining = Math.max(0, 60 - elapsed);
 		const refreshEl = document.getElementById('tableLastRefresh');
 		if (refreshEl) {
 			const now = new Date(lastRefresh);
@@ -50,6 +57,95 @@ document.addEventListener('DOMContentLoaded', async () => {
 		}
 	}, 1000);
 });
+
+function setupMQTT() {
+	const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+	const wsUrl = `${wsProtocol}//${window.location.hostname}:8090`;
+	
+	console.log(`[MQTT] Connecting to ${wsUrl}...`);
+	ws = new WebSocket(wsUrl);
+
+	ws.onopen = () => {
+		console.log('[MQTT] Connected to WebSocket bridge');
+		// Subscribe to current room
+		if (selectedSensor !== 'all') {
+			subscribeToRoom(selectedSensor);
+		}
+	};
+
+	ws.onmessage = (event) => {
+		const msg = JSON.parse(event.data);
+		handleLiveUpdate(msg);
+	};
+
+	ws.onclose = () => {
+		console.log('[MQTT] Disconnected, retrying in 5s...');
+		setTimeout(setupMQTT, 5000);
+	};
+}
+
+function subscribeToRoom(room) {
+	if (ws && ws.readyState === WebSocket.OPEN) {
+		ws.send(JSON.stringify({ type: 'subscribe', room }));
+	}
+}
+
+function handleLiveUpdate(msg) {
+	// Only handle if it's the current room or we are in 'all' view
+	if (selectedSensor !== 'all' && msg.room !== selectedSensor) return;
+	
+	console.log('[MQTT] Live update:', msg);
+	
+	// update UI values immediately
+	if (msg.type === 'temp') {
+		const tempEl = document.getElementById('currentTemp');
+		if (tempEl) tempEl.textContent = `${msg.value.toFixed(1)}°C`;
+		
+		// update charts if applicable
+		if (selectedSensor !== 'all') {
+			updateChartsWithLivePoint(tempChart, msg.value, msg.ts);
+		}
+	} else if (msg.type === 'co2') {
+		const co2El = document.getElementById('currentCo2');
+		if (co2El) co2El.textContent = `${msg.value.toFixed(0)} ppm`;
+		
+		if (selectedSensor !== 'all') {
+			updateChartsWithLivePoint(co2Chart, msg.value, msg.ts);
+		}
+	}
+}
+
+function updateChartsWithLivePoint(chart, value, ts) {
+	if (!chart) return;
+	const time = new Date(ts);
+	chart.data.labels.push(formatTime(time));
+	if (chart.data.tooltipLabels) {
+		chart.data.tooltipLabels.push(formatTooltipTime(time));
+	}
+	chart.data.datasets[0].data.push(value);
+	
+	// Keep only last 50 points to avoid memory issues
+	if (chart.data.labels.length > 50) {
+		chart.data.labels.shift();
+		if (chart.data.tooltipLabels) chart.data.tooltipLabels.shift();
+		chart.data.datasets[0].data.shift();
+	}
+	
+	chart.update('none'); // Update without animation for smooth live feel
+}
+
+function triggerRoomAnimation() {
+	const elements = document.querySelectorAll('.card, .chart-card, .table-card');
+	elements.forEach((el, index) => {
+		el.classList.remove('animate-up');
+		// Trigger reflow
+		void el.offsetWidth;
+		// Add class with delay
+		setTimeout(() => {
+			el.classList.add('animate-up');
+		}, index * 50);
+	});
+}
 
 // Initialize Chart.js charts
 function initCharts() {
@@ -134,6 +230,9 @@ window.filterByFloor = async (floor) => {
 
 // Select sensor
 window.selectSensor = async (sensor) => {
+	if (selectedSensor === sensor) return; // No change
+	
+	const oldSensor = selectedSensor;
 	selectedSensor = sensor;
 	
 	// Update custom dropdown display
@@ -152,6 +251,15 @@ window.selectSensor = async (sensor) => {
 	// Clear popups
 	document.getElementById('searchResults')?.classList.remove('visible');
 	document.getElementById('roomDropdownPopup')?.classList.remove('visible');
+
+	// MQTT Subscribe/Unsubscribe
+	if (ws && ws.readyState === WebSocket.OPEN) {
+		if (oldSensor !== 'all') ws.send(JSON.stringify({ type: 'unsubscribe', room: oldSensor }));
+		if (sensor !== 'all') ws.send(JSON.stringify({ type: 'subscribe', room: sensor }));
+	}
+
+	// Trigger animation
+	triggerRoomAnimation();
 
 	await refreshAllData();
 };
