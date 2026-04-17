@@ -60,9 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function setupMQTT() {
 	const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-	// Prefer the actual server hostname for the WebSocket connection
-	const bridgeHost = window.location.hostname === 'localhost' ? 'vm23.htl-leonding.ac.at' : window.location.hostname;
-	const wsUrl = `${wsProtocol}//${bridgeHost}:8090`;
+	const wsUrl = `${wsProtocol}//${window.location.hostname}:8090`;
 	
 	console.log(`[MQTT] Connecting to ${wsUrl}...`);
 	ws = new WebSocket(wsUrl);
