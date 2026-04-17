@@ -146,10 +146,11 @@ body {
 }
 
 .sensor-selector-card {
-	background: #25282e; /* Solid background instead of transparent with blur */
+	background: rgba(255, 255, 255, 0.05);
 	border-radius: 12px;
 	padding: 15px 20px;
 	border: 1px solid rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(10px);
 }
 
 .sensor-selector-header {
@@ -171,7 +172,7 @@ body {
 	top: 100%;
 	left: 0;
 	right: 0;
-	background: #1a1c20;
+	background: rgba(26, 28, 32, 0.95);
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	border-radius: 8px;
 	margin-top: 5px;
@@ -180,6 +181,7 @@ body {
 	z-index: 9999;
 	display: none;
 	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+	backdrop-filter: blur(15px);
 }
 
 .search-results-popup.visible {
@@ -300,10 +302,11 @@ body {
 }
 
 .card {
-	background: #25282e;
+	background: rgba(255, 255, 255, 0.05);
 	border-radius: 12px;
 	padding: 20px;
 	border: 1px solid rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(10px);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -371,10 +374,11 @@ body {
 }
 
 .chart-card {
-	background: #25282e;
+	background: rgba(255, 255, 255, 0.05);
 	border-radius: 12px;
 	padding: 20px;
 	border: 1px solid rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(10px);
 }
 
 .chart-card.full-width {
@@ -440,10 +444,11 @@ body {
 
 /* Table */
 .table-card {
-	background: #25282e;
+	background: rgba(255, 255, 255, 0.05);
 	border-radius: 12px;
 	padding: 20px;
 	border: 1px solid rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(10px);
 }
 
 .table-container {
