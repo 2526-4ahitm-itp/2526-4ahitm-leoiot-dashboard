@@ -49,10 +49,12 @@
 							<button class="filter-tab" onclick="filterByFloor('U')" data-floor="U">Basement</button>
 						</div>
 						<div class="sensor-dropdown-container">
-							<select id="sensorDropdown" class="sensor-dropdown" onchange="selectSensor(this.value)">
-								<option value="all">📊 All Rooms (Average)</option>
+							<div id="roomDropdownTrigger" class="custom-dropdown-trigger" onclick="toggleRoomDropdown()">
+								🏠 Room 1Aula
+							</div>
+							<div id="roomDropdownPopup" class="search-results-popup custom-dropdown-popup">
 								<!-- Dynamically populated -->
-							</select>
+							</div>
 						</div>
 					</div>
 				</div>

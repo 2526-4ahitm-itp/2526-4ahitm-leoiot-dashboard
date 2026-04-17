@@ -5,7 +5,7 @@ const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
 // State
-let selectedSensor = 'all';
+let selectedSensor = '1Aula';
 let availableRooms = [];
 let currentTimeRange = '6h';
 let currentFloorFilter = 'all';
@@ -136,10 +136,11 @@ window.filterByFloor = async (floor) => {
 window.selectSensor = async (sensor) => {
 	selectedSensor = sensor;
 	
-	// Update dropdown if not already set (for programmatic calls)
-	const dropdown = document.getElementById('sensorDropdown');
-	if (dropdown && dropdown.value !== sensor) {
-		dropdown.value = sensor;
+	// Update custom dropdown display
+	const trigger = document.getElementById('roomDropdownTrigger');
+	if (trigger) {
+		const label = sensor === 'all' ? '📊 All Rooms' : `🏠 Room ${sensor}`;
+		trigger.textContent = label;
 	}
 
 	const label = sensor === 'all' ? 'All Rooms' : `Room ${sensor}`;
@@ -148,17 +149,26 @@ window.selectSensor = async (sensor) => {
 	document.getElementById('tempSensorLabel').textContent = label;
 	document.getElementById('co2SensorLabel').textContent = label;
 	
-	// Clear search results popup
-	const resultsPopup = document.getElementById('searchResults');
-	if (resultsPopup) {
-		resultsPopup.classList.remove('visible');
-		resultsPopup.innerHTML = '';
-	}
-	
-	// Optional: Clear search input when a room is selected from search
-	// document.getElementById('sensorSearch').value = '';
+	// Clear popups
+	document.getElementById('searchResults')?.classList.remove('visible');
+	document.getElementById('roomDropdownPopup')?.classList.remove('visible');
 
 	await refreshAllData();
+};
+
+// Toggle room dropdown
+window.toggleRoomDropdown = () => {
+	const popup = document.getElementById('roomDropdownPopup');
+	const isVisible = popup.classList.contains('visible');
+	
+	// Close other popups
+	document.getElementById('searchResults')?.classList.remove('visible');
+	
+	if (isVisible) {
+		popup.classList.remove('visible');
+	} else {
+		popup.classList.add('visible');
+	}
 };
 
 // Filter sensors based on search (shows popup, ignores floor filters)
@@ -193,9 +203,14 @@ window.filterSensors = () => {
 // Close search results when clicking outside
 document.addEventListener('click', (e) => {
 	const searchContainer = document.querySelector('.sensor-search-container');
-	const resultsPopup = document.getElementById('searchResults');
+	const dropdownContainer = document.querySelector('.sensor-dropdown-container');
+	
 	if (searchContainer && !searchContainer.contains(e.target)) {
-		resultsPopup?.classList.remove('visible');
+		document.getElementById('searchResults')?.classList.remove('visible');
+	}
+	
+	if (dropdownContainer && !dropdownContainer.contains(e.target)) {
+		document.getElementById('roomDropdownPopup')?.classList.remove('visible');
 	}
 });
 
@@ -243,7 +258,7 @@ window.refreshAllData = async () => {
 	window.lastRoomData = allRoomData;
 };
 
-// Update room selector dropdown
+// Update room selector custom dropdown
 function updateRoomSelector(tempData) {
 	const rooms = Object.keys(tempData).sort();
 	availableRooms = rooms;
@@ -255,19 +270,17 @@ function updateRoomSelector(tempData) {
 		rooms.sort();
 	}
 
-	const dropdown = document.getElementById('sensorDropdown');
-	
-	// Keep current selection
-	const currentVal = dropdown.value;
+	const popup = document.getElementById('roomDropdownPopup');
+	if (!popup) return;
 
-	dropdown.innerHTML = `
-       <option value="all" ${selectedSensor === 'all' ? 'selected' : ''}>
-          📊 All Rooms (Average)
-       </option>
+	let html = `
+       <div class="search-result-item ${selectedSensor === 'all' ? 'active' : ''}" onclick="selectSensor('all')">
+          <span class="room-id">📊 All Rooms (Average)</span>
+       </div>
     `;
 
 	rooms.forEach(room => {
-		// Apply floor filters only to the dropdown
+		// Apply floor filters
 		const matchesFloor = currentFloorFilter === 'all' ||
 			(currentFloorFilter === '1' && /^\d{3}$/.test(room)) ||
 			(currentFloorFilter === '2' && /^2\d{2}$/.test(room)) ||
@@ -275,20 +288,20 @@ function updateRoomSelector(tempData) {
 			(currentFloorFilter === 'U' && room.startsWith('U'));
 
 		if (matchesFloor) {
-			const opt = document.createElement('option');
-			opt.value = room;
-			opt.selected = (selectedSensor === room);
-			opt.textContent = `🏠 Room ${room}`;
-			dropdown.appendChild(opt);
+			html += `
+				<div class="search-result-item ${selectedSensor === room ? 'active' : ''}" onclick="selectSensor('${room}')">
+					<span class="room-id">🏠 Room ${room}</span>
+				</div>
+			`;
 		}
 	});
 	
-	// If the selection changed because of the update, re-select
-	if (dropdown.value !== currentVal && currentVal !== '') {
-		// Only re-select if it still exists
-		if (rooms.includes(currentVal) || currentVal === 'all') {
-			dropdown.value = currentVal;
-		}
+	popup.innerHTML = html;
+	
+	// Update trigger label too
+	const trigger = document.getElementById('roomDropdownTrigger');
+	if (trigger) {
+		trigger.textContent = selectedSensor === 'all' ? '📊 All Rooms' : `🏠 Room ${selectedSensor}`;
 	}
 }
 
