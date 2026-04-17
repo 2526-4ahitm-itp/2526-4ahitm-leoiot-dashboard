@@ -154,12 +154,14 @@ body {
 .sensor-selector-header {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	gap: 20px;
 	flex-wrap: wrap;
 }
 
 .sensor-search-container {
-	flex: 0 1 250px;
+	flex: 1;
+	min-width: 200px;
 }
 
 .sensor-search {
@@ -187,6 +189,8 @@ body {
 	display: flex;
 	gap: 8px;
 	flex-wrap: wrap;
+	justify-content: center;
+	flex: 0 1 auto;
 }
 
 .filter-tab {

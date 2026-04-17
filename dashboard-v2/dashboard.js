@@ -62,11 +62,25 @@ function initCharts() {
 					color: 'rgba(255, 255, 255, 0.7)',
 					font: { size: 12 }
 				}
+			},
+			tooltip: {
+				callbacks: {
+					title: (context) => {
+						const chart = context[0].chart;
+						const index = context[0].dataIndex;
+						return chart.data.tooltipLabels ? chart.data.tooltipLabels[index] : context[0].label;
+					}
+				}
 			}
 		},
 		scales: {
 			x: {
-				ticks: { color: 'rgba(255, 255, 255, 0.5)' },
+				ticks: { 
+					color: 'rgba(255, 255, 255, 0.5)',
+					maxRotation: 0,
+					autoSkip: true,
+					maxTicksLimit: 12
+				},
 				grid: { color: 'rgba(255, 255, 255, 0.05)' }
 			},
 			y: {
@@ -662,6 +676,7 @@ function updateTemperatureChart(tempData) {
 	// Show single room
 	const roomData = tempData[selectedSensor] || [];
 	tempChart.data.labels = roomData.map(({ time }) => formatTime(time));
+	tempChart.data.tooltipLabels = roomData.map(({ time }) => formatTooltipTime(time));
 	tempChart.data.datasets = [{
 		label: `Room ${selectedSensor}`,
 		data: roomData.map(({ value }) => value),
@@ -697,6 +712,7 @@ function updateCO2Chart(co2Data) {
 	const roomCo2Data = co2Data[topic] || [];
 
 	co2Chart.data.labels = roomCo2Data.map(({ time }) => formatTime(time));
+	co2Chart.data.tooltipLabels = roomCo2Data.map(({ time }) => formatTooltipTime(time));
 	co2Chart.data.datasets = [{
 		label: `Room ${selectedSensor}`,
 		data: roomCo2Data.map(({ value }) => value),
@@ -785,16 +801,38 @@ function getRoomColor(index, alpha = 1) {
 	return colors[index % colors.length];
 }
 
-// Helper: Format time
+// Helper: Format time for charts
 function formatTime(date) {
-	return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+	const options = { 
+		hour: '2-digit', 
+		minute: '2-digit', 
+		hour12: false 
+	};
+	
+	const timeStr = date.toLocaleTimeString('de-DE', options);
+	
+	// If range is > 24h, show date
+	if (currentTimeRange === '7d') {
+		const dateStr = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+		return `${dateStr} ${timeStr}`;
+	}
+	
+	return timeStr;
+}
+
+// Helper: Format time for tooltips (always includes date)
+function formatTooltipTime(date) {
+	const timeStr = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false });
+	const dateStr = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+	return `${dateStr} ${timeStr}`;
 }
 
 // Helper: Format relative time
 function formatRelativeTime(date) {
 	const now = new Date();
 	const diff = Math.floor((now - date) / 1000);
-	if (diff < 60) return 'Just now';
-	if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-	return `${Math.floor(diff / 3600)}h ago`;
+	if (diff < 60) return 'Gerade eben';
+	if (diff < 3600) return `vor ${Math.floor(diff / 60)} Min.`;
+	if (diff < 86400) return `vor ${Math.floor(diff / 3600)} Std.`;
+	return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
