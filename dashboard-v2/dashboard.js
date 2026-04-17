@@ -194,7 +194,7 @@ function triggerRoomAnimation() {
 
 // Initialize Chart.js charts
 function initCharts() {
-	const chartOptions = {
+	const baseOptions = {
 		responsive: true,
 		maintainAspectRatio: false,
 		plugins: {
@@ -231,20 +231,32 @@ function initCharts() {
 		}
 	};
 
+	// Temperature History Chart Options
+	const tempOptions = JSON.parse(JSON.stringify(baseOptions));
+	tempOptions.scales.y.suggestedMin = 15;
+	tempOptions.scales.y.suggestedMax = 30;
+	tempOptions.scales.y.ticks.stepSize = 1;
+
 	// Temperature History Chart
 	const tempCtx = document.getElementById('tempChart').getContext('2d');
 	tempChart = new Chart(tempCtx, {
 		type: 'line',
 		data: { labels: [], datasets: [] },
-		options: chartOptions
+		options: tempOptions
 	});
+
+	// CO2 History Chart Options
+	const co2Options = JSON.parse(JSON.stringify(baseOptions));
+	co2Options.scales.y.suggestedMin = 400;
+	co2Options.scales.y.suggestedMax = 1200;
+	co2Options.scales.y.ticks.stepSize = 200;
 
 	// CO2 History Chart
 	const co2Ctx = document.getElementById('co2Chart').getContext('2d');
 	co2Chart = new Chart(co2Ctx, {
 		type: 'line',
 		data: { labels: [], datasets: [] },
-		options: chartOptions
+		options: co2Options
 	});
 }
 
