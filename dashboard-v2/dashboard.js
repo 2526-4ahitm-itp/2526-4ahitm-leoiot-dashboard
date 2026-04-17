@@ -91,26 +91,70 @@ function subscribeToRoom(room) {
 }
 
 function handleLiveUpdate(msg) {
-	// Only handle if it's the current room or we are in 'all' view
-	if (selectedSensor !== 'all' && msg.room !== selectedSensor) return;
-	
-	console.log('[MQTT] Live update:', msg);
-	
-	// update UI values immediately
-	if (msg.type === 'temp') {
-		const tempEl = document.getElementById('currentTemp');
-		if (tempEl) tempEl.textContent = `${msg.value.toFixed(1)}°C`;
-		
-		// update charts if applicable
-		if (selectedSensor !== 'all') {
-			updateChartsWithLivePoint(tempChart, msg.value, msg.ts);
+	// Update global room data state for the table and "all" calculations
+	if (window.lastRoomData) {
+		let room = window.lastRoomData.find(r => r.room === msg.room);
+		if (!room) {
+			room = { room: msg.room, temperature: null, co2: null, time: new Date(msg.ts) };
+			window.lastRoomData.push(room);
 		}
-	} else if (msg.type === 'co2') {
-		const co2El = document.getElementById('currentCo2');
-		if (co2El) co2El.textContent = `${msg.value.toFixed(0)} ppm`;
 		
-		if (selectedSensor !== 'all') {
+		if (msg.type === 'temp') {
+			room.temperature = msg.value;
+		} else if (msg.type === 'co2') {
+			room.co2 = msg.value;
+		}
+		room.time = new Date(msg.ts);
+		
+		// Update table immediately if visible
+		updateRoomTable(window.lastRoomData);
+	}
+
+	// Update summary cards for "All Rooms" view or specific room
+	updateSummaryFromLive(msg);
+	
+	// update charts if applicable
+	if (selectedSensor !== 'all' && msg.room === selectedSensor) {
+		if (msg.type === 'temp') {
+			updateChartsWithLivePoint(tempChart, msg.value, msg.ts);
+		} else if (msg.type === 'co2') {
 			updateChartsWithLivePoint(co2Chart, msg.value, msg.ts);
+		}
+	}
+}
+
+function updateSummaryFromLive(msg) {
+	const isAllView = selectedSensor === 'all';
+	const isCurrentRoom = msg.room === selectedSensor;
+	
+	if (!isAllView && !isCurrentRoom) return;
+
+	if (isAllView) {
+		// Recalculate averages for filtered rooms
+		const filteredRooms = window.lastRoomData?.filter(room => {
+			return currentFloorFilter === 'all' ||
+				(currentFloorFilter === '1' && room.room.startsWith('1')) ||
+				(currentFloorFilter === '2' && room.room.startsWith('2')) ||
+				(currentFloorFilter === 'E' && room.room.startsWith('E')) ||
+				(currentFloorFilter === 'U' && room.room.startsWith('U'));
+		}) || [];
+
+		if (msg.type === 'temp') {
+			const roomsWithTemp = filteredRooms.filter(r => r.temperature !== null);
+			const avgTemp = roomsWithTemp.reduce((acc, r) => acc + r.temperature, 0) / (roomsWithTemp.length || 1);
+			document.getElementById('currentTemp').textContent = `${avgTemp.toFixed(1)}°C`;
+		} else if (msg.type === 'co2') {
+			const roomsWithCo2 = filteredRooms.filter(r => r.co2 !== null);
+			const avgCo2 = roomsWithCo2.reduce((acc, r) => acc + r.co2, 0) / (roomsWithCo2.length || 1);
+			document.getElementById('currentCo2').textContent = `${avgCo2.toFixed(0)} ppm`;
+		}
+		document.getElementById('activeSensors').textContent = filteredRooms.length;
+	} else {
+		// Update single room boxes
+		if (msg.type === 'temp') {
+			document.getElementById('currentTemp').textContent = `${msg.value.toFixed(1)}°C`;
+		} else if (msg.type === 'co2') {
+			document.getElementById('currentCo2').textContent = `${msg.value.toFixed(0)} ppm`;
 		}
 	}
 }
