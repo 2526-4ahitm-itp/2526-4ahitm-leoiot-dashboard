@@ -316,7 +316,7 @@ async function getSolaxToken() {
 	if (solaxToken) return solaxToken;
 	
 	try {
-		const url = `${SOLAX_HOST}/openapi/auth/get_token/`;
+		const url = `${SOLAX_HOST}/openapi/auth/get_token`;
 		console.log(`[Solax] Fetching token from: ${url}`);
 		const response = await fetch(url, {
 			method: 'POST',
@@ -352,7 +352,7 @@ async function refreshPVData() {
 	if (!token) return;
 
 	try {
-		const url = `${SOLAX_HOST}/openapi/v2/plant/realtime_data/?plantId=${SOLAX_PLANT_ID}&businessType=4`;
+		const url = `${SOLAX_HOST}/openapi/v2/plant/realtime_data?plantId=${SOLAX_PLANT_ID}&businessType=4`;
 		const response = await fetch(url, {
 			method: 'GET',
 			headers: {
