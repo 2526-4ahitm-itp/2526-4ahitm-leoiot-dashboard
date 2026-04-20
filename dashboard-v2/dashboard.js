@@ -1259,11 +1259,11 @@ function formatTime(date) {
 		hour12: false 
 	};
 	
-	const timeStr = date.toLocaleTimeString('de-DE', options);
+	const timeStr = date.toLocaleTimeString('en-GB', options);
 	
 	// If range is > 24h, show date
 	if (currentTimeRange === '7d') {
-		const dateStr = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+		const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
 		return `${dateStr} ${timeStr}`;
 	}
 	
@@ -1272,8 +1272,8 @@ function formatTime(date) {
 
 // Helper: Format time for tooltips (always includes date)
 function formatTooltipTime(date) {
-	const timeStr = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false });
-	const dateStr = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+	const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+	const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 	return `${dateStr} ${timeStr}`;
 }
 
@@ -1281,8 +1281,8 @@ function formatTooltipTime(date) {
 function formatRelativeTime(date) {
 	const now = new Date();
 	const diff = Math.floor((now - date) / 1000);
-	if (diff < 60) return 'Gerade eben';
-	if (diff < 3600) return `vor ${Math.floor(diff / 60)} Min.`;
-	if (diff < 86400) return `vor ${Math.floor(diff / 3600)} Std.`;
-	return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+	if (diff < 60) return 'Just now';
+	if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+	if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+	return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
