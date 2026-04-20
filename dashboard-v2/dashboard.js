@@ -5,7 +5,7 @@ const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
 // Solax Configuration
-const SOLAX_HOST = '/solax';
+const SOLAX_HOST = '/solax/';
 const SOLAX_CLIENT_ID = 'b6d55e642b304989be96a3e0f0ce1793';
 const SOLAX_CLIENT_SECRET = 'HCRctfp7_ezVhnIWlNrzO3--U_wFSjscVEhdQd5RpUI';
 const SOLAX_USERNAME = 'm.remake';
@@ -316,7 +316,7 @@ async function getSolaxToken() {
 	if (solaxToken) return solaxToken;
 	
 	try {
-		const url = `${SOLAX_HOST}/openapi/auth/get_token`;
+		const url = `${SOLAX_HOST}openapi/auth/get_token`;
 		console.log(`[Solax] Fetching token from: ${url}`);
 		const response = await fetch(url, {
 			method: 'POST',
@@ -352,7 +352,7 @@ async function refreshPVData() {
 	if (!token) return;
 
 	try {
-		const url = `${SOLAX_HOST}/openapi/v2/plant/realtime_data?plantId=${SOLAX_PLANT_ID}&businessType=4`;
+		const url = `${SOLAX_HOST}openapi/v2/plant/realtime_data?plantId=${SOLAX_PLANT_ID}&businessType=4`;
 		const response = await fetch(url, {
 			method: 'GET',
 			headers: {
