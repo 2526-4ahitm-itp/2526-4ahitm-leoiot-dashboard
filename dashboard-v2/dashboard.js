@@ -23,8 +23,9 @@ let displayedRoomsCount = 10;
 const ROOMS_PER_PAGE = 15;
 
 // Chart instances
-let tempChart, co2Chart;
+let tempChart, co2Chart, pvSolarChart, pvConsumptionChart;
 let ws;
+let pvInterval;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
@@ -172,6 +173,17 @@ function updateSummaryFromLive(msg) {
 
 function updateChartsWithLivePoint(chart, value, ts) {
 	if (!chart) return;
+	
+	// Ensure dataset exists
+	if (chart.data.datasets.length === 0) {
+		chart.data.datasets.push({
+			label: 'Live Data',
+			data: [],
+			borderColor: '#3b82f6',
+			tension: 0.4
+		});
+	}
+
 	const time = new Date(ts);
 	chart.data.labels.push(formatTime(time));
 	if (chart.data.tooltipLabels) {
@@ -268,6 +280,34 @@ function initCharts() {
 		data: { labels: [], datasets: [] },
 		options: co2Options
 	});
+
+	// PV Solar Chart
+	const solarCtx = document.getElementById('pvSolarChart').getContext('2d');
+	pvSolarChart = new Chart(solarCtx, {
+		type: 'line',
+		data: { labels: [], datasets: [] },
+		options: {
+			...baseOptions,
+			scales: {
+				...baseOptions.scales,
+				y: { ...baseOptions.scales.y, suggestedMin: 0 }
+			}
+		}
+	});
+
+	// PV Consumption Chart
+	const consumptionCtx = document.getElementById('pvConsumptionChart').getContext('2d');
+	pvConsumptionChart = new Chart(consumptionCtx, {
+		type: 'line',
+		data: { labels: [], datasets: [] },
+		options: {
+			...baseOptions,
+			scales: {
+				...baseOptions.scales,
+				y: { ...baseOptions.scales.y, suggestedMin: 0 }
+			}
+		}
+	});
 }
 
 // Set time range
@@ -299,6 +339,12 @@ window.switchView = async (view) => {
 		btnPV.classList.remove('active');
 		title.textContent = '🏢 LeoIOT Sensor Dashboard';
 		timeSelector.style.visibility = 'visible';
+		
+		// Stop PV polling
+		if (pvInterval) {
+			clearInterval(pvInterval);
+			pvInterval = null;
+		}
 	} else {
 		sensorsView.style.display = 'none';
 		pvView.style.display = 'block';
@@ -306,7 +352,10 @@ window.switchView = async (view) => {
 		btnPV.classList.add('active');
 		title.textContent = '☀️ LeoIOT PV Dashboard';
 		timeSelector.style.visibility = 'hidden';
+		
+		// Start PV polling (every 30s)
 		await refreshPVData();
+		pvInterval = setInterval(refreshPVData, 30000);
 	}
 	
 	triggerRoomAnimation();
@@ -374,15 +423,15 @@ function updatePVDashboard(data) {
 	document.getElementById('pvDailyYield').textContent = `${data.dailyYield.toFixed(1)} kWh`;
 	document.getElementById('pvTotalYield').textContent = `${data.totalYield.toFixed(1)} kWh`;
 	
-	// Battery Flow (Charged - Discharged as a simple indicator)
+	// Battery Usage (Charged - Discharged)
 	const batteryFlow = data.dailyCharged - data.dailyDischarged;
 	document.getElementById('pvBatteryFlow').textContent = `${Math.abs(batteryFlow).toFixed(1)} kWh`;
-	document.getElementById('pvBatteryStatus').textContent = batteryFlow >= 0 ? 'Net Charged Today' : 'Net Discharged Today';
+	document.getElementById('pvBatteryStatus').textContent = batteryFlow >= 0 ? 'Charging (Net)' : 'Discharging (Net)';
 	
-	// Grid Flow (Imported - Exported)
+	// Grid Usage (Imported - Exported)
 	const gridFlow = data.dailyImported - data.dailyExported;
 	document.getElementById('pvGridFlow').textContent = `${Math.abs(gridFlow).toFixed(1)} kWh`;
-	document.getElementById('pvGridStatus').textContent = gridFlow >= 0 ? 'Net Imported Today' : 'Net Exported Today';
+	document.getElementById('pvGridStatus').textContent = gridFlow >= 0 ? 'Buying (Net)' : 'Selling (Net)';
 	
 	document.getElementById('pvTimeLabel').textContent = `Updated: ${data.plantLocalTime}`;
 	
@@ -391,6 +440,29 @@ function updatePVDashboard(data) {
 	document.getElementById('pvDailyDischarged').textContent = `${data.dailyDischarged.toFixed(1)} kWh`;
 	document.getElementById('pvDailyImported').textContent = `${data.dailyImported.toFixed(1)} kWh`;
 	document.getElementById('pvDailyExported').textContent = `${data.dailyExported.toFixed(1)} kWh`;
+
+	// Update Charts (Live Feed)
+	const now = new Date();
+	const timeLabel = formatTime(now);
+	
+	// Solar Generation Chart
+	updateChartsWithLivePoint(pvSolarChart, data.dailyYield, now.getTime());
+	pvSolarChart.data.datasets[0].label = 'Solar Power Today (kWh)';
+	pvSolarChart.data.datasets[0].borderColor = '#f59e0b';
+	pvSolarChart.data.datasets[0].backgroundColor = 'rgba(245, 158, 11, 0.1)';
+	pvSolarChart.data.datasets[0].fill = true;
+	pvSolarChart.update('none');
+
+	// Consumption Calculation: Yield - Export + Import
+	// Simplified: Production + Grid Net + Battery Net?
+	// Let's use: DailyYield (Solar) - DailyExported (Sent to grid) + DailyImported (Taken from grid)
+	const consumption = data.dailyYield - data.dailyExported + data.dailyImported;
+	updateChartsWithLivePoint(pvConsumptionChart, consumption, now.getTime());
+	pvConsumptionChart.data.datasets[0].label = 'Building Consumption (kWh)';
+	pvConsumptionChart.data.datasets[0].borderColor = '#3b82f6';
+	pvConsumptionChart.data.datasets[0].backgroundColor = 'rgba(59, 130, 246, 0.1)';
+	pvConsumptionChart.data.datasets[0].fill = true;
+	pvConsumptionChart.update('none');
 }
 
 

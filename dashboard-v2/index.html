@@ -171,7 +171,7 @@
 					<div class="card summary-card">
 						<div class="card-icon">☀️</div>
 						<div class="card-content">
-							<h3>Daily Yield</h3>
+							<h3>Solar Power Today</h3>
 							<div class="value" id="pvDailyYield">-- kWh</div>
 							<div class="sensor-label" id="pvTimeLabel">Updated: --</div>
 						</div>
@@ -179,25 +179,25 @@
 					<div class="card summary-card">
 						<div class="card-icon">🌍</div>
 						<div class="card-content">
-							<h3>Total Yield</h3>
+							<h3>Lifetime Total</h3>
 							<div class="value" id="pvTotalYield">-- kWh</div>
-							<div class="sensor-label">Lifetime</div>
+							<div class="sensor-label">Total Generated</div>
 						</div>
 					</div>
 					<div class="card summary-card">
 						<div class="card-icon">🔋</div>
 						<div class="card-content">
-							<h3>Battery</h3>
-							<div class="value" id="pvBatteryFlow">-- kW</div>
-							<div class="sensor-label" id="pvBatteryStatus">Charge/Discharge</div>
+							<h3>Battery Usage</h3>
+							<div class="value" id="pvBatteryFlow">-- kWh</div>
+							<div class="sensor-label" id="pvBatteryStatus">Today's Activity</div>
 						</div>
 					</div>
 					<div class="card summary-card">
 						<div class="card-icon">⚡</div>
 						<div class="card-content">
-							<h3>Grid</h3>
-							<div class="value" id="pvGridFlow">-- kW</div>
-							<div class="sensor-label" id="pvGridStatus">Import/Export</div>
+							<h3>Grid Usage</h3>
+							<div class="value" id="pvGridFlow">-- kWh</div>
+							<div class="sensor-label" id="pvGridStatus">Imported / Exported</div>
 						</div>
 					</div>
 				</section>
@@ -205,30 +205,46 @@
 				<section class="charts-grid">
 					<div class="chart-card full-width">
 						<div class="chart-header">
-							<h2>Energy Statistics</h2>
-							<span class="chart-subtitle">Yield vs. Consumption (Daily)</span>
+							<h2>Solar Generation (Live)</h2>
+							<span class="chart-subtitle">Energy produced by solar panels</span>
 						</div>
 						<div class="chart-container">
-							<div class="pv-placeholder">
-								<div class="placeholder-icon">📈</div>
-								<p>Real-time Solax Cloud Data</p>
-								<div id="pvDetails" class="pv-details-grid">
-									<div class="pv-detail-item">
-										<span class="label">Daily Charged:</span>
-										<span id="pvDailyCharged" class="value">-- kWh</span>
-									</div>
-									<div class="pv-detail-item">
-										<span class="label">Daily Discharged:</span>
-										<span id="pvDailyDischarged" class="value">-- kWh</span>
-									</div>
-									<div class="pv-detail-item">
-										<span class="label">Daily Imported:</span>
-										<span id="pvDailyImported" class="value">-- kWh</span>
-									</div>
-									<div class="pv-detail-item">
-										<span class="label">Daily Exported:</span>
-										<span id="pvDailyExported" class="value">-- kWh</span>
-									</div>
+							<canvas id="pvSolarChart"></canvas>
+						</div>
+					</div>
+
+					<div class="chart-card full-width">
+						<div class="chart-header">
+							<h2>Building Consumption (Live)</h2>
+							<span class="chart-subtitle">Energy used by the building</span>
+						</div>
+						<div class="chart-container">
+							<canvas id="pvConsumptionChart"></canvas>
+						</div>
+					</div>
+
+					<div class="chart-card full-width">
+						<div class="chart-header">
+							<h2>Detailed Statistics</h2>
+							<span class="chart-subtitle">Daily totals breakdown</span>
+						</div>
+						<div class="chart-container" style="height: auto;">
+							<div class="pv-details-grid">
+								<div class="pv-detail-item">
+									<span class="label">Saved in Battery:</span>
+									<span id="pvDailyCharged" class="value">-- kWh</span>
+								</div>
+								<div class="pv-detail-item">
+									<span class="label">Taken from Battery:</span>
+									<span id="pvDailyDischarged" class="value">-- kWh</span>
+								</div>
+								<div class="pv-detail-item">
+									<span class="label">Bought from Grid:</span>
+									<span id="pvDailyImported" class="value">-- kWh</span>
+								</div>
+								<div class="pv-detail-item">
+									<span class="label">Sold to Grid:</span>
+									<span id="pvDailyExported" class="value">-- kWh</span>
 								</div>
 							</div>
 						</div>
