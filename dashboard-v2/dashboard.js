@@ -5,9 +5,11 @@ const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
 // Solax Configuration
-const SOLAX_HOST = 'https://openapi-eu.solaxcloud.com';
+const SOLAX_HOST = '/solax';
 const SOLAX_CLIENT_ID = 'f842a5382669414f81329b58c20f2fb3';
 const SOLAX_CLIENT_SECRET = 'Or5lZuergsWB_NeqlE3mk__NIxif-GpLzFla5bP1pqE';
+const SOLAX_USERNAME = 'm.remake';
+const SOLAX_PASSWORD = 'Uniformed-Auction-Lanky1';
 const SOLAX_PLANT_ID = '508819503377442';
 
 // State
@@ -320,7 +322,9 @@ async function getSolaxToken() {
 			body: JSON.stringify({
 				client_id: SOLAX_CLIENT_ID,
 				client_secret: SOLAX_CLIENT_SECRET,
-				grant_type: 'CICS'
+				grant_type: 'CICS',
+				username: SOLAX_USERNAME,
+				password: SOLAX_PASSWORD
 			})
 		});
 		const data = await response.json();
