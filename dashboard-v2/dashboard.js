@@ -4,7 +4,15 @@ const INFLUXDB_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-Rc
 const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
+// Solax Configuration
+const SOLAX_HOST = 'https://openapi-eu.solaxcloud.com';
+const SOLAX_CLIENT_ID = 'f842a5382669414f81329b58c20f2fb3';
+const SOLAX_CLIENT_SECRET = 'Or5lZuergsWB_NeqlE3mk__NIxif-GpLzFla5bP1pqE';
+const SOLAX_PLANT_ID = '508819503377442';
+
 // State
+let currentView = 'sensors';
+let solaxToken = null;
 let selectedSensor = '1Aula';
 let availableRooms = [];
 let currentTimeRange = '6h';
@@ -270,6 +278,109 @@ window.setTimeRange = async (range) => {
 	await refreshAllData();
 };
 
+// Switch between Sensors and PV view
+window.switchView = async (view) => {
+	if (currentView === view) return;
+	currentView = view;
+
+	const sensorsView = document.getElementById('sensorsView');
+	const pvView = document.getElementById('pvView');
+	const btnSensors = document.getElementById('btnSensors');
+	const btnPV = document.getElementById('btnPV');
+	const title = document.getElementById('dashboardTitle');
+	const timeSelector = document.getElementById('sensorTimeSelector');
+
+	if (view === 'sensors') {
+		sensorsView.style.display = 'block';
+		pvView.style.display = 'none';
+		btnSensors.classList.add('active');
+		btnPV.classList.remove('active');
+		title.textContent = '🏢 LeoIOT Sensor Dashboard';
+		timeSelector.style.visibility = 'visible';
+	} else {
+		sensorsView.style.display = 'none';
+		pvView.style.display = 'block';
+		btnSensors.classList.remove('active');
+		btnPV.classList.add('active');
+		title.textContent = '☀️ LeoIOT PV Dashboard';
+		timeSelector.style.visibility = 'hidden';
+		await refreshPVData();
+	}
+	
+	triggerRoomAnimation();
+};
+
+async function getSolaxToken() {
+	if (solaxToken) return solaxToken;
+	
+	try {
+		const response = await fetch(`${SOLAX_HOST}/openapi/auth/get_token`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				client_id: SOLAX_CLIENT_ID,
+				client_secret: SOLAX_CLIENT_SECRET,
+				grant_type: 'CICS'
+			})
+		});
+		const data = await response.json();
+		if (data.code === 0) {
+			solaxToken = data.result.access_token;
+			return solaxToken;
+		}
+	} catch (error) {
+		console.error('Error fetching Solax token:', error);
+	}
+	return null;
+}
+
+async function refreshPVData() {
+	const token = await getSolaxToken();
+	if (!token) return;
+
+	try {
+		const url = `${SOLAX_HOST}/openapi/v2/plant/realtime_data?plantId=${SOLAX_PLANT_ID}&businessType=4`;
+		const response = await fetch(url, {
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			}
+		});
+		
+		const data = await response.json();
+		if (data.code === 10000) {
+			updatePVDashboard(data.result);
+		}
+	} catch (error) {
+		console.error('Error fetching Solax real-time data:', error);
+	}
+}
+
+function updatePVDashboard(data) {
+	document.getElementById('pvDailyYield').textContent = `${data.dailyYield.toFixed(1)} kWh`;
+	document.getElementById('pvTotalYield').textContent = `${data.totalYield.toFixed(1)} kWh`;
+	
+	// Battery Flow (Charged - Discharged as a simple indicator)
+	const batteryFlow = data.dailyCharged - data.dailyDischarged;
+	document.getElementById('pvBatteryFlow').textContent = `${Math.abs(batteryFlow).toFixed(1)} kWh`;
+	document.getElementById('pvBatteryStatus').textContent = batteryFlow >= 0 ? 'Net Charged Today' : 'Net Discharged Today';
+	
+	// Grid Flow (Imported - Exported)
+	const gridFlow = data.dailyImported - data.dailyExported;
+	document.getElementById('pvGridFlow').textContent = `${Math.abs(gridFlow).toFixed(1)} kWh`;
+	document.getElementById('pvGridStatus').textContent = gridFlow >= 0 ? 'Net Imported Today' : 'Net Exported Today';
+	
+	document.getElementById('pvTimeLabel').textContent = `Updated: ${data.plantLocalTime}`;
+	
+	// Details
+	document.getElementById('pvDailyCharged').textContent = `${data.dailyCharged.toFixed(1)} kWh`;
+	document.getElementById('pvDailyDischarged').textContent = `${data.dailyDischarged.toFixed(1)} kWh`;
+	document.getElementById('pvDailyImported').textContent = `${data.dailyImported.toFixed(1)} kWh`;
+	document.getElementById('pvDailyExported').textContent = `${data.dailyExported.toFixed(1)} kWh`;
+}
+
+
 // Filter by floor
 window.filterByFloor = async (floor) => {
 	currentFloorFilter = floor;
@@ -381,6 +492,11 @@ window.showMoreRooms = () => {
 
 // Refresh all data
 window.refreshAllData = async () => {
+	if (currentView === 'pv') {
+		await refreshPVData();
+		return;
+	}
+
 	const [tempData, co2Data, allRoomData, room105CO2, room105Temp] = await Promise.all([
 		fetchTemperatureData(),
 		fetchCO2Data(),

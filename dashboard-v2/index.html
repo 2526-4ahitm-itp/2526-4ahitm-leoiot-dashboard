@@ -15,8 +15,14 @@
 		</div>
 
 		<header class="dashboard-header">
-			<h1>🏢 LeoIOT Sensor Dashboard</h1>
-			<div class="time-range-selector">
+			<div class="header-left">
+				<h1 id="dashboardTitle">🏢 LeoIOT Sensor Dashboard</h1>
+				<div class="dashboard-toggle">
+					<button onclick="switchView('sensors')" id="btnSensors" class="view-btn active">Sensors</button>
+					<button onclick="switchView('pv')" id="btnPV" class="view-btn">PV System</button>
+				</div>
+			</div>
+			<div class="time-range-selector" id="sensorTimeSelector">
 				<button onclick="setTimeRange('1h')" class="time-btn">1h</button>
 				<button onclick="setTimeRange('6h')" class="time-btn active">6h</button>
 				<button onclick="setTimeRange('24h')" class="time-btn">24h</button>
@@ -25,136 +31,210 @@
 		</header>
 
 		<main class="dashboard-content">
-			<!-- Sensor Selector -->
-			<section class="sensor-selector-section">
-				<div class="sensor-selector-card">
-					<div class="sensor-selector-header">
-						<div class="sensor-search-container">
-							<input 
-								type="text" 
-								id="sensorSearch" 
-								class="sensor-search" 
-								placeholder="🔍 Search room..."
-								oninput="filterSensors()"
-								onfocus="filterSensors()"
-								autocomplete="off"
-							/>
-							<div id="searchResults" class="search-results-popup"></div>
-						</div>
-						<div class="sensor-filter-tabs">
-							<button class="filter-tab active" onclick="filterByFloor('all')" data-floor="all">All</button>
-							<button class="filter-tab" onclick="filterByFloor('1')" data-floor="1">Floor 1</button>
-							<button class="filter-tab" onclick="filterByFloor('2')" data-floor="2">Floor 2</button>
-							<button class="filter-tab" onclick="filterByFloor('E')" data-floor="E">Floor E</button>
-							<button class="filter-tab" onclick="filterByFloor('U')" data-floor="U">Basement</button>
-						</div>
-						<div class="sensor-dropdown-container">
-							<div id="roomDropdownTrigger" class="custom-dropdown-trigger" onclick="toggleRoomDropdown()">
-								🏠 Room 1Aula
+			<!-- Sensors View -->
+			<div id="sensorsView">
+				<!-- Sensor Selector -->
+				<section class="sensor-selector-section">
+					<div class="sensor-selector-card">
+						<div class="sensor-selector-header">
+							<div class="sensor-search-container">
+								<input 
+									type="text" 
+									id="sensorSearch" 
+									class="sensor-search" 
+									placeholder="🔍 Search room..."
+									oninput="filterSensors()"
+									onfocus="filterSensors()"
+									autocomplete="off"
+								/>
+								<div id="searchResults" class="search-results-popup"></div>
 							</div>
-							<div id="roomDropdownPopup" class="search-results-popup custom-dropdown-popup">
-								<!-- Dynamically populated -->
+							<div class="sensor-filter-tabs">
+								<button class="filter-tab active" onclick="filterByFloor('all')" data-floor="all">All</button>
+								<button class="filter-tab" onclick="filterByFloor('1')" data-floor="1">Floor 1</button>
+								<button class="filter-tab" onclick="filterByFloor('2')" data-floor="2">Floor 2</button>
+								<button class="filter-tab" onclick="filterByFloor('E')" data-floor="E">Floor E</button>
+								<button class="filter-tab" onclick="filterByFloor('U')" data-floor="U">Basement</button>
+							</div>
+							<div class="sensor-dropdown-container">
+								<div id="roomDropdownTrigger" class="custom-dropdown-trigger" onclick="toggleRoomDropdown()">
+									🏠 Room 1Aula
+								</div>
+								<div id="roomDropdownPopup" class="search-results-popup custom-dropdown-popup">
+									<!-- Dynamically populated -->
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			</section>
+				</section>
 
-			<!-- Current Value Cards -->
-			<section class="summary-cards">
-				<div class="card summary-card">
-					<div class="card-icon">🌡️</div>
-					<div class="card-content">
-						<h3>Temperature</h3>
-						<div class="value" id="currentTemp">--°C</div>
-						<div class="sensor-label" id="tempSensorLabel">All Rooms</div>
+				<!-- Current Value Cards -->
+				<section class="summary-cards">
+					<div class="card summary-card">
+						<div class="card-icon">🌡️</div>
+						<div class="card-content">
+							<h3>Temperature</h3>
+							<div class="value" id="currentTemp">--°C</div>
+							<div class="sensor-label" id="tempSensorLabel">All Rooms</div>
+						</div>
 					</div>
-				</div>
-				<div class="card summary-card">
-					<div class="card-icon">💨</div>
-					<div class="card-content">
-						<h3>CO₂ Level</h3>
-						<div class="value" id="currentCo2">-- ppm</div>
-						<div class="sensor-label" id="co2SensorLabel">All Rooms</div>
+					<div class="card summary-card">
+						<div class="card-icon">💨</div>
+						<div class="card-content">
+							<h3>CO₂ Level</h3>
+							<div class="value" id="currentCo2">-- ppm</div>
+							<div class="sensor-label" id="co2SensorLabel">All Rooms</div>
+						</div>
 					</div>
-				</div>
-				<div class="card summary-card">
-					<div class="card-icon">📈</div>
-					<div class="card-content">
-						<h3>24h Average</h3>
-						<div class="value" id="avgTemp24h">--°C</div>
-						<div class="sensor-label">Temperature</div>
+					<div class="card summary-card">
+						<div class="card-icon">📈</div>
+						<div class="card-content">
+							<h3>24h Average</h3>
+							<div class="value" id="avgTemp24h">--°C</div>
+							<div class="sensor-label">Temperature</div>
+						</div>
 					</div>
-				</div>
-				<div class="card summary-card">
-					<div class="card-icon">📊</div>
-					<div class="card-content">
-						<h3>Active Sensors</h3>
-						<div class="value" id="activeSensors">--</div>
-						<div class="sensor-label">Online</div>
+					<div class="card summary-card">
+						<div class="card-icon">📊</div>
+						<div class="card-content">
+							<h3>Active Sensors</h3>
+							<div class="value" id="activeSensors">--</div>
+							<div class="sensor-label">Online</div>
+						</div>
 					</div>
-				</div>
-			</section>
+				</section>
 
-			<!-- Main Charts -->
-			<section class="charts-grid">
-				<div class="chart-card full-width">
+				<!-- Main Charts -->
+				<section class="charts-grid">
+					<div class="chart-card full-width">
+						<div class="chart-header">
+							<h2>Temperature History</h2>
+							<span class="chart-subtitle" id="tempChartSubtitle">All Rooms</span>
+						</div>
+						<div class="chart-container">
+							<canvas id="tempChart"></canvas>
+						</div>
+						<div class="chart-placeholder" id="tempPlaceholder">
+							<div class="placeholder-icon">📊</div>
+							<div class="placeholder-text">Select a specific room to view its temperature history</div>
+						</div>
+					</div>
+
+					<div class="chart-card full-width">
+						<div class="chart-header">
+							<h2>CO₂ History</h2>
+							<span class="chart-subtitle" id="co2ChartSubtitle">All Rooms</span>
+						</div>
+						<div class="chart-container">
+							<canvas id="co2Chart"></canvas>
+						</div>
+						<div class="chart-placeholder" id="co2Placeholder">
+							<div class="placeholder-icon">💨</div>
+							<div class="placeholder-text">Select a specific room to view its CO₂ history</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- Room Details Table -->
+				<section class="table-card">
 					<div class="chart-header">
-						<h2>Temperature History</h2>
-						<span class="chart-subtitle" id="tempChartSubtitle">All Rooms</span>
+						<h2>All Sensors Overview</h2>
+						<span class="chart-subtitle" id="tableLastRefresh">Last refresh: --</span>
 					</div>
-					<div class="chart-container">
-						<canvas id="tempChart"></canvas>
+					<div class="table-container">
+						<table id="roomTable">
+							<thead>
+								<tr>
+									<th>Room</th>
+									<th>Temperature</th>
+									<th>CO₂</th>
+									<th>Last Update</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody id="roomTableBody">
+								<!-- Populated by JS -->
+							</tbody>
+						</table>
 					</div>
-					<div class="chart-placeholder" id="tempPlaceholder">
-						<div class="placeholder-icon">📊</div>
-						<div class="placeholder-text">Select a specific room to view its temperature history</div>
+					<div class="table-pagination">
+						<button id="showMoreBtn" class="show-more-btn" onclick="showMoreRooms()">
+							Show More <span id="showMoreCount">(10/117)</span>
+						</button>
 					</div>
-				</div>
+				</section>
+			</div>
 
-				<div class="chart-card full-width">
-					<div class="chart-header">
-						<h2>CO₂ History</h2>
-						<span class="chart-subtitle" id="co2ChartSubtitle">All Rooms</span>
+			<!-- PV View -->
+			<div id="pvView" style="display: none;">
+				<section class="summary-cards">
+					<div class="card summary-card">
+						<div class="card-icon">☀️</div>
+						<div class="card-content">
+							<h3>Daily Yield</h3>
+							<div class="value" id="pvDailyYield">-- kWh</div>
+							<div class="sensor-label" id="pvTimeLabel">Updated: --</div>
+						</div>
 					</div>
-					<div class="chart-container">
-						<canvas id="co2Chart"></canvas>
+					<div class="card summary-card">
+						<div class="card-icon">🌍</div>
+						<div class="card-content">
+							<h3>Total Yield</h3>
+							<div class="value" id="pvTotalYield">-- kWh</div>
+							<div class="sensor-label">Lifetime</div>
+						</div>
 					</div>
-					<div class="chart-placeholder" id="co2Placeholder">
-						<div class="placeholder-icon">💨</div>
-						<div class="placeholder-text">Select a specific room to view its CO₂ history</div>
+					<div class="card summary-card">
+						<div class="card-icon">🔋</div>
+						<div class="card-content">
+							<h3>Battery</h3>
+							<div class="value" id="pvBatteryFlow">-- kW</div>
+							<div class="sensor-label" id="pvBatteryStatus">Charge/Discharge</div>
+						</div>
 					</div>
-				</div>
-			</section>
+					<div class="card summary-card">
+						<div class="card-icon">⚡</div>
+						<div class="card-content">
+							<h3>Grid</h3>
+							<div class="value" id="pvGridFlow">-- kW</div>
+							<div class="sensor-label" id="pvGridStatus">Import/Export</div>
+						</div>
+					</div>
+				</section>
 
-			<!-- Room Details Table -->
-			<section class="table-card">
-				<div class="chart-header">
-					<h2>All Sensors Overview</h2>
-					<span class="chart-subtitle" id="tableLastRefresh">Last refresh: --</span>
-				</div>
-				<div class="table-container">
-					<table id="roomTable">
-						<thead>
-							<tr>
-								<th>Room</th>
-								<th>Temperature</th>
-								<th>CO₂</th>
-								<th>Last Update</th>
-								<th>Status</th>
-							</tr>
-						</thead>
-						<tbody id="roomTableBody">
-							<!-- Populated by JS -->
-						</tbody>
-					</table>
-				</div>
-				<div class="table-pagination">
-					<button id="showMoreBtn" class="show-more-btn" onclick="showMoreRooms()">
-						Show More <span id="showMoreCount">(10/117)</span>
-					</button>
-				</div>
-			</section>
+				<section class="charts-grid">
+					<div class="chart-card full-width">
+						<div class="chart-header">
+							<h2>Energy Statistics</h2>
+							<span class="chart-subtitle">Yield vs. Consumption (Daily)</span>
+						</div>
+						<div class="chart-container">
+							<div class="pv-placeholder">
+								<div class="placeholder-icon">📈</div>
+								<p>Real-time Solax Cloud Data</p>
+								<div id="pvDetails" class="pv-details-grid">
+									<div class="pv-detail-item">
+										<span class="label">Daily Charged:</span>
+										<span id="pvDailyCharged" class="value">-- kWh</span>
+									</div>
+									<div class="pv-detail-item">
+										<span class="label">Daily Discharged:</span>
+										<span id="pvDailyDischarged" class="value">-- kWh</span>
+									</div>
+									<div class="pv-detail-item">
+										<span class="label">Daily Imported:</span>
+										<span id="pvDailyImported" class="value">-- kWh</span>
+									</div>
+									<div class="pv-detail-item">
+										<span class="label">Daily Exported:</span>
+										<span id="pvDailyExported" class="value">-- kWh</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+			</div>
 		</main>
 
 		<script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
