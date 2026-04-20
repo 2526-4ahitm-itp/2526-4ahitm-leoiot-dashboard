@@ -330,7 +330,6 @@ window.switchView = async (view) => {
 	const btnSensors = document.getElementById('btnSensors');
 	const btnPV = document.getElementById('btnPV');
 	const title = document.getElementById('dashboardTitle');
-	const timeSelector = document.getElementById('sensorTimeSelector');
 
 	if (view === 'sensors') {
 		sensorsView.style.display = 'block';
@@ -338,7 +337,6 @@ window.switchView = async (view) => {
 		btnSensors.classList.add('active');
 		btnPV.classList.remove('active');
 		title.textContent = '🏢 LeoIOT Sensor Dashboard';
-		timeSelector.style.visibility = 'visible';
 		
 		// Stop PV polling
 		if (pvInterval) {
@@ -351,7 +349,6 @@ window.switchView = async (view) => {
 		btnSensors.classList.remove('active');
 		btnPV.classList.add('active');
 		title.textContent = '☀️ LeoIOT PV Dashboard';
-		timeSelector.style.visibility = 'hidden';
 		
 		// Start PV polling (every 30s)
 		await refreshPVData();
