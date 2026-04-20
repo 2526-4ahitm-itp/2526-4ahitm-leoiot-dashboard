@@ -401,6 +401,7 @@ async function refreshPVData() {
 	if (!token) return;
 
 	try {
+		// 1. Fetch Real-time Snapshot
 		const url = `${SOLAX_HOST}openapi/v2/plant/realtime_data?plantId=${SOLAX_PLANT_ID}&businessType=4`;
 		const response = await fetch(url, {
 			method: 'GET',
@@ -414,8 +415,89 @@ async function refreshPVData() {
 		if (data.code === 10000) {
 			updatePVDashboard(data.result);
 		}
+
+		// 2. Fetch History from InfluxDB for the Charts
+		await fetchPVHistoryData();
+
 	} catch (error) {
 		console.error('Error fetching Solax real-time data:', error);
+	}
+}
+
+async function fetchPVHistoryData() {
+	const query = `from(bucket: "${INFLUXDB_BUCKET}")
+       |> range(start: -${currentTimeRange})
+       |> filter(fn: (r) => r._measurement == "solax_stats")
+       |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption")
+       |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+       |> yield(name: "mean")`;
+
+	try {
+		const csvData = await fetchInfluxDB(query);
+		const dataByField = parsePVHistoryResponse(csvData);
+		
+		updatePVCharts(dataByField);
+	} catch (error) {
+		console.error('Error fetching PV history from InfluxDB:', error);
+	}
+}
+
+function parsePVHistoryResponse(csvData) {
+	const lines = csvData.trim().split('\n');
+	if (lines.length < 2) return {};
+
+	const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+	const valueIndex = headers.indexOf('_value');
+	const timeIndex = headers.indexOf('_time');
+	const fieldIndex = headers.indexOf('_field');
+
+	const dataByField = { daily_yield: [], consumption: [] };
+
+	for (let i = 1; i < lines.length; i++) {
+		const columns = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
+		if (!columns[valueIndex] || !columns[timeIndex] || !columns[fieldIndex]) continue;
+
+		const field = columns[fieldIndex];
+		const value = parseFloat(columns[valueIndex]);
+		const time = new Date(columns[timeIndex]);
+
+		if (dataByField[field]) {
+			dataByField[field].push({ time, value });
+		}
+	}
+
+	return dataByField;
+}
+
+function updatePVCharts(dataByField) {
+	if (dataByField.daily_yield && dataByField.daily_yield.length > 0) {
+		const yieldData = dataByField.daily_yield.sort((a, b) => a.time - b.time);
+		pvSolarChart.data.labels = yieldData.map(({ time }) => formatTime(time));
+		pvSolarChart.data.tooltipLabels = yieldData.map(({ time }) => formatTooltipTime(time));
+		pvSolarChart.data.datasets = [{
+			label: 'Solar Power Today (kWh)',
+			data: yieldData.map(({ value }) => value),
+			borderColor: '#f59e0b',
+			backgroundColor: 'rgba(245, 158, 11, 0.1)',
+			fill: true,
+			tension: 0.4
+		}];
+		pvSolarChart.update();
+	}
+
+	if (dataByField.consumption && dataByField.consumption.length > 0) {
+		const consumptionData = dataByField.consumption.sort((a, b) => a.time - b.time);
+		pvConsumptionChart.data.labels = consumptionData.map(({ time }) => formatTime(time));
+		pvConsumptionChart.data.tooltipLabels = consumptionData.map(({ time }) => formatTooltipTime(time));
+		pvConsumptionChart.data.datasets = [{
+			label: 'Building Consumption (kWh)',
+			data: consumptionData.map(({ value }) => value),
+			borderColor: '#3b82f6',
+			backgroundColor: 'rgba(59, 130, 246, 0.1)',
+			fill: true,
+			tension: 0.4
+		}];
+		pvConsumptionChart.update();
 	}
 }
 
@@ -440,29 +522,6 @@ function updatePVDashboard(data) {
 	document.getElementById('pvDailyDischarged').textContent = `${data.dailyDischarged.toFixed(1)} kWh`;
 	document.getElementById('pvDailyImported').textContent = `${data.dailyImported.toFixed(1)} kWh`;
 	document.getElementById('pvDailyExported').textContent = `${data.dailyExported.toFixed(1)} kWh`;
-
-	// Update Charts (Live Feed)
-	const now = new Date();
-	const timeLabel = formatTime(now);
-	
-	// Solar Generation Chart
-	updateChartsWithLivePoint(pvSolarChart, data.dailyYield, now.getTime());
-	pvSolarChart.data.datasets[0].label = 'Solar Power Today (kWh)';
-	pvSolarChart.data.datasets[0].borderColor = '#f59e0b';
-	pvSolarChart.data.datasets[0].backgroundColor = 'rgba(245, 158, 11, 0.1)';
-	pvSolarChart.data.datasets[0].fill = true;
-	pvSolarChart.update('none');
-
-	// Consumption Calculation: Yield - Export + Import
-	// Simplified: Production + Grid Net + Battery Net?
-	// Let's use: DailyYield (Solar) - DailyExported (Sent to grid) + DailyImported (Taken from grid)
-	const consumption = data.dailyYield - data.dailyExported + data.dailyImported;
-	updateChartsWithLivePoint(pvConsumptionChart, consumption, now.getTime());
-	pvConsumptionChart.data.datasets[0].label = 'Building Consumption (kWh)';
-	pvConsumptionChart.data.datasets[0].borderColor = '#3b82f6';
-	pvConsumptionChart.data.datasets[0].backgroundColor = 'rgba(59, 130, 246, 0.1)';
-	pvConsumptionChart.data.datasets[0].fill = true;
-	pvConsumptionChart.update('none');
 }
 
 
