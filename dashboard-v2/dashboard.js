@@ -327,6 +327,13 @@ async function getSolaxToken() {
 				password: SOLAX_PASSWORD
 			})
 		});
+		
+		if (!response.ok) {
+			const text = await response.text();
+			console.error(`Solax token request failed with status ${response.status}: ${text}`);
+			return null;
+		}
+
 		const data = await response.json();
 		if (data.code === 0) {
 			solaxToken = data.result.access_token;
