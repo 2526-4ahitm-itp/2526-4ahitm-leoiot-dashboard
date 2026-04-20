@@ -5,7 +5,7 @@ const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
 // Solax Configuration
-const SOLAX_HOST = '/solax';
+const SOLAX_HOST = window.location.origin + '/solax';
 const SOLAX_CLIENT_ID = 'f842a5382669414f81329b58c20f2fb3';
 const SOLAX_CLIENT_SECRET = 'Or5lZuergsWB_NeqlE3mk__NIxif-GpLzFla5bP1pqE';
 const SOLAX_USERNAME = 'm.remake';
@@ -316,7 +316,9 @@ async function getSolaxToken() {
 	if (solaxToken) return solaxToken;
 	
 	try {
-		const response = await fetch(`${SOLAX_HOST}/openapi/auth/get_token`, {
+		const url = `${SOLAX_HOST}/openapi/auth/get_token`;
+		console.log(`[Solax] Fetching token from: ${url}`);
+		const response = await fetch(url, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
