@@ -57,7 +57,11 @@ async function collectData() {
             await writeToInflux(data, consumption);
         } else {
             console.error('[Collector] Data fetch error:', response.data);
-            if (response.data.code === 10401) cachedToken = null; // Token expired
+            // 10401 = Token expired, 10402 = Invalid token
+            if (response.data.code === 10401 || response.data.code === 10402) {
+                console.log('[Collector] Clearing invalid token...');
+                cachedToken = null; 
+            }
         }
     } catch (error) {
         console.error('[Collector] Error fetching data:', error.message);

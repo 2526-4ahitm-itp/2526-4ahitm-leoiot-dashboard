@@ -386,9 +386,13 @@ async function getSolaxToken() {
 		if (data.code === 0) {
 			solaxToken = data.result.access_token;
 			return solaxToken;
+		} else {
+			console.error('[Solax] Token API error:', data);
+			solaxToken = null;
 		}
 	} catch (error) {
 		console.error('Error fetching Solax token:', error);
+		solaxToken = null;
 	}
 	return null;
 }
@@ -411,6 +415,9 @@ async function refreshPVData() {
 		const data = await response.json();
 		if (data.code === 10000) {
 			updatePVDashboard(data.result);
+		} else if (data.code === 10401 || data.code === 10402) {
+			console.log('[Solax] Token expired or invalid, clearing...');
+			solaxToken = null;
 		}
 
 		// 2. Fetch History from InfluxDB for the Charts
