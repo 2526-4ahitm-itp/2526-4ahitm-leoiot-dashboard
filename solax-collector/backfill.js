@@ -60,7 +60,7 @@ async function fetchHistory(token, snList, deviceType, startTimeMs, endTimeMs) {
 async function writeToInflux(points) {
     const influxUrl = process.env.IN_DOCKER ? INFLUX_URL : INFLUX_URL_LOCAL;
     const lines = points.map(p => {
-        return `solax_stats,plant_id=${SOLAX_PLANT_ID} daily_yield=${p.yield},consumption=${p.consumption} ${p.timestamp * 1000000}`;
+        return `solax_stats,plant_id=${SOLAX_PLANT_ID} daily_yield=${p.yield},consumption=${p.consumption} ${p.timestamp}000000000`;
     });
 
     for (let i = 0; i < lines.length; i += 500) {
