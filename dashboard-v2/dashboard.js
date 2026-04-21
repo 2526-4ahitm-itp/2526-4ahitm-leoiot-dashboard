@@ -1348,11 +1348,11 @@ function updateRoomTable(roomData) {
 		}
 
 		row.innerHTML = `
-          <td><strong>${room.room}</strong></td>
-          <td class="${tempClass}">${tempValue}</td>
-          <td class="${co2Class}">${co2Value}</td>
-          <td>${formatRelativeTime(room.time)}</td>
-          <td class="${statusClass}">${statusText}</td>
+          <td data-label="Room"><strong>${room.room}</strong></td>
+          <td data-label="Temperature" class="${tempClass}">${tempValue}</td>
+          <td data-label="CO₂" class="${co2Class}">${co2Value}</td>
+          <td data-label="Last Update">${formatRelativeTime(room.time)}</td>
+          <td data-label="Status" class="${statusClass}">${statusText}</td>
        `;
 		tbody.appendChild(row);
 	});
