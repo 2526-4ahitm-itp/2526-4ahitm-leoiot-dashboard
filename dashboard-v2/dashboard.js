@@ -141,7 +141,10 @@ function handleLiveUpdate(msg) {
 	updateRoomTable(window.lastRoomData);
 
 	// Update summary cards for "All Rooms" view or specific room
-	updateSummaryFromLive(msg);
+	const isPast = currentTimeRange === 'custom' && !isTodaySelected();
+	if (!isPast) {
+		updateSummaryFromLive(msg);
+	}
 	
 	// update charts if applicable
 	if (selectedSensor !== 'all' && msg.room === selectedSensor) {
