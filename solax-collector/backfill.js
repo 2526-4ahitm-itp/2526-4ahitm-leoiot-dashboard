@@ -76,7 +76,11 @@ async function writeToInflux(points) {
                 }
             );
         } catch (e) {
-            console.error('Influx error chunk:', e.message);
+            console.error('Influx error chunk:', e.response ? JSON.stringify(e.response.data) : e.message);
+            // Log the first line of the failing chunk to see the format
+            if (chunk.length > 0) {
+                console.error('First line of failing chunk:', chunk[0]);
+            }
         }
     }
 }
