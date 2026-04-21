@@ -21,6 +21,14 @@ let currentTimeRange = '6h';
 let customDate = null;
 let currentFloorFilter = 'all';
 
+function isTodaySelected() {
+	if (currentTimeRange !== 'custom' || !customDate) return false;
+	const d = new Date();
+	const pad = n => n.toString().padStart(2, '0');
+	const todayStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+	return customDate === todayStr;
+}
+
 function getRangeQuery() {
 	if (currentTimeRange === 'custom' && customDate) {
 		const start = new Date(customDate + 'T00:00:00').toISOString();
@@ -138,7 +146,7 @@ function handleLiveUpdate(msg) {
 	// update charts if applicable
 	if (selectedSensor !== 'all' && msg.room === selectedSensor) {
 		// Only update live charts if we are NOT looking at a historical date
-		if (currentTimeRange !== 'custom' && currentTimeRange !== '7d') {
+		if ((currentTimeRange !== 'custom' && currentTimeRange !== '7d') || isTodaySelected()) {
 			if (msg.type === 'temp') {
 				updateChartsWithLivePoint(tempChart, msg.value, msg.ts);
 			} else if (msg.type === 'co2') {
@@ -369,11 +377,11 @@ window.setSpecificDate = async (dateStr) => {
 	// Update titles
 	const formattedDate = dateBtn ? dateBtn.textContent.replace('📅 ', '') : dateStr;
 	const solarTitle = document.getElementById('pvSolarPowerTitle');
-	if (solarTitle) solarTitle.textContent = `Solar Power on ${formattedDate}`;
+	if (solarTitle) solarTitle.textContent = isTodaySelected() ? `Solar Power Today` : `Solar Power on ${formattedDate}`;
 	const chartTitle1 = document.getElementById('pvSolarChartTitle');
-	if (chartTitle1) chartTitle1.textContent = `Solar Generation (${formattedDate})`;
+	if (chartTitle1) chartTitle1.textContent = isTodaySelected() ? `Solar Generation (Live)` : `Solar Generation (${formattedDate})`;
 	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
-	if (chartTitle2) chartTitle2.textContent = `Building Consumption (${formattedDate})`;
+	if (chartTitle2) chartTitle2.textContent = isTodaySelected() ? `Building Consumption (Live)` : `Building Consumption (${formattedDate})`;
 
 	await refreshAllData();
 };
@@ -456,7 +464,7 @@ async function getSolaxToken() {
 }
 
 async function refreshPVData() {
-	if (currentTimeRange === 'custom') {
+	if (currentTimeRange === 'custom' && !isTodaySelected()) {
 		await fetchPVHistoryData();
 		return;
 	}
@@ -504,7 +512,7 @@ async function fetchPVHistoryData() {
 		
 		updatePVCharts(dataByField);
 
-		if (currentTimeRange === 'custom') {
+		if (currentTimeRange === 'custom' && !isTodaySelected()) {
 			const getLast = (arr) => arr && arr.length > 0 ? arr[arr.length - 1].value : 0;
 			const mockData = {
 				dailyYield: getLast(dataByField.daily_yield),
