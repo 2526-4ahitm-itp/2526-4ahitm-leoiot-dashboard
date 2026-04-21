@@ -102,6 +102,8 @@ async function backfill() {
         // Fetch Meter History (Grid Import/Export)
         const meterHistory = await fetchHistory(token, [METER_SN], "3", start, end);
 
+        console.log(`  Fetched ${invHistory.length} inverter records and ${meterHistory.length} meter records.`);
+
         // Process points
         // History data is usually a list of records. We need to align them by timestamp.
         const pointsByTime = {};
