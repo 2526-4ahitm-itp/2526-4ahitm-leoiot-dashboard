@@ -181,7 +181,6 @@ function updateSummaryFromLive(msg) {
 			const avgCo2 = roomsWithCo2.reduce((acc, r) => acc + r.co2, 0) / (roomsWithCo2.length || 1);
 			document.getElementById('currentCo2').textContent = `${avgCo2.toFixed(0)} ppm`;
 		}
-		document.getElementById('activeSensors').textContent = filteredRooms.length;
 	} else {
 		// Update single room boxes
 		if (msg.type === 'temp') {
@@ -1109,7 +1108,20 @@ function parseCO2RoomData(csvData) {
 
 // Update summary cards
 function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
-	let currentTemp, avgTemp24h;
+	let currentTemp = 0, avgTemp24h = 0, highestTemp = -Infinity;
+	let currentCo2 = 0, avgCo224h = 0, highestCo2 = -Infinity;
+
+	const isPast = currentTimeRange === 'custom' && !isTodaySelected();
+
+	// Set Titles based on isPast
+	const title1 = document.getElementById('card1Title');
+	if (title1) title1.textContent = isPast ? 'Highest Temp' : 'Temperature';
+	const title2 = document.getElementById('card2Title');
+	if (title2) title2.textContent = isPast ? 'Highest CO₂' : 'CO₂ Level';
+	const title3 = document.getElementById('card3Title');
+	if (title3) title3.textContent = isPast ? '24h Avg Temp' : '24h Average';
+	const title4 = document.getElementById('card4Title');
+	if (title4) title4.textContent = '24h Average CO₂';
 
 	if (selectedSensor === 'all') {
 		// Get only rooms that match the current floor filter
@@ -1132,10 +1144,11 @@ function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
 				tempSum += values[values.length - 1].value;
 				tempCount++;
 
-				// All values in range for "24h Average"
+				// All values in range for "24h Average" and highest
 				values.forEach(v => {
 					historySum += v.value;
 					historyCount++;
+					if (v.value > highestTemp) highestTemp = v.value;
 				});
 			}
 		});
@@ -1145,21 +1158,26 @@ function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
 
 		// Calculate Average CO2 for filtered rooms
 		let co2Sum = 0, co2Count = 0;
+		let co2HistorySum = 0, co2HistoryCount = 0;
+
 		filteredRooms.forEach(room => {
 			let currentCo2Val = null;
 
-			if (room === '105') {
-				if (room105CO2.length > 0) {
-					currentCo2Val = room105CO2[0].co2;
-				} else {
-					const topic = "nili3/sensor/nili3_co2/state";
-					const roomCo2Data = co2Data[topic] || [];
-					if (roomCo2Data.length > 0) currentCo2Val = roomCo2Data[roomCo2Data.length - 1].value;
-				}
-			} else {
-				const topic = `nili3/sensor/${room.toLowerCase()}_co2/state`;
-				const roomCo2Data = co2Data[topic] || [];
-				if (roomCo2Data.length > 0) currentCo2Val = roomCo2Data[roomCo2Data.length - 1].value;
+			const topic = room === '105' ? "nili3/sensor/nili3_co2/state" : `nili3/sensor/${room.toLowerCase()}_co2/state`;
+			const roomCo2Data = co2Data[topic] || [];
+
+			if (roomCo2Data.length > 0) {
+				roomCo2Data.forEach(v => {
+					co2HistorySum += v.value;
+					co2HistoryCount++;
+					if (v.value > highestCo2) highestCo2 = v.value;
+				});
+			}
+
+			if (room === '105' && !isPast && room105CO2.length > 0) {
+				currentCo2Val = room105CO2[0].co2;
+			} else if (roomCo2Data.length > 0) {
+				currentCo2Val = roomCo2Data[roomCo2Data.length - 1].value;
 			}
 
 			if (currentCo2Val !== null) {
@@ -1168,43 +1186,54 @@ function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
 			}
 		});
 
-		const currentCo2 = co2Count > 0 ? co2Sum / co2Count : 0;
-
-		// Update UI
-		document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
-		document.getElementById('avgTemp24h').textContent = `${avgTemp24h.toFixed(1)}°C`;
-		document.getElementById('currentCo2').textContent = `${currentCo2.toFixed(0)} ppm`;
-		document.getElementById('activeSensors').textContent = filteredRooms.length;
+		currentCo2 = co2Count > 0 ? co2Sum / co2Count : 0;
+		avgCo224h = co2HistoryCount > 0 ? co2HistorySum / co2HistoryCount : 0;
 
 	} else {
+		// Single room logic
 		const roomData = tempData[selectedSensor] || [];
 		currentTemp = roomData.length > 0 ? roomData[roomData.length - 1].value : 0;
 		let sum = 0;
-		roomData.forEach(({ value }) => { sum += value; });
+		roomData.forEach(({ value }) => { 
+			sum += value; 
+			if (value > highestTemp) highestTemp = value;
+		});
 		avgTemp24h = roomData.length > 0 ? sum / roomData.length : 0;
 
-		document.getElementById('currentTemp').textContent = `${currentTemp.toFixed(1)}°C`;
-		document.getElementById('avgTemp24h').textContent = `${avgTemp24h.toFixed(1)}°C`;
+		const topic = selectedSensor === '105' ? "nili3/sensor/nili3_co2/state" : `nili3/sensor/${selectedSensor.toLowerCase()}_co2/state`;
+		const roomCo2Data = co2Data[topic] || [];
 
-		// Setup correct CO2 logic for custom room mapping
-		let currentCo2 = 0;
-		if (selectedSensor === '105') {
-			if (room105CO2.length > 0) {
-				currentCo2 = room105CO2[0].co2;
-			} else {
-				const topic = "nili3/sensor/nili3_co2/state";
-				const roomCo2Data = co2Data[topic] || [];
-				currentCo2 = roomCo2Data.length > 0 ? roomCo2Data[roomCo2Data.length - 1].value : 0;
-			}
+		let cSum = 0;
+		roomCo2Data.forEach(({ value }) => {
+			cSum += value;
+			if (value > highestCo2) highestCo2 = value;
+		});
+		avgCo224h = roomCo2Data.length > 0 ? cSum / roomCo2Data.length : 0;
+
+		if (selectedSensor === '105' && !isPast && room105CO2.length > 0) {
+			currentCo2 = room105CO2[0].co2;
 		} else {
-			const topic = `nili3/sensor/${selectedSensor.toLowerCase()}_co2/state`;
-			const roomCo2Data = co2Data[topic] || [];
 			currentCo2 = roomCo2Data.length > 0 ? roomCo2Data[roomCo2Data.length - 1].value : 0;
 		}
-
-		document.getElementById('currentCo2').textContent = `${currentCo2.toFixed(0)} ppm`;
-		document.getElementById('activeSensors').textContent = Object.keys(tempData).length;
 	}
+
+	if (highestTemp === -Infinity) highestTemp = 0;
+	if (highestCo2 === -Infinity) highestCo2 = 0;
+
+	const val1 = isPast ? highestTemp : currentTemp;
+	const val2 = isPast ? highestCo2 : currentCo2;
+
+	const tempEl = document.getElementById('currentTemp');
+	if (tempEl) tempEl.textContent = `${val1.toFixed(1)}°C`;
+	
+	const co2El = document.getElementById('currentCo2');
+	if (co2El) co2El.textContent = `${val2.toFixed(0)} ppm`;
+	
+	const avgTempEl = document.getElementById('avgTemp24h');
+	if (avgTempEl) avgTempEl.textContent = `${avgTemp24h.toFixed(1)}°C`;
+	
+	const avgCo2El = document.getElementById('avgCo224h');
+	if (avgCo2El) avgCo2El.textContent = `${avgCo224h.toFixed(0)} ppm`;
 }
 
 // Update temperature chart
