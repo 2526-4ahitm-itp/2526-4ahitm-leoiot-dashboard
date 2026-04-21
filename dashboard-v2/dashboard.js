@@ -137,10 +137,13 @@ function handleLiveUpdate(msg) {
 	
 	// update charts if applicable
 	if (selectedSensor !== 'all' && msg.room === selectedSensor) {
-		if (msg.type === 'temp') {
-			updateChartsWithLivePoint(tempChart, msg.value, msg.ts);
-		} else if (msg.type === 'co2') {
-			updateChartsWithLivePoint(co2Chart, msg.value, msg.ts);
+		// Only update live charts if we are NOT looking at a historical date
+		if (currentTimeRange !== 'custom' && currentTimeRange !== '7d') {
+			if (msg.type === 'temp') {
+				updateChartsWithLivePoint(tempChart, msg.value, msg.ts);
+			} else if (msg.type === 'co2') {
+				updateChartsWithLivePoint(co2Chart, msg.value, msg.ts);
+			}
 		}
 	}
 }
@@ -328,6 +331,19 @@ window.setTimeRange = async (range) => {
 		btn.classList.remove('active');
 		if (btn.textContent === range) btn.classList.add('active');
 	});
+	
+	// Reset date picker button
+	const dateBtn = document.getElementById('btnDatePicker');
+	if (dateBtn) dateBtn.textContent = '📅';
+	
+	// Reset titles
+	const solarTitle = document.getElementById('pvSolarPowerTitle');
+	if (solarTitle) solarTitle.textContent = 'Solar Power Today';
+	const chartTitle1 = document.getElementById('pvSolarChartTitle');
+	if (chartTitle1) chartTitle1.textContent = 'Solar Generation (Live)';
+	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
+	if (chartTitle2) chartTitle2.textContent = 'Building Consumption (Live)';
+
 	await refreshAllData();
 };
 
@@ -338,7 +354,27 @@ window.setSpecificDate = async (dateStr) => {
 	document.querySelectorAll('.time-btn').forEach(btn => {
 		btn.classList.remove('active');
 	});
-	document.getElementById('btnDatePicker').classList.add('active');
+	
+	// Update date picker button
+	const dateBtn = document.getElementById('btnDatePicker');
+	if (dateBtn) {
+		dateBtn.classList.add('active');
+		// Format as DD.MM.YYYY
+		const parts = dateStr.split('-');
+		if (parts.length === 3) {
+			dateBtn.textContent = `📅 ${parts[2]}.${parts[1]}.${parts[0]}`;
+		}
+	}
+	
+	// Update titles
+	const formattedDate = dateBtn ? dateBtn.textContent.replace('📅 ', '') : dateStr;
+	const solarTitle = document.getElementById('pvSolarPowerTitle');
+	if (solarTitle) solarTitle.textContent = `Solar Power on ${formattedDate}`;
+	const chartTitle1 = document.getElementById('pvSolarChartTitle');
+	if (chartTitle1) chartTitle1.textContent = `Solar Generation (${formattedDate})`;
+	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
+	if (chartTitle2) chartTitle2.textContent = `Building Consumption (${formattedDate})`;
+
 	await refreshAllData();
 };
 
