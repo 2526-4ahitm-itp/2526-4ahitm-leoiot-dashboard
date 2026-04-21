@@ -37,15 +37,19 @@ async function getSolaxToken() {
 
 async function fetchHistory(token, snList, deviceType, startTime, endTime) {
     try {
-        const response = await axios.post(`${SOLAX_HOST}/openapi/v2/device/history_data`, {
-            snList: snList,
-            deviceType: deviceType,
-            startTime: startTime.toString(),
-            endTime: endTime.toString(),
-            timeInterval: "300", // 5 minute intervals for history is plenty
-            businessType: "4"
-        }, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        const response = await axios.get(`${SOLAX_HOST}/openapi/v2/device/history_data`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            data: {
+                snList: snList,
+                deviceType: deviceType,
+                startTime: startTime.toString(),
+                endTime: endTime.toString(),
+                timeInterval: "5", // 5 minute intervals (unit is minutes, not seconds!)
+                businessType: "4"
+            }
         });
         return response.data.result || [];
     } catch (error) {
