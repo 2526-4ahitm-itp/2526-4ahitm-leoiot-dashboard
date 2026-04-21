@@ -1,0 +1,14 @@
+---
+import Layout from "../components/Layout.astro";
+---
+<Layout title="404 | LeoIoT" description="Page not found." pathname="">
+  <section class="page-head">
+    <p class="eyebrow">404</p>
+    <h1>Route not found</h1>
+    <p>The requested page is not part of the published LeoIoT project site.</p>
+    <div class="hero-actions">
+      <a class="button" href={`${import.meta.env.BASE_URL}`}>Back to overview</a>
+      <a class="button-secondary" href={`${import.meta.env.BASE_URL}presentation`}>Open presentation</a>
+    </div>
+  </section>
+</Layout>

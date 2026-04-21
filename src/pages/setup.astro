@@ -1,0 +1,30 @@
+---
+import Layout from "../components/Layout.astro";
+import project from "../data/project.json";
+---
+<Layout title="Setup | LeoIoT" description="Setup instructions for LeoIoT." pathname="/setup">
+  <section class="page-head">
+    <p class="eyebrow">Setup</p>
+    <h1>Bring the platform up locally</h1>
+    <p>The repository already contains Docker Compose definitions for the complete runtime. Most contributors can start there and only drop into individual packages when they need to work on one service.</p>
+  </section>
+
+  <section class="section two-up">
+    <article class="panel">
+      <h3>Recommended path</h3>
+      <div class="code-block"><pre>docker compose up -d</pre></div>
+      <ul>
+        {project.setup.map((item) => <li>{item}</li>)}
+      </ul>
+    </article>
+    <article class="panel">
+      <h3>Primary access points</h3>
+      <ul>
+        <li>`http://localhost:8080` for the 3D building view</li>
+        <li>`http://localhost:8081` for `dashboard-v2`</li>
+        <li>`http://localhost:3000` for Grafana</li>
+        <li>`http://localhost:8086` for InfluxDB</li>
+      </ul>
+    </article>
+  </section>
+</Layout>

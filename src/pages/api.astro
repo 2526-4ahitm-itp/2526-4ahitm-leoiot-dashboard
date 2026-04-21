@@ -1,0 +1,22 @@
+---
+import Layout from "../components/Layout.astro";
+import project from "../data/project.json";
+---
+<Layout title="API | LeoIoT" description="API and messaging reference for LeoIoT." pathname="/api">
+  <section class="page-head">
+    <p class="eyebrow">API and Messaging</p>
+    <h1>HTTP, MQTT, and WebSocket touchpoints</h1>
+    <p>The repository mixes classic HTTP endpoints with broker topics and a browser-facing socket bridge. This page captures the interfaces visible from the checked-in source.</p>
+  </section>
+
+  <section class="section api-grid">
+    {project.api.map((entry) => (
+      <article class="panel">
+        <p class="eyebrow">{entry.method}</p>
+        <h3>{entry.name}</h3>
+        <div class="code-block"><pre>{entry.path}</pre></div>
+        <p>{entry.description}</p>
+      </article>
+    ))}
+  </section>
+</Layout>

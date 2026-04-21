@@ -1,0 +1,53 @@
+---
+import "../styles/global.css";
+
+const { title = "LeoIoT", description = "LeoIoT project site", pathname = "/" } = Astro.props;
+
+const nav = [
+  { href: "/", label: "Overview" },
+  { href: "/features", label: "Features" },
+  { href: "/architecture", label: "Architecture" },
+  { href: "/setup", label: "Setup" },
+  { href: "/api", label: "API" },
+  { href: "/presentation", label: "Presentation" }
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell">
+        <a class="brand" href={`${import.meta.env.BASE_URL}`}>
+          <span class="brand-mark">L</span>
+          <span>LeoIoT</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          {nav.map((item) => (
+            <a href={`${import.meta.env.BASE_URL}${item.href === "/" ? "" : item.href.slice(1)}`} aria-current={pathname === item.href ? "page" : undefined}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    </header>
+    <main class="shell">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="shell">
+        <span>Built from repository sources, docs, and runtime configuration.</span>
+        <a href="https://github.com/2526-4ahitm-itp/2526-4ahitm-leoiot-dashboard">GitHub Repository</a>
+      </div>
+    </footer>
+  </body>
+</html>

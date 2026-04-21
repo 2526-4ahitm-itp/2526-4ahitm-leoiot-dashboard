@@ -1,0 +1,37 @@
+---
+const { slides } = Astro.props;
+---
+<div class="presentation-shell">
+  <div class="reveal">
+    <div class="slides">
+      {slides.map((slide) => (
+        <section>
+          <h2>{slide.title}</h2>
+          <p>{slide.body}</p>
+        </section>
+      ))}
+      <section>
+        <h2>Repository Flow</h2>
+        <ul>
+          <li>Docker Compose runs the platform locally.</li>
+          <li>Node services feed browser clients and PV ingestion.</li>
+          <li>GitHub Actions deploy the Astro site and rebuild the VM stack.</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css" />
+<script type="module">
+  import Reveal from "https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.esm.js";
+
+  const deck = new Reveal({
+    hash: true,
+    transition: "slide",
+    backgroundTransition: "fade"
+  });
+
+  deck.initialize();
+</script>

@@ -1,0 +1,136 @@
+{
+  "title": "LeoIoT Dashboard",
+  "tagline": "Monitoring stack for room climate, PV data, and live building telemetry at HTL Leonding.",
+  "repo": "https://github.com/2526-4ahitm-itp/2526-4ahitm-leoiot-dashboard",
+  "highlights": [
+    "MQTT-first telemetry pipeline for room sensors and generated demo data",
+    "InfluxDB + Grafana for time-series storage and visualization",
+    "3D building explorer and dashboard-v2 frontend for live room status",
+    "Quarkus-based sensor publisher and WebSocket bridge for browser clients",
+    "Docker Compose environment that runs the full platform locally"
+  ],
+  "stack": [
+    "Astro",
+    "Docker Compose",
+    "Mosquitto",
+    "Telegraf",
+    "InfluxDB 2.7",
+    "Grafana",
+    "Quarkus 3",
+    "Three.js",
+    "Vite",
+    "Node.js"
+  ],
+  "services": [
+    {
+      "name": "Mosquitto",
+      "purpose": "MQTT broker for sensor traffic and generated room data.",
+      "port": "1883"
+    },
+    {
+      "name": "InfluxDB",
+      "purpose": "Time-series storage for room climate and energy telemetry.",
+      "port": "8086"
+    },
+    {
+      "name": "Telegraf",
+      "purpose": "Subscription and write pipeline from MQTT into InfluxDB.",
+      "port": "-"
+    },
+    {
+      "name": "Grafana",
+      "purpose": "Operational dashboards for analytics and history.",
+      "port": "3000"
+    },
+    {
+      "name": "Frontend",
+      "purpose": "Three.js building view for room temperatures.",
+      "port": "8080"
+    },
+    {
+      "name": "Dashboard-v2",
+      "purpose": "Live room dashboard for charts and sensor cards.",
+      "port": "8081"
+    },
+    {
+      "name": "MQTT WebSocket Bridge",
+      "purpose": "Pushes temperature and CO2 updates to browser subscribers.",
+      "port": "8090"
+    },
+    {
+      "name": "Quarkus Sensor Generator",
+      "purpose": "Publishes sine data and room temperatures on a schedule.",
+      "port": "-"
+    },
+    {
+      "name": "Fake Sensors",
+      "purpose": "Simulates realistic room occupancy, temperature, and CO2 values.",
+      "port": "-"
+    },
+    {
+      "name": "Solax Collector",
+      "purpose": "Pulls PV plant data from Solax Cloud and writes it to InfluxDB.",
+      "port": "-"
+    }
+  ],
+  "api": [
+    {
+      "name": "Sensor Snapshot",
+      "method": "GET",
+      "path": "/api/sensors",
+      "description": "Documented test request for sensor data on localhost:8080."
+    },
+    {
+      "name": "Room Temperature Topic",
+      "method": "MQTT",
+      "path": "room-temperature",
+      "description": "JSON payloads such as {\"room\":\"105\",\"temperature\":21.5}."
+    },
+    {
+      "name": "CO2 Topics",
+      "method": "MQTT",
+      "path": "nili3/sensor/{room}_co2/state",
+      "description": "Plain numeric CO2 measurements per room."
+    },
+    {
+      "name": "Browser Live Feed",
+      "method": "WS",
+      "path": "/ws",
+      "description": "Clients subscribe to specific rooms and receive cached snapshots plus updates."
+    }
+  ],
+  "setup": [
+    "Run `docker compose up -d` from the repository root.",
+    "Open the main applications on ports 8080, 8081, 3000, and 8086.",
+    "Use `docker compose logs -f dashboard-v2` or `docker compose logs -f fake-sensors` during development.",
+    "Start frontend packages independently with `npm install` and `npm run dev` inside `frontend/` or `dashboard-v2/`.",
+    "Run the Quarkus generator with `./mvnw quarkus:dev` in `backend/sensor-data-generator/`."
+  ],
+  "deployment": [
+    "A self-hosted workflow rebuilds the Docker deployment on pushes to `main`.",
+    "GitHub Pages publishes this Astro site at the repository project path.",
+    "Nginx on the school VM routes `/`, `/dashboard/`, `/influx/`, and `/ws` to internal services."
+  ],
+  "presentation": [
+    {
+      "title": "Project Handover",
+      "body": "The team took over an existing LeoGreen effort and refocused it on an operable school monitoring platform."
+    },
+    {
+      "title": "Problem Space",
+      "body": "The project combines room-climate monitoring for classrooms with PV and energy-related telemetry."
+    },
+    {
+      "title": "Architecture",
+      "body": "Sensors and generators publish to MQTT, Telegraf writes to InfluxDB, and dashboards consume the resulting data."
+    },
+    {
+      "title": "Sensor Hardware",
+      "body": "ESP-based sensor boxes provide room measurements that can be visualized in dashboards and 3D views."
+    },
+    {
+      "title": "Tech Stack",
+      "body": "The solution uses MQTT, InfluxDB, Grafana, Quarkus, Node services, and browser-based frontends."
+    }
+  ]
+}
