@@ -91,5 +91,5 @@ async function writeToInflux(data, consumption) {
 // Initial run
 collectData();
 
-// Run every 5 minutes
-setInterval(collectData, 5 * 60 * 1000);
+// Run every 1 minute
+setInterval(collectData, 1 * 60 * 1000);
