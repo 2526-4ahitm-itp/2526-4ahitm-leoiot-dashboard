@@ -342,7 +342,7 @@ window.setTimeRange = async (range) => {
 	
 	// Reset date picker button
 	const dateBtn = document.getElementById('btnDatePicker');
-	if (dateBtn) dateBtn.textContent = '📅';
+	if (dateBtn) dateBtn.textContent = '🗓️';
 	
 	// Reset titles
 	const solarTitle = document.getElementById('pvSolarPowerTitle');
@@ -367,15 +367,19 @@ window.setSpecificDate = async (dateStr) => {
 	const dateBtn = document.getElementById('btnDatePicker');
 	if (dateBtn) {
 		dateBtn.classList.add('active');
-		// Format as DD.MM.YYYY
-		const parts = dateStr.split('-');
-		if (parts.length === 3) {
-			dateBtn.textContent = `📅 ${parts[2]}.${parts[1]}.${parts[0]}`;
+		if (isTodaySelected()) {
+			dateBtn.textContent = `🗓️ Today`;
+		} else {
+			// Format as DD.MM.YYYY
+			const parts = dateStr.split('-');
+			if (parts.length === 3) {
+				dateBtn.textContent = `🗓️ ${parts[2]}.${parts[1]}.${parts[0]}`;
+			}
 		}
 	}
 	
 	// Update titles
-	const formattedDate = dateBtn ? dateBtn.textContent.replace('📅 ', '') : dateStr;
+	const formattedDate = dateBtn ? dateBtn.textContent.replace('🗓️ ', '') : dateStr;
 	const solarTitle = document.getElementById('pvSolarPowerTitle');
 	if (solarTitle) solarTitle.textContent = isTodaySelected() ? `Solar Power Today` : `Solar Power on ${formattedDate}`;
 	const chartTitle1 = document.getElementById('pvSolarChartTitle');
