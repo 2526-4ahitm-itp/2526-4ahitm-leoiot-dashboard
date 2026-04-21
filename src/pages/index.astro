@@ -1,6 +1,7 @@
 ---
 import Layout from "../components/Layout.astro";
 import project from "../data/project.json";
+const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 <Layout title="LeoIoT Dashboard" description={project.tagline} pathname="/">
   <section class="hero">
@@ -11,8 +12,8 @@ import project from "../data/project.json";
         <p class="lede">{project.tagline}</p>
         <p class="hero-note">This root URL is the primary project site. The deck is a secondary route inside the same deployment, not a separate slides-only homepage.</p>
         <div class="hero-actions">
-          <a class="button" href={`${import.meta.env.BASE_URL}features`}>Explore Platform</a>
-          <a class="button-secondary" href={`${import.meta.env.BASE_URL}presentation`}>Open Deck</a>
+          <a class="button" href={`${base}features/`}>Explore Platform</a>
+          <a class="button-secondary" href={`${base}presentation/`}>Open Deck</a>
           <a class="button-ghost" href={project.repo}>Repository</a>
         </div>
       </div>
@@ -71,7 +72,7 @@ import project from "../data/project.json";
 
   <section class="section two-up">
     <figure class="image-card">
-      <img src={`${import.meta.env.BASE_URL}project/architektur.png`} alt="Architecture overview" />
+      <img src={`${base}project/architektur.png`} alt="Architecture overview" />
       <figcaption>Existing project architecture from the slide deck.</figcaption>
     </figure>
     <article class="panel">

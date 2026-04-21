@@ -2,6 +2,7 @@
 import "../styles/global.css";
 
 const { title = "LeoIoT", description = "LeoIoT project site", pathname = "/" } = Astro.props;
+const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 
 const nav = [
   { href: "/", label: "Overview" },
@@ -19,7 +20,7 @@ const nav = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
-    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <link rel="icon" href={`${base}favicon.svg`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -27,13 +28,13 @@ const nav = [
   <body>
     <header class="site-header">
       <div class="shell">
-        <a class="brand" href={`${import.meta.env.BASE_URL}`}>
+        <a class="brand" href={base}>
           <span class="brand-mark">L</span>
           <span>LeoIoT</span>
         </a>
         <nav class="nav" aria-label="Primary">
           {nav.map((item) => (
-            <a href={`${import.meta.env.BASE_URL}${item.href === "/" ? "" : item.href.slice(1)}`} aria-current={pathname === item.href ? "page" : undefined}>
+            <a href={item.href === "/" ? base : `${base}${item.href.slice(1)}/`} aria-current={pathname === item.href ? "page" : undefined}>
               {item.label}
             </a>
           ))}
