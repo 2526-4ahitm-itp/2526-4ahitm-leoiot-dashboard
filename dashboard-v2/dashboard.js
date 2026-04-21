@@ -18,7 +18,17 @@ let solaxToken = null;
 let selectedSensor = '1Aula';
 let availableRooms = [];
 let currentTimeRange = '6h';
+let customDate = null;
 let currentFloorFilter = 'all';
+
+function getRangeQuery() {
+	if (currentTimeRange === 'custom' && customDate) {
+		const start = new Date(customDate + 'T00:00:00').toISOString();
+		const end = new Date(customDate + 'T23:59:59.999').toISOString();
+		return `|> range(start: ${start}, stop: ${end})`;
+	}
+	return `|> range(start: -${currentTimeRange})`;
+}
 let displayedRoomsCount = 10;
 const ROOMS_PER_PAGE = 15;
 
@@ -313,10 +323,22 @@ function initCharts() {
 // Set time range
 window.setTimeRange = async (range) => {
 	currentTimeRange = range;
+	customDate = null;
 	document.querySelectorAll('.time-btn').forEach(btn => {
 		btn.classList.remove('active');
 		if (btn.textContent === range) btn.classList.add('active');
 	});
+	await refreshAllData();
+};
+
+window.setSpecificDate = async (dateStr) => {
+	if (!dateStr) return;
+	customDate = dateStr;
+	currentTimeRange = 'custom';
+	document.querySelectorAll('.time-btn').forEach(btn => {
+		btn.classList.remove('active');
+	});
+	document.getElementById('btnDatePicker').classList.add('active');
 	await refreshAllData();
 };
 
@@ -398,6 +420,11 @@ async function getSolaxToken() {
 }
 
 async function refreshPVData() {
+	if (currentTimeRange === 'custom') {
+		await fetchPVHistoryData();
+		return;
+	}
+
 	const token = await getSolaxToken();
 	if (!token) return;
 
@@ -430,9 +457,8 @@ async function refreshPVData() {
 
 async function fetchPVHistoryData() {
 	const query = `from(bucket: "${INFLUXDB_BUCKET}")
-       |> range(start: -${currentTimeRange})
+       ${getRangeQuery()}
        |> filter(fn: (r) => r._measurement == "solax_stats")
-       |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption")
        |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
        |> yield(name: "mean")`;
 
@@ -441,6 +467,20 @@ async function fetchPVHistoryData() {
 		const dataByField = parsePVHistoryResponse(csvData);
 		
 		updatePVCharts(dataByField);
+
+		if (currentTimeRange === 'custom') {
+			const getLast = (arr) => arr && arr.length > 0 ? arr[arr.length - 1].value : 0;
+			const mockData = {
+				dailyYield: getLast(dataByField.daily_yield),
+				totalYield: getLast(dataByField.total_yield),
+				dailyCharged: getLast(dataByField.daily_charged),
+				dailyDischarged: getLast(dataByField.daily_discharged),
+				dailyImported: getLast(dataByField.daily_imported),
+				dailyExported: getLast(dataByField.daily_exported),
+				plantLocalTime: `${customDate} (End of Day)`
+			};
+			updatePVDashboard(mockData);
+		}
 	} catch (error) {
 		console.error('Error fetching PV history from InfluxDB:', error);
 	}
@@ -455,7 +495,15 @@ function parsePVHistoryResponse(csvData) {
 	const timeIndex = headers.indexOf('_time');
 	const fieldIndex = headers.indexOf('_field');
 
-	const dataByField = { daily_yield: [], consumption: [] };
+	const dataByField = { 
+		daily_yield: [], 
+		consumption: [],
+		total_yield: [],
+		daily_charged: [],
+		daily_discharged: [],
+		daily_imported: [],
+		daily_exported: []
+	};
 
 	for (let i = 1; i < lines.length; i++) {
 		const columns = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
@@ -465,7 +513,7 @@ function parsePVHistoryResponse(csvData) {
 		const value = parseFloat(columns[valueIndex]);
 		const time = new Date(columns[timeIndex]);
 
-		if (dataByField[field]) {
+		if (dataByField[field] !== undefined) {
 			dataByField[field].push({ time, value });
 		}
 	}
@@ -732,7 +780,7 @@ function updateRoomSelector(tempData) {
 // Fetch temperature data
 async function fetchTemperatureData() {
 	const query = `from(bucket: "${INFLUXDB_BUCKET}")
-       |> range(start: -${currentTimeRange})
+       ${getRangeQuery()}
        |> filter(fn: (r) => r._measurement == "room_temperature")
        |> filter(fn: (r) => r._field == "temperature")
        |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
@@ -750,7 +798,7 @@ async function fetchTemperatureData() {
 // Fetch CO2 data
 async function fetchCO2Data() {
 	const query = `from(bucket: "${INFLUXDB_BUCKET}")
-       |> range(start: -${currentTimeRange})
+       ${getRangeQuery()}
        |> filter(fn: (r) => r._measurement == "mqtt_consumer")
        |> filter(fn: (r) => r.topic =~ /co2/)
        |> filter(fn: (r) => r._field == "value")
@@ -788,7 +836,7 @@ async function fetchRoom105CO2() {
 async function fetchRoom105Temperature() {
 	const topic = "nili3/sensor/nili3_temperature/state";
 	const query = `from(bucket: "${INFLUXDB_BUCKET}")
-      |> range(start: -${currentTimeRange})
+      ${getRangeQuery()}
       |> filter(fn: (r) => r._measurement == "mqtt_consumer" and r.topic == "${topic}")
       |> filter(fn: (r) => r._field == "value")
       |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
