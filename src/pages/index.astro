@@ -6,13 +6,14 @@ import project from "../data/project.json";
   <section class="hero">
     <div class="hero-copy">
       <div>
-        <p class="eyebrow">HTL Leonding IoT Platform</p>
+        <p class="eyebrow">HTL Leonding | Live Project Site</p>
         <h1>{project.title}</h1>
         <p class="lede">{project.tagline}</p>
+        <p class="hero-note">This root URL is the primary project site. The deck is a secondary route inside the same deployment, not a separate slides-only homepage.</p>
         <div class="hero-actions">
-          <a class="button" href={`${import.meta.env.BASE_URL}setup`}>Get Started</a>
-          <a class="button-secondary" href={`${import.meta.env.BASE_URL}presentation`}>Open Presentation</a>
-          <a class="button-ghost" href={project.repo}>GitHub</a>
+          <a class="button" href={`${import.meta.env.BASE_URL}features`}>Explore Platform</a>
+          <a class="button-secondary" href={`${import.meta.env.BASE_URL}presentation`}>Open Deck</a>
+          <a class="button-ghost" href={project.repo}>Repository</a>
         </div>
       </div>
       <div class="chip-row">
@@ -22,28 +23,41 @@ import project from "../data/project.json";
     <div class="hero-grid">
       <article class="metric-card">
         <strong>10</strong>
-        <span>compose services in the end-to-end stack</span>
+        <span>services wired into the end-to-end telemetry stack</span>
       </article>
       <article class="metric-card">
         <strong>8</strong>
-        <span>simulated rooms documented in the fake sensor package</span>
+        <span>simulated rooms already covered by the fake sensor package</span>
       </article>
       <article class="metric-card">
         <strong>4</strong>
-        <span>main user-facing surfaces: 3D view, dashboard, Grafana, InfluxDB</span>
+        <span>user-facing surfaces: 3D view, dashboard, Grafana, and InfluxDB</span>
       </article>
       <article class="metric-card">
         <strong>1</strong>
-        <span>shared MQTT backbone for live telemetry</span>
+        <span>shared MQTT backbone feeding the monitoring flow</span>
       </article>
     </div>
+  </section>
+
+  <section class="section two-up">
+    <article class="panel panel-strong">
+      <p class="eyebrow">Primary URL</p>
+      <h3>Designed for the repository root deployment</h3>
+      <p>The target homepage is `https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/`. Everything important starts here, and all internal routes now stay inside the same Astro site.</p>
+    </article>
+    <article class="panel panel-strong">
+      <p class="eyebrow">Presentation Access</p>
+      <h3>No fragile slide runtime</h3>
+      <p>The presentation is now rendered as an internal deck page without Reveal CDN dependencies, which removes the broken behavior from the previous slides link.</p>
+    </article>
   </section>
 
   <section class="section">
     <div class="section-head">
       <div>
-        <p class="eyebrow">Highlights</p>
-        <h2>What the repository already delivers</h2>
+        <p class="eyebrow">Core Value</p>
+        <h2>Operational telemetry with a sharper front door</h2>
       </div>
     </div>
     <div class="cards">
@@ -62,8 +76,8 @@ import project from "../data/project.json";
     </figure>
     <article class="panel">
       <p class="eyebrow">Deployment</p>
-      <h3>Local runtime and published project docs</h3>
-      <p>The repository contains the full classroom telemetry stack, plus a self-hosted deployment workflow for the school VM and a GitHub Pages site for public project documentation.</p>
+      <h3>School runtime plus public project surface</h3>
+      <p>The repository contains the classroom telemetry stack, a VM deployment workflow, and a public-facing Astro site that now acts as the main project entrypoint.</p>
       <ul>
         {project.deployment.map((item) => <li>{item}</li>)}
       </ul>

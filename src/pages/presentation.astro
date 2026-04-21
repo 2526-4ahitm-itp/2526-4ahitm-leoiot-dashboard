@@ -8,13 +8,13 @@ import "../styles/global.css";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Presentation | LeoIoT</title>
+    <title>Deck | LeoIoT</title>
     <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   </head>
-  <body>
+  <body class="deck-page">
     <PresentationEmbed slides={project.presentation} />
   </body>
 </html>
