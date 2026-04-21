@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Presentation | LeoIoT</title><link rel="icon" href="/2526-4ahitm-leoiot-dashboardfavicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/2526-4ahitm-leoiot-dashboard/_astro/api.Ce-YmUSd.css"></head> <body> <div class="presentation-shell"> <div class="reveal"> <div class="slides"> <section> <h2>Project Handover</h2> <p>The team took over an existing LeoGreen effort and refocused it on an operable school monitoring platform.</p> </section><section> <h2>Problem Space</h2> <p>The project combines room-climate monitoring for classrooms with PV and energy-related telemetry.</p> </section><section> <h2>Architecture</h2> <p>Sensors and generators publish to MQTT, Telegraf writes to InfluxDB, and dashboards consume the resulting data.</p> </section><section> <h2>Sensor Hardware</h2> <p>ESP-based sensor boxes provide room measurements that can be visualized in dashboards and 3D views.</p> </section><section> <h2>Tech Stack</h2> <p>The solution uses MQTT, InfluxDB, Grafana, Quarkus, Node services, and browser-based frontends.</p> </section> <section> <h2>Repository Flow</h2> <ul> <li>Docker Compose runs the platform locally.</li> <li>Node services feed browser clients and PV ingestion.</li> <li>GitHub Actions deploy the Astro site and rebuild the VM stack.</li> </ul> </section> </div> </div> </div> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css"> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css"> <script type="module">
+  import Reveal from "https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.esm.js";
+
+  const deck = new Reveal({
+    hash: true,
+    transition: "slide",
+    backgroundTransition: "fade"
+  });
+
+  deck.initialize();
+</script> </body></html>
