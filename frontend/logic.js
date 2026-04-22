@@ -1014,32 +1014,27 @@ window.initNavigationUI = () => {
 
 
 // --- HTL Leonding Architectural Skeleton ---
-const hallwayCenterlines = {
-    ringWestX: -11.15,
-    ringEastX: 16.2,
-    ringSouthZ: 5.1,
-    ringNorthZ: -13.9,
-    westWingZ: 5.1,
-    eastWingZ: -13.9,
-    northWingX: 16.2,
-    southWing1X: -11.15,
-    southWing2X: 16.2
-};
+const segments = [
+    { id: 'RingN',  x1: -11.15, x2: 16.2,   z1: -13.9, z2: -13.9, type: 'H' },
+    { id: 'RingS',  x1: -11.15, x2: 16.2,   z1: 5.1,   z2: 5.1,   type: 'H' },
+    { id: 'RingW',  x1: -11.15, x2: -11.15, z1: -13.9, z2: 5.1,   type: 'V' },
+    { id: 'RingE',  x1: 16.2,   x2: 16.2,   z1: -13.9, z2: 5.1,   type: 'V' },
+    { id: 'WestW',  x1: -70.0,  x2: -11.15, z1: 5.1,   z2: 5.1,   type: 'H' },
+    { id: 'EastW',  x1: 16.2,   x2: 70.0,   z1: -13.9, z2: -13.9, type: 'H' },
+    { id: 'NorthW', x1: 16.2,   x2: 16.2,   z1: -70.0, z2: -13.9, type: 'V' },
+    { id: 'South1', x1: -11.15, x2: -11.15, z1: 5.1,   z2: 70.0,  type: 'V' },
+    { id: 'South2', x1: 16.2,   x2: 16.2,   z1: 5.1,   z2: 70.0,  type: 'V' }
+];
 
 const graphNodes = {
-    // Entrance / Staircase Area
     'Aula':  { x: 5.5, z: -5.8 },
     'Stair': { x: 2.5, z: -4.4 },
-    
-    // Ring Intersections
     'NW': { x: -11.15, z: -13.9 },
     'NE': { x: 16.2,   z: -13.9 },
     'SW': { x: -11.15, z: 5.1 },
     'SE': { x: 16.2,   z: 5.1 },
-    
-    // Wing Terminals
-    'W_End':  { x: -58.0, z: 5.1 },
-    'E_End':  { x: 58.0,  z: -13.9 },
+    'W_End':  { x: -70.0, z: 5.1 },
+    'E_End':  { x: 70.0,  z: -13.9 },
     'N_End':  { x: 16.2,  z: -70.0 },
     'S1_End': { x: -11.15, z: 70.0 },
     'S2_End': { x: 16.2,   z: 70.0 }
@@ -1052,13 +1047,10 @@ const graphEdges = [
 ];
 
 const graph = {};
-for (const key in graphNodes) {
-    graph[key] = { id: key, ...graphNodes[key], edges: {} };
-}
+for (const key in graphNodes) { graph[key] = { id: key, ...graphNodes[key], edges: {} }; }
 for (const [u, v] of graphEdges) {
     const d = Math.hypot(graph[u].x - graph[v].x, graph[u].z - graph[v].z);
-    graph[u].edges[v] = d;
-    graph[v].edges[u] = d;
+    graph[u].edges[v] = d; graph[v].edges[u] = d;
 }
 
 function findShortestPath(startId, endId) {
@@ -1075,6 +1067,7 @@ function findShortestPath(startId, endId) {
             if (alt < dists[v]) { dists[v] = alt; prev[v] = u; }
         }
     }
+    if (!prev[endId] && startId !== endId) return [graph[startId], graph[endId]];
     const path = []; let curr = endId;
     while (curr) { path.push(graph[curr]); curr = prev[curr]; }
     return path.reverse();
@@ -1083,14 +1076,10 @@ function findShortestPath(startId, endId) {
 function getTerrainHeight(x, z, floorModelId) {
     const floorModel = modelCache[floorModelId];
     if (!floorModel) return 0;
-    
-    // Shoot ray from above everything down to hit the specific floor
-    const origin = new THREE.Vector3(x, 20, z); 
+    const origin = new THREE.Vector3(x, 25, z); 
     const rc = new THREE.Raycaster(origin, new THREE.Vector3(0, -1, 0));
     const intersects = rc.intersectObject(floorModel, true);
-    
     if (intersects.length > 0) {
-        // Find the top-most surface that isn't a vertical wall
         for (const hit of intersects) {
             if (hit.face && Math.abs(hit.face.normal.y) > 0.6) return hit.point.y;
         }
@@ -1098,7 +1087,6 @@ function getTerrainHeight(x, z, floorModelId) {
     }
     return 0;
 }
-
 
 window.startNavigation = async (targetRoomName) => {
     let inputName = targetRoomName || document.getElementById('room-search').value;
@@ -1137,35 +1125,74 @@ window.startNavigation = async (targetRoomName) => {
     else if (name.startsWith('2')) floorId = 'Model2F.gltf';
     else if (name.startsWith('U')) floorId = 'ModelU.gltf';
 
-    // 1. Find nearest skeleton node to the target room
-    let minDist = Infinity, bestNodeId = 'SE';
-    for (const [id, node] of Object.entries(graphNodes)) {
-        const d = Math.hypot(endPoint.x - node.x, endPoint.z - node.z);
-        if (d < minDist) { minDist = d; bestNodeId = id; }
+    // 1. Find closest corridor segment and project the room center onto it (the "Door Point")
+    let minDist = Infinity;
+    let doorPoint = { x: 0, z: 0, segmentId: '' };
+    for (const seg of segments) {
+        let px, pz;
+        if (seg.type === 'H') {
+            px = Math.max(seg.x1, Math.min(seg.x2, endPoint.x));
+            pz = seg.z1;
+        } else {
+            px = seg.x1;
+            pz = Math.max(seg.z1, Math.min(seg.z2, endPoint.z));
+        }
+        const d = Math.hypot(endPoint.x - px, endPoint.z - pz);
+        if (d < minDist) {
+            minDist = d;
+            doorPoint = { x: px, z: pz, segmentId: seg.id };
+        }
     }
 
-    // 2. Get path from Aula to that node
+    // 2. Find closest skeleton node to our calculated Door Point
+    let minNodeDist = Infinity, bestNodeId = 'SE';
+    for (const [id, node] of Object.entries(graphNodes)) {
+        const d = Math.hypot(doorPoint.x - node.x, doorPoint.z - node.z);
+        if (d < minNodeDist) { minNodeDist = d; bestNodeId = id; }
+    }
+
+    // 3. Get path from Aula to that node
     const graphPath = findShortestPath('Aula', bestNodeId);
     
-    // 3. Construct 3D points with terrain hugging
-    let rawPath = [];
+    // 4. Build sequence of straight lines
+    let waypoints = [];
     for (const node of graphPath) {
-        const y = getTerrainHeight(node.x, node.z, floorId);
-        rawPath.push(new THREE.Vector3(node.x, y + 0.5, node.z));
+        waypoints.push(new THREE.Vector3(node.x, 0, node.z));
+    }
+    // Add Door Point (ensures it goes along the hallway first)
+    waypoints.push(new THREE.Vector3(doorPoint.x, 0, doorPoint.z));
+    
+    // 5. Sample points frequently to lock the CatmullRomCurve3 into straight lines
+    let rawPath = [];
+    for (let i = 0; i < waypoints.length - 1; i++) {
+        const p1 = waypoints[i];
+        const p2 = waypoints[i+1];
+        const dist = p1.distanceTo(p2);
+        const steps = Math.ceil(dist / 0.5);
+        for (let j = 0; j <= steps; j++) {
+            const t = j / steps;
+            const x = p1.x + (p2.x - p1.x) * t;
+            const z = p1.z + (p2.z - p1.z) * t;
+            // Height depends on floor
+            const currentFloor = (i === 0 && floorId !== 'ModelE.gltf') ? 'ModelE.gltf' : floorId;
+            const y = getTerrainHeight(x, z, currentFloor);
+            rawPath.push(new THREE.Vector3(x, y + 0.5, z));
+        }
     }
     
-    // 4. Add the final room center
-    rawPath.push(new THREE.Vector3(endPoint.x, endPoint.y + 0.5, endPoint.z));
+    // Final 90-degree step into the room center
+    const finalY = getTerrainHeight(endPoint.x, endPoint.z, floorId);
+    rawPath.push(new THREE.Vector3(endPoint.x, finalY + 0.5, endPoint.z));
 
     navPoints = rawPath.filter((p, i, arr) => i === 0 || p.distanceTo(arr[i-1]) > 0.1);
     if (navPoints.length < 2) navPoints.push(endPoint.clone().add(new THREE.Vector3(0, 0.1, 0)));
 
-    const curve = new THREE.CatmullRomCurve3(navPoints);
+    const curve = new THREE.CatmullRomCurve3(navPoints, false, 'catmullrom', 0);
     if (navPath) scene.remove(navPath);
     if (navDot) scene.remove(navDot);
     if (navTimer) cancelAnimationFrame(navTimer);
 
-    const tubeGeom = new THREE.TubeGeometry(curve, Math.max(64, navPoints.length * 10), 0.3, 8, false);
+    const tubeGeom = new THREE.TubeGeometry(curve, Math.max(128, navPoints.length), 0.3, 8, false);
     const tubeMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.8, depthTest: false });
     navPath = new THREE.Mesh(tubeGeom, tubeMat);
     tubeGeom.setDrawRange(0, 0); 
@@ -1188,8 +1215,9 @@ window.startNavigation = async (targetRoomName) => {
     navAnimationProgress = 0;
     isNavigating = true;
     let floorSwitched = false;
-    const startPoint = navPoints[0];
-    const pathFloorYDiff = Math.abs(startPoint.y - endPoint.y);
+    const pathStart = navPoints[0];
+    const pathEnd = navPoints[navPoints.length - 1];
+    const pathFloorYDiff = Math.abs(pathStart.y - pathEnd.y);
 
     const animateNav = () => {
         if (!isNavigating) return;
@@ -1200,7 +1228,7 @@ window.startNavigation = async (targetRoomName) => {
         navDot.position.copy(point);
 
         if (pathFloorYDiff > 2 && !floorSwitched) {
-            if (Math.abs(point.y - endPoint.y) < Math.abs(point.y - startPoint.y)) {
+            if (Math.abs(point.y - pathEnd.y) < Math.abs(point.y - pathStart.y)) {
                 const targetBtn = Array.from(document.querySelectorAll('#button-container button')).find(b => b.onclick && b.onclick.toString().includes(floorId));
                 if (targetBtn) window.handleButtonClick(targetBtn, floorId);
                 else window.showOnly(floorId);
@@ -1216,14 +1244,6 @@ window.startNavigation = async (targetRoomName) => {
     };
     animateNav();
 };
-/** * 9. RENDER LOOP
- **/
-function animate(){
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-    labelRenderer.render(scene, camera); // Render the 3D labels
-}
 
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
