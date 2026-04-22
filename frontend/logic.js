@@ -1129,6 +1129,7 @@ function findShortestPath(startId, endId) {
         }
     }
     
+    if (!prev[endId] && startId !== endId) return [graph[startId], graph[endId]];
     const path = [];
     let curr = endId;
     while (curr) {
@@ -1180,6 +1181,7 @@ function getTerrainHeight(x, z, floorModelId) {
 }
 
 window.startNavigation = async (targetRoomName) => {
+    let startPoint = new THREE.Vector3(5.5, 0.5, -5.8);
     let inputName = targetRoomName || document.getElementById('room-search').value;
     inputName = inputName.trim();
     if (!inputName) return;
@@ -1253,7 +1255,7 @@ window.startNavigation = async (targetRoomName) => {
         return p.distanceTo(arr[i-1]) > 0.1;
     });
     
-    if (navPoints.length < 2) navPoints.push(new THREE.Vector3(endPoint.x, finalY + 0.5, endPoint.z));
+    if (navPoints.length < 2) navPoints.push(navPoints[0].clone().add(new THREE.Vector3(0, 0.1, 0)));
 
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
