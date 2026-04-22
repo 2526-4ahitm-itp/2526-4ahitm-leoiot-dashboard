@@ -1074,10 +1074,20 @@ window.startNavigation = (targetRoomName) => {
     let endPoint = new THREE.Vector3();
     endBox.getCenter(endPoint);
 
-    // Create path points (start -> mid1 -> mid2 -> end) to make it look a bit more like a route
-    const midPoint1 = new THREE.Vector3(startPoint.x, startPoint.y, endPoint.z);
-    const midPoint2 = new THREE.Vector3(endPoint.x, startPoint.y, endPoint.z);
-    navPoints = [startPoint, midPoint1, midPoint2, endPoint];
+    const floorYDiff = Math.abs(startPoint.y - endPoint.y);
+    
+    if (floorYDiff > 2) {
+        // Different floor: go UP/DOWN at the start point (stairway), then horizontally to the room
+        const stairTop = new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z);
+        const midPoint = new THREE.Vector3(startPoint.x, endPoint.y, endPoint.z);
+        navPoints = [startPoint, stairTop, midPoint, endPoint];
+    } else {
+        // Same floor
+        const midPoint1 = new THREE.Vector3(startPoint.x, startPoint.y, endPoint.z);
+        const midPoint2 = new THREE.Vector3(endPoint.x, startPoint.y, endPoint.z);
+        navPoints = [startPoint, midPoint1, midPoint2, endPoint];
+    }
+    
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
     // Clean up old navigation
@@ -1086,7 +1096,7 @@ window.startNavigation = (targetRoomName) => {
     if (navTimer) cancelAnimationFrame(navTimer);
 
     // Create Trail Line
-    const tubeGeom = new THREE.TubeGeometry(curve, 128, 0.3, 8, false);
+    const tubeGeom = new THREE.TubeGeometry(curve, 256, 0.3, 8, false);
     const tubeMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.8, depthTest: false }); // depthTest false to see it through walls
     navPath = new THREE.Mesh(tubeGeom, tubeMat);
     tubeGeom.setDrawRange(0, 0); 
@@ -1126,6 +1136,15 @@ window.startNavigation = (targetRoomName) => {
     // Start animation
     navAnimationProgress = 0;
     isNavigating = true;
+    let floorSwitched = false;
+    
+    let targetFloorChar = targetMesh.name.charAt(0).toUpperCase();
+    if (targetFloorChar !== 'U' && targetFloorChar !== 'E' && targetFloorChar !== '1' && targetFloorChar !== '2') {
+        targetFloorChar = 'E'; // fallback
+    }
+    const targetModelId = targetFloorChar === '1' ? 'Model1F.gltf' : 
+                          targetFloorChar === '2' ? 'Model2F.gltf' : 
+                          targetFloorChar === 'U' ? 'ModelU.gltf' : 'ModelE.gltf';
     
     const animateNav = () => {
         if (!isNavigating) return;
@@ -1137,6 +1156,34 @@ window.startNavigation = (targetRoomName) => {
 
         const point = curve.getPoint(navAnimationProgress);
         navDot.position.copy(point);
+
+        // Optional: follow dot with camera smoothly
+        // controls.target.lerp(point, 0.1);
+        // controls.update();
+
+        // Switch floor if we passed halfway up the stairs
+        if (floorYDiff > 2 && !floorSwitched) {
+            if (Math.abs(point.y - endPoint.y) < Math.abs(point.y - startPoint.y)) {
+                const targetBtn = Array.from(document.querySelectorAll('#button-container button')).find(b => b.onclick && b.onclick.toString().includes(targetModelId));
+                if (targetBtn) window.handleButtonClick(targetBtn, targetModelId);
+                else window.showOnly(targetModelId);
+                
+                floorSwitched = true;
+                
+                // Highlight the room now that we're on the new floor
+                setTimeout(() => {
+                    if (currentModel) {
+                        currentModel.traverse(child => {
+                            if (child.isMesh && normalizeRoomName(child.name) === normalizeRoomName(targetMesh.name)) {
+                                clickedObject = child;
+                                clickedObject.material = baseMaterial.clone();
+                                clickedObject.material.color.set(0x2ecc71); 
+                            }
+                        });
+                    }
+                }, 200);
+            }
+        }
 
         const totalVertices = tubeGeom.index ? tubeGeom.index.count : tubeGeom.attributes.position.count;
         tubeGeom.setDrawRange(0, Math.floor(totalVertices * navAnimationProgress));
