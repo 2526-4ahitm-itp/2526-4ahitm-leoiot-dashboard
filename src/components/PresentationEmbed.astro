@@ -1,9 +1,10 @@
 ---
 const { slides } = Astro.props;
+const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 <div class="presentation-shell shell">
   <div class="deck-topbar">
-    <a class="button-secondary" href={`${import.meta.env.BASE_URL}`}>Back to site</a>
+    <a class="button-secondary" href={base}>Back to site</a>
     <div class="deck-nav">
       {slides.map((slide, index) => (
         <a href={`#slide-${index + 1}`}>{String(index + 1).padStart(2, "0")}</a>

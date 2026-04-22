@@ -1,6 +1,7 @@
 ---
 import Layout from "../components/Layout.astro";
 import project from "../data/project.json";
+const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 <Layout title="Architecture | LeoIoT" description="System architecture for LeoIoT." pathname="/architecture">
   <section class="page-head">
@@ -11,7 +12,7 @@ import project from "../data/project.json";
 
   <section class="section two-up">
     <figure class="image-card">
-      <img src={`${import.meta.env.BASE_URL}project/architektur.png`} alt="Architecture diagram" />
+      <img src={`${base}project/architektur.png`} alt="Architecture diagram" />
       <figcaption>Original architecture asset shipped with the project slides.</figcaption>
     </figure>
     <article class="panel">
