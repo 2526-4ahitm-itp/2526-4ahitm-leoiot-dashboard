@@ -934,8 +934,9 @@ let navPoints = [];
 let navTimer = null;
 
 window.initNavigationUI = () => {
-    const select = document.getElementById('room-select');
-    if (!select) return;
+    const searchInput = document.getElementById('room-search');
+    const suggestionsBox = document.getElementById('search-suggestions');
+    if (!searchInput || !suggestionsBox) return;
     
     const roomNames = new Set();
     const model = modelCache['ModelFull.gltf'];
@@ -948,33 +949,58 @@ window.initNavigationUI = () => {
     }
     
     const sortedRooms = Array.from(roomNames).filter(Boolean).sort();
-    sortedRooms.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        option.style.color = "black";
-        select.appendChild(option);
+
+    searchInput.addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase().trim();
+        suggestionsBox.innerHTML = '';
+        
+        if (!val) {
+            suggestionsBox.style.display = 'none';
+            return;
+        }
+
+        const matches = sortedRooms.filter(room => room.toLowerCase().includes(val));
+        
+        if (matches.length > 0) {
+            suggestionsBox.style.display = 'block';
+            matches.forEach(room => {
+                const div = document.createElement('div');
+                div.textContent = room;
+                div.style.padding = '10px 15px';
+                div.style.cursor = 'pointer';
+                div.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                div.style.fontFamily = 'sans-serif';
+                div.style.fontSize = '14px';
+                div.style.transition = 'background 0.2s';
+                
+                div.addEventListener('mouseenter', () => {
+                    div.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                });
+                div.addEventListener('mouseleave', () => {
+                    div.style.backgroundColor = 'transparent';
+                });
+                
+                div.addEventListener('click', () => {
+                    searchInput.value = room;
+                    suggestionsBox.style.display = 'none';
+                    window.startNavigation(room);
+                });
+                suggestionsBox.appendChild(div);
+            });
+        } else {
+            suggestionsBox.style.display = 'none';
+        }
     });
 
-    const searchInput = document.getElementById('room-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            Array.from(select.options).forEach(opt => {
-                if (opt.value === "") return;
-                opt.style.display = opt.value.toLowerCase().includes(val) ? 'block' : 'none';
-            });
-            // Automatically select if exact match
-            const exactMatch = Array.from(select.options).find(opt => opt.value.toLowerCase() === val);
-            if (exactMatch) select.value = exactMatch.value;
-        });
-    }
+    document.addEventListener('click', (e) => {
+        if (e.target !== searchInput && e.target !== suggestionsBox) {
+            suggestionsBox.style.display = 'none';
+        }
+    });
 };
 
-window.startNavigation = () => {
-    const select = document.getElementById('room-select');
-    if (!select || !select.value) return;
-    const targetRoomName = select.value;
+window.startNavigation = (targetRoomName) => {
+    if (!targetRoomName) return;
 
     const fullModel = modelCache['ModelFull.gltf'];
     if (!fullModel) return;
@@ -994,26 +1020,36 @@ window.startNavigation = () => {
         return;
     }
     
-    // Switch to full view first
-    window.showOnly('ModelFull.gltf');
+    // Switch to ground floor view initially
+    const groundBtn = Array.from(document.querySelectorAll('#button-container button')).find(b => b.textContent.includes('Ground'));
+    if (groundBtn) window.handleButtonClick(groundBtn, 'ModelE.gltf');
+    else window.showOnly('ModelE.gltf');
 
-    // Calculate entrance (below 1Aula)
+    // Calculate entrance (beneath 1Aula on Ground Floor)
     let startPoint = new THREE.Vector3(0, 0, 0);
     if (aulaMesh) {
         const box = new THREE.Box3().setFromObject(aulaMesh);
         box.getCenter(startPoint);
-        startPoint.y = 0; // Ground floor level roughly
+        // Estimate ground floor Y from ModelE if possible
+        const groundModel = modelCache['ModelE.gltf'];
+        let groundY = 0;
+        if (groundModel) {
+            const groundBox = new THREE.Box3().setFromObject(groundModel);
+            groundY = groundBox.min.y; 
+        }
+        startPoint.y = groundY + 0.5; // Slightly above ground
     } else {
-        startPoint.set(20, 0, 20); // Fallback
+        startPoint.set(20, 0.5, 20); // Fallback
     }
 
     const endBox = new THREE.Box3().setFromObject(targetMesh);
     let endPoint = new THREE.Vector3();
     endBox.getCenter(endPoint);
 
-    // Create path points
-    const midPoint = new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z);
-    navPoints = [startPoint, midPoint, endPoint];
+    // Create path points (start -> mid1 -> mid2 -> end) to make it look a bit more like a route
+    const midPoint1 = new THREE.Vector3(startPoint.x, startPoint.y, endPoint.z);
+    const midPoint2 = new THREE.Vector3(endPoint.x, startPoint.y, endPoint.z);
+    navPoints = [startPoint, midPoint1, midPoint2, endPoint];
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
     // Clean up old navigation
@@ -1022,29 +1058,42 @@ window.startNavigation = () => {
     if (navTimer) cancelAnimationFrame(navTimer);
 
     // Create Trail Line
-    const tubeGeom = new THREE.TubeGeometry(curve, 64, 0.3, 8, false);
-    const tubeMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.8 });
+    const tubeGeom = new THREE.TubeGeometry(curve, 128, 0.3, 8, false);
+    const tubeMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.8, depthTest: false }); // depthTest false to see it through walls
     navPath = new THREE.Mesh(tubeGeom, tubeMat);
     tubeGeom.setDrawRange(0, 0); 
+    navPath.renderOrder = 999;
     scene.add(navPath);
 
     // Spawn dot
-    const dotGeom = new THREE.SphereGeometry(0.8, 16, 16);
-    const dotMat = new THREE.MeshBasicMaterial({ color: 0xe74c3c });
+    const dotGeom = new THREE.SphereGeometry(1.2, 16, 16);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xe74c3c, depthTest: false });
     navDot = new THREE.Mesh(dotGeom, dotMat);
     navDot.position.copy(startPoint);
+    navDot.renderOrder = 1000;
     scene.add(navDot);
 
     // Look at entrance
-    camera.position.set(startPoint.x - 30, startPoint.y + 40, startPoint.z + 40);
+    camera.position.set(startPoint.x - 30, startPoint.y + 60, startPoint.z + 40);
     controls.target.copy(startPoint);
     controls.update();
 
-    // Highlight target room
+    // Highlight target room if we can find it in the current floor model
     if (clickedObject) clickedObject.material = baseMaterial;
-    clickedObject = targetMesh;
-    clickedObject.material = baseMaterial.clone();
-    clickedObject.material.color.set(0x2ecc71); // Green highlight for target
+    let currentTargetMesh = null;
+    if (currentModel) {
+        currentModel.traverse(child => {
+            if (child.isMesh && normalizeRoomName(child.name) === targetRoomName) {
+                currentTargetMesh = child;
+            }
+        });
+    }
+    
+    if (currentTargetMesh) {
+        clickedObject = currentTargetMesh;
+        clickedObject.material = baseMaterial.clone();
+        clickedObject.material.color.set(0x2ecc71); // Green highlight for target
+    }
     
     // Start animation
     navAnimationProgress = 0;
