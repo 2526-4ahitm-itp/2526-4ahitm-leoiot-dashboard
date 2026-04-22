@@ -1035,7 +1035,7 @@ function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, floorY) 
             if (!name) continue;
             
             // If we hit the target room, it's the end of the path!
-            if (hit.object === targetRoomMesh) return true;
+            if (normalizeRoomName(hit.object.name) === normalizeRoomName(targetRoomMesh.name)) return true;
             
             const isRoom = /^[EU12]/.test(name);
             // 1Aula is a walkable area (contains the stairs and main hall)
@@ -1059,7 +1059,7 @@ function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, floorY) 
     let bestNode = openSet[0];
     let minDistToTarget = Infinity;
 
-    const maxIterations = 2500; // prevent infinite loops
+    const maxIterations = 350; // prevent infinite loops
     let iterations = 0;
 
     while (openSet.length > 0 && iterations < maxIterations) {
@@ -1243,6 +1243,16 @@ window.startNavigation = (targetRoomName) => {
     if (navPoints.length < 2) {
         navPoints = [startPoint, new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z), endPoint];
     }
+    
+    // Remove duplicate consecutive points that can crash CatmullRomCurve3
+    navPoints = navPoints.filter((p, i, arr) => {
+        if (i === 0) return true;
+        return p.distanceTo(arr[i-1]) > 0.1;
+    });
+    
+    if (navPoints.length < 2) {
+        navPoints.push(endPoint); // Guarantee at least 2 points
+    }
 
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
@@ -1350,3 +1360,4 @@ window.addEventListener('resize', () => {
 });
 
 animate();
+
