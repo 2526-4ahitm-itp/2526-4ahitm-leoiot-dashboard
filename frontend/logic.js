@@ -1009,25 +1009,27 @@ window.initNavigationUI = () => {
 
 // --- Mathematical Skeleton Pathfinding for HTL Leonding ---
 const segments = [
-    { id: 'West',  type: 'H', x1: -150, x2: -11.15, z: 5.1 },
-    { id: 'South', type: 'V', z1: 5.1, z2: 150, x: -11.15 },
-    { id: 'RingB', type: 'H', x1: -11.15, x2: 16.2, z: 5.1 },
-    { id: 'RingL', type: 'V', z1: -13.9, z2: 5.1, x: -11.15 },
-    { id: 'RingT', type: 'H', x1: -11.15, x2: 16.2, z: -13.9 },
-    { id: 'RingR', type: 'V', z1: -13.9, z2: 5.1, x: 16.2 },
-    { id: 'East',  type: 'H', x1: 16.2, x2: 150, z: -13.9 },
-    { id: 'North', type: 'V', z1: -150, z2: -13.9, x: 16.2 }
+    { id: 'WestWing',   type: 'H', x1: -70, x2: -15, z: -4.5 },
+    { id: 'EastWing',   type: 'H', x1: 2.5, x2: 70,  z: -13.9 },
+    { id: 'NorthWing',  type: 'V', z1: -70, z2: -13.9, x: 2.5 },
+    { id: 'SouthWing1', type: 'V', z1: -4.5, z2: 70,  x: -15.0 },
+    { id: 'SouthWing2', type: 'V', z1: -4.5, z2: 70,  x: 2.5 },
+    { id: 'RingNorth',  type: 'H', x1: -15, x2: 2.5, z: -13.9 },
+    { id: 'RingSouth',  type: 'H', x1: -15, x2: 2.5, z: -4.5 },
+    { id: 'RingWest',   type: 'V', z1: -13.9, z2: -4.5, x: -15.0 },
+    { id: 'RingEast',   type: 'V', z1: -13.9, z2: -4.5, x: 2.5 }
 ];
 
 const coreNodes = {
-    'TL': { x: -11.15, z: -13.9 },
-    'TR': { x: 16.2, z: -13.9 },
-    'BL': { x: -11.15, z: 5.1 },
-    'BR': { x: 16.2, z: 5.1 },
-    'W_end': { x: -150, z: 5.1 },
-    'S_end': { x: -11.15, z: 150 },
-    'E_end': { x: 150, z: -13.9 },
-    'N_end': { x: 16.2, z: -150 }
+    'NW': { x: -15.0, z: -13.9 },
+    'NE': { x: 2.5, z: -13.9 },
+    'SW': { x: -15.0, z: -4.5 },
+    'SE': { x: 2.5, z: -4.5 },
+    'W_end': { x: -70, z: -4.5 },
+    'E_end': { x: 70, z: -13.9 },
+    'N_end': { x: 2.5, z: -70 },
+    'S1_end': { x: -15.0, z: 70 },
+    'S2_end': { x: 2.5, z: 70 }
 };
 
 function getClosestPointOnSegments(px, pz) {
@@ -1172,12 +1174,7 @@ window.startNavigation = (targetRoomName) => {
                           targetFloorChar === 'U' ? 'ModelU.gltf' : 'ModelE.gltf';
 
     let startPoint = new THREE.Vector3(0, 0, 0);
-    let stairCenter = new THREE.Vector3(0, 0, 0);
-    
-    if (aulaMesh) {
-        const box = new THREE.Box3().setFromObject(aulaMesh);
-        box.getCenter(stairCenter);
-    }
+    let stairCenter = new THREE.Vector3(2.5, 0, -4.5); // Fixed staircase at SE corner of ring (near 1Aula)
     
     const groundModel = modelCache['ModelE.gltf'];
     let groundY = 0;
@@ -1195,41 +1192,41 @@ window.startNavigation = (targetRoomName) => {
     const floorYDiff = Math.abs(startPoint.y - endPoint.y);
     const targetY = endPoint.y + 0.5;
     
-    // Build path using mathematical skeleton
-    const B_start = getClosestPointOnSegments(stairCenter.x, stairCenter.z);
+    // Project end point to nearest corridor strictly
     const B_end = getClosestPointOnSegments(endPoint.x, endPoint.z);
     
+    // Build path using mathematical skeleton
+    const B_start = getClosestPointOnSegments(stairCenter.x, stairCenter.z);
     const graph = buildGraph(B_start, B_end);
     const graphPath2D = findShortestPath(graph, 'Start', 'End');
     
     let rawPath = [];
-    rawPath.push(startPoint); // from Aula center
+    rawPath.push(startPoint); // start exactly at the staircase entrance
     
     if (floorYDiff > 2) {
+        // Go straight up the stairs first
         const stairTop = new THREE.Vector3(stairCenter.x, targetY, stairCenter.z);
         rawPath.push(stairTop);
-        // Add graph nodes at target floor height
+        // Then follow the 2D graph along the corridors on the target floor
         for (const node of graphPath2D) {
             rawPath.push(new THREE.Vector3(node.x, targetY, node.z));
         }
     } else {
-        // Same floor
+        // Same floor, just follow the 2D graph
         for (const node of graphPath2D) {
             rawPath.push(new THREE.Vector3(node.x, groundY + 0.5, node.z));
         }
     }
     
-    // Ensure final point goes cleanly into the room
+    // Final step: straight from the corridor perfectly 90-degrees into the room center
     rawPath.push(new THREE.Vector3(endPoint.x, targetY, endPoint.z));
     
-    navPoints = rawPath;
-    
-    navPoints = navPoints.filter((p, i, arr) => {
+    navPoints = rawPath.filter((p, i, arr) => {
         if (i === 0) return true;
         return p.distanceTo(arr[i-1]) > 0.1;
     });
     
-    if (navPoints.length < 2) navPoints.push(endPoint);
+    if (navPoints.length < 2) navPoints.push(new THREE.Vector3(endPoint.x, targetY, endPoint.z));
 
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
