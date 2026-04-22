@@ -926,6 +926,155 @@ function updateRoomInfoPanel(objectName, roomTag) {
     displayRoomInfo(objectName, roomTag, temp, co2);
 }
 
+let navPath = null;
+let navDot = null;
+let navAnimationProgress = 0;
+let isNavigating = false;
+let navPoints = [];
+let navTimer = null;
+
+window.initNavigationUI = () => {
+    const select = document.getElementById('room-select');
+    if (!select) return;
+    
+    const roomNames = new Set();
+    const model = modelCache['ModelFull.gltf'];
+    if (model) {
+        model.traverse(child => {
+            if (child.isMesh && /^[EU12]/.test(child.name)) {
+                roomNames.add(normalizeRoomName(child.name));
+            }
+        });
+    }
+    
+    const sortedRooms = Array.from(roomNames).filter(Boolean).sort();
+    sortedRooms.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        option.style.color = "black";
+        select.appendChild(option);
+    });
+
+    const searchInput = document.getElementById('room-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            Array.from(select.options).forEach(opt => {
+                if (opt.value === "") return;
+                opt.style.display = opt.value.toLowerCase().includes(val) ? 'block' : 'none';
+            });
+            // Automatically select if exact match
+            const exactMatch = Array.from(select.options).find(opt => opt.value.toLowerCase() === val);
+            if (exactMatch) select.value = exactMatch.value;
+        });
+    }
+};
+
+window.startNavigation = () => {
+    const select = document.getElementById('room-select');
+    if (!select || !select.value) return;
+    const targetRoomName = select.value;
+
+    const fullModel = modelCache['ModelFull.gltf'];
+    if (!fullModel) return;
+
+    let targetMesh = null;
+    let aulaMesh = null;
+    fullModel.traverse(child => {
+        if (child.isMesh) {
+            const normName = normalizeRoomName(child.name);
+            if (normName === targetRoomName && !targetMesh) targetMesh = child;
+            if (normName === '1Aula' && !aulaMesh) aulaMesh = child;
+        }
+    });
+
+    if (!targetMesh) {
+        alert("Room not found in the 3D model.");
+        return;
+    }
+    
+    // Switch to full view first
+    window.showOnly('ModelFull.gltf');
+
+    // Calculate entrance (below 1Aula)
+    let startPoint = new THREE.Vector3(0, 0, 0);
+    if (aulaMesh) {
+        const box = new THREE.Box3().setFromObject(aulaMesh);
+        box.getCenter(startPoint);
+        startPoint.y = 0; // Ground floor level roughly
+    } else {
+        startPoint.set(20, 0, 20); // Fallback
+    }
+
+    const endBox = new THREE.Box3().setFromObject(targetMesh);
+    let endPoint = new THREE.Vector3();
+    endBox.getCenter(endPoint);
+
+    // Create path points
+    const midPoint = new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z);
+    navPoints = [startPoint, midPoint, endPoint];
+    const curve = new THREE.CatmullRomCurve3(navPoints);
+
+    // Clean up old navigation
+    if (navPath) scene.remove(navPath);
+    if (navDot) scene.remove(navDot);
+    if (navTimer) cancelAnimationFrame(navTimer);
+
+    // Create Trail Line
+    const tubeGeom = new THREE.TubeGeometry(curve, 64, 0.3, 8, false);
+    const tubeMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.8 });
+    navPath = new THREE.Mesh(tubeGeom, tubeMat);
+    tubeGeom.setDrawRange(0, 0); 
+    scene.add(navPath);
+
+    // Spawn dot
+    const dotGeom = new THREE.SphereGeometry(0.8, 16, 16);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xe74c3c });
+    navDot = new THREE.Mesh(dotGeom, dotMat);
+    navDot.position.copy(startPoint);
+    scene.add(navDot);
+
+    // Look at entrance
+    camera.position.set(startPoint.x - 30, startPoint.y + 40, startPoint.z + 40);
+    controls.target.copy(startPoint);
+    controls.update();
+
+    // Highlight target room
+    if (clickedObject) clickedObject.material = baseMaterial;
+    clickedObject = targetMesh;
+    clickedObject.material = baseMaterial.clone();
+    clickedObject.material.color.set(0x2ecc71); // Green highlight for target
+    
+    // Start animation
+    navAnimationProgress = 0;
+    isNavigating = true;
+    
+    const animateNav = () => {
+        if (!isNavigating) return;
+        navAnimationProgress += 0.003; 
+        if (navAnimationProgress >= 1) {
+            navAnimationProgress = 1;
+            isNavigating = false;
+        }
+
+        const point = curve.getPoint(navAnimationProgress);
+        navDot.position.copy(point);
+
+        const totalVertices = tubeGeom.index ? tubeGeom.index.count : tubeGeom.attributes.position.count;
+        tubeGeom.setDrawRange(0, Math.floor(totalVertices * navAnimationProgress));
+
+        if (navAnimationProgress < 1) {
+            navTimer = requestAnimationFrame(animateNav);
+        } else {
+            // Reached target
+            controls.target.copy(endPoint);
+            controls.update();
+        }
+    };
+    animateNav();
+};
+
 /** * 9. RENDER LOOP
  **/
 function animate(){
