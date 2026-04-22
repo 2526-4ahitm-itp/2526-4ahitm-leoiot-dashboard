@@ -1007,7 +1007,145 @@ window.initNavigationUI = () => {
     });
 };
 
-// Smooth path to reduce zigzag from grid
+// --- Async A* Pathfinding for Hallways ---
+async function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, floorY) {
+    const gridSize = 4.0;
+    
+    const sx = Math.round(startPt.x / gridSize) * gridSize;
+    const sz = Math.round(startPt.z / gridSize) * gridSize;
+    const ex = Math.round(endPt.x / gridSize) * gridSize;
+    const ez = Math.round(endPt.z / gridSize) * gridSize;
+
+    const rc = new THREE.Raycaster();
+    const downDir = new THREE.Vector3(0, -1, 0);
+    const upPt = new THREE.Vector3();
+    
+    const walkableCache = new Map();
+    
+    const isWalkable = (x, z) => {
+        const key = `${x},${z}`;
+        if (walkableCache.has(key)) return walkableCache.get(key);
+        
+        upPt.set(x, floorY + 10, z);
+        rc.set(upPt, downDir);
+        const intersects = rc.intersectObject(floorModel, true);
+        
+        if (intersects.length === 0) {
+            walkableCache.set(key, false);
+            return false;
+        }
+        
+        for (const hit of intersects) {
+            const name = hit.object.name;
+            if (!name) continue;
+            
+            if (normalizeRoomName(name) === normalizeRoomName(targetRoomMesh.name)) {
+                walkableCache.set(key, true);
+                return true;
+            }
+            
+            const isRoom = /^[EU12]/.test(name);
+            if (isRoom && !name.includes('1Aula')) {
+                walkableCache.set(key, false);
+                return false;
+            }
+            
+            walkableCache.set(key, true);
+            return true;
+        }
+        walkableCache.set(key, false);
+        return false;
+    };
+
+    const openSet = [{ x: sx, z: sz, g: 0, h: 0, f: 0, parent: null }];
+    const closedSet = new Set();
+    const getKey = (x, z) => `${x},${z}`;
+    
+    let bestNode = openSet[0];
+    let minDistToTarget = Infinity;
+
+    const maxIterations = 5000;
+    let iterations = 0;
+
+    while (openSet.length > 0 && iterations < maxIterations) {
+        iterations++;
+        
+        if (iterations % 100 === 0) {
+            await new Promise(r => setTimeout(r, 0)); // yield to keep UI responsive
+        }
+        
+        let currentIdx = 0;
+        for (let i = 1; i < openSet.length; i++) {
+            if (openSet[i].f < openSet[currentIdx].f) {
+                currentIdx = i;
+            }
+        }
+        const current = openSet.splice(currentIdx, 1)[0];
+        
+        const distToTarget = Math.hypot(current.x - ex, current.z - ez);
+        if (distToTarget < minDistToTarget) {
+            minDistToTarget = distToTarget;
+            bestNode = current;
+        }
+
+        if (distToTarget <= gridSize * 1.5) {
+            bestNode = current;
+            break;
+        }
+
+        closedSet.add(getKey(current.x, current.z));
+
+        const neighbors = [
+            { x: current.x + gridSize, z: current.z },
+            { x: current.x - gridSize, z: current.z },
+            { x: current.x, z: current.z + gridSize },
+            { x: current.x, z: current.z - gridSize }
+        ];
+
+        for (const n of neighbors) {
+            const key = getKey(n.x, n.z);
+            if (closedSet.has(key)) continue;
+
+            if (!isWalkable(n.x, n.z)) {
+                closedSet.add(key);
+                continue;
+            }
+
+            const g = current.g + gridSize;
+            const h = Math.hypot(n.x - ex, n.z - ez);
+            const f = g + h;
+
+            const existingNode = openSet.find(o => o.x === n.x && o.z === n.z);
+            if (existingNode) {
+                if (g < existingNode.g) {
+                    existingNode.g = g;
+                    existingNode.f = f;
+                    existingNode.parent = current;
+                }
+            } else {
+                openSet.push({ x: n.x, z: n.z, g, h, f, parent: current });
+            }
+        }
+    }
+
+    const path = [];
+    let curr = bestNode;
+    while (curr) {
+        path.push(new THREE.Vector3(curr.x, floorY + 0.5, curr.z));
+        curr = curr.parent;
+    }
+    path.reverse();
+    
+    if (path.length > 0) {
+        path[0].copy(startPt);
+        path.push(endPt.clone());
+    } else {
+        path.push(startPt, endPt);
+    }
+    
+    return path;
+}
+
 function smoothPath(points) {
     if (points.length <= 2) return points;
     const smoothed = [points[0]];
@@ -1018,12 +1156,17 @@ function smoothPath(points) {
     return smoothed;
 }
 
-window.startNavigation = (targetRoomName) => {
+window.startNavigation = async (targetRoomName) => {
     let inputName = targetRoomName || document.getElementById('room-search').value;
     inputName = inputName.trim();
     if (!inputName) return;
 
-    // We must use the full model to locate the target mesh and stairs globally
+    const navBtn = document.getElementById('nav-btn');
+    if (navBtn) {
+        navBtn.textContent = '...';
+        navBtn.style.opacity = '0.7';
+    }
+
     const fullModel = modelCache['ModelFull.gltf'];
     if (!fullModel) return;
 
@@ -1043,12 +1186,12 @@ window.startNavigation = (targetRoomName) => {
 
     if (!targetMesh) {
         alert("Room not found in the 3D model.");
+        if (navBtn) { navBtn.textContent = 'GO'; navBtn.style.opacity = '1'; }
         return;
     }
     
     document.getElementById('room-search').value = normalizeRoomName(targetMesh.name);
     
-    // Calculate target center and target floor
     const endBox = new THREE.Box3().setFromObject(targetMesh);
     let endPoint = new THREE.Vector3();
     endBox.getCenter(endPoint);
@@ -1060,7 +1203,6 @@ window.startNavigation = (targetRoomName) => {
                           targetFloorChar === '2' ? 'Model2F.gltf' : 
                           targetFloorChar === 'U' ? 'ModelU.gltf' : 'ModelE.gltf';
 
-    // Start at the Ground Floor Entrance (using 1Aula's X/Z but Ground Floor's Y)
     let startPoint = new THREE.Vector3(0, 0, 0);
     let stairCenter = new THREE.Vector3(0, 0, 0);
     
@@ -1078,43 +1220,35 @@ window.startNavigation = (targetRoomName) => {
     
     startPoint.set(stairCenter.x, groundY + 0.5, stairCenter.z);
 
-    // Switch to ground floor view initially
-    const groundBtn = Array.from(document.querySelectorAll('#button-container button')).find(b => b.textContent.includes('Ground'));
-    if (groundBtn) window.handleButtonClick(groundBtn, 'ModelE.gltf');
+    const groundBtnElement = Array.from(document.querySelectorAll('#button-container button')).find(b => b.textContent.includes('Ground'));
+    if (groundBtnElement) window.handleButtonClick(groundBtnElement, 'ModelE.gltf');
     else window.showOnly('ModelE.gltf');
 
     const floorYDiff = Math.abs(startPoint.y - endPoint.y);
     let rawPath = [];
     
-    // We are on Ground Floor. Do we need to go up/down the stairs?
     if (floorYDiff > 2) {
         const stairTop = new THREE.Vector3(stairCenter.x, endPoint.y + 0.5, stairCenter.z);
-        // Simple L-shape on target floor
-        const midPoint = new THREE.Vector3(stairTop.x, endPoint.y + 0.5, endPoint.z);
-        rawPath = [startPoint, stairTop, midPoint, endPoint];
+        const targetFloorModel = modelCache[targetModelId];
+        const floorPath = await findPathInHallways(stairTop, endPoint, targetMesh, targetFloorModel, endPoint.y);
+        rawPath = [startPoint, stairTop, ...floorPath];
     } else {
-        // Same floor (Ground floor)
-        const midPoint1 = new THREE.Vector3(startPoint.x, startPoint.y, endPoint.z);
-        const midPoint2 = new THREE.Vector3(endPoint.x, startPoint.y, endPoint.z);
-        rawPath = [startPoint, midPoint1, midPoint2, endPoint];
+        const floorPath = await findPathInHallways(startPoint, endPoint, targetMesh, groundModel, startPoint.y);
+        rawPath = floorPath;
     }
     
-    navPoints = rawPath;
+    navPoints = smoothPath(rawPath);
     
-    // Ensure we have at least two valid points
     if (navPoints.length < 2) {
         navPoints = [startPoint, new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z), endPoint];
     }
     
-    // Remove duplicate consecutive points that can crash CatmullRomCurve3
     navPoints = navPoints.filter((p, i, arr) => {
         if (i === 0) return true;
         return p.distanceTo(arr[i-1]) > 0.1;
     });
     
-    if (navPoints.length < 2) {
-        navPoints.push(endPoint); // Guarantee at least 2 points
-    }
+    if (navPoints.length < 2) navPoints.push(endPoint);
 
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
@@ -1122,7 +1256,7 @@ window.startNavigation = (targetRoomName) => {
     if (navDot) scene.remove(navDot);
     if (navTimer) cancelAnimationFrame(navTimer);
 
-    const tubeGeom = new THREE.TubeGeometry(curve, Math.max(64, navPoints.length * 10), 0.3, 8, false);
+    const tubeGeom = new THREE.TubeGeometry(curve, Math.max(64, navPoints.length * 5), 0.3, 8, false);
     const tubeMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.8, depthTest: false });
     navPath = new THREE.Mesh(tubeGeom, tubeMat);
     tubeGeom.setDrawRange(0, 0); 
@@ -1155,6 +1289,11 @@ window.startNavigation = (targetRoomName) => {
         clickedObject.material.color.set(0x2ecc71); 
     }
     
+    if (navBtn) {
+        navBtn.textContent = 'GO';
+        navBtn.style.opacity = '1';
+    }
+
     navAnimationProgress = 0;
     isNavigating = true;
     let floorSwitched = false;
