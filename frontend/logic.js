@@ -895,16 +895,6 @@ function displayRoomInfo(objectName, roomTag, temperature, co2) {
     if (!infoDiv) {
         infoDiv = document.createElement('div');
         infoDiv.id = 'room-info';
-        infoDiv.style.position = 'fixed';
-        infoDiv.style.top = '20px';
-        infoDiv.style.right = '20px';
-        infoDiv.style.padding = '15px';
-        infoDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-        infoDiv.style.color = '#333';
-        infoDiv.style.borderRadius = '8px';
-        infoDiv.style.fontFamily = 'sans-serif';
-        infoDiv.style.zIndex = '1000';
-        infoDiv.style.border = '1px solid #ccc';
         document.body.appendChild(infoDiv);
     }
     const tempText = temperature !== null ? `${temperature.toFixed(1)}°C` : 'No data';

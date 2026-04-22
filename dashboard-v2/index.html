@@ -2,7 +2,11 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+		<meta name="theme-color" content="#1a1c20" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 		<title>Sensor Dashboard</title>
 		<link rel="stylesheet" href="style.css" />
 	</head>
@@ -27,10 +31,10 @@
 				<button onclick="setTimeRange('6h')" class="time-btn active">6h</button>
 				<button onclick="setTimeRange('24h')" class="time-btn">24h</button>
 				<button onclick="setTimeRange('7d')" class="time-btn">7d</button>
-				<div style="position: relative; display: inline-block;">
-					<button onclick="document.getElementById('datePicker').showPicker()" class="time-btn" id="btnDatePicker" title="Pick a specific date">🗓️</button>
-					<input type="date" id="datePicker" onchange="setSpecificDate(this.value)" style="position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; pointer-events: none;">
-				</div>
+					<div class="date-picker-trigger">
+						<button onclick="document.getElementById('datePicker').showPicker()" class="time-btn" id="btnDatePicker" title="Pick a specific date">🗓️</button>
+						<input type="date" id="datePicker" onchange="setSpecificDate(this.value)" class="hidden-date-picker">
+					</div>
 			</div>
 		</header>
 
