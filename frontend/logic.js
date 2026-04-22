@@ -1007,69 +1007,107 @@ window.initNavigationUI = () => {
     });
 };
 
-// --- Optimized Async A* Pathfinding ---
-async function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, floorY) {
-    const gridSize = 2.0; // Fine grid for precise hallway tracing
+// --- Corridor Bounds & Terrain Hugging A* ---
+// Defines the exact rectangular bounds of the walkable corridors (ignoring courtyard/rooms)
+const corridors = [
+    // Main Ring
+    { minX: -22.5, maxX: -11.5, minZ: -19.5, maxZ: 10.5 }, // West Corridor
+    { minX: 8.5,   maxX: 19.5,  minZ: -19.5, maxZ: 10.5 }, // East Corridor
+    { minX: -22.5, maxX: 19.5,  minZ: -19.5, maxZ: -8.5 }, // North Corridor
+    { minX: -22.5, maxX: 19.5,  minZ: -0.5,  maxZ: 10.5 }, // South Corridor
+    
+    // Wings
+    { minX: -70.0, maxX: -22.5, minZ: -9.5,  maxZ: 1.5 },  // West Wing
+    { minX: 19.5,  maxX: 70.0,  minZ: -18.5, maxZ: -8.5 }, // East Wing
+    { minX: -3.5,  maxX: 8.5,   minZ: -70.0, maxZ: -19.5 },// North Wing
+    { minX: -22.5, maxX: -11.5, minZ: 10.5,  maxZ: 70.0 }, // South Wing 1
+    { minX: -3.5,  maxX: 8.5,   minZ: 10.5,  maxZ: 70.0 }  // South Wing 2
+];
+
+function isPointInCorridor(x, z) {
+    // 1Aula entrance is a special wide area connecting to the ring
+    if (x > -5 && x < 15 && z > -15 && z < 5) return true;
+    
+    for (const c of corridors) {
+        if (x >= c.minX && x <= c.maxX && z >= c.minZ && z <= c.maxZ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Raycaster to hug the floor/stairs height dynamically
+const heightRaycaster = new THREE.Raycaster();
+const downVector = new THREE.Vector3(0, -1, 0);
+
+function getTerrainHeight(x, z, startY, floorModel) {
+    const origin = new THREE.Vector3(x, startY + 15, z);
+    heightRaycaster.set(origin, downVector);
+    
+    const intersects = heightRaycaster.intersectObject(floorModel, true);
+    if (intersects.length > 0) {
+        // Find the highest walkable mesh (e.g. top of stairs vs floor below)
+        for (const hit of intersects) {
+            // Ignore ceilings
+            if (hit.face && hit.face.normal.y > 0.5) {
+                return hit.point.y;
+            }
+        }
+    }
+    return startY;
+}
+
+async function findPathInCorridors(startPt, endPt, targetRoomMesh, floorModel) {
+    const gridSize = 2.0;
     
     const sx = Math.round(startPt.x / gridSize) * gridSize;
     const sz = Math.round(startPt.z / gridSize) * gridSize;
     const ex = Math.round(endPt.x / gridSize) * gridSize;
     const ez = Math.round(endPt.z / gridSize) * gridSize;
 
-    // Cache to prevent duplicate raycasts
-    const walkableCache = new Map();
     const rc = new THREE.Raycaster();
-    const downDir = new THREE.Vector3(0, -1, 0);
     const upPt = new THREE.Vector3();
+    const walkableCache = new Map();
     
-    // Separate floor and room meshes for extremely fast raycasting
-    const floorMeshes = [];
+    // Fast cache for room meshes
     const roomMeshes = [];
     floorModel.traverse(c => {
-        if (c.isMesh) {
-            const name = c.name.toLowerCase();
-            if (name.includes('floor') || name.includes('cellar') || name.includes('basement')) {
-                floorMeshes.push(c);
-            } else if (/^[EU12]/.test(c.name)) {
-                roomMeshes.push(c);
-            }
-        }
+        if (c.isMesh && /^[EU12]/.test(c.name)) roomMeshes.push(c);
     });
 
     const isWalkable = (x, z) => {
         const key = `${x},${z}`;
         if (walkableCache.has(key)) return walkableCache.get(key);
         
-        // Raycast down from slightly above floor level
-        upPt.set(x, floorY + 5, z); // safely above floor
-        rc.set(upPt, downDir);
-        
-        // 1. Are we inside the building?
-        const floorHits = rc.intersectObjects(floorMeshes, false);
-        if (floorHits.length === 0) {
-            walkableCache.set(key, false);
-            return false; // courtyard or outside
+        // Check if inside mathematical corridor
+        if (!isPointInCorridor(x, z)) {
+            // Allow stepping outside corridor ONLY if we are right next to the target room
+            const distToTarget = Math.hypot(x - ex, z - ez);
+            if (distToTarget > gridSize * 3) {
+                walkableCache.set(key, false);
+                return false;
+            }
         }
         
-        // 2. Did we hit a room?
+        // Raycast to ensure we don't walk THROUGH another room
+        upPt.set(x, startPt.y + 10, z);
+        rc.set(upPt, downVector);
+        
         const roomHits = rc.intersectObjects(roomMeshes, false);
         if (roomHits.length > 0) {
             const hitRoom = roomHits[0].object;
             const normHit = normalizeRoomName(hitRoom.name);
             const normTarget = normalizeRoomName(targetRoomMesh.name);
             
-            // We can walk in the target room or the main hall staircase area
             if (normHit === normTarget || normHit === '1Aula') {
                 walkableCache.set(key, true);
                 return true;
             }
-            
-            // We hit an obstacle room
+            // Blocked by another room
             walkableCache.set(key, false);
             return false;
         }
         
-        // We hit the floor and no room: it's a hallway
         walkableCache.set(key, true);
         return true;
     };
@@ -1080,15 +1118,12 @@ async function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, fl
     
     let bestNode = openSet[0];
     let minDistToTarget = Infinity;
-    const maxIterations = 5000;
+    const maxIterations = 8000;
     let iterations = 0;
 
     while (openSet.length > 0 && iterations < maxIterations) {
         iterations++;
-        // Yield occasionally to prevent browser freezing
-        if (iterations % 50 === 0) {
-            await new Promise(r => setTimeout(r, 0)); 
-        }
+        if (iterations % 150 === 0) await new Promise(r => setTimeout(r, 0));
         
         let currentIdx = 0;
         for (let i = 1; i < openSet.length; i++) {
@@ -1102,7 +1137,6 @@ async function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, fl
             bestNode = current;
         }
 
-        // Close enough to the room center
         if (distToTarget <= gridSize * 1.5) {
             bestNode = current;
             break;
@@ -1143,20 +1177,25 @@ async function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, fl
         }
     }
 
-    const path = [];
+    const path2D = [];
     let curr = bestNode;
     while (curr) {
-        path.push(new THREE.Vector3(curr.x, floorY + 0.5, curr.z));
+        path2D.push({ x: curr.x, z: curr.z });
         curr = curr.parent;
     }
-    path.reverse();
-    if (path.length > 0) {
-        path[0].copy(startPt);
-        path.push(endPt.clone());
-    } else {
-        path.push(startPt, endPt);
+    path2D.reverse();
+    
+    // Apply terrain hugging (Raycast down to find exact floor height for every step)
+    const path3D = [];
+    path3D.push(startPt);
+    
+    for (const pt of path2D) {
+        const y = getTerrainHeight(pt.x, pt.z, startPt.y, floorModel);
+        path3D.push(new THREE.Vector3(pt.x, y + 0.5, pt.z));
     }
-    return path;
+    
+    path3D.push(endPt.clone());
+    return path3D;
 }
 
 function smoothPath(points) {
@@ -1217,7 +1256,7 @@ window.startNavigation = async (targetRoomName) => {
                           targetFloorChar === 'U' ? 'ModelU.gltf' : 'ModelE.gltf';
 
     let startPoint = new THREE.Vector3(0, 0, 0);
-    let stairCenter = new THREE.Vector3(5.5, 0, -5.8); // Precise 1Aula center from coordinates
+    let stairCenter = new THREE.Vector3(2.5, 0, -4.5); // Coordinates for the central 1Aula staircase
     
     if (aulaMesh) {
         const box = new THREE.Box3().setFromObject(aulaMesh);
@@ -1231,6 +1270,7 @@ window.startNavigation = async (targetRoomName) => {
         groundY = groundBox.min.y; 
     }
     
+    // Start strictly at Ground Floor height
     startPoint.set(stairCenter.x, groundY + 0.5, stairCenter.z);
 
     const groundBtnElement = Array.from(document.querySelectorAll('#button-container button')).find(b => b.textContent.includes('Ground'));
@@ -1238,20 +1278,25 @@ window.startNavigation = async (targetRoomName) => {
     else window.showOnly('ModelE.gltf');
 
     const floorYDiff = Math.abs(startPoint.y - endPoint.y);
-    const targetY = endPoint.y + 0.5;
-    
     let rawPath = [];
     
     if (floorYDiff > 2) {
-        const stairTop = new THREE.Vector3(stairCenter.x, targetY, stairCenter.z);
+        // Different floor: Traverse ground floor to stairs, then traverse target floor to room
         const targetFloorModel = modelCache[targetModelId];
         
-        // Find path on the target floor using highly optimized A* Raycasting
-        const floorPath = await findPathInHallways(stairTop, endPoint, targetMesh, targetFloorModel, endPoint.y);
-        rawPath = [startPoint, stairTop, ...floorPath];
+        // 1. Walk from entrance to staircase on ground floor
+        const toStairsPath = await findPathInCorridors(startPoint, stairCenter, targetMesh, groundModel);
+        
+        // 2. Teleport up the stairs
+        const stairTop = new THREE.Vector3(stairCenter.x, endPoint.y + 0.5, stairCenter.z);
+        
+        // 3. Walk from top of stairs to room
+        const toRoomPath = await findPathInCorridors(stairTop, endPoint, targetMesh, targetFloorModel);
+        
+        rawPath = [...toStairsPath, stairTop, ...toRoomPath];
     } else {
-        const floorPath = await findPathInHallways(startPoint, endPoint, targetMesh, groundModel, startPoint.y);
-        rawPath = floorPath;
+        // Same floor
+        rawPath = await findPathInCorridors(startPoint, endPoint, targetMesh, groundModel);
     }
     
     navPoints = smoothPath(rawPath);
@@ -1261,7 +1306,8 @@ window.startNavigation = async (targetRoomName) => {
         return p.distanceTo(arr[i-1]) > 0.1;
     });
     
-    if (navPoints.length < 2) navPoints.push(new THREE.Vector3(endPoint.x, targetY, endPoint.z));
+    if (navPoints.length < 2) navPoints.push(endPoint);
+
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
     if (navPath) scene.remove(navPath);
