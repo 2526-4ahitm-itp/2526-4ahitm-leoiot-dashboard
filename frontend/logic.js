@@ -121,12 +121,8 @@ const loader = new GLTFLoader();
 
 const loadPromises = modelIds.map(id => {
     return new Promise((resolve, reject) => {
-            loader.load(`./${id}`, (gltf) => {
-                modelCache[id] = gltf.scene;
-                modelCache[id].position.set(0, 0, 0);
-                modelCache[id].rotation.set(0, 0, 0);
-                modelCache[id].scale.set(1, 1, 1);
-
+        loader.load(`./${id}`, (gltf) => {
+            modelCache[id] = gltf.scene;
             modelCache[id].traverse(child => {
                 if(child.isMesh){
                     child.castShadow = true;
