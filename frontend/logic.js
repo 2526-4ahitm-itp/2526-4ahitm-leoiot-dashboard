@@ -1007,195 +1007,131 @@ window.initNavigationUI = () => {
     });
 };
 
-// --- Corridor Bounds & Terrain Hugging A* ---
-// Defines the exact rectangular bounds of the walkable corridors (ignoring courtyard/rooms)
-const corridors = [
-    // Main Ring
-    { minX: -22.5, maxX: -11.5, minZ: -19.5, maxZ: 10.5 }, // West Corridor
-    { minX: 8.5,   maxX: 19.5,  minZ: -19.5, maxZ: 10.5 }, // East Corridor
-    { minX: -22.5, maxX: 19.5,  minZ: -19.5, maxZ: -8.5 }, // North Corridor
-    { minX: -22.5, maxX: 19.5,  minZ: -0.5,  maxZ: 10.5 }, // South Corridor
+// --- Exact Spline-Based Graph Navigation ---
+
+// Coordinates derived from user splines and precise room centers
+const graphNodes = {
+    'S_Main': { x: 5.5, z: -5.8 }, // Main Staircase at 1Aula
     
-    // Wings
-    { minX: -70.0, maxX: -22.5, minZ: -9.5,  maxZ: 1.5 },  // West Wing
-    { minX: 19.5,  maxX: 70.0,  minZ: -18.5, maxZ: -8.5 }, // East Wing
-    { minX: -3.5,  maxX: 8.5,   minZ: -70.0, maxZ: -19.5 },// North Wing
-    { minX: -22.5, maxX: -11.5, minZ: 10.5,  maxZ: 70.0 }, // South Wing 1
-    { minX: -3.5,  maxX: 8.5,   minZ: 10.5,  maxZ: 70.0 }  // South Wing 2
+    // Central Ring Corners
+    'R_NE': { x: 8.5, z: -14.0 },
+    'R_NW': { x: -11.7, z: -14.0 },
+    'R_SE': { x: 8.5, z: -3.6 },
+    'R_SW': { x: -11.7, z: -3.6 },
+    
+    // West Wing Corridor
+    'W_Mid': { x: -30.8, z: -3.6 },
+    'W_End': { x: -52.5, z: -3.6 },
+    
+    // East Wing Corridor
+    'E_Mid': { x: 38.8, z: -14.0 },
+    'E_End': { x: 51.5, z: -14.0 },
+    
+    // North Wing Corridor
+    'N_Mid': { x: 8.5, z: -43.5 },
+    'N_End': { x: 8.5, z: -63.8 },
+    
+    // South Wing 1 Corridor
+    'S1_Mid': { x: -11.7, z: 28.5 },
+    'S1_End': { x: -11.7, z: 63.9 },
+    
+    // South Wing 2 Corridor (E71 / 151 side)
+    'S2_Mid': { x: -2.6, z: 28.5 },
+    'S2_End': { x: -2.6, z: 63.9 }
+};
+
+// Edges representing the drawn splines
+const graphEdges = [
+    // Main Staircase to Ring
+    ['S_Main', 'R_SE'],
+    
+    // The Ring
+    ['R_NE', 'R_NW'],
+    ['R_NW', 'R_SW'],
+    ['R_SW', 'R_SE'],
+    ['R_SE', 'R_NE'],
+    
+    // West Wing
+    ['R_SW', 'W_Mid'],
+    ['W_Mid', 'W_End'],
+    
+    // East Wing
+    ['R_NE', 'E_Mid'],
+    ['E_Mid', 'E_End'],
+    
+    // North Wing
+    ['R_NE', 'N_Mid'],
+    ['N_Mid', 'N_End'],
+    
+    // South Wing 1
+    ['R_SW', 'S1_Mid'],
+    ['S1_Mid', 'S1_End'],
+    
+    // South Wing 2
+    ['R_SE', 'S2_Mid'],
+    ['S2_Mid', 'S2_End']
 ];
 
-function isPointInCorridor(x, z) {
-    // 1Aula entrance is a special wide area connecting to the ring
-    if (x > -5 && x < 15 && z > -15 && z < 5) return true;
-    
-    for (const c of corridors) {
-        if (x >= c.minX && x <= c.maxX && z >= c.minZ && z <= c.maxZ) {
-            return true;
+function getClosestNode(px, pz) {
+    let minDist = Infinity;
+    let best = null;
+    for (const [id, node] of Object.entries(graphNodes)) {
+        const dist = Math.hypot(px - node.x, pz - node.z);
+        if (dist < minDist) {
+            minDist = dist;
+            best = id;
         }
     }
-    return false;
+    return best;
 }
 
-// Raycaster to hug the floor/stairs height dynamically
-const heightRaycaster = new THREE.Raycaster();
-const downVector = new THREE.Vector3(0, -1, 0);
-
-function getTerrainHeight(x, z, startY, floorModel) {
-    const origin = new THREE.Vector3(x, startY + 15, z);
-    heightRaycaster.set(origin, downVector);
-    
-    const intersects = heightRaycaster.intersectObject(floorModel, true);
-    if (intersects.length > 0) {
-        // Find the highest walkable mesh (e.g. top of stairs vs floor below)
-        for (const hit of intersects) {
-            // Ignore ceilings
-            if (hit.face && hit.face.normal.y > 0.5) {
-                return hit.point.y;
-            }
-        }
-    }
-    return startY;
+// Build the graph
+const graph = {};
+for (const key in graphNodes) {
+    graph[key] = { ...graphNodes[key], edges: {} };
+}
+for (const [u, v] of graphEdges) {
+    const dist = Math.hypot(graph[u].x - graph[v].x, graph[u].z - graph[v].z);
+    graph[u].edges[v] = dist;
+    graph[v].edges[u] = dist;
 }
 
-async function findPathInCorridors(startPt, endPt, targetRoomMesh, floorModel) {
-    const gridSize = 2.0;
+function findShortestPath(startId, endId) {
+    const dists = {};
+    const prev = {};
+    const q = new Set();
     
-    const sx = Math.round(startPt.x / gridSize) * gridSize;
-    const sz = Math.round(startPt.z / gridSize) * gridSize;
-    const ex = Math.round(endPt.x / gridSize) * gridSize;
-    const ez = Math.round(endPt.z / gridSize) * gridSize;
-
-    const rc = new THREE.Raycaster();
-    const upPt = new THREE.Vector3();
-    const walkableCache = new Map();
+    for (const id in graph) {
+        dists[id] = Infinity;
+        q.add(id);
+    }
+    dists[startId] = 0;
     
-    // Fast cache for room meshes
-    const roomMeshes = [];
-    floorModel.traverse(c => {
-        if (c.isMesh && /^[EU12]/.test(c.name)) roomMeshes.push(c);
-    });
-
-    const isWalkable = (x, z) => {
-        const key = `${x},${z}`;
-        if (walkableCache.has(key)) return walkableCache.get(key);
-        
-        // Check if inside mathematical corridor
-        if (!isPointInCorridor(x, z)) {
-            // Allow stepping outside corridor ONLY if we are right next to the target room
-            const distToTarget = Math.hypot(x - ex, z - ez);
-            if (distToTarget > gridSize * 3) {
-                walkableCache.set(key, false);
-                return false;
-            }
+    while (q.size > 0) {
+        let u = null;
+        for (const id of q) {
+            if (!u || dists[id] < dists[u]) u = id;
         }
+        if (dists[u] === Infinity) break;
+        if (u === endId) break;
+        q.delete(u);
         
-        // Raycast to ensure we don't walk THROUGH another room
-        upPt.set(x, startPt.y + 10, z);
-        rc.set(upPt, downVector);
-        
-        const roomHits = rc.intersectObjects(roomMeshes, false);
-        if (roomHits.length > 0) {
-            const hitRoom = roomHits[0].object;
-            const normHit = normalizeRoomName(hitRoom.name);
-            const normTarget = normalizeRoomName(targetRoomMesh.name);
-            
-            if (normHit === normTarget || normHit === '1Aula') {
-                walkableCache.set(key, true);
-                return true;
-            }
-            // Blocked by another room
-            walkableCache.set(key, false);
-            return false;
-        }
-        
-        walkableCache.set(key, true);
-        return true;
-    };
-
-    const openSet = [{ x: sx, z: sz, g: 0, h: 0, f: 0, parent: null }];
-    const closedSet = new Set();
-    const getKey = (x, z) => `${x},${z}`;
-    
-    let bestNode = openSet[0];
-    let minDistToTarget = Infinity;
-    const maxIterations = 8000;
-    let iterations = 0;
-
-    while (openSet.length > 0 && iterations < maxIterations) {
-        iterations++;
-        if (iterations % 150 === 0) await new Promise(r => setTimeout(r, 0));
-        
-        let currentIdx = 0;
-        for (let i = 1; i < openSet.length; i++) {
-            if (openSet[i].f < openSet[currentIdx].f) currentIdx = i;
-        }
-        const current = openSet.splice(currentIdx, 1)[0];
-        
-        const distToTarget = Math.hypot(current.x - ex, current.z - ez);
-        if (distToTarget < minDistToTarget) {
-            minDistToTarget = distToTarget;
-            bestNode = current;
-        }
-
-        if (distToTarget <= gridSize * 1.5) {
-            bestNode = current;
-            break;
-        }
-
-        closedSet.add(getKey(current.x, current.z));
-
-        const neighbors = [
-            { x: current.x + gridSize, z: current.z },
-            { x: current.x - gridSize, z: current.z },
-            { x: current.x, z: current.z + gridSize },
-            { x: current.x, z: current.z - gridSize }
-        ];
-
-        for (const n of neighbors) {
-            const key = getKey(n.x, n.z);
-            if (closedSet.has(key)) continue;
-
-            if (!isWalkable(n.x, n.z)) {
-                closedSet.add(key);
-                continue;
-            }
-
-            const g = current.g + gridSize;
-            const h = Math.hypot(n.x - ex, n.z - ez);
-            const f = g + h;
-
-            const existingNode = openSet.find(o => o.x === n.x && o.z === n.z);
-            if (existingNode) {
-                if (g < existingNode.g) {
-                    existingNode.g = g;
-                    existingNode.f = f;
-                    existingNode.parent = current;
-                }
-            } else {
-                openSet.push({ x: n.x, z: n.z, g, h, f, parent: current });
+        for (const [v, cost] of Object.entries(graph[u].edges)) {
+            const alt = dists[u] + cost;
+            if (alt < dists[v]) {
+                dists[v] = alt;
+                prev[v] = u;
             }
         }
     }
-
-    const path2D = [];
-    let curr = bestNode;
+    
+    const path = [];
+    let curr = endId;
     while (curr) {
-        path2D.push({ x: curr.x, z: curr.z });
-        curr = curr.parent;
+        path.push(graph[curr]);
+        curr = prev[curr];
     }
-    path2D.reverse();
-    
-    // Apply terrain hugging (Raycast down to find exact floor height for every step)
-    const path3D = [];
-    path3D.push(startPt);
-    
-    for (const pt of path2D) {
-        const y = getTerrainHeight(pt.x, pt.z, startPt.y, floorModel);
-        path3D.push(new THREE.Vector3(pt.x, y + 0.5, pt.z));
-    }
-    
-    path3D.push(endPt.clone());
-    return path3D;
+    return path.reverse();
 }
 
 function smoothPath(points) {
@@ -1256,12 +1192,7 @@ window.startNavigation = async (targetRoomName) => {
                           targetFloorChar === 'U' ? 'ModelU.gltf' : 'ModelE.gltf';
 
     let startPoint = new THREE.Vector3(0, 0, 0);
-    let stairCenter = new THREE.Vector3(2.5, 0, -4.5); // Coordinates for the central 1Aula staircase
-    
-    if (aulaMesh) {
-        const box = new THREE.Box3().setFromObject(aulaMesh);
-        box.getCenter(stairCenter);
-    }
+    let stairCenter = new THREE.Vector3(5.5, 0, -5.8); // 1Aula precise stair start point
     
     const groundModel = modelCache['ModelE.gltf'];
     let groundY = 0;
@@ -1270,7 +1201,6 @@ window.startNavigation = async (targetRoomName) => {
         groundY = groundBox.min.y; 
     }
     
-    // Start strictly at Ground Floor height
     startPoint.set(stairCenter.x, groundY + 0.5, stairCenter.z);
 
     const groundBtnElement = Array.from(document.querySelectorAll('#button-container button')).find(b => b.textContent.includes('Ground'));
@@ -1278,35 +1208,38 @@ window.startNavigation = async (targetRoomName) => {
     else window.showOnly('ModelE.gltf');
 
     const floorYDiff = Math.abs(startPoint.y - endPoint.y);
+    const targetY = endPoint.y + 0.5;
+    
+    const B_end = getClosestNode(endPoint.x, endPoint.z);
+    const graphPath2D = findShortestPath('S_Main', B_end);
+    
     let rawPath = [];
+    rawPath.push(startPoint);
     
     if (floorYDiff > 2) {
-        // Different floor: Traverse ground floor to stairs, then traverse target floor to room
-        const targetFloorModel = modelCache[targetModelId];
-        
-        // 1. Walk from entrance to staircase on ground floor
-        const toStairsPath = await findPathInCorridors(startPoint, stairCenter, targetMesh, groundModel);
-        
-        // 2. Teleport up the stairs
-        const stairTop = new THREE.Vector3(stairCenter.x, endPoint.y + 0.5, stairCenter.z);
-        
-        // 3. Walk from top of stairs to room
-        const toRoomPath = await findPathInCorridors(stairTop, endPoint, targetMesh, targetFloorModel);
-        
-        rawPath = [...toStairsPath, stairTop, ...toRoomPath];
+        // Go straight up the stairs first
+        const stairTop = new THREE.Vector3(stairCenter.x, targetY, stairCenter.z);
+        rawPath.push(stairTop);
+        // Then follow the 2D graph along the corridors on the target floor
+        for (const node of graphPath2D) {
+            rawPath.push(new THREE.Vector3(node.x, targetY, node.z));
+        }
     } else {
         // Same floor
-        rawPath = await findPathInCorridors(startPoint, endPoint, targetMesh, groundModel);
+        for (const node of graphPath2D) {
+            rawPath.push(new THREE.Vector3(node.x, groundY + 0.5, node.z));
+        }
     }
     
-    navPoints = smoothPath(rawPath);
+    // Final step into the room
+    rawPath.push(new THREE.Vector3(endPoint.x, targetY, endPoint.z));
     
-    navPoints = navPoints.filter((p, i, arr) => {
+    navPoints = rawPath.filter((p, i, arr) => {
         if (i === 0) return true;
         return p.distanceTo(arr[i-1]) > 0.1;
     });
     
-    if (navPoints.length < 2) navPoints.push(endPoint);
+    if (navPoints.length < 2) navPoints.push(new THREE.Vector3(endPoint.x, targetY, endPoint.z));
 
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
