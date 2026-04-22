@@ -1301,8 +1301,9 @@ window.startNavigation = async (targetRoomName) => {
 
     navAnimationProgress = 0;
     isNavigating = true;
-    const startPoint = navPoints[0];
-    const floorYDiff = Math.abs(startPoint.y - navPoints[navPoints.length - 1].y);
+    const pathStart = navPoints[0];
+    const pathEnd = navPoints[navPoints.length - 1];
+    const pathFloorYDiff = Math.abs(pathStart.y - pathEnd.y);
     let floorSwitched = false;
     
     const animateNav = () => {
@@ -1316,8 +1317,8 @@ window.startNavigation = async (targetRoomName) => {
         const point = curve.getPoint(navAnimationProgress);
         navDot.position.copy(point);
 
-        if (floorYDiff > 2 && !floorSwitched) {
-            if (Math.abs(point.y - endPoint.y) < Math.abs(point.y - startPoint.y)) {
+        if (pathFloorYDiff > 2 && !floorSwitched) {
+            if (Math.abs(point.y - pathEnd.y) < Math.abs(point.y - pathStart.y)) {
                 const targetBtn = Array.from(document.querySelectorAll('#button-container button')).find(b => b.onclick && b.onclick.toString().includes(targetModelId));
                 if (targetBtn) window.handleButtonClick(targetBtn, targetModelId);
                 else window.showOnly(targetModelId);
