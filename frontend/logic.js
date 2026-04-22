@@ -939,14 +939,14 @@ window.initNavigationUI = () => {
     if (!searchInput || !suggestionsBox) return;
     
     const roomNames = new Set();
-    const model = modelCache['ModelFull.gltf'];
-    if (model) {
+    Object.values(modelCache).forEach(model => {
+        if (!model) return;
         model.traverse(child => {
             if (child.isMesh && /^[EU12]/.test(child.name)) {
                 roomNames.add(normalizeRoomName(child.name));
             }
         });
-    }
+    });
     
     const sortedRooms = Array.from(roomNames).filter(Boolean).sort();
 
@@ -959,7 +959,7 @@ window.initNavigationUI = () => {
             return;
         }
 
-        const matches = sortedRooms.filter(room => room.toLowerCase().includes(val));
+        const matches = sortedRooms.filter(room => room.toLowerCase().includes(val)).slice(0, 10);
         
         if (matches.length > 0) {
             suggestionsBox.style.display = 'block';
@@ -980,6 +980,11 @@ window.initNavigationUI = () => {
                     div.style.backgroundColor = 'transparent';
                 });
                 
+                div.addEventListener('mousedown', (ev) => {
+                    // Prevent blur from firing before click
+                    ev.preventDefault();
+                });
+
                 div.addEventListener('click', () => {
                     searchInput.value = room;
                     suggestionsBox.style.display = 'none';
@@ -988,37 +993,60 @@ window.initNavigationUI = () => {
                 suggestionsBox.appendChild(div);
             });
         } else {
-            suggestionsBox.style.display = 'none';
+            suggestionsBox.innerHTML = '<div style="padding: 10px 15px; color: #aaa; font-size: 14px;">No rooms found</div>';
+            suggestionsBox.style.display = 'block';
         }
     });
 
-    document.addEventListener('click', (e) => {
-        if (e.target !== searchInput && e.target !== suggestionsBox) {
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
             suggestionsBox.style.display = 'none';
+            window.startNavigation(searchInput.value);
+        }
+    });
+
+    searchInput.addEventListener('blur', () => {
+        // slight delay to allow click event on suggestions to fire
+        setTimeout(() => { suggestionsBox.style.display = 'none'; }, 150);
+    });
+
+    searchInput.addEventListener('focus', (e) => {
+        if (e.target.value.trim()) {
+            e.target.dispatchEvent(new Event('input'));
         }
     });
 };
 
 window.startNavigation = (targetRoomName) => {
-    if (!targetRoomName) return;
+    let inputName = targetRoomName || document.getElementById('room-search').value;
+    inputName = inputName.trim();
+    if (!inputName) return;
 
     const fullModel = modelCache['ModelFull.gltf'];
     if (!fullModel) return;
 
     let targetMesh = null;
     let aulaMesh = null;
-    fullModel.traverse(child => {
-        if (child.isMesh) {
-            const normName = normalizeRoomName(child.name);
-            if (normName === targetRoomName && !targetMesh) targetMesh = child;
-            if (normName === '1Aula' && !aulaMesh) aulaMesh = child;
-        }
+    
+    // Check all models to find the target mesh and 1Aula
+    Object.values(modelCache).forEach(model => {
+        if (!model) return;
+        model.traverse(child => {
+            if (child.isMesh) {
+                const normName = normalizeRoomName(child.name);
+                if (normName && normName.toLowerCase() === inputName.toLowerCase() && !targetMesh) targetMesh = child;
+                if (normName === '1Aula' && !aulaMesh) aulaMesh = child;
+            }
+        });
     });
 
     if (!targetMesh) {
         alert("Room not found in the 3D model.");
         return;
     }
+    
+    // Update input field to exact matched name
+    document.getElementById('room-search').value = normalizeRoomName(targetMesh.name);
     
     // Switch to ground floor view initially
     const groundBtn = Array.from(document.querySelectorAll('#button-container button')).find(b => b.textContent.includes('Ground'));
@@ -1083,7 +1111,7 @@ window.startNavigation = (targetRoomName) => {
     let currentTargetMesh = null;
     if (currentModel) {
         currentModel.traverse(child => {
-            if (child.isMesh && normalizeRoomName(child.name) === targetRoomName) {
+            if (child.isMesh && normalizeRoomName(child.name) === normalizeRoomName(targetMesh.name)) {
                 currentTargetMesh = child;
             }
         });

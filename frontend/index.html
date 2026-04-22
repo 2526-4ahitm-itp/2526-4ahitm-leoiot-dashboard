@@ -259,11 +259,14 @@
 
 		<div class="vm-badge">running on vm 23</div>
 
-		<div id="nav-system" style="position: absolute; top: 80px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; color: white; z-index: 1000; display: flex; flex-direction: column; gap: 10px; font-family: sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 250px;">
+		<div id="nav-system" style="position: absolute; top: 80px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; color: white; z-index: 1000; display: flex; flex-direction: column; gap: 10px; font-family: sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 300px;">
 			<h3 style="margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Navigation</h3>
-			<div style="position: relative;">
-				<input type="text" id="room-search" placeholder="Search room (e.g. 105)..." autocomplete="off" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 14px;">
-				<div id="search-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: #2a2d31; border-radius: 4px; overflow: hidden; display: none; z-index: 1001; max-height: 200px; overflow-y: auto; margin-top: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);"></div>
+			<div style="display: flex; gap: 8px; position: relative;">
+				<div style="position: relative; flex-grow: 1;">
+					<input type="text" id="room-search" placeholder="Search room (e.g. 105)..." autocomplete="off" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 14px;">
+					<div id="search-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: #2a2d31; border-radius: 4px; overflow: hidden; display: none; z-index: 1001; max-height: 200px; overflow-y: auto; margin-top: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);"></div>
+				</div>
+				<button onclick="window.startNavigation(document.getElementById('room-search').value)" id="nav-btn" style="padding: 0 15px; background: #2ecc71; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase;">GO</button>
 			</div>
 		</div>
 
