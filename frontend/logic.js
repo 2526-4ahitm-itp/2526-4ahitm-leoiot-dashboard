@@ -1007,140 +1007,6 @@ window.initNavigationUI = () => {
     });
 };
 
-// --- A* Pathfinding for Hallways ---
-function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, floorY) {
-    const gridSize = 2.0;
-    
-    // Snap to grid
-    const sx = Math.round(startPt.x / gridSize) * gridSize;
-    const sz = Math.round(startPt.z / gridSize) * gridSize;
-    const ex = Math.round(endPt.x / gridSize) * gridSize;
-    const ez = Math.round(endPt.z / gridSize) * gridSize;
-
-    // Helper: check if a point is walkable using a vertical raycast
-    const rc = new THREE.Raycaster();
-    const downDir = new THREE.Vector3(0, -1, 0);
-    const upPt = new THREE.Vector3();
-    
-    const isWalkable = (x, z) => {
-        upPt.set(x, floorY + 10, z);
-        rc.set(upPt, downDir);
-        // Only intersect with the current floor model
-        const intersects = rc.intersectObject(floorModel, true);
-        if (intersects.length === 0) return false; // Hit nothing (courtyard/outside)
-        
-        // Find the first valid mesh hit
-        for (const hit of intersects) {
-            const name = hit.object.name;
-            if (!name) continue;
-            
-            // If we hit the target room, it's the end of the path!
-            if (normalizeRoomName(hit.object.name) === normalizeRoomName(targetRoomMesh.name)) return true;
-            
-            const isRoom = /^[EU12]/.test(name);
-            // 1Aula is a walkable area (contains the stairs and main hall)
-            if (isRoom && !name.includes('1Aula')) {
-                return false; // Hit another room
-            }
-            
-            // Hit a floor/corridor/1Aula
-            return true;
-        }
-        return false;
-    };
-
-    // A* algorithm
-    const openSet = [{ x: sx, z: sz, g: 0, h: 0, f: 0, parent: null }];
-    const closedSet = new Set();
-    const getKey = (x, z) => `${x},${z}`;
-    
-    const targetKey = getKey(ex, ez);
-    
-    let bestNode = openSet[0];
-    let minDistToTarget = Infinity;
-
-    const maxIterations = 350; // prevent infinite loops
-    let iterations = 0;
-
-    while (openSet.length > 0 && iterations < maxIterations) {
-        iterations++;
-        
-        // Pop lowest f
-        let currentIdx = 0;
-        for (let i = 1; i < openSet.length; i++) {
-            if (openSet[i].f < openSet[currentIdx].f) {
-                currentIdx = i;
-            }
-        }
-        const current = openSet.splice(currentIdx, 1)[0];
-        
-        const distToTarget = Math.hypot(current.x - ex, current.z - ez);
-        if (distToTarget < minDistToTarget) {
-            minDistToTarget = distToTarget;
-            bestNode = current;
-        }
-
-        // If we are close enough to the target center (e.g. reached the door/room)
-        if (distToTarget <= gridSize * 2) {
-            bestNode = current;
-            break;
-        }
-
-        closedSet.add(getKey(current.x, current.z));
-
-        const neighbors = [
-            { x: current.x + gridSize, z: current.z },
-            { x: current.x - gridSize, z: current.z },
-            { x: current.x, z: current.z + gridSize },
-            { x: current.x, z: current.z - gridSize }
-        ];
-
-        for (const n of neighbors) {
-            const key = getKey(n.x, n.z);
-            if (closedSet.has(key)) continue;
-
-            if (!isWalkable(n.x, n.z)) {
-                closedSet.add(key);
-                continue;
-            }
-
-            const g = current.g + gridSize;
-            const h = Math.hypot(n.x - ex, n.z - ez);
-            const f = g + h;
-
-            const existingNode = openSet.find(o => o.x === n.x && o.z === n.z);
-            if (existingNode) {
-                if (g < existingNode.g) {
-                    existingNode.g = g;
-                    existingNode.f = f;
-                    existingNode.parent = current;
-                }
-            } else {
-                openSet.push({ x: n.x, z: n.z, g, h, f, parent: current });
-            }
-        }
-    }
-
-    // Reconstruct path
-    const path = [];
-    let curr = bestNode;
-    while (curr) {
-        path.push(new THREE.Vector3(curr.x, floorY + 0.5, curr.z));
-        curr = curr.parent;
-    }
-    path.reverse();
-    
-    // Ensure start and end exact points are included
-    if (path.length > 0) {
-        path[0].copy(startPt);
-        path.push(endPt.clone());
-    } else {
-        path.push(startPt, endPt);
-    }
-    
-    return path;
-}
-
 // Smooth path to reduce zigzag from grid
 function smoothPath(points) {
     if (points.length <= 2) return points;
@@ -1222,24 +1088,20 @@ window.startNavigation = (targetRoomName) => {
     
     // We are on Ground Floor. Do we need to go up/down the stairs?
     if (floorYDiff > 2) {
-        // Path 1: Ground floor entrance to Ground floor stairs (which is the same point here, but let's be safe)
-        // Then vertical line UP the stairs
         const stairTop = new THREE.Vector3(stairCenter.x, endPoint.y + 0.5, stairCenter.z);
-        
-        // Path 2: On the target floor, from stairs to the room using Hallways
-        const targetFloorModel = modelCache[targetModelId];
-        const floorPath = findPathInHallways(stairTop, endPoint, targetMesh, targetFloorModel, endPoint.y);
-        
-        rawPath = [startPoint, stairTop, ...floorPath];
+        // Simple L-shape on target floor
+        const midPoint = new THREE.Vector3(stairTop.x, endPoint.y + 0.5, endPoint.z);
+        rawPath = [startPoint, stairTop, midPoint, endPoint];
     } else {
         // Same floor (Ground floor)
-        const floorPath = findPathInHallways(startPoint, endPoint, targetMesh, groundModel, startPoint.y);
-        rawPath = floorPath;
+        const midPoint1 = new THREE.Vector3(startPoint.x, startPoint.y, endPoint.z);
+        const midPoint2 = new THREE.Vector3(endPoint.x, startPoint.y, endPoint.z);
+        rawPath = [startPoint, midPoint1, midPoint2, endPoint];
     }
     
-    navPoints = smoothPath(rawPath);
+    navPoints = rawPath;
     
-    // Fallback if path generation failed
+    // Ensure we have at least two valid points
     if (navPoints.length < 2) {
         navPoints = [startPoint, new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z), endPoint];
     }
