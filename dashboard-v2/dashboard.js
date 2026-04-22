@@ -630,6 +630,7 @@ function updatePVDashboard(data) {
 // Filter by floor
 window.filterByFloor = async (floor) => {
 	currentFloorFilter = floor;
+	displayedRoomsCount = ROOMS_PER_PAGE; // Reset pagination when filter changes
 	document.querySelectorAll('.filter-tab').forEach(btn => {
 		btn.classList.remove('active');
 		if (btn.dataset.floor === floor) btn.classList.add('active');
@@ -648,6 +649,7 @@ window.selectSensor = async (sensor) => {
 	
 	const oldSensor = selectedSensor;
 	selectedSensor = sensor;
+	displayedRoomsCount = ROOMS_PER_PAGE; // Reset pagination when focus changes
 	
 	// Update custom dropdown display
 	const trigger = document.getElementById('roomDropdownTrigger');
@@ -1311,12 +1313,32 @@ function updateRoomTable(roomData) {
 	const tbody = document.getElementById('roomTableBody');
 	const showMoreBtn = document.getElementById('showMoreBtn');
 	const showMoreCount = document.getElementById('showMoreCount');
+	const refreshEl = document.getElementById('tableLastRefresh');
+
+	// Update status indicator
+	const isPast = currentTimeRange === 'custom' && !isTodaySelected();
+	if (refreshEl) {
+		if (isPast) {
+			refreshEl.innerHTML = `<span style="color: #60a5fa">📅</span> Historical Data (${customDate})`;
+		} else {
+			refreshEl.innerHTML = '<span style="color: #4ade80">●</span> Live MQTT Stream';
+		}
+	}
+
+	// Filter rooms by floor
+	const filteredData = roomData.filter(room => {
+		return currentFloorFilter === 'all' ||
+			(currentFloorFilter === '1' && room.room.startsWith('1')) ||
+			(currentFloorFilter === '2' && room.room.startsWith('2')) ||
+			(currentFloorFilter === 'E' && room.room.startsWith('E')) ||
+			(currentFloorFilter === 'U' && room.room.startsWith('U'));
+	});
 
 	// Sort rooms
-	roomData.sort((a, b) => a.room.localeCompare(b.room));
+	filteredData.sort((a, b) => a.room.localeCompare(b.room));
 
 	// Show only displayedRoomsCount
-	const visibleRooms = roomData.slice(0, displayedRoomsCount);
+	const visibleRooms = filteredData.slice(0, displayedRoomsCount);
 
 	tbody.innerHTML = '';
 	visibleRooms.forEach(room => {
@@ -1358,11 +1380,11 @@ function updateRoomTable(roomData) {
 	});
 
 	// Update show more button
-	if (displayedRoomsCount >= roomData.length) {
+	if (displayedRoomsCount >= filteredData.length) {
 		showMoreBtn.style.display = 'none';
 	} else {
 		showMoreBtn.style.display = '';
-		showMoreCount.textContent = `(${displayedRoomsCount}/${roomData.length})`;
+		showMoreCount.textContent = `(${displayedRoomsCount}/${filteredData.length})`;
 	}
 }
 
