@@ -1017,18 +1017,163 @@ window.initNavigationUI = () => {
     });
 };
 
+// --- A* Pathfinding for Hallways ---
+function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, floorY) {
+    const gridSize = 2.0;
+    
+    // Snap to grid
+    const sx = Math.round(startPt.x / gridSize) * gridSize;
+    const sz = Math.round(startPt.z / gridSize) * gridSize;
+    const ex = Math.round(endPt.x / gridSize) * gridSize;
+    const ez = Math.round(endPt.z / gridSize) * gridSize;
+
+    // Helper: check if a point is walkable using a vertical raycast
+    const rc = new THREE.Raycaster();
+    const downDir = new THREE.Vector3(0, -1, 0);
+    const upPt = new THREE.Vector3();
+    
+    const isWalkable = (x, z) => {
+        upPt.set(x, floorY + 10, z);
+        rc.set(upPt, downDir);
+        // Only intersect with the current floor model
+        const intersects = rc.intersectObject(floorModel, true);
+        if (intersects.length === 0) return false; // Hit nothing (courtyard/outside)
+        
+        // Find the first valid mesh hit
+        for (const hit of intersects) {
+            const name = hit.object.name;
+            if (!name) continue;
+            
+            // If we hit the target room, it's the end of the path!
+            if (hit.object === targetRoomMesh) return true;
+            
+            const isRoom = /^[EU12]/.test(name);
+            // 1Aula is a walkable area (contains the stairs and main hall)
+            if (isRoom && !name.includes('1Aula')) {
+                return false; // Hit another room
+            }
+            
+            // Hit a floor/corridor/1Aula
+            return true;
+        }
+        return false;
+    };
+
+    // A* algorithm
+    const openSet = [{ x: sx, z: sz, g: 0, h: 0, f: 0, parent: null }];
+    const closedSet = new Set();
+    const getKey = (x, z) => `${x},${z}`;
+    
+    const targetKey = getKey(ex, ez);
+    
+    let bestNode = openSet[0];
+    let minDistToTarget = Infinity;
+
+    const maxIterations = 2500; // prevent infinite loops
+    let iterations = 0;
+
+    while (openSet.length > 0 && iterations < maxIterations) {
+        iterations++;
+        
+        // Pop lowest f
+        let currentIdx = 0;
+        for (let i = 1; i < openSet.length; i++) {
+            if (openSet[i].f < openSet[currentIdx].f) {
+                currentIdx = i;
+            }
+        }
+        const current = openSet.splice(currentIdx, 1)[0];
+        
+        const distToTarget = Math.hypot(current.x - ex, current.z - ez);
+        if (distToTarget < minDistToTarget) {
+            minDistToTarget = distToTarget;
+            bestNode = current;
+        }
+
+        // If we are close enough to the target center (e.g. reached the door/room)
+        if (distToTarget <= gridSize * 2) {
+            bestNode = current;
+            break;
+        }
+
+        closedSet.add(getKey(current.x, current.z));
+
+        const neighbors = [
+            { x: current.x + gridSize, z: current.z },
+            { x: current.x - gridSize, z: current.z },
+            { x: current.x, z: current.z + gridSize },
+            { x: current.x, z: current.z - gridSize }
+        ];
+
+        for (const n of neighbors) {
+            const key = getKey(n.x, n.z);
+            if (closedSet.has(key)) continue;
+
+            if (!isWalkable(n.x, n.z)) {
+                closedSet.add(key);
+                continue;
+            }
+
+            const g = current.g + gridSize;
+            const h = Math.hypot(n.x - ex, n.z - ez);
+            const f = g + h;
+
+            const existingNode = openSet.find(o => o.x === n.x && o.z === n.z);
+            if (existingNode) {
+                if (g < existingNode.g) {
+                    existingNode.g = g;
+                    existingNode.f = f;
+                    existingNode.parent = current;
+                }
+            } else {
+                openSet.push({ x: n.x, z: n.z, g, h, f, parent: current });
+            }
+        }
+    }
+
+    // Reconstruct path
+    const path = [];
+    let curr = bestNode;
+    while (curr) {
+        path.push(new THREE.Vector3(curr.x, floorY + 0.5, curr.z));
+        curr = curr.parent;
+    }
+    path.reverse();
+    
+    // Ensure start and end exact points are included
+    if (path.length > 0) {
+        path[0].copy(startPt);
+        path.push(endPt.clone());
+    } else {
+        path.push(startPt, endPt);
+    }
+    
+    return path;
+}
+
+// Smooth path to reduce zigzag from grid
+function smoothPath(points) {
+    if (points.length <= 2) return points;
+    const smoothed = [points[0]];
+    for (let i = 1; i < points.length - 1; i += 2) {
+        smoothed.push(points[i]);
+    }
+    smoothed.push(points[points.length - 1]);
+    return smoothed;
+}
+
 window.startNavigation = (targetRoomName) => {
     let inputName = targetRoomName || document.getElementById('room-search').value;
     inputName = inputName.trim();
     if (!inputName) return;
 
+    // We must use the full model to locate the target mesh and stairs globally
     const fullModel = modelCache['ModelFull.gltf'];
     if (!fullModel) return;
 
     let targetMesh = null;
     let aulaMesh = null;
     
-    // Check all models to find the target mesh and 1Aula
     Object.values(modelCache).forEach(model => {
         if (!model) return;
         model.traverse(child => {
@@ -1045,65 +1190,83 @@ window.startNavigation = (targetRoomName) => {
         return;
     }
     
-    // Update input field to exact matched name
     document.getElementById('room-search').value = normalizeRoomName(targetMesh.name);
     
+    // Calculate target center and target floor
+    const endBox = new THREE.Box3().setFromObject(targetMesh);
+    let endPoint = new THREE.Vector3();
+    endBox.getCenter(endPoint);
+
+    let targetFloorChar = targetMesh.name.charAt(0).toUpperCase();
+    if (!['U', 'E', '1', '2'].includes(targetFloorChar)) targetFloorChar = 'E';
+    
+    const targetModelId = targetFloorChar === '1' ? 'Model1F.gltf' : 
+                          targetFloorChar === '2' ? 'Model2F.gltf' : 
+                          targetFloorChar === 'U' ? 'ModelU.gltf' : 'ModelE.gltf';
+
+    // Start at the Ground Floor Entrance (using 1Aula's X/Z but Ground Floor's Y)
+    let startPoint = new THREE.Vector3(0, 0, 0);
+    let stairCenter = new THREE.Vector3(0, 0, 0);
+    
+    if (aulaMesh) {
+        const box = new THREE.Box3().setFromObject(aulaMesh);
+        box.getCenter(stairCenter);
+    }
+    
+    const groundModel = modelCache['ModelE.gltf'];
+    let groundY = 0;
+    if (groundModel) {
+        const groundBox = new THREE.Box3().setFromObject(groundModel);
+        groundY = groundBox.min.y; 
+    }
+    
+    startPoint.set(stairCenter.x, groundY + 0.5, stairCenter.z);
+
     // Switch to ground floor view initially
     const groundBtn = Array.from(document.querySelectorAll('#button-container button')).find(b => b.textContent.includes('Ground'));
     if (groundBtn) window.handleButtonClick(groundBtn, 'ModelE.gltf');
     else window.showOnly('ModelE.gltf');
 
-    // Calculate entrance (beneath 1Aula on Ground Floor)
-    let startPoint = new THREE.Vector3(0, 0, 0);
-    if (aulaMesh) {
-        const box = new THREE.Box3().setFromObject(aulaMesh);
-        box.getCenter(startPoint);
-        // Estimate ground floor Y from ModelE if possible
-        const groundModel = modelCache['ModelE.gltf'];
-        let groundY = 0;
-        if (groundModel) {
-            const groundBox = new THREE.Box3().setFromObject(groundModel);
-            groundY = groundBox.min.y; 
-        }
-        startPoint.y = groundY + 0.5; // Slightly above ground
-    } else {
-        startPoint.set(20, 0.5, 20); // Fallback
-    }
-
-    const endBox = new THREE.Box3().setFromObject(targetMesh);
-    let endPoint = new THREE.Vector3();
-    endBox.getCenter(endPoint);
-
     const floorYDiff = Math.abs(startPoint.y - endPoint.y);
+    let rawPath = [];
     
+    // We are on Ground Floor. Do we need to go up/down the stairs?
     if (floorYDiff > 2) {
-        // Different floor: go UP/DOWN at the start point (stairway), then horizontally to the room
-        const stairTop = new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z);
-        const midPoint = new THREE.Vector3(startPoint.x, endPoint.y, endPoint.z);
-        navPoints = [startPoint, stairTop, midPoint, endPoint];
+        // Path 1: Ground floor entrance to Ground floor stairs (which is the same point here, but let's be safe)
+        // Then vertical line UP the stairs
+        const stairTop = new THREE.Vector3(stairCenter.x, endPoint.y + 0.5, stairCenter.z);
+        
+        // Path 2: On the target floor, from stairs to the room using Hallways
+        const targetFloorModel = modelCache[targetModelId];
+        const floorPath = findPathInHallways(stairTop, endPoint, targetMesh, targetFloorModel, endPoint.y);
+        
+        rawPath = [startPoint, stairTop, ...floorPath];
     } else {
-        // Same floor
-        const midPoint1 = new THREE.Vector3(startPoint.x, startPoint.y, endPoint.z);
-        const midPoint2 = new THREE.Vector3(endPoint.x, startPoint.y, endPoint.z);
-        navPoints = [startPoint, midPoint1, midPoint2, endPoint];
+        // Same floor (Ground floor)
+        const floorPath = findPathInHallways(startPoint, endPoint, targetMesh, groundModel, startPoint.y);
+        rawPath = floorPath;
     }
     
+    navPoints = smoothPath(rawPath);
+    
+    // Fallback if path generation failed
+    if (navPoints.length < 2) {
+        navPoints = [startPoint, new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z), endPoint];
+    }
+
     const curve = new THREE.CatmullRomCurve3(navPoints);
 
-    // Clean up old navigation
     if (navPath) scene.remove(navPath);
     if (navDot) scene.remove(navDot);
     if (navTimer) cancelAnimationFrame(navTimer);
 
-    // Create Trail Line
-    const tubeGeom = new THREE.TubeGeometry(curve, 256, 0.3, 8, false);
-    const tubeMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.8, depthTest: false }); // depthTest false to see it through walls
+    const tubeGeom = new THREE.TubeGeometry(curve, Math.max(64, navPoints.length * 10), 0.3, 8, false);
+    const tubeMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.8, depthTest: false });
     navPath = new THREE.Mesh(tubeGeom, tubeMat);
     tubeGeom.setDrawRange(0, 0); 
     navPath.renderOrder = 999;
     scene.add(navPath);
 
-    // Spawn dot
     const dotGeom = new THREE.SphereGeometry(1.2, 16, 16);
     const dotMat = new THREE.MeshBasicMaterial({ color: 0xe74c3c, depthTest: false });
     navDot = new THREE.Mesh(dotGeom, dotMat);
@@ -1111,12 +1274,10 @@ window.startNavigation = (targetRoomName) => {
     navDot.renderOrder = 1000;
     scene.add(navDot);
 
-    // Look at entrance
     camera.position.set(startPoint.x - 30, startPoint.y + 60, startPoint.z + 40);
     controls.target.copy(startPoint);
     controls.update();
 
-    // Highlight target room if we can find it in the current floor model
     if (clickedObject) clickedObject.material = baseMaterial;
     let currentTargetMesh = null;
     if (currentModel) {
@@ -1126,25 +1287,15 @@ window.startNavigation = (targetRoomName) => {
             }
         });
     }
-    
     if (currentTargetMesh) {
         clickedObject = currentTargetMesh;
         clickedObject.material = baseMaterial.clone();
-        clickedObject.material.color.set(0x2ecc71); // Green highlight for target
+        clickedObject.material.color.set(0x2ecc71); 
     }
     
-    // Start animation
     navAnimationProgress = 0;
     isNavigating = true;
     let floorSwitched = false;
-    
-    let targetFloorChar = targetMesh.name.charAt(0).toUpperCase();
-    if (targetFloorChar !== 'U' && targetFloorChar !== 'E' && targetFloorChar !== '1' && targetFloorChar !== '2') {
-        targetFloorChar = 'E'; // fallback
-    }
-    const targetModelId = targetFloorChar === '1' ? 'Model1F.gltf' : 
-                          targetFloorChar === '2' ? 'Model2F.gltf' : 
-                          targetFloorChar === 'U' ? 'ModelU.gltf' : 'ModelE.gltf';
     
     const animateNav = () => {
         if (!isNavigating) return;
@@ -1157,11 +1308,6 @@ window.startNavigation = (targetRoomName) => {
         const point = curve.getPoint(navAnimationProgress);
         navDot.position.copy(point);
 
-        // Optional: follow dot with camera smoothly
-        // controls.target.lerp(point, 0.1);
-        // controls.update();
-
-        // Switch floor if we passed halfway up the stairs
         if (floorYDiff > 2 && !floorSwitched) {
             if (Math.abs(point.y - endPoint.y) < Math.abs(point.y - startPoint.y)) {
                 const targetBtn = Array.from(document.querySelectorAll('#button-container button')).find(b => b.onclick && b.onclick.toString().includes(targetModelId));
@@ -1170,7 +1316,6 @@ window.startNavigation = (targetRoomName) => {
                 
                 floorSwitched = true;
                 
-                // Highlight the room now that we're on the new floor
                 setTimeout(() => {
                     if (currentModel) {
                         currentModel.traverse(child => {
@@ -1191,7 +1336,6 @@ window.startNavigation = (targetRoomName) => {
         if (navAnimationProgress < 1) {
             navTimer = requestAnimationFrame(animateNav);
         } else {
-            // Reached target
             controls.target.copy(endPoint);
             controls.update();
         }
