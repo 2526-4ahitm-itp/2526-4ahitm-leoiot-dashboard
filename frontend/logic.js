@@ -1007,156 +1007,124 @@ window.initNavigationUI = () => {
     });
 };
 
-// --- Async A* Pathfinding for Hallways ---
-async function findPathInHallways(startPt, endPt, targetRoomMesh, floorModel, floorY) {
-    const gridSize = 4.0;
-    
-    const sx = Math.round(startPt.x / gridSize) * gridSize;
-    const sz = Math.round(startPt.z / gridSize) * gridSize;
-    const ex = Math.round(endPt.x / gridSize) * gridSize;
-    const ez = Math.round(endPt.z / gridSize) * gridSize;
+// --- Mathematical Skeleton Pathfinding for HTL Leonding ---
+const segments = [
+    { id: 'West',  type: 'H', x1: -150, x2: -11.15, z: 5.1 },
+    { id: 'South', type: 'V', z1: 5.1, z2: 150, x: -11.15 },
+    { id: 'RingB', type: 'H', x1: -11.15, x2: 16.2, z: 5.1 },
+    { id: 'RingL', type: 'V', z1: -13.9, z2: 5.1, x: -11.15 },
+    { id: 'RingT', type: 'H', x1: -11.15, x2: 16.2, z: -13.9 },
+    { id: 'RingR', type: 'V', z1: -13.9, z2: 5.1, x: 16.2 },
+    { id: 'East',  type: 'H', x1: 16.2, x2: 150, z: -13.9 },
+    { id: 'North', type: 'V', z1: -150, z2: -13.9, x: 16.2 }
+];
 
-    const rc = new THREE.Raycaster();
-    const downDir = new THREE.Vector3(0, -1, 0);
-    const upPt = new THREE.Vector3();
-    
-    const walkableCache = new Map();
-    
-    const isWalkable = (x, z) => {
-        const key = `${x},${z}`;
-        if (walkableCache.has(key)) return walkableCache.get(key);
-        
-        upPt.set(x, floorY + 10, z);
-        rc.set(upPt, downDir);
-        const intersects = rc.intersectObject(floorModel, true);
-        
-        if (intersects.length === 0) {
-            walkableCache.set(key, false);
-            return false;
+const coreNodes = {
+    'TL': { x: -11.15, z: -13.9 },
+    'TR': { x: 16.2, z: -13.9 },
+    'BL': { x: -11.15, z: 5.1 },
+    'BR': { x: 16.2, z: 5.1 },
+    'W_end': { x: -150, z: 5.1 },
+    'S_end': { x: -11.15, z: 150 },
+    'E_end': { x: 150, z: -13.9 },
+    'N_end': { x: 16.2, z: -150 }
+};
+
+function getClosestPointOnSegments(px, pz) {
+    let minDist = Infinity;
+    let best = null;
+    for (const seg of segments) {
+        let cx, cz;
+        if (seg.type === 'H') {
+            cx = Math.max(seg.x1, Math.min(seg.x2, px));
+            cz = seg.z;
+        } else {
+            cx = seg.x;
+            cz = Math.max(seg.z1, Math.min(seg.z2, pz));
         }
-        
-        for (const hit of intersects) {
-            const name = hit.object.name;
-            if (!name) continue;
-            
-            if (normalizeRoomName(name) === normalizeRoomName(targetRoomMesh.name)) {
-                walkableCache.set(key, true);
-                return true;
-            }
-            
-            const isRoom = /^[EU12]/.test(name);
-            if (isRoom && !name.includes('1Aula')) {
-                walkableCache.set(key, false);
-                return false;
-            }
-            
-            walkableCache.set(key, true);
-            return true;
+        const dist = Math.hypot(px - cx, pz - cz);
+        if (dist < minDist) {
+            minDist = dist;
+            best = { point: { x: cx, z: cz }, segment: seg };
         }
-        walkableCache.set(key, false);
-        return false;
+    }
+    return best;
+}
+
+function buildGraph(B_start, B_end) {
+    const graph = {};
+    for (const key in coreNodes) {
+        graph[key] = { ...coreNodes[key], edges: {} };
+    }
+    
+    const addNode = (id, x, z) => {
+        if (!graph[id]) graph[id] = { x, z, edges: {} };
     };
-
-    const openSet = [{ x: sx, z: sz, g: 0, h: 0, f: 0, parent: null }];
-    const closedSet = new Set();
-    const getKey = (x, z) => `${x},${z}`;
     
-    let bestNode = openSet[0];
-    let minDistToTarget = Infinity;
-
-    const maxIterations = 5000;
-    let iterations = 0;
-
-    while (openSet.length > 0 && iterations < maxIterations) {
-        iterations++;
-        
-        if (iterations % 100 === 0) {
-            await new Promise(r => setTimeout(r, 0)); // yield to keep UI responsive
-        }
-        
-        let currentIdx = 0;
-        for (let i = 1; i < openSet.length; i++) {
-            if (openSet[i].f < openSet[currentIdx].f) {
-                currentIdx = i;
+    addNode('Start', B_start.point.x, B_start.point.z);
+    addNode('End', B_end.point.x, B_end.point.z);
+    
+    for (const seg of segments) {
+        const nodesOnSeg = [];
+        for (const [id, node] of Object.entries(graph)) {
+            if (seg.type === 'H' && Math.abs(node.z - seg.z) < 0.1 && node.x >= seg.x1 - 0.1 && node.x <= seg.x2 + 0.1) {
+                nodesOnSeg.push({ id, val: node.x });
+            }
+            if (seg.type === 'V' && Math.abs(node.x - seg.x) < 0.1 && node.z >= seg.z1 - 0.1 && node.z <= seg.z2 + 0.1) {
+                nodesOnSeg.push({ id, val: node.z });
             }
         }
-        const current = openSet.splice(currentIdx, 1)[0];
+        nodesOnSeg.sort((a, b) => a.val - b.val);
+        for (let i = 0; i < nodesOnSeg.length - 1; i++) {
+            const id1 = nodesOnSeg[i].id;
+            const id2 = nodesOnSeg[i+1].id;
+            const dist = Math.abs(nodesOnSeg[i].val - nodesOnSeg[i+1].val);
+            graph[id1].edges[id2] = dist;
+            graph[id2].edges[id1] = dist;
+        }
+    }
+    return graph;
+}
+
+function findShortestPath(graph, startId, endId) {
+    const dists = {};
+    const prev = {};
+    const q = new Set();
+    
+    for (const id in graph) {
+        dists[id] = Infinity;
+        q.add(id);
+    }
+    dists[startId] = 0;
+    
+    while (q.size > 0) {
+        let u = null;
+        for (const id of q) {
+            if (!u || dists[id] < dists[u]) u = id;
+        }
+        if (dists[u] === Infinity) break;
+        if (u === endId) break;
+        q.delete(u);
         
-        const distToTarget = Math.hypot(current.x - ex, current.z - ez);
-        if (distToTarget < minDistToTarget) {
-            minDistToTarget = distToTarget;
-            bestNode = current;
-        }
-
-        if (distToTarget <= gridSize * 1.5) {
-            bestNode = current;
-            break;
-        }
-
-        closedSet.add(getKey(current.x, current.z));
-
-        const neighbors = [
-            { x: current.x + gridSize, z: current.z },
-            { x: current.x - gridSize, z: current.z },
-            { x: current.x, z: current.z + gridSize },
-            { x: current.x, z: current.z - gridSize }
-        ];
-
-        for (const n of neighbors) {
-            const key = getKey(n.x, n.z);
-            if (closedSet.has(key)) continue;
-
-            if (!isWalkable(n.x, n.z)) {
-                closedSet.add(key);
-                continue;
-            }
-
-            const g = current.g + gridSize;
-            const h = Math.hypot(n.x - ex, n.z - ez);
-            const f = g + h;
-
-            const existingNode = openSet.find(o => o.x === n.x && o.z === n.z);
-            if (existingNode) {
-                if (g < existingNode.g) {
-                    existingNode.g = g;
-                    existingNode.f = f;
-                    existingNode.parent = current;
-                }
-            } else {
-                openSet.push({ x: n.x, z: n.z, g, h, f, parent: current });
+        for (const [v, cost] of Object.entries(graph[u].edges)) {
+            const alt = dists[u] + cost;
+            if (alt < dists[v]) {
+                dists[v] = alt;
+                prev[v] = u;
             }
         }
     }
-
+    
     const path = [];
-    let curr = bestNode;
+    let curr = endId;
     while (curr) {
-        path.push(new THREE.Vector3(curr.x, floorY + 0.5, curr.z));
-        curr = curr.parent;
+        path.push(graph[curr]);
+        curr = prev[curr];
     }
-    path.reverse();
-    
-    if (path.length > 0) {
-        path[0].copy(startPt);
-        path.push(endPt.clone());
-    } else {
-        path.push(startPt, endPt);
-    }
-    
-    return path;
+    return path.reverse();
 }
 
-function smoothPath(points) {
-    if (points.length <= 2) return points;
-    const smoothed = [points[0]];
-    for (let i = 1; i < points.length - 1; i += 2) {
-        smoothed.push(points[i]);
-    }
-    smoothed.push(points[points.length - 1]);
-    return smoothed;
-}
-
-window.startNavigation = async (targetRoomName) => {
+window.startNavigation = (targetRoomName) => {
     let inputName = targetRoomName || document.getElementById('room-search').value;
     inputName = inputName.trim();
     if (!inputName) return;
@@ -1225,23 +1193,36 @@ window.startNavigation = async (targetRoomName) => {
     else window.showOnly('ModelE.gltf');
 
     const floorYDiff = Math.abs(startPoint.y - endPoint.y);
+    const targetY = endPoint.y + 0.5;
+    
+    // Build path using mathematical skeleton
+    const B_start = getClosestPointOnSegments(stairCenter.x, stairCenter.z);
+    const B_end = getClosestPointOnSegments(endPoint.x, endPoint.z);
+    
+    const graph = buildGraph(B_start, B_end);
+    const graphPath2D = findShortestPath(graph, 'Start', 'End');
+    
     let rawPath = [];
+    rawPath.push(startPoint); // from Aula center
     
     if (floorYDiff > 2) {
-        const stairTop = new THREE.Vector3(stairCenter.x, endPoint.y + 0.5, stairCenter.z);
-        const targetFloorModel = modelCache[targetModelId];
-        const floorPath = await findPathInHallways(stairTop, endPoint, targetMesh, targetFloorModel, endPoint.y);
-        rawPath = [startPoint, stairTop, ...floorPath];
+        const stairTop = new THREE.Vector3(stairCenter.x, targetY, stairCenter.z);
+        rawPath.push(stairTop);
+        // Add graph nodes at target floor height
+        for (const node of graphPath2D) {
+            rawPath.push(new THREE.Vector3(node.x, targetY, node.z));
+        }
     } else {
-        const floorPath = await findPathInHallways(startPoint, endPoint, targetMesh, groundModel, startPoint.y);
-        rawPath = floorPath;
+        // Same floor
+        for (const node of graphPath2D) {
+            rawPath.push(new THREE.Vector3(node.x, groundY + 0.5, node.z));
+        }
     }
     
-    navPoints = smoothPath(rawPath);
+    // Ensure final point goes cleanly into the room
+    rawPath.push(new THREE.Vector3(endPoint.x, targetY, endPoint.z));
     
-    if (navPoints.length < 2) {
-        navPoints = [startPoint, new THREE.Vector3(startPoint.x, endPoint.y, startPoint.z), endPoint];
-    }
+    navPoints = rawPath;
     
     navPoints = navPoints.filter((p, i, arr) => {
         if (i === 0) return true;
