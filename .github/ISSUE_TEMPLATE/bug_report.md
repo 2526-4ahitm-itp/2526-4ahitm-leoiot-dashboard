@@ -23,10 +23,17 @@ A clear and concise description of what the bug is or what the issue is about.
 A clear and concise description of what you expected to happen.
 
 ## Environment
-- **Product:** [e.g. Proctor, Sentinel, ...]
-- **OS:** [e.g. Windows, MacOS]
-- **Browser:** [e.g. Zen, Floorp]
-- **Version:** [e.g. 22]
+- **Product:** [e.g. Dashboard-v2, 3D Explorer]
+- **OS:** [e.g. Windows, iOS, Android]
+- **Browser:** [e.g. Chrome, Safari, Firefox]
+- **Device:** [e.g. iPhone 15, Desktop, Tablet]
+- **Screen Resolution:** [e.g. 393x852 (Mobile), 1920x1080]
+
+## Mobile Responsiveness (if applicable)
+- [ ] Issue occurs in Portrait mode
+- [ ] Issue occurs in Landscape mode
+- [ ] Touch targets are difficult to tap
+- [ ] Content is cut off or overlaps (e.g. Notch/Dynamic Island)
 
 ## Additional Context
 Add any other context about the problem here.

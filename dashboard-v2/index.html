@@ -21,19 +21,19 @@
 		<header class="dashboard-header">
 			<div class="header-left">
 				<h1 id="dashboardTitle">🏢 LeoIOT Sensor Dashboard</h1>
-				<div class="dashboard-toggle">
-					<button onclick="switchView('sensors')" id="btnSensors" class="view-btn active">Sensors</button>
-					<button onclick="switchView('pv')" id="btnPV" class="view-btn">PV System</button>
+				<div class="dashboard-toggle" role="tablist" aria-label="Dashboard views">
+					<button onclick="switchView('sensors')" id="btnSensors" class="view-btn active" role="tab" aria-selected="true" aria-controls="sensorsView">Sensors</button>
+					<button onclick="switchView('pv')" id="btnPV" class="view-btn" role="tab" aria-selected="false" aria-controls="pvView">PV System</button>
 				</div>
 			</div>
-			<div class="time-range-selector">
-				<button onclick="setTimeRange('1h')" class="time-btn">1h</button>
-				<button onclick="setTimeRange('6h')" class="time-btn active">6h</button>
-				<button onclick="setTimeRange('24h')" class="time-btn">24h</button>
-				<button onclick="setTimeRange('7d')" class="time-btn">7d</button>
+			<div class="time-range-selector" role="group" aria-label="Time range selector">
+				<button onclick="setTimeRange('1h')" class="time-btn" aria-label="Last 1 hour">1h</button>
+				<button onclick="setTimeRange('6h')" class="time-btn active" aria-label="Last 6 hours">6h</button>
+				<button onclick="setTimeRange('24h')" class="time-btn" aria-label="Last 24 hours">24h</button>
+				<button onclick="setTimeRange('7d')" class="time-btn" aria-label="Last 7 days">7d</button>
 					<div class="date-picker-trigger">
-						<button onclick="document.getElementById('datePicker').showPicker()" class="time-btn" id="btnDatePicker" title="Pick a specific date">🗓️</button>
-						<input type="date" id="datePicker" onchange="setSpecificDate(this.value)" class="hidden-date-picker">
+						<button onclick="document.getElementById('datePicker').showPicker()" class="time-btn" id="btnDatePicker" title="Pick a specific date" aria-label="Select custom date">🗓️</button>
+						<input type="date" id="datePicker" onchange="setSpecificDate(this.value)" class="hidden-date-picker" aria-hidden="true">
 					</div>
 			</div>
 		</header>

@@ -408,8 +408,10 @@ window.switchView = async (view) => {
 		pvView.style.display = 'none';
 		btnSensors.classList.add('active');
 		btnPV.classList.remove('active');
+		btnSensors.setAttribute('aria-selected', 'true');
+		btnPV.setAttribute('aria-selected', 'false');
 		title.textContent = '🏢 LeoIOT Sensor Dashboard';
-		
+
 		// Stop PV polling
 		if (pvInterval) {
 			clearInterval(pvInterval);
@@ -420,16 +422,17 @@ window.switchView = async (view) => {
 		pvView.style.display = 'block';
 		btnSensors.classList.remove('active');
 		btnPV.classList.add('active');
+		btnSensors.setAttribute('aria-selected', 'false');
+		btnPV.setAttribute('aria-selected', 'true');
 		title.textContent = '☀️ LeoIOT PV Dashboard';
-		
+
 		// Start PV polling (every 30s)
 		await refreshPVData();
 		pvInterval = setInterval(refreshPVData, 30000);
 	}
-	
+
 	triggerRoomAnimation();
 };
-
 async function getSolaxToken() {
 	if (solaxToken) return solaxToken;
 	

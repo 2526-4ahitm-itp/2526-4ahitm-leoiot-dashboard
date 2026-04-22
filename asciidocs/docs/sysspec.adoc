@@ -1,83 +1,96 @@
-= My Project
-firstname lastname
-1.0.0, {docdate}: Some notes
+= LeoIoT System Specification
+DLettner, Elias Pointinger
+1.0.0, {docdate}
 ifndef::imagesdir[:imagesdir: images]
-//:toc-placement!:  // prevents the generation of the doc at this position, so it can be printed afterwards
-:sourcedir: ../src/main/java
 :icons: font
-:sectnums:    // Nummerierung der Überschriften / section numbering
+:sectnums:
 :toc: left
 
-//Need this blank line after ifdef, don't know why...
-ifdef::backend-html5[]
+== Architecture & Design
 
-// https://fontawesome.com/v4.7.0/icons/
-icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/asciidoctor-docker-template/master/asciidocs/{docname}.adoc] ‏ ‏ ‎
-icon:github-square[link=https://github.com/htl-leonding-college/asciidoctor-docker-template] ‏ ‏ ‎
-icon:home[link=https://htl-leonding.github.io/]
-endif::backend-html5[]
+=== Data Flow Sequence Diagram
 
-// print the toc here (not at the default position)
-//toc::[]
+The following diagram illustrates the real-time data flow from the sensors to the end-user dashboard.
 
-== Pflichtenheft "Was mache ich"
-
-
-=== Ausgangssituation
-
-Die HTL Leonding ist eine HTL im oö. Zentralraum mit ca. 1000 Schülern und den Fachabteilungen Medientechnik, Informatik, ....
-
-=== Istzustand
+[plantuml, data-flow, png]
 ----
-Beschreibung der speziellen Situation zB in der Abteilung
-----
-=== Problemstellung
-=== Aufgabenstellung
-==== Funktionale Anforderungen
+@startuml
+skinparam handwritten false
+skinparam monochrome true
+skinparam packageStyle rect
+skinparam defaultFontName "Verdana"
 
-[plantuml,wireframe,png]
-----
-@startsalt
-{
-Name         | "                 "
-Modifiers:   | { (X) public | () default | () private | () protected
-	            [] abstract | [] final   | [] static }
-Superclass:  | { "java.lang.Object " | [Browse...] }
-}
-@endsalt
-----
-==== Nichtfunktionale Anforderungen (NFA)
-=== Ziele
-=== Mengengerüst
-=== Rahmenbedingungen
-zB Vorgaben vom Auftraggeber
+actor "User" as user
+participant "Dashboard-v2\n(Browser)" as web
+participant "WebSocket Bridge" as ws
+participant "Telegraf" as telegraf
+database "InfluxDB" as influx
+queue "Mosquitto\n(MQTT Broker)" as mqtt
+participant "Sensor Data Generator\n(Quarkus)" as sensors
 
-== Entwurf "Wie mache ich es"
-=== Systemarchitektur
-=== ...
+== Periodic Data Collection ==
 
-== Projekthandbuch "Organisatorische Rahmenbedingungen"
+sensors -> mqtt : Publish room data\nTopic: room-temperature\nPayload: {"room": "105", "temperature": 22.5}
+mqtt -> telegraf : Forward message
+telegraf -> influx : Write to bucket "server_data"\nMeasurement: room_temperature
 
+== Real-time Visualization (WebSocket) ==
 
+user -> web : Opens Dashboard
+web -> ws : Connect & Subscribe\n{"type": "subscribe", "room": "105"}
+mqtt -> ws : Forward live message
+ws -> web : Send live update\n{"type": "temp", "room": "105", "value": 22.5}
+web -> user : Update Heatmap / Chart
 
-=== GANTT-Diagramm
+== Historical Data (InfluxDB API) ==
 
-mit User-Stories (definiert in YouTrack)
-
-[plantuml,gantt-protoype,png]
-----
-@startgantt
-[Test prototype] lasts 10 days
-[Prototype completed] happens at [Test prototype]'s end
-[Setup assembly line] lasts 12 days
-[Setup assembly line] starts at [Test prototype]'s end
-[Test prototype 2] lasts 3 days
-[Test prototype 2] starts at [Prototype completed]'s end
-@endgantt
+user -> web : Selects Date Range
+web -> influx : Query via Flux API\n/api/v2/query
+influx -> web : Return CSV data
+web -> user : Render Historical Charts
+@enduml
 ----
 
+=== Component Specification
 
+==== MQTT Topic Hierarchy
 
-* link:minutes-of-meeting.html[Protokollvorlage]
-* link:demo.html[Demo]
+The project uses the following MQTT topics for communication:
 
+[cols="1,2,2", options="header"]
+|===
+| Topic | Format | Description
+| `room-temperature` | JSON: `{"room": "ID", "temperature": float}` | Periodic temperature updates for all rooms.
+| `nili3/sensor/nili3_co2/state` | Value (Float) | CO2 levels for Room 105 (special sensor).
+| `nili3/sensor/nili3_temperature/state` | Value (Float) | High-resolution temperature for Room 105.
+| `nili3/sensor/+/state` | Value (Float) | Generic pattern for other Nili sensors.
+|===
+
+==== InfluxDB Schema (Bucket: `server_data`)
+
+[cols="1,1,2,2", options="header"]
+|===
+| Measurement | Field | Tags | Description
+| `room_temperature` | `temperature` | `room` | Standardized room temperatures.
+| `mqtt_consumer` | `value` | `topic` | Raw data from various MQTT topics (CO2, power, etc).
+| `pv_data` | (multiple) | `plant_id` | Solar plant metrics (yield, consumption, battery).
+|===
+
+== Functional Requirements
+
+=== Real-time Monitoring
+* Users can view the current temperature and CO2 levels of every room in a 3D building model.
+* Data is updated instantly via WebSockets when new sensor values arrive.
+
+=== Historical Analysis
+* Users can select a specific date or time range (6h, 24h, 7d) to view trends.
+* Aggregated averages are shown for rooms and floors.
+
+=== Mobile Accessibility
+* The dashboard is fully responsive and optimized for mobile devices (iOS/Android).
+* Support for notch/Dynamic Island devices and touch-friendly interaction targets.
+
+== Non-functional Requirements (NFA)
+* **Latency:** Real-time updates should reflect in the UI within 500ms of reaching the MQTT broker.
+* **Scalability:** The system should handle up to 200 rooms with 10-second update intervals.
+* **Availability:** The dashboard and data collectors should restart automatically via Docker Compose.
