@@ -1042,33 +1042,36 @@ const segments = [
     { id: 'U_TopH',  x1: -57.9,  x2:  16.2,  z1: -52.0, z2: -52.0, type: 'H', floors: 'U'   },
 ];
 
-// Graph nodes (X, Z only — Y is resolved at runtime from FLOOR_Y)
+// Graph nodes (X, Z only — Y is resolved at runtime from FLOOR_Y).
+// 'RingS_Mid' is the navigation start: south entry to the ring on the RingS corridor.
+// All edges are axis-aligned (H or V) so the trail never cuts diagonally through walls.
 const graphNodes = {
-    'Aula':     { x:  5.5,   z:  -5.8  }, // building entrance / reception
-    'Stair':    { x:  5.5,   z: -13.9  }, // staircase on RingN (north of Aula)
-    'NW':       { x: -11.15, z: -13.9  },
-    'NE':       { x:  16.2,  z: -13.9  },
-    'SW':       { x: -11.15, z:   5.1  },
-    'SE':       { x:  16.2,  z:   5.1  },
-    'W_End':    { x: -70.0,  z:   5.1  },
-    'E_End':    { x:  70.0,  z: -13.9  },
-    'N_End':    { x:  16.2,  z: -70.0  },
-    'S1_End':   { x: -11.15, z:  70.0  },
-    'S2_End':   { x:  16.2,  z:  70.0  },
+    'RingS_Mid': { x:  5.5,   z:   5.1  }, // south-ring start point (on RingS corridor)
+    'Stair':     { x:  5.5,   z: -13.9  }, // staircase on RingN (straight north of RingS_Mid)
+    'NW':        { x: -11.15, z: -13.9  },
+    'NE':        { x:  16.2,  z: -13.9  },
+    'SW':        { x: -11.15, z:   5.1  },
+    'SE':        { x:  16.2,  z:   5.1  },
+    'W_End':     { x: -70.0,  z:   5.1  },
+    'E_End':     { x:  70.0,  z: -13.9  },
+    'N_End':     { x:  16.2,  z: -70.0  },
+    'S1_End':    { x: -11.15, z:  70.0  },
+    'S2_End':    { x:  16.2,  z:  70.0  },
     // U-floor north extension nodes
-    'U_WN_Jct': { x: -41.45, z:   5.1  }, // junction on WestW corridor
-    'U_WN_End': { x: -41.45, z: -51.0  }, // north end of the west extension
-    'U_Top_W':  { x: -57.9,  z: -52.0  }, // far-north corridor, west end
-    'U_Top_E':  { x:  16.2,  z: -52.0  }, // far-north corridor → merges with NorthW
+    'U_WN_Jct':  { x: -41.45, z:   5.1  }, // junction on WestW corridor
+    'U_WN_End':  { x: -41.45, z: -51.0  }, // north end of west extension
+    'U_Top_W':   { x: -57.9,  z: -52.0  }, // far-north corridor, west end
+    'U_Top_E':   { x:  16.2,  z: -52.0  }, // far-north corridor → NorthW
 };
 
 const graphEdges = [
-    // Aula interior + staircase
-    ['Aula', 'Stair'],
-    ['Aula', 'SW'], ['Aula', 'SE'],
-    // Staircase sits on RingN
+    // Through the Aula: south ring → staircase (straight north, no diagonal)
+    ['RingS_Mid', 'Stair'],
+    // South ring corridor (axis-aligned, no diagonals through ring walls)
+    ['RingS_Mid', 'SW'], ['RingS_Mid', 'SE'],
+    // Staircase on north ring
     ['Stair', 'NW'], ['Stair', 'NE'],
-    // Ring perimeter
+    // Ring sides
     ['NW', 'SW'], ['NE', 'SE'],
     // Wings
     ['SW', 'W_End'],
@@ -1109,6 +1112,51 @@ function findShortestPath(startId, endId) {
     const path = []; let curr = endId;
     while (curr) { path.push(graph[curr]); curr = prev[curr]; }
     return path.reverse();
+}
+
+// Returns graph distances from startId to every node (used for entry-node selection).
+function dijkstraDists(startId) {
+    const dists = {}, q = new Set();
+    for (const id in graph) { dists[id] = Infinity; q.add(id); }
+    dists[startId] = 0;
+    while (q.size > 0) {
+        let u = null;
+        for (const id of q) if (!u || dists[id] < dists[u]) u = id;
+        if (dists[u] === Infinity) break;
+        q.delete(u);
+        for (const [v, cost] of Object.entries(graph[u].edges)) {
+            const alt = dists[u] + cost;
+            if (alt < dists[v]) dists[v] = alt;
+        }
+    }
+    return dists;
+}
+
+// Finds the "entry node" — the graph node that lies on the door segment and
+// that you would naturally pass through when walking from startId toward doorPoint,
+// without overshooting past the doorPoint and reversing.
+// Strategy: among all nodes that lie on doorSeg, pick the one minimising
+//   graphDist(start → node) + Euclidean(node → doorPoint).
+function entryNode(startId, doorSeg, doorPoint) {
+    const dists = dijkstraDists(startId);
+    const SNAP_TOL = 0.2;
+    let bestId = null, bestCost = Infinity;
+    for (const [id, node] of Object.entries(graphNodes)) {
+        let onSeg;
+        if (doorSeg.type === 'H') {
+            const xMin = Math.min(doorSeg.x1, doorSeg.x2), xMax = Math.max(doorSeg.x1, doorSeg.x2);
+            onSeg = Math.abs(node.z - doorSeg.z1) < SNAP_TOL &&
+                    node.x >= xMin - SNAP_TOL && node.x <= xMax + SNAP_TOL;
+        } else {
+            const zMin = Math.min(doorSeg.z1, doorSeg.z2), zMax = Math.max(doorSeg.z1, doorSeg.z2);
+            onSeg = Math.abs(node.x - doorSeg.x1) < SNAP_TOL &&
+                    node.z >= zMin - SNAP_TOL && node.z <= zMax + SNAP_TOL;
+        }
+        if (!onSeg || !isFinite(dists[id])) continue;
+        const cost = dists[id] + Math.hypot(doorPoint.x - node.x, doorPoint.z - node.z);
+        if (cost < bestCost) { bestCost = cost; bestId = id; }
+    }
+    return bestId || 'SE';
 }
 
 window.startNavigation = async (targetRoomName) => {
@@ -1157,7 +1205,7 @@ window.startNavigation = async (targetRoomName) => {
         s.floors === 'all' || (s.floors === 'U' && floorId === 'ModelU.gltf')
     );
 
-    let minDist = Infinity, doorPoint = { x: 0, z: 0 };
+    let minDist = Infinity, doorPoint = { x: 0, z: 0 }, doorSeg = activeSegs[0];
     for (const seg of activeSegs) {
         let px, pz;
         if (seg.type === 'H') {
@@ -1170,22 +1218,16 @@ window.startNavigation = async (targetRoomName) => {
             pz = Math.max(zMin, Math.min(zMax, endCenter.z));
         }
         const d = Math.hypot(endCenter.x - px, endCenter.z - pz);
-        if (d < minDist) { minDist = d; doorPoint = { x: px, z: pz }; }
-    }
-
-    // --- Nearest graph node to the door point ---
-    let minNodeDist = Infinity, bestNodeId = 'SE';
-    for (const [id, node] of Object.entries(graphNodes)) {
-        const d = Math.hypot(doorPoint.x - node.x, doorPoint.z - node.z);
-        if (d < minNodeDist) { minNodeDist = d; bestNodeId = id; }
+        if (d < minDist) { minDist = d; doorPoint = { x: px, z: pz }; doorSeg = seg; }
     }
 
     // --- Build 3D waypoints with fixed floor Y (no terrain raycasting) ---
     const waypoints3D = [];
 
     if (isGroundFloor) {
-        // Same-floor: Aula → graph nodes → door point → room centre
-        const graphPath = findShortestPath('Aula', bestNodeId);
+        // Same-floor: start → entry node (no overshoot) → door point → room centre
+        const eNode = entryNode('RingS_Mid', doorSeg, doorPoint);
+        const graphPath = findShortestPath('RingS_Mid', eNode);
         for (const node of graphPath)
             waypoints3D.push(new THREE.Vector3(node.x, groundY, node.z));
         waypoints3D.push(new THREE.Vector3(doorPoint.x, groundY, doorPoint.z));
@@ -1193,8 +1235,8 @@ window.startNavigation = async (targetRoomName) => {
     } else {
         // Multi-floor — three phases:
 
-        // Phase 1: walk along E floor from Aula to the staircase node
-        const toStair = findShortestPath('Aula', 'Stair');
+        // Phase 1: walk along E floor from RingS_Mid to the staircase
+        const toStair = findShortestPath('RingS_Mid', 'Stair');
         for (const node of toStair)
             waypoints3D.push(new THREE.Vector3(node.x, groundY, node.z));
 
@@ -1211,9 +1253,10 @@ window.startNavigation = async (targetRoomName) => {
             ));
         }
 
-        // Phase 3: walk along target floor from staircase to room
-        const fromStair = findShortestPath('Stair', bestNodeId);
-        for (let i = 1; i < fromStair.length; i++)   // skip index 0 (Stair, already placed)
+        // Phase 3: walk along target floor — entry node (no overshoot) → door → room
+        const eNode = entryNode('Stair', doorSeg, doorPoint);
+        const fromStair = findShortestPath('Stair', eNode);
+        for (let i = 1; i < fromStair.length; i++)
             waypoints3D.push(new THREE.Vector3(fromStair[i].x, targetFloorY, fromStair[i].z));
         waypoints3D.push(new THREE.Vector3(doorPoint.x, targetFloorY, doorPoint.z));
         waypoints3D.push(new THREE.Vector3(endCenter.x,  targetFloorY, endCenter.z));
