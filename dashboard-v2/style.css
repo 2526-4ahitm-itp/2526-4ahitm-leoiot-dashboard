@@ -765,21 +765,19 @@ tbody td.status-medium {
 	}
 
 	.sensor-filter-tabs {
-		flex-wrap: nowrap;
+		flex-wrap: wrap;
+		gap: 5px;
 		justify-content: flex-start;
-		overflow-x: auto;
-		scrollbar-width: none;
+		overflow-x: visible;
 	}
 
-	.sensor-filter-tabs::-webkit-scrollbar {
-		display: none;
-	}
-
-	.filter-tab {
+	/* Higher specificity than pointer:coarse .filter-tab — wins regardless of cascade order */
+	.sensor-filter-tabs .filter-tab {
 		flex: 0 0 auto;
 		white-space: nowrap;
-		padding: 6px 12px;
-		font-size: 12px;
+		padding: 5px 10px;
+		font-size: 11px;
+		min-height: 34px;
 	}
 
 	.sensor-selector-card {
