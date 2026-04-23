@@ -753,12 +753,14 @@ tbody td.status-medium {
 	.sensor-selector-header {
 		flex-direction: column;
 		align-items: stretch;
+		justify-content: flex-start;
 		gap: 8px;
 	}
 
-	/* Search + filter tabs on the same row */
-	.sensor-search-container {
-		flex: 1;
+	.sensor-search-container,
+	.sensor-dropdown-container {
+		flex: none;
+		width: 100%;
 		min-width: 0;
 	}
 
@@ -802,17 +804,18 @@ tbody td.status-medium {
 	}
 
 	.card-content .value {
-		font-size: clamp(20px, 6vw, 26px);
+		font-size: clamp(15px, 4vw, 18px);
 		word-break: break-word;
+		line-height: 1.2;
 	}
 
 	.card-content h3 {
-		font-size: 12px;
-		margin-bottom: 4px;
+		font-size: 11px;
+		margin-bottom: 3px;
 	}
 
 	.card-content .sensor-label {
-		font-size: 11px;
+		font-size: 10px;
 	}
 
 	.summary-cards {
@@ -840,9 +843,22 @@ tbody td.status-medium {
 	}
 
 	.pv-details-grid {
-		grid-template-columns: 1fr;
-		gap: 1rem;
-		margin-top: 1rem;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 8px;
+		margin-top: 12px;
+	}
+
+	.pv-detail-item {
+		padding: 10px 12px;
+		gap: 3px;
+	}
+
+	.pv-detail-item .label {
+		font-size: 0.7rem;
+	}
+
+	.pv-detail-item .value {
+		font-size: 1rem;
 	}
 
 	.table-card {
@@ -856,7 +872,6 @@ tbody td.status-medium {
 	table,
 	thead,
 	tbody,
-	tr,
 	th,
 	td {
 		display: block;
@@ -868,43 +883,80 @@ tbody td.status-medium {
 
 	tbody {
 		display: grid;
-		gap: 12px;
+		gap: 8px;
 	}
 
+	/* 2-column grid card: Room+Status / Temp+CO2 / Last Update */
 	tbody tr {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		grid-template-areas:
+			"room status"
+			"temp co2"
+			"time time";
+		column-gap: 8px;
+		row-gap: 4px;
+		padding: 10px 12px;
+		border-radius: 10px;
 		background: rgba(255, 255, 255, 0.03);
 		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 12px;
-		padding: 12px;
 	}
 
 	tbody td {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 16px;
-		padding: 8px 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-		text-align: right;
-	}
-
-	tbody td:last-child {
-		border-bottom: none;
-		padding-bottom: 0;
-	}
-
-	tbody td::before {
-		content: attr(data-label);
-		color: rgba(255, 255, 255, 0.55);
-		font-size: 12px;
-		font-weight: 600;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
+		display: block;
+		padding: 0;
+		border: none;
+		font-size: 13px;
 		text-align: left;
 	}
 
+	tbody td::before {
+		display: none;
+	}
+
+	/* Room — top-left, bold */
+	tbody td:nth-child(1) {
+		grid-area: room;
+		font-size: 14px;
+		font-weight: 600;
+		align-self: center;
+	}
+
+	/* Temperature — middle-left */
+	tbody td:nth-child(2) {
+		grid-area: temp;
+		font-size: 13px;
+	}
+
+	/* CO2 — middle-right */
+	tbody td:nth-child(3) {
+		grid-area: co2;
+		font-size: 13px;
+		text-align: right;
+	}
+
+	/* Last Update — bottom, full width, subtle */
+	tbody td:nth-child(4) {
+		grid-area: time;
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.38);
+	}
+
+	/* Status — top-right */
+	tbody td:nth-child(5) {
+		grid-area: status;
+		font-size: 12px;
+		text-align: right;
+		align-self: center;
+	}
+
+	tbody td:last-child {
+		border: none;
+		padding: 0;
+	}
+
 	.table-pagination {
-		padding: 16px 0 0;
+		padding: 12px 0 0;
 	}
 
 	.show-more-btn {
@@ -931,11 +983,6 @@ tbody td.status-medium {
 		height: 220px;
 	}
 
-	tbody td {
-		flex-direction: column;
-		align-items: flex-start;
-		text-align: left;
-	}
 }
 
 /* Touch-friendly tap targets */
