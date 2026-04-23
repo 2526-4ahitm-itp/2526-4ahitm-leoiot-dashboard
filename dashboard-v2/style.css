@@ -7,6 +7,7 @@
 
 html {
 	scroll-behavior: smooth;
+	overflow-x: hidden;
 }
 
 :root {
@@ -752,14 +753,19 @@ tbody td.status-medium {
 	.sensor-selector-header {
 		flex-direction: column;
 		align-items: stretch;
-		gap: 12px;
+		gap: 8px;
+	}
+
+	/* Search + filter tabs on the same row */
+	.sensor-search-container {
+		flex: 1;
+		min-width: 0;
 	}
 
 	.sensor-filter-tabs {
 		flex-wrap: nowrap;
 		justify-content: flex-start;
 		overflow-x: auto;
-		padding-bottom: 4px;
 		scrollbar-width: none;
 	}
 
@@ -770,32 +776,55 @@ tbody td.status-medium {
 	.filter-tab {
 		flex: 0 0 auto;
 		white-space: nowrap;
+		padding: 6px 12px;
+		font-size: 12px;
+	}
+
+	.sensor-selector-card {
+		padding: 12px var(--card-padding);
 	}
 
 	.summary-cards {
-		grid-template-columns: 1fr;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 12px;
 	}
 
 	.summary-card {
-		align-items: flex-start;
+		align-items: center;
+		gap: 10px;
 	}
 
 	.card-icon {
-		width: 52px;
-		height: 52px;
-		font-size: 30px;
+		width: 44px;
+		height: 44px;
+		font-size: 22px;
+		flex-shrink: 0;
 	}
 
 	.card-content .value {
-		font-size: clamp(24px, 7vw, 30px);
+		font-size: clamp(20px, 6vw, 26px);
 		word-break: break-word;
 	}
 
+	.card-content h3 {
+		font-size: 12px;
+		margin-bottom: 4px;
+	}
+
+	.card-content .sensor-label {
+		font-size: 11px;
+	}
+
+	.summary-cards {
+		margin-bottom: 12px;
+	}
+
 	.chart-header {
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 6px;
-		margin-bottom: 16px;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin-bottom: 12px;
 	}
 
 	.chart-header h2 {
@@ -906,17 +935,6 @@ tbody td.status-medium {
 		flex-direction: column;
 		align-items: flex-start;
 		text-align: left;
-	}
-}
-
-/* 2-column summary cards on medium-small phones */
-@media (min-width: 480px) and (max-width: 768px) {
-	.summary-cards {
-		grid-template-columns: repeat(2, 1fr);
-	}
-
-	.summary-card {
-		gap: 12px;
 	}
 }
 
