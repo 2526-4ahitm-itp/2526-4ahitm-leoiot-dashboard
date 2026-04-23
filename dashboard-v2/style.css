@@ -695,22 +695,41 @@ tbody td.status-medium {
 
 @media (max-width: 768px) {
 	.dashboard-header {
-		padding-top: 16px;
-		padding-bottom: 16px;
+		padding-top: 12px;
+		padding-bottom: 10px;
+		gap: 10px;
+	}
+
+	/* Compact 2-row header: [title + toggle] / [time range] */
+	.header-left {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		min-width: 0;
+		gap: 10px;
 	}
 
 	.dashboard-header h1 {
-		font-size: 22px;
-		letter-spacing: 1px;
+		font-size: 15px;
+		letter-spacing: 0.5px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		min-width: 0;
+		flex: 1;
+		font-weight: 500;
 	}
 
 	.dashboard-toggle {
-		width: 100%;
+		flex-shrink: 0;
+		width: auto;
 	}
 
 	.view-btn {
-		flex: 1 1 0;
-		padding: 10px 12px;
+		flex: 0 0 auto;
+		padding: 7px 12px;
+		font-size: 0.8rem;
 	}
 
 	.time-range-selector {
@@ -866,7 +885,7 @@ tbody td.status-medium {
 
 @media (max-width: 480px) {
 	.dashboard-header h1 {
-		font-size: 20px;
+		font-size: 14px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
