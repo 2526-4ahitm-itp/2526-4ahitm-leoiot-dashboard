@@ -8,62 +8,69 @@ ifndef::imagesdir[:imagesdir: images]
 
 == Architecture & Design
 
-=== Data Flow Sequence Diagram
+=== Architecture Diagram
 
-The following diagram illustrates the real-time data flow from the sensors to the end-user dashboard.
-
-[plantuml, data-flow, png]
+[plantuml, architecture, png]
 ----
 @startuml
 skinparam handwritten false
 skinparam monochrome true
-skinparam packageStyle rect
 skinparam defaultFontName "Verdana"
+skinparam componentStyle rectangle
 
-actor "User" as user
-participant "Dashboard-v2\n(Browser)" as web
-participant "WebSocket Bridge" as ws
-participant "Telegraf" as telegraf
+component "fake-sensors" as sensors
+component "solax-collector" as solax
+queue "Mosquitto" as mqtt
+component "Telegraf" as telegraf
+component "mqtt-ws-bridge" as wsbridge
 database "InfluxDB" as influx
-queue "Mosquitto\n(MQTT Broker)" as mqtt
-participant "Sensor Data Generator\n(Quarkus)" as sensors
+component "Nginx" as nginx
+component "Dashboard-v2" as dashboard
+component "3D Explorer" as explorer
+cloud "Solax API" as solaxapi
 
-== Periodic Data Collection ==
+sensors --> mqtt : MQTT publish
+solax --> solaxapi : REST poll
+solaxapi --> solax
+solax --> influx : write solax_stats
+mqtt --> telegraf : subscribe
+telegraf --> influx : write measurements
+mqtt --> wsbridge : subscribe
+wsbridge --> nginx : WebSocket
+influx --> nginx : HTTP
+nginx --> dashboard : WS + REST
+nginx --> explorer : WS + REST
 
-sensors -> mqtt : Publish room data\nTopic: room-temperature\nPayload: {"room": "105", "temperature": 22.5}
-mqtt -> telegraf : Forward message
-telegraf -> influx : Write to bucket "server_data"\nMeasurement: room_temperature
-
-== Real-time Visualization (WebSocket) ==
-
-user -> web : Opens Dashboard
-web -> ws : Connect & Subscribe\n{"type": "subscribe", "room": "105"}
-mqtt -> ws : Forward live message
-ws -> web : Send live update\n{"type": "temp", "room": "105", "value": 22.5}
-web -> user : Update Heatmap / Chart
-
-== Historical Data (InfluxDB API) ==
-
-user -> web : Selects Date Range
-web -> influx : Query via Flux API\n/api/v2/query
-influx -> web : Return CSV data
-web -> user : Render Historical Charts
 @enduml
 ----
 
 === Component Specification
 
-==== MQTT Topic Hierarchy
+==== Services
 
-The project uses the following MQTT topics for communication:
+[cols="1,2,2", options="header"]
+|===
+| Service | Technology | Role
+| `fake-sensors` | Node.js | Simulates room sensors; publishes temperature and CO2 to Mosquitto every 10 s.
+| `mqtt-ws-bridge` | Node.js (`mqtt` + `ws`) | Subscribes to Mosquitto, caches latest value per room, fans out live updates to WebSocket clients.
+| `telegraf` | Telegraf | Consumes MQTT topics and writes measurements to InfluxDB.
+| `solax-collector` | Node.js (`axios`) | Polls Solax Cloud REST API every 5 min and writes PV metrics to InfluxDB.
+| `influxdb` | InfluxDB v2 | Time-series store for all historical sensor and PV data (bucket: `server_data`).
+| `mosquitto` | Mosquitto | MQTT broker; central message bus between sensors and consumers.
+| `nginx` | Nginx | Reverse proxy: routes `/ws` → mqtt-ws-bridge, `/influx` → InfluxDB, `/solax` → Solax API.
+| `dashboard-v2` | Vite + Chart.js | Sensor dashboard: live table, temperature/CO2 charts, PV view.
+| `frontend` (3D Explorer) | Vite + Three.js | 3D building model with heatmap, room info, and animated indoor navigation.
+|===
+
+==== MQTT Topic Hierarchy
 
 [cols="1,2,2", options="header"]
 |===
 | Topic | Format | Description
-| `room-temperature` | JSON: `{"room": "ID", "temperature": float}` | Periodic temperature updates for all rooms.
-| `nili3/sensor/nili3_co2/state` | Value (Float) | CO2 levels for Room 105 (special sensor).
-| `nili3/sensor/nili3_temperature/state` | Value (Float) | High-resolution temperature for Room 105.
-| `nili3/sensor/+/state` | Value (Float) | Generic pattern for other Nili sensors.
+| `room-temperature` | JSON: `{"room": "ID", "temperature": float}` | Periodic temperature for all simulated rooms (published by fake-sensors).
+| `nili3/sensor/<room>_co2/state` | Float (plain text) | CO2 reading for a specific room, e.g. `nili3/sensor/105_co2/state`.
+| `nili3/sensor/nili3_co2/state` | Float (plain text) | CO2 for Room 105 from the physical Nili3 sensor.
+| `nili3/sensor/nili3_temperature/state` | Float (plain text) | Temperature for Room 105 from the physical Nili3 sensor.
 |===
 
 ==== InfluxDB Schema (Bucket: `server_data`)
@@ -71,9 +78,9 @@ The project uses the following MQTT topics for communication:
 [cols="1,1,2,2", options="header"]
 |===
 | Measurement | Field | Tags | Description
-| `room_temperature` | `temperature` | `room` | Standardized room temperatures.
-| `mqtt_consumer` | `value` | `topic` | Raw data from various MQTT topics (CO2, power, etc).
-| `pv_data` | (multiple) | `plant_id` | Solar plant metrics (yield, consumption, battery).
+| `room_temperature` | `temperature` | `room` | Standardized room temperatures written by Telegraf.
+| `mqtt_consumer` | `value` | `topic` | Raw MQTT payloads (CO2 and Nili3 temperature) written by Telegraf.
+| `solax_stats` | `daily_yield`, `consumption`, `daily_charged`, `daily_discharged`, `daily_imported`, `daily_exported`, `total_yield` | — | PV plant metrics written by solax-collector.
 |===
 
 == Functional Requirements
