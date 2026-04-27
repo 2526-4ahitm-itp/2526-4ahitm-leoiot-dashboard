@@ -1252,45 +1252,34 @@ window.startNavigation = async (targetRoomName) => {
         }
     }
 
-    // Build 3D waypoints — all Y values are fixed floor heights + trail offset
+    // Build 3D waypoints — all Y values are fixed floor heights + trail offset.
+    // The trail stops at the door point on the corridor and never enters room geometry.
+    const entX = graphNodes['Entrance'].x;
+    const entZ = graphNodes['Entrance'].z;
+
     const waypoints3D = [];
-    let stairClimbEndPos = null; // 3D position at top of staircase climb (for multi-floor)
+    let stairClimbEndPos = null; // set for multi-floor: top of the vertical rise
 
     if (isGroundFloor) {
-        // Entrance centre → corridor entry node → door point → room centre (all on ground floor)
+        // Entrance → corridor graph (axis-aligned) → door point on corridor
+        waypoints3D.push(new THREE.Vector3(entX, groundY, entZ));
         const eNode = entryNode('Entrance', doorSeg, doorPoint);
         const graphPath = findShortestPath('Entrance', eNode);
-        for (const node of graphPath)
-            waypoints3D.push(new THREE.Vector3(node.x, groundY, node.z));
+        for (let i = 1; i < graphPath.length; i++)
+            waypoints3D.push(new THREE.Vector3(graphPath[i].x, groundY, graphPath[i].z));
         waypoints3D.push(new THREE.Vector3(doorPoint.x, groundY, doorPoint.z));
-        waypoints3D.push(new THREE.Vector3(endCenter.x,  groundY, endCenter.z));
     } else {
-        // Phase 1: walk from Entrance to the staircase on the ground floor
-        const toStair = findShortestPath('Entrance', 'Stair');
-        for (const node of toStair)
-            waypoints3D.push(new THREE.Vector3(node.x, groundY, node.z));
-
-        // Phase 2: go straight up (or down) at the staircase XZ position
-        const stairX = graphNodes['Stair'].x;
-        const stairZ = graphNodes['Stair'].z;
-        const STAIR_STEPS = 16;
-        for (let i = 1; i <= STAIR_STEPS; i++) {
-            const t = i / STAIR_STEPS;
-            waypoints3D.push(new THREE.Vector3(
-                stairX,
-                groundY + (targetFloorY - groundY) * t,
-                stairZ
-            ));
-        }
+        // Phase 1: go straight up (or down for basement) at the Entrance XZ position
+        waypoints3D.push(new THREE.Vector3(entX, groundY,      entZ));
+        waypoints3D.push(new THREE.Vector3(entX, targetFloorY, entZ));
         stairClimbEndPos = waypoints3D[waypoints3D.length - 1].clone();
 
-        // Phase 3: walk along the target floor from the staircase to the destination
-        const eNode = entryNode('Stair', doorSeg, doorPoint);
-        const fromStair = findShortestPath('Stair', eNode);
-        for (let i = 1; i < fromStair.length; i++)
-            waypoints3D.push(new THREE.Vector3(fromStair[i].x, targetFloorY, fromStair[i].z));
+        // Phase 2: navigate from Entrance on the target floor along corridors to door point
+        const eNode = entryNode('Entrance', doorSeg, doorPoint);
+        const fromEntrance = findShortestPath('Entrance', eNode);
+        for (let i = 1; i < fromEntrance.length; i++)
+            waypoints3D.push(new THREE.Vector3(fromEntrance[i].x, targetFloorY, fromEntrance[i].z));
         waypoints3D.push(new THREE.Vector3(doorPoint.x, targetFloorY, doorPoint.z));
-        waypoints3D.push(new THREE.Vector3(endCenter.x,  targetFloorY, endCenter.z));
     }
 
     // Densely interpolate waypoints into a smooth point array
@@ -1404,7 +1393,7 @@ window.startNavigation = async (targetRoomName) => {
         if (navAnimationProgress < 1) {
             navTimer = requestAnimationFrame(animateNav);
         } else {
-            controls.target.copy(endCenter);
+            controls.target.set(doorPoint.x, targetFloorY, doorPoint.z);
             controls.update();
         }
     };
