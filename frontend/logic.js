@@ -546,6 +546,7 @@ window.showOnly = (id) => {
 };
 
 window.handleButtonClick = (buttonElement, modelId) => {
+    clearNavigation();
     const container = document.getElementById('button-container');
     const buttons = container.querySelectorAll('button');
     buttons.forEach(btn => btn.classList.remove('active'));
@@ -920,11 +921,23 @@ function updateRoomInfoPanel(objectName, roomTag) {
 }
 
 let navPath = null;
+let navPathLower = null; // ghost ground-floor tube shown after floor switch
 let navDot = null;
 let navAnimationProgress = 0;
 let isNavigating = false;
 let navPoints = [];
 let navTimer = null;
+
+function clearNavigation() {
+    if (navPath)      { scene.remove(navPath);      navPath      = null; }
+    if (navPathLower) { scene.remove(navPathLower); navPathLower = null; }
+    if (navDot)       { scene.remove(navDot);       navDot       = null; }
+    if (navTimer)     { cancelAnimationFrame(navTimer); navTimer  = null; }
+    isNavigating = false;
+    navPoints = [];
+    navAnimationProgress = 0;
+}
+window.clearNavigation = clearNavigation;
 
 window.initNavigationUI = () => {
     const searchInput = document.getElementById('room-search');
@@ -1062,6 +1075,7 @@ const graphNodes = {
     'U_WN_End':  { x: -41.45, z: -51.0  }, // north end of west extension
     'U_Top_W':   { x: -57.9,  z: -52.0  }, // far-north corridor, west end
     'U_Top_E':   { x:  16.2,  z: -52.0  }, // far-north corridor → NorthW
+    'Entrance':  { x:   5.5,  z:  -4.4  }, // Aula / entrance hall centre
 };
 
 const graphEdges = [
@@ -1085,6 +1099,9 @@ const graphEdges = [
     ['U_WN_End', 'U_Top_W'],
     ['U_Top_W', 'U_Top_E'],
     ['U_Top_E', 'N_End'],
+    // Entrance hall: straight north to staircase, straight south to south-ring mid
+    ['Entrance', 'Stair'],
+    ['Entrance', 'RingS_Mid'],
 ];
 
 const graph = {};
@@ -1164,6 +1181,8 @@ window.startNavigation = async (targetRoomName) => {
     inputName = inputName.trim();
     if (!inputName) return;
 
+    clearNavigation();
+
     const navBtn = document.getElementById('nav-btn');
     if (navBtn) { navBtn.textContent = '...'; navBtn.style.opacity = '0.7'; }
 
@@ -1185,7 +1204,6 @@ window.startNavigation = async (targetRoomName) => {
     const name = normalizeRoomName(targetMesh.name);
     document.getElementById('room-search').value = name;
 
-    // Room bounding-box centre (X,Z for snapping; Y replaced by FLOOR_Y)
     const endBox = new THREE.Box3().setFromObject(targetMesh);
     const endCenter = new THREE.Vector3();
     endBox.getCenter(endCenter);
@@ -1200,7 +1218,7 @@ window.startNavigation = async (targetRoomName) => {
     const groundY      = FLOOR_Y['ModelE.gltf'] + TRAIL_OFFSET;
     const targetFloorY = FLOOR_Y[floorId]       + TRAIL_OFFSET;
 
-    // --- Snap room centre to nearest hallway centreline (door point) ---
+    // Snap room centre to nearest hallway centreline (door point)
     const activeSegs = segments.filter(s =>
         s.floors === 'all' || (s.floors === 'U' && floorId === 'ModelU.gltf')
     );
@@ -1221,29 +1239,41 @@ window.startNavigation = async (targetRoomName) => {
         if (d < minDist) { minDist = d; doorPoint = { x: px, z: pz }; doorSeg = seg; }
     }
 
-    // --- Build 3D waypoints with fixed floor Y (no terrain raycasting) ---
+    // Always start by showing the ground floor model (navigation begins at the entrance)
+    window.showOnly('ModelE.gltf');
+    // Update button active state to reflect ground floor
+    {
+        const container = document.getElementById('button-container');
+        if (container) {
+            container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            const groundBtn = Array.from(container.querySelectorAll('button'))
+                .find(b => b.textContent.trim() === 'Ground');
+            if (groundBtn) groundBtn.classList.add('active');
+        }
+    }
+
+    // Build 3D waypoints — all Y values are fixed floor heights + trail offset
     const waypoints3D = [];
+    let stairClimbEndPos = null; // 3D position at top of staircase climb (for multi-floor)
 
     if (isGroundFloor) {
-        // Same-floor: start → entry node (no overshoot) → door point → room centre
-        const eNode = entryNode('RingS_Mid', doorSeg, doorPoint);
-        const graphPath = findShortestPath('RingS_Mid', eNode);
+        // Entrance centre → corridor entry node → door point → room centre (all on ground floor)
+        const eNode = entryNode('Entrance', doorSeg, doorPoint);
+        const graphPath = findShortestPath('Entrance', eNode);
         for (const node of graphPath)
             waypoints3D.push(new THREE.Vector3(node.x, groundY, node.z));
         waypoints3D.push(new THREE.Vector3(doorPoint.x, groundY, doorPoint.z));
         waypoints3D.push(new THREE.Vector3(endCenter.x,  groundY, endCenter.z));
     } else {
-        // Multi-floor — three phases:
-
-        // Phase 1: walk along E floor from RingS_Mid to the staircase
-        const toStair = findShortestPath('RingS_Mid', 'Stair');
+        // Phase 1: walk from Entrance to the staircase on the ground floor
+        const toStair = findShortestPath('Entrance', 'Stair');
         for (const node of toStair)
             waypoints3D.push(new THREE.Vector3(node.x, groundY, node.z));
 
-        // Phase 2: climb / descend (X,Z fixed at staircase, Y interpolates)
+        // Phase 2: go straight up (or down) at the staircase XZ position
         const stairX = graphNodes['Stair'].x;
         const stairZ = graphNodes['Stair'].z;
-        const STAIR_STEPS = 14;
+        const STAIR_STEPS = 16;
         for (let i = 1; i <= STAIR_STEPS; i++) {
             const t = i / STAIR_STEPS;
             waypoints3D.push(new THREE.Vector3(
@@ -1252,8 +1282,9 @@ window.startNavigation = async (targetRoomName) => {
                 stairZ
             ));
         }
+        stairClimbEndPos = waypoints3D[waypoints3D.length - 1].clone();
 
-        // Phase 3: walk along target floor — entry node (no overshoot) → door → room
+        // Phase 3: walk along the target floor from the staircase to the destination
         const eNode = entryNode('Stair', doorSeg, doorPoint);
         const fromStair = findShortestPath('Stair', eNode);
         for (let i = 1; i < fromStair.length; i++)
@@ -1262,7 +1293,7 @@ window.startNavigation = async (targetRoomName) => {
         waypoints3D.push(new THREE.Vector3(endCenter.x,  targetFloorY, endCenter.z));
     }
 
-    // --- Linear interpolation along waypoints (no terrain raycasting) ---
+    // Densely interpolate waypoints into a smooth point array
     const rawPath = [];
     for (let i = 0; i < waypoints3D.length - 1; i++) {
         const p1 = waypoints3D[i], p2 = waypoints3D[i + 1];
@@ -1282,18 +1313,41 @@ window.startNavigation = async (targetRoomName) => {
     if (navPoints.length < 2)
         navPoints.push(navPoints[0].clone().add(new THREE.Vector3(0, 0.01, 0)));
 
-    // --- Tube + dot ---
-    const curve = new THREE.CatmullRomCurve3(navPoints, false, 'catmullrom', 0);
-    if (navPath)  scene.remove(navPath);
-    if (navDot)   scene.remove(navDot);
-    if (navTimer) cancelAnimationFrame(navTimer);
+    // Find where the staircase climb ends in navPoints (for floor-switch timing)
+    let navSplitIdx = navPoints.length - 1;
+    if (stairClimbEndPos) {
+        for (let i = 0; i < navPoints.length; i++) {
+            if (navPoints[i].distanceTo(stairClimbEndPos) < 1.0) {
+                navSplitIdx = i;
+                break;
+            }
+        }
+    }
+    const splitProgress = navSplitIdx / (navPoints.length - 1);
 
-    const tubeGeom = new THREE.TubeGeometry(curve, Math.max(128, navPoints.length * 2), 0.3, 8, false);
+    // Main tube (full path, animated incrementally)
+    const curve = new THREE.CatmullRomCurve3(navPoints, false, 'catmullrom', 0);
+    const totalSubdivs = Math.max(128, navPoints.length * 2);
+    const tubeGeom = new THREE.TubeGeometry(curve, totalSubdivs, 0.3, 8, false);
     const tubeMat  = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.85, depthTest: false });
     navPath = new THREE.Mesh(tubeGeom, tubeMat);
     tubeGeom.setDrawRange(0, 0);
     navPath.renderOrder = 999;
     scene.add(navPath);
+
+    // For multi-floor: build the ground-floor ghost tube (transparent, shown after floor switch)
+    if (!isGroundFloor && navSplitIdx < navPoints.length - 1) {
+        const lowerPts = navPoints.slice(0, navSplitIdx + 1);
+        if (lowerPts.length >= 2) {
+            const lowerCurve = new THREE.CatmullRomCurve3(lowerPts, false, 'catmullrom', 0);
+            const lowerSubdivs = Math.max(64, lowerPts.length * 2);
+            const lowerGeom = new THREE.TubeGeometry(lowerCurve, lowerSubdivs, 0.3, 8, false);
+            const lowerMat  = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.18, depthTest: false });
+            navPathLower = new THREE.Mesh(lowerGeom, lowerMat);
+            navPathLower.renderOrder = 997;
+            // Added to scene only after the floor switches
+        }
+    }
 
     const dotGeom = new THREE.SphereGeometry(1.2, 16, 16);
     const dotMat  = new THREE.MeshBasicMaterial({ color: 0xe74c3c, depthTest: false });
@@ -1311,7 +1365,8 @@ window.startNavigation = async (targetRoomName) => {
     navAnimationProgress = 0;
     isNavigating = true;
     let floorSwitched = false;
-    const midFloorY = (groundY + targetFloorY) / 2;
+
+    const totalVerts = tubeGeom.index ? tubeGeom.index.count : tubeGeom.attributes.position.count;
 
     const animateNav = () => {
         if (!isNavigating) return;
@@ -1321,18 +1376,29 @@ window.startNavigation = async (targetRoomName) => {
         const point = curve.getPoint(navAnimationProgress);
         navDot.position.copy(point);
 
-        // Switch displayed floor when dot crosses staircase midpoint
-        if (!isGroundFloor && !floorSwitched) {
-            const pastMid = (targetFloorY > groundY) ? point.y >= midFloorY : point.y <= midFloorY;
-            if (pastMid) {
-                window.showOnly(floorId);
-                floorSwitched = true;
+        // Switch to target floor model exactly when the staircase climb finishes
+        if (!isGroundFloor && !floorSwitched && navAnimationProgress >= splitProgress) {
+            window.showOnly(floorId);
+            // Update button active state
+            const floorLabel = { 'ModelU.gltf': 'Basement', 'Model1F.gltf': 'Floor\u00a01', 'Model2F.gltf': 'Floor\u00a02' }[floorId];
+            const container = document.getElementById('button-container');
+            if (container && floorLabel) {
+                container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                const floorBtn = Array.from(container.querySelectorAll('button'))
+                    .find(b => b.textContent.trim() === floorLabel.trim());
+                if (floorBtn) floorBtn.classList.add('active');
+            }
+            floorSwitched = true;
+            // Make the ghost ground-floor tube appear (transparent, always visible through model)
+            if (navPathLower) {
+                scene.add(navPathLower);
+                const lv = navPathLower.geometry.index
+                    ? navPathLower.geometry.index.count
+                    : navPathLower.geometry.attributes.position.count;
+                navPathLower.geometry.setDrawRange(0, lv);
             }
         }
 
-        const totalVerts = tubeGeom.index
-            ? tubeGeom.index.count
-            : tubeGeom.attributes.position.count;
         tubeGeom.setDrawRange(0, Math.floor(totalVerts * navAnimationProgress));
 
         if (navAnimationProgress < 1) {
