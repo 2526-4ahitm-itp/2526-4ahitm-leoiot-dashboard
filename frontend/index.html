@@ -86,25 +86,25 @@
 				}
 			}
 
-			/* === Nav System Panel === */
-			#nav-system {
-				position: absolute;
-				top: 80px;
-				right: 20px;
-				background: rgba(0, 0, 0, 0.82);
-				padding: 15px;
-				border-radius: 8px;
-				color: white;
-				z-index: 1000;
-				display: flex;
-				flex-direction: column;
-				gap: 10px;
-				font-family: sans-serif;
-				box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-				width: 300px;
-				backdrop-filter: blur(12px);
-				border: 1px solid rgba(255, 255, 255, 0.08);
-			}
+/* === Nav System Panel === */
+#nav-system {
+	position: absolute;
+	top: 80px;
+	right: 20px;
+	background: rgba(0, 0, 0, 0.82);
+	padding: 15px;
+	border-radius: 8px;
+	color: white;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	font-family: sans-serif;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+	width: 360px; /* Further increased width to accommodate new button */
+	backdrop-filter: blur(12px);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
 
 			#nav-system h3 {
 				margin: 0;
@@ -383,9 +383,11 @@
 				transform: translateY(-2px);
 			}
 
-			.model-controls button:active {
-				transform: translateY(0);
-			}
+.model-controls button:active {
+    transform: translateY(0);
+}
+
+/* Swipe effect removed - using camera animation instead */
 
 			.model-controls button.reset-btn {
 				background: #e74c3c;
@@ -462,15 +464,16 @@
 			</div>
 		</div>
 
-		<div class="model-controls" id="button-container">
-			<button class="nav-inline-btn" onclick="toggleNavPanel()" id="nav-toggle-btn" aria-label="Open navigation">🧭</button>
-			<button onclick="handleButtonClick(this, 'ModelU.gltf')">Basement</button>
-			<button onclick="handleButtonClick(this, 'ModelE.gltf')">Ground</button>
-			<button onclick="handleButtonClick(this, 'Model1F.gltf')">Floor&nbsp;1</button>
-			<button onclick="handleButtonClick(this, 'Model2F.gltf')">Floor&nbsp;2</button>
-			<button onclick="handleButtonClick(this, 'ModelFull.gltf')" class="reset-btn">Reset View</button>
-			<button onclick="updateBuildingHeatmap()" id="heatMapButton">Temperature</button>
-			<button onclick="updateCO2Heatmap()" id="co2HeatmapButton">CO2</button>
-		</div>
+<div class="model-controls" id="button-container">
+    <button class="nav-inline-btn" onclick="toggleNavPanel()" id="nav-toggle-btn" aria-label="Open navigation">🧭</button>
+    <button onclick="handleButtonClick(this, 'ModelU.gltf')">Basement</button>
+    <button onclick="handleButtonClick(this, 'ModelE.gltf')">Ground</button>
+    <button onclick="handleButtonClick(this, 'Model1F.gltf')">Floor&nbsp;1</button>
+    <button onclick="handleButtonClick(this, 'Model2F.gltf')">Floor&nbsp;2</button>
+    <button onclick="handleButtonClick(this, 'ModelT.gltf')">Gym</button>
+    <button onclick="handleButtonClick(this, 'ModelFull.gltf')" class="reset-btn">Reset View</button>
+    <button onclick="updateBuildingHeatmap()" id="heatMapButton">Temperature</button>
+    <button onclick="updateCO2Heatmap()" id="co2HeatmapButton">CO2</button>
+</div>
 	</body>
 </html>

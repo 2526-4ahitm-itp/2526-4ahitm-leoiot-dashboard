@@ -29,6 +29,10 @@ labelRenderer.domElement.style.pointerEvents = 'none'; // Allows clicking throug
 document.body.appendChild(labelRenderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
+// Store initial camera state for reset
+const initialCameraPosition = camera.position.clone();
+const initialCameraRotation = camera.rotation.clone();
+const initialControlsTarget = controls.target.clone();
 
 /** * 2. LIGHTING
  **/
@@ -67,7 +71,7 @@ const glassMaterial = new THREE.MeshStandardMaterial({
 
 /** * 4. MODEL LOADING & CACHE
  **/
-const modelIds = ['ModelU.gltf','ModelE.gltf','Model1F.gltf','Model2F.gltf','ModelFull.gltf'];
+const modelIds = ['ModelU.gltf','ModelE.gltf','Model1F.gltf','Model2F.gltf','ModelFull.gltf','ModelT.gltf'];
 const modelCache = {};
 let currentModel = null;
 let clickedObject = null;
@@ -76,7 +80,8 @@ let activeHeatmapType = null; // null, 'temp', 'co2'
 function setHeatmapButtonState(modelId) {
     const tempBtn = document.getElementById('heatMapButton');
     const co2Btn = document.getElementById('co2HeatmapButton');
-    const enabled = modelId !== 'ModelFull.gltf';
+    // Enable heatmap only for floor models (U, E, 1F, 2F)
+    const enabled = ['ModelU.gltf', 'ModelE.gltf', 'Model1F.gltf', 'Model2F.gltf'].includes(modelId);
 
     if (tempBtn) {
         tempBtn.disabled = !enabled;
@@ -530,8 +535,44 @@ window.showOnly = (id) => {
     currentModel = modelCache[id];
     scene.add(currentModel);
 
-    if (id === 'ModelFull.gltf') {
-        camera.position.set(100, 80, 100);
+    // Store initial camera state for reset (when not going to gym)
+    if (id !== 'ModelT.gltf' && !window.initialCameraPosition) {
+        window.initialCameraPosition = camera.position.clone();
+        window.initialCameraRotation = camera.rotation.clone();
+        // Also store the OrbitControls target if it exists
+        if (controls.target) {
+            window.initialControlsTarget = controls.target.clone();
+        }
+    }
+
+// Handle camera animation based on model
+    if (id === 'ModelT.gltf') {
+        // Going TO gym - animate to gym rotation
+        const targetRotation = getCameraRotationForModel(id);
+        console.log('ANIMATING TO GYM - targetRotation:', targetRotation.toArray());
+        console.log('Current rotation before anim:', camera.rotation.clone().toArray());
+        // Temporarily disable OrbitControls to prevent conflict
+        controls.enabled = false;
+        animateCameraRotationTo(targetRotation, () => {
+            // Re-enable OrbitControls after animation
+            controls.enabled = true;
+        });
+    } else if (window.initialCameraRotation) {
+        // Going FROM gym back to school - restore initial camera state
+        console.log('ANIMATING FROM GYM - targetRotation:', window.initialCameraRotation.toArray());
+        console.log('Current rotation before anim:', camera.rotation.clone().toArray());
+        // Temporarily disable OrbitControls to prevent conflict
+        controls.enabled = false;
+        animateCameraRotationTo(window.initialCameraRotation, () => {
+            // Re-enable OrbitControls after animation
+            controls.enabled = true;
+            // Reset stored values after use so we capture them again next time
+            window.initialCameraPosition = null;
+            window.initialCameraRotation = null;
+            if (window.initialControlsTarget) {
+                window.initialControlsTarget = null;
+            }
+        });
     }
 
     // If heatmap was already on, refresh it for the new floor
@@ -542,15 +583,81 @@ window.showOnly = (id) => {
         activeHeatmapType = null;
         window.updateCO2Heatmap();
     }
-
 };
 
+// Get target camera rotation for each model
+function getCameraRotationForModel(modelId) {
+    // Default rotation (looking at center of school)
+    const defaultRotation = new THREE.Euler(0, 0, 0, 'YXZ');
+    
+    switch(modelId) {
+        case 'ModelT.gltf': // Gym model
+            // Rotate camera to the right (negative Y rotation in Three.js)
+            // Increased rotation for more noticeable effect
+            // This will bring the gym (positioned to the right) into center view
+            return new THREE.Euler(0, -0.8, 0, 'YXZ'); // Approximately 46 degrees to the right
+        default:
+            // Default rotation for all other models (face center)
+            return defaultRotation;
+    }
+}
+
+// Animate camera rotation to target rotation
+function animateCameraRotationTo(targetRotation, callback) {
+    console.log('Starting animation from:', camera.rotation.clone(), 'to:', targetRotation.clone());
+    const startRotation = camera.rotation.clone();
+    const duration = 1000; // 1 second animation
+    const startTime = performance.now();
+
+    function animateRotation(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smoother animation
+        const easedProgress = progress < 0.5 
+            ? 2 * progress * progress 
+            : -1 + (4 - 2 * progress) * progress;
+        
+        // Interpolate between start and target rotation
+        camera.rotation.x = THREE.MathUtils.lerp(startRotation.x, targetRotation.x, easedProgress);
+        camera.rotation.y = THREE.MathUtils.lerp(startRotation.y, targetRotation.y, easedProgress);
+        camera.rotation.z = THREE.MathUtils.lerp(startRotation.z, targetRotation.z, easedProgress);
+        
+        // Update the camera's projection matrix (important for Three.js)
+        camera.updateProjectionMatrix();
+        
+        if (progress < 1) {
+            requestAnimationFrame(animateRotation);
+        } else {
+            console.log('Animation complete. Final rotation:', camera.rotation.clone());
+            // Call callback if provided
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
+        }
+    }
+    
+    requestAnimationFrame(animateRotation);
+}
+
 window.handleButtonClick = (buttonElement, modelId) => {
+    console.log('Button clicked for model:', modelId);
     clearNavigation();
     const container = document.getElementById('button-container');
     const buttons = container.querySelectorAll('button');
     buttons.forEach(btn => btn.classList.remove('active'));
     if (modelId !== 'ModelFull.gltf') buttonElement.classList.add('active');
+    
+    // Special handling for reset view - also reset camera to default
+    if (modelId === 'ModelFull.gltf') {
+        // Reset camera to default position and rotation
+        console.log('RESET VIEW - Resetting camera to default position');
+        camera.position.copy(initialCameraPosition);
+        camera.rotation.copy(initialCameraRotation);
+        controls.target.copy(initialControlsTarget);
+        controls.update();
+    }
+    
     window.showOnly(modelId);
 };
 
@@ -696,7 +803,7 @@ window.addEventListener('click', async (event) => {
     if (intersects.length > 0) {
         const obj = intersects[0].object;
 
-        if (/^[EU12]/.test(obj.name)) {
+        if (/^[EU12T]/.test(obj.name)) {
             const roomTag = normalizeRoomName(obj.name);
 
             // If heatmap is active, clicking a room should behave like "Clear Heatmap"
@@ -891,6 +998,8 @@ function normalizeRoomName(objectName) {
     if (!objectName) return objectName;
     let name = String(objectName).trim().split('_')[0];
     if (/^U\d{3}$/.test(name)) name = `U${name.substring(1, 3)}`;
+    // Handle gym room names (T followed by 3 digits)
+    if (/^T\d{3}$/.test(name)) name = `T${name.substring(1, 3)}`;
     return name;
 }
 
@@ -1034,6 +1143,7 @@ const FLOOR_Y = {
     'ModelE.gltf':   0.058,
     'Model1F.gltf':  3.205,
     'Model2F.gltf':  6.263,
+    'ModelT.gltf':   0.058, // Gym is on ground floor level
 };
 const TRAIL_OFFSET = 0.6;
 
