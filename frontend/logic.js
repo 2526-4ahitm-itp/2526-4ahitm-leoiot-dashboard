@@ -1038,94 +1038,85 @@ const FLOOR_Y = {
 const TRAIL_OFFSET = 0.6;
 
 // Corridor segments used to snap a room centre to the nearest hallway centreline.
-// 'upper' = ground floor + 1F + 2F (X/cross pattern through the Aula centre).
-// 'U'     = basement only (rectangular ring around the courtyard).
+// 'all'   = every floor (ring + wing corridors at their actual positions).
+// 'upper' = ground / 1F / 2F only (Aula cross segments for central rooms).
+// 'U'     = basement only (north extension beyond the ring).
 const segments = [
-    // ── Upper floors (E / 1F / 2F): two corridors crossing at the Aula ──────
-    // East-west corridor at z = -4.4 (centre of wing, spans west→east wing)
-    { id: 'EW_Main',  x1: -70.0,  x2:  70.0,  z1: -4.4,  z2: -4.4,  type: 'H', floors: 'upper' },
-    // North-south corridor at x = 5.5 (spans north wing through Aula to south wing)
-    { id: 'NS_Main',  x1:   5.5,  x2:   5.5,  z1: -70.0, z2:  70.0, type: 'V', floors: 'upper' },
-
-    // ── Basement (U): rectangular ring around the courtyard ──────────────────
-    { id: 'U_RingN',  x1: -11.15, x2:  16.2,  z1: -13.9, z2: -13.9, type: 'H', floors: 'U' },
-    { id: 'U_RingS',  x1: -11.15, x2:  16.2,  z1:   5.1, z2:   5.1, type: 'H', floors: 'U' },
-    { id: 'U_RingW',  x1: -11.15, x2: -11.15, z1: -13.9, z2:   5.1, type: 'V', floors: 'U' },
-    { id: 'U_RingE',  x1:  16.2,  x2:  16.2,  z1: -13.9, z2:   5.1, type: 'V', floors: 'U' },
-    // Basement wing corridors
-    { id: 'U_WestW',  x1: -70.0,  x2: -11.15, z1:   5.1, z2:   5.1, type: 'H', floors: 'U' },
-    { id: 'U_EastW',  x1:  16.2,  x2:  70.0,  z1: -13.9, z2: -13.9, type: 'H', floors: 'U' },
-    { id: 'U_NorthW', x1:  16.2,  x2:  16.2,  z1: -70.0, z2: -13.9, type: 'V', floors: 'U' },
-    { id: 'U_South1', x1: -11.15, x2: -11.15, z1:   5.1, z2:  70.0, type: 'V', floors: 'U' },
-    { id: 'U_South2', x1:  16.2,  x2:  16.2,  z1:   5.1, z2:  70.0, type: 'V', floors: 'U' },
-    // Basement north extension
-    { id: 'U_WestN',  x1: -41.45, x2: -41.45, z1: -51.0, z2:   5.1, type: 'V', floors: 'U' },
-    { id: 'U_TopH',   x1: -57.9,  x2:  16.2,  z1: -52.0, z2: -52.0, type: 'H', floors: 'U' },
+    // ── Ring (courtyard perimeter) — hallway edge used on every floor ─────────
+    { id: 'RingN',  x1: -11.15, x2:  16.2,  z1: -13.9, z2: -13.9, type: 'H', floors: 'all' },
+    { id: 'RingS',  x1: -11.15, x2:  16.2,  z1:   5.1, z2:   5.1, type: 'H', floors: 'all' },
+    { id: 'RingW',  x1: -11.15, x2: -11.15, z1: -13.9, z2:   5.1, type: 'V', floors: 'all' },
+    { id: 'RingE',  x1:  16.2,  x2:  16.2,  z1: -13.9, z2:   5.1, type: 'V', floors: 'all' },
+    // ── Wing corridors — extend from ring corners outward, every floor ─────────
+    { id: 'WestW',  x1: -70.0,  x2: -11.15, z1:   5.1, z2:   5.1, type: 'H', floors: 'all' },
+    { id: 'EastW',  x1:  16.2,  x2:  70.0,  z1: -13.9, z2: -13.9, type: 'H', floors: 'all' },
+    { id: 'NorthW', x1:  16.2,  x2:  16.2,  z1: -70.0, z2: -13.9, type: 'V', floors: 'all' },
+    { id: 'South1', x1: -11.15, x2: -11.15, z1:   5.1, z2:  70.0, type: 'V', floors: 'all' },
+    { id: 'South2', x1:  16.2,  x2:  16.2,  z1:   5.1, z2:  70.0, type: 'V', floors: 'all' },
+    // ── Aula cross corridors (upper floors) — rooms in central area snap here ──
+    { id: 'AulaEW', x1: -11.15, x2:  16.2,  z1:  -4.4, z2:  -4.4, type: 'H', floors: 'upper' },
+    { id: 'AulaNS', x1:   5.5,  x2:   5.5,  z1: -13.9, z2:   5.1, type: 'V', floors: 'upper' },
+    // ── Basement-only north extension ─────────────────────────────────────────
+    { id: 'U_WestN', x1: -41.45, x2: -41.45, z1: -51.0, z2:   5.1, type: 'V', floors: 'U' },
+    { id: 'U_TopH',  x1: -57.9,  x2:  16.2,  z1: -52.0, z2: -52.0, type: 'H', floors: 'U' },
 ];
 
 // Graph nodes (X, Z only — Y is resolved at runtime from FLOOR_Y).
-// Upper-floor navigation follows the X-corridor: all paths route through Entrance.
-// Basement uses a separate rectangular ring connected to Entrance via the NS axis.
+//
+// The Aula (entrance hall) has four arm-nodes that form an X:
+//   NorthAula / SouthAula on the NS arm (x = 5.5)
+//   WestAula  / EastAula  on the EW arm (z = −4.4)
+// These sit exactly on the ring boundary, so Dijkstra routes paths through the
+// centre of the building rather than around the ring perimeter.
 const graphNodes = {
-    // ── Upper-floor X-corridor ────────────────────────────────────────────────
-    'Entrance':     { x:   5.5,  z:  -4.4  }, // Aula crossing (EW ∩ NS corridors)
-    'W_End':        { x: -70.0,  z:  -4.4  }, // west wing far end  (EW corridor)
-    'E_End':        { x:  70.0,  z:  -4.4  }, // east wing far end  (EW corridor)
-    'N_End':        { x:   5.5,  z: -70.0  }, // north wing far end (NS corridor)
-    'S_End':        { x:   5.5,  z:  70.0  }, // south wing far end (NS corridor)
-
-    // ── Basement: NS-axis junctions with the courtyard ring ───────────────────
-    // These sit on x = 5.5 (the NS corridor) at the ring's N and S Z levels.
-    'U_RingN_Jct':  { x:   5.5,  z: -13.9  }, // NS corridor meets ring-north
-    'U_RingS_Jct':  { x:   5.5,  z:   5.1  }, // NS corridor meets ring-south
-
-    // ── Basement ring corners ─────────────────────────────────────────────────
-    'U_NW':         { x: -11.15, z: -13.9  },
-    'U_NE':         { x:  16.2,  z: -13.9  },
-    'U_SW':         { x: -11.15, z:   5.1  },
-    'U_SE':         { x:  16.2,  z:   5.1  },
-
-    // ── Basement wing ends ────────────────────────────────────────────────────
-    'U_W_End':      { x: -70.0,  z:   5.1  },
-    'U_E_End':      { x:  70.0,  z: -13.9  },
-    'U_N_End':      { x:  16.2,  z: -70.0  },
-    'U_S1_End':     { x: -11.15, z:  70.0  },
-    'U_S2_End':     { x:  16.2,  z:  70.0  },
-
-    // ── Basement north extension ──────────────────────────────────────────────
-    'U_WN_Jct':     { x: -41.45, z:   5.1  },
-    'U_WN_End':     { x: -41.45, z: -51.0  },
-    'U_Top_W':      { x: -57.9,  z: -52.0  },
-    'U_Top_E':      { x:  16.2,  z: -52.0  },
+    // ── Aula centre and its four arm-ends ─────────────────────────────────────
+    'Entrance':  { x:  5.5,   z:  -4.4 }, // X crossing inside the Aula
+    'WestAula':  { x: -11.15, z:  -4.4 }, // EW arm, west end  (on RingW)
+    'EastAula':  { x:  16.2,  z:  -4.4 }, // EW arm, east end  (on RingE)
+    'NorthAula': { x:  5.5,   z: -13.9 }, // NS arm, north end (on RingN)
+    'SouthAula': { x:  5.5,   z:   5.1 }, // NS arm, south end (on RingS)
+    // ── Ring corners (where Aula arms meet the wing corridors) ────────────────
+    'NW':        { x: -11.15, z: -13.9 },
+    'NE':        { x:  16.2,  z: -13.9 },
+    'SW':        { x: -11.15, z:   5.1 },
+    'SE':        { x:  16.2,  z:   5.1 },
+    // ── Wing far ends ─────────────────────────────────────────────────────────
+    'W_End':     { x: -70.0,  z:   5.1 },
+    'E_End':     { x:  70.0,  z: -13.9 },
+    'N_End':     { x:  16.2,  z: -70.0 },
+    'S1_End':    { x: -11.15, z:  70.0 },
+    'S2_End':    { x:  16.2,  z:  70.0 },
+    // ── Basement north extension ───────────────────────────────────────────────
+    'U_WN_Jct':  { x: -41.45, z:   5.1 },
+    'U_WN_End':  { x: -41.45, z: -51.0 },
+    'U_Top_W':   { x: -57.9,  z: -52.0 },
+    'U_Top_E':   { x:  16.2,  z: -52.0 },
 };
 
 const graphEdges = [
-    // ── Upper-floor X-corridor (all 4 arms radiate from Entrance) ─────────────
-    ['Entrance', 'W_End'],
-    ['Entrance', 'E_End'],
-    // NS corridor passes through basement ring junctions on the way to N/S ends
-    ['Entrance', 'U_RingN_Jct'], ['U_RingN_Jct', 'N_End'],
-    ['Entrance', 'U_RingS_Jct'], ['U_RingS_Jct', 'S_End'],
-
-    // ── Basement ring: connect junctions to ring corners ──────────────────────
-    ['U_RingN_Jct', 'U_NW'], ['U_RingN_Jct', 'U_NE'],
-    ['U_RingS_Jct', 'U_SW'], ['U_RingS_Jct', 'U_SE'],
-    // Ring sides (west and east walls of courtyard)
-    ['U_NW', 'U_SW'], ['U_NE', 'U_SE'],
-
-    // ── Basement wing corridors ───────────────────────────────────────────────
-    ['U_SW', 'U_W_End'],
-    ['U_NE', 'U_E_End'],
-    ['U_NE', 'U_N_End'],
-    ['U_SW', 'U_S1_End'],
-    ['U_SE', 'U_S2_End'],
-
+    // ── Aula EW arm: Entrance ↔ WestAula and Entrance ↔ EastAula ─────────────
+    ['Entrance', 'WestAula'],
+    ['Entrance', 'EastAula'],
+    // ── Aula NS arm: Entrance ↔ NorthAula and Entrance ↔ SouthAula ───────────
+    ['Entrance', 'NorthAula'],
+    ['Entrance', 'SouthAula'],
+    // ── Aula arm-ends → ring corners ─────────────────────────────────────────
+    ['WestAula',  'NW'], ['WestAula',  'SW'],
+    ['EastAula',  'NE'], ['EastAula',  'SE'],
+    ['NorthAula', 'NW'], ['NorthAula', 'NE'],
+    ['SouthAula', 'SW'], ['SouthAula', 'SE'],
+    // ── Wing corridors from ring corners ──────────────────────────────────────
+    ['SW', 'W_End'],
+    ['NE', 'E_End'],
+    ['NE', 'N_End'],
+    ['SW', 'S1_End'],
+    ['SE', 'S2_End'],
     // ── Basement north extension ──────────────────────────────────────────────
-    ['U_SW', 'U_WN_Jct'], ['U_WN_Jct', 'U_W_End'],
+    ['SW', 'U_WN_Jct'], ['U_WN_Jct', 'W_End'],
     ['U_WN_Jct', 'U_WN_End'],
     ['U_WN_End', 'U_Top_W'],
-    ['U_Top_W', 'U_Top_E'],
-    ['U_Top_E', 'U_N_End'],
+    ['U_Top_W',  'U_Top_E'],
+    ['U_Top_E',  'N_End'],
 ];
 
 const graph = {};
@@ -1244,6 +1235,7 @@ window.startNavigation = async (targetRoomName) => {
 
     // Snap room centre to nearest hallway centreline (door point)
     const activeSegs = segments.filter(s => {
+        if (s.floors === 'all')   return true;
         if (s.floors === 'upper') return floorId !== 'ModelU.gltf';
         if (s.floors === 'U')     return floorId === 'ModelU.gltf';
         return false;
