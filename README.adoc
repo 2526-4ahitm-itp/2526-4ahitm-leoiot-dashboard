@@ -83,8 +83,6 @@ docker compose down
 | Dashboard-v2 | 8081 | -
 |===
 
----
-
 
 == Security (MQTT)
 The MQTT Broker (Mosquitto) is **password protected**. Anonymous access is disabled.
@@ -127,5 +125,50 @@ The project uses a **System-level Nginx** as a reverse proxy.
 * Config location: `/etc/nginx/sites-available/leoiot`
 * To reload after config changes: `sudo systemctl reload nginx`
 
+
+== Database Backup
+
+InfluxDB data is backed up weekly via a shell script using the built-in `influx backup` CLI.
+
+=== Backup Details
+
+[cols="^.^1,^.<3", options="header"]
+|===
+| Property | Value
+| *Schedule* | Every Sunday at 02:00 UTC
+| *Location* | `/home/solmqadmin/influxdb-backups/`
+| *Retention* | Last 8 weeks
+| *Log* | `/home/solmqadmin/influxdb-backup.log`
+|===
+
+=== Scripts
+
+* `backup/backup.sh` — creates timestamped backup, prunes old ones
+* `backup/restore.sh` — restores a specific backup by date
+
+=== First-Time Setup (cron)
+
+The cron job must be registered manually on the VM once:
+
+[source,bash]
+----
+ssh solmqadmin@vm23.htl-leonding.ac.at
+crontab -e
+----
+
+Add this line:
+[source]
+----
+# Weekly InfluxDB backup (every Sunday 02:00) - leoiot dashboard
+0 2 * * 0 /home/solmqadmin/2526-4ahitm-leoiot-dashboard/backup/backup.sh >> /home/solmqadmin/influxdb-backup.log 2>&1
+----
+
+=== Restore
+
+[source,bash]
+----
+cd 2526-4ahitm-leoiot-dashboard
+bash backup/restore.sh 2026-05-07
+----
 
 *Built with* MQTT, InfluxDB, Grafana, Quarkus, Three.js, Chart.js
