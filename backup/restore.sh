@@ -7,12 +7,12 @@ set -euo pipefail
 if [ -z "${1:-}" ]; then
   echo "Usage: $0 <YYYY-MM-DD>"
   echo "Available backups:"
-  ls /opt/influxdb-backups/
+  ls "$HOME/influxdb-backups/"
   exit 1
 fi
 
 DATE=$1
-BACKUP_DIR="/opt/influxdb-backups"
+BACKUP_DIR="$HOME/influxdb-backups"
 TOKEN="ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A=="
 
 if [ ! -d "$BACKUP_DIR/$DATE" ]; then
