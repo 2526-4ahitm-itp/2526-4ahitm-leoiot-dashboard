@@ -23,6 +23,7 @@ services:
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==
     volumes:
       - influxdb_data:/var/lib/influxdb2
+      - influxdb_backups:/backups
     networks:
       - leoiot
 
@@ -155,3 +156,4 @@ networks:
 volumes:
   mosquitto_data:
   influxdb_data:
+  influxdb_backups:
