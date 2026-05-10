@@ -45,6 +45,8 @@ const TRANSLATIONS = {
 		solarPowerToday: 'Solarertrag heute', lifetimeTotal: 'Gesamtertrag',
 		totalGenerated: 'Gesamte Erzeugung', batteryUsage: 'Batterienutzung',
 		gridUsage: 'Netznutzung', importedExported: 'Bezug / Einspeisung',
+		batteryActivity: 'Heutige Aktivität',
+		updatedInit: 'Aktualisiert: --',
 		updatedAt: 'Aktualisiert: {time}',
 		chargingNet: 'Laden (netto)', dischargingNet: 'Entladen (netto)',
 		buyingNet: 'Bezug (netto)', sellingNet: 'Einspeisung (netto)',
@@ -81,6 +83,8 @@ const TRANSLATIONS = {
 		solarPowerToday: 'Solar Power Today', lifetimeTotal: 'Lifetime Total',
 		totalGenerated: 'Total Generated', batteryUsage: 'Battery Usage',
 		gridUsage: 'Grid Usage', importedExported: 'Imported / Exported',
+		batteryActivity: "Today's Activity",
+		updatedInit: 'Updated: --',
 		updatedAt: 'Updated: {time}',
 		chargingNet: 'Charging (Net)', dischargingNet: 'Discharging (Net)',
 		buyingNet: 'Buying (Net)', sellingNet: 'Selling (Net)',
@@ -164,6 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	customDate = todayStr;
 	currentTimeRange = 'custom';
 	document.getElementById('datePicker').value = todayStr;
+	document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
 	const _dateBtn = document.getElementById('btnDatePicker');
 	if (_dateBtn) {
 		_dateBtn.classList.add('active');
@@ -671,6 +676,14 @@ function applyTranslations() {
 	if (pvBattTitle) pvBattTitle.textContent = t('batteryUsage');
 	const pvGridTitle = document.getElementById('pvGridUsageTitle');
 	if (pvGridTitle) pvGridTitle.textContent = t('gridUsage');
+
+	// PV sublabels — set initial/fallback values; refreshAllData() overwrites with live data
+	const pvBattStatus = document.getElementById('pvBatteryStatus');
+	if (pvBattStatus) pvBattStatus.textContent = t('batteryActivity');
+	const pvGridStatus = document.getElementById('pvGridStatus');
+	if (pvGridStatus) pvGridStatus.textContent = t('importedExported');
+	const pvTimeLabel = document.getElementById('pvTimeLabel');
+	if (pvTimeLabel) pvTimeLabel.textContent = t('updatedInit');
 
 	// PV chart titles & subtitles
 	const pvSolarChart = document.getElementById('pvSolarChartTitle');
