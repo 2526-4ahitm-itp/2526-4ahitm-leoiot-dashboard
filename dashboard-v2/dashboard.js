@@ -156,6 +156,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// Initialize charts
 	initCharts();
+
+	// Default to today
+	const _d = new Date();
+	const _pad = n => n.toString().padStart(2, '0');
+	const todayStr = `${_d.getFullYear()}-${_pad(_d.getMonth()+1)}-${_pad(_d.getDate())}`;
+	customDate = todayStr;
+	currentTimeRange = 'custom';
+	document.getElementById('datePicker').value = todayStr;
+	const _dateBtn = document.getElementById('btnDatePicker');
+	if (_dateBtn) {
+		_dateBtn.classList.add('active');
+		_dateBtn.textContent = `🗓️ ${currentLang === 'de' ? 'Heute' : 'Today'}`;
+	}
+
 	applyTranslations();
 	updateNextDayBtn();
 
@@ -595,6 +609,11 @@ function applyTranslations() {
 	if (c3) c3.textContent = (currentTimeRange === 'custom' && !isTodaySelected()) ? t('avgTemp24h') : t('avg24h');
 	const c4 = document.getElementById('card4Title');
 	if (c4) c4.textContent = t('avgCo224h');
+
+	const c3Sub = document.getElementById('card3SubLabel');
+	if (c3Sub) c3Sub.textContent = t('temperature');
+	const c4Sub = document.getElementById('card4SubLabel');
+	if (c4Sub) c4Sub.textContent = t('co2Level');
 
 	// Sensor labels (all rooms / selected room)
 	const roomLabel = selectedSensor === 'all' ? t('allRooms') : `${t('room')} ${selectedSensor}`;
