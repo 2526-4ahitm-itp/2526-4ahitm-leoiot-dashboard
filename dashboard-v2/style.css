@@ -118,6 +118,46 @@ body {
 	gap: 20px;
 }
 
+.header-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+.lang-switcher {
+	display: flex;
+	background: rgba(255, 255, 255, 0.05);
+	padding: 4px;
+	border-radius: 20px;
+	gap: 2px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lang-btn {
+	background: transparent;
+	border: none;
+	color: rgba(255, 255, 255, 0.5);
+	padding: 5px 12px;
+	border-radius: 16px;
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.5px;
+	transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+	color: white;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.lang-btn.active {
+	background: rgba(255, 255, 255, 0.25);
+	color: white;
+}
+
 .header-left {
 	display: flex;
 	flex-direction: column;
@@ -691,8 +731,12 @@ tbody td.status-medium {
 		flex-direction: column;
 	}
 
-	.time-range-selector {
+	.header-right {
 		width: 100%;
+	}
+
+	.time-range-selector {
+		flex: 1;
 		justify-content: flex-start;
 	}
 

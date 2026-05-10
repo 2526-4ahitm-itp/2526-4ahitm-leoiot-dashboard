@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -12,7 +12,7 @@
 	</head>
 	<body>
 		<div id="loading">
-			<div class="loading-text">Loading Dashboard</div>
+			<div class="loading-text">Dashboard laden</div>
 			<div class="loading-bar-container">
 				<div class="loading-bar-progress"></div>
 			</div>
@@ -22,21 +22,27 @@
 			<div class="header-left">
 				<h1 id="dashboardTitle">🏢 LeoIOT Sensor Dashboard</h1>
 				<div class="dashboard-toggle" role="tablist" aria-label="Dashboard views">
-					<button onclick="switchView('sensors')" id="btnSensors" class="view-btn active" role="tab" aria-selected="true" aria-controls="sensorsView">Sensors</button>
+					<button onclick="switchView('sensors')" id="btnSensors" class="view-btn active" role="tab" aria-selected="true" aria-controls="sensorsView">Sensoren</button>
 					<button onclick="switchView('pv')" id="btnPV" class="view-btn" role="tab" aria-selected="false" aria-controls="pvView">PV System</button>
 				</div>
 			</div>
-			<div class="time-range-selector" role="group" aria-label="Time range selector">
-				<button onclick="setTimeRange('1h')" class="time-btn" aria-label="Last 1 hour">1h</button>
-				<button onclick="setTimeRange('6h')" class="time-btn active" aria-label="Last 6 hours">6h</button>
-				<button onclick="setTimeRange('24h')" class="time-btn" aria-label="Last 24 hours">24h</button>
-				<button onclick="setTimeRange('7d')" class="time-btn" aria-label="Last 7 days">7d</button>
-					<div class="date-picker-trigger">
-						<button onclick="navigateDay(-1)" class="time-btn day-nav-btn" id="btnPrevDay" title="Previous day" aria-label="Previous day">◀</button>
-						<button onclick="document.getElementById('datePicker').showPicker()" class="time-btn" id="btnDatePicker" title="Pick a specific date" aria-label="Select custom date">🗓️</button>
-						<button onclick="navigateDay(1)" class="time-btn day-nav-btn" id="btnNextDay" title="Next day" aria-label="Next day">▶</button>
-						<input type="date" id="datePicker" onchange="setSpecificDate(this.value)" class="hidden-date-picker" aria-hidden="true">
-					</div>
+			<div class="header-right">
+				<div class="time-range-selector" role="group" aria-label="Time range selector">
+					<button onclick="setTimeRange('1h')" class="time-btn" aria-label="Last 1 hour">1h</button>
+					<button onclick="setTimeRange('6h')" class="time-btn active" aria-label="Last 6 hours">6h</button>
+					<button onclick="setTimeRange('24h')" class="time-btn" aria-label="Last 24 hours">24h</button>
+					<button onclick="setTimeRange('7d')" class="time-btn" aria-label="Last 7 days">7d</button>
+						<div class="date-picker-trigger">
+							<button onclick="navigateDay(-1)" class="time-btn day-nav-btn" id="btnPrevDay" title="Vorheriger Tag" aria-label="Vorheriger Tag">◀</button>
+							<button onclick="document.getElementById('datePicker').showPicker()" class="time-btn" id="btnDatePicker" title="Datum auswählen" aria-label="Datum auswählen">🗓️</button>
+							<button onclick="navigateDay(1)" class="time-btn day-nav-btn" id="btnNextDay" title="Nächster Tag" aria-label="Nächster Tag">▶</button>
+							<input type="date" id="datePicker" onchange="setSpecificDate(this.value)" class="hidden-date-picker" aria-hidden="true">
+						</div>
+				</div>
+				<div class="lang-switcher" role="group" aria-label="Language">
+					<button class="lang-btn active" data-lang="de" onclick="switchLang('de')">DE</button>
+					<button class="lang-btn" data-lang="en" onclick="switchLang('en')">EN</button>
+				</div>
 			</div>
 		</header>
 
@@ -48,11 +54,11 @@
 					<div class="sensor-selector-card">
 						<div class="sensor-selector-header">
 							<div class="sensor-search-container">
-								<input 
-									type="text" 
-									id="sensorSearch" 
-									class="sensor-search" 
-									placeholder="🔍 Search room..."
+								<input
+									type="text"
+									id="sensorSearch"
+									class="sensor-search"
+									placeholder="🔍 Raum suchen..."
 									oninput="filterSensors()"
 									onfocus="filterSensors()"
 									autocomplete="off"
@@ -60,15 +66,15 @@
 								<div id="searchResults" class="search-results-popup"></div>
 							</div>
 							<div class="sensor-filter-tabs">
-								<button class="filter-tab active" onclick="filterByFloor('all')" data-floor="all">All</button>
+								<button class="filter-tab active" onclick="filterByFloor('all')" data-floor="all">Alle</button>
 								<button class="filter-tab" onclick="filterByFloor('1')" data-floor="1">Floor 1</button>
 								<button class="filter-tab" onclick="filterByFloor('2')" data-floor="2">Floor 2</button>
 								<button class="filter-tab" onclick="filterByFloor('E')" data-floor="E">Floor E</button>
-								<button class="filter-tab" onclick="filterByFloor('U')" data-floor="U">Basement</button>
+								<button class="filter-tab" onclick="filterByFloor('U')" data-floor="U">Keller</button>
 							</div>
 							<div class="sensor-dropdown-container">
 								<div id="roomDropdownTrigger" class="custom-dropdown-trigger" onclick="toggleRoomDropdown()">
-									🏠 Room 1Aula
+									🏠 Raum 1Aula
 								</div>
 								<div id="roomDropdownPopup" class="search-results-popup custom-dropdown-popup">
 									<!-- Dynamically populated -->
@@ -83,33 +89,33 @@
 					<div class="card summary-card">
 						<div class="card-icon">🌡️</div>
 						<div class="card-content">
-							<h3 id="card1Title">Temperature</h3>
+							<h3 id="card1Title">Temperatur</h3>
 							<div class="value" id="currentTemp">--°C</div>
-							<div class="sensor-label" id="tempSensorLabel">All Rooms</div>
+							<div class="sensor-label" id="tempSensorLabel">Alle Räume</div>
 						</div>
 					</div>
 					<div class="card summary-card">
 						<div class="card-icon">💨</div>
 						<div class="card-content">
-							<h3 id="card2Title">CO₂ Level</h3>
+							<h3 id="card2Title">CO₂-Wert</h3>
 							<div class="value" id="currentCo2">-- ppm</div>
-							<div class="sensor-label" id="co2SensorLabel">All Rooms</div>
+							<div class="sensor-label" id="co2SensorLabel">Alle Räume</div>
 						</div>
 					</div>
 					<div class="card summary-card">
 						<div class="card-icon">📈</div>
 						<div class="card-content">
-							<h3 id="card3Title">24h Average</h3>
+							<h3 id="card3Title">24h Durchschnitt</h3>
 							<div class="value" id="avgTemp24h">--°C</div>
-							<div class="sensor-label">Temperature</div>
+							<div class="sensor-label">Temperatur</div>
 						</div>
 					</div>
 					<div class="card summary-card">
 						<div class="card-icon">📊</div>
 						<div class="card-content">
-							<h3 id="card4Title">24h Average CO₂</h3>
+							<h3 id="card4Title">24h Durchschnitt CO₂</h3>
 							<div class="value" id="avgCo224h">-- ppm</div>
-							<div class="sensor-label">CO₂ Level</div>
+							<div class="sensor-label">CO₂-Wert</div>
 						</div>
 					</div>
 				</section>
@@ -118,29 +124,29 @@
 				<section class="charts-grid">
 					<div class="chart-card full-width">
 						<div class="chart-header">
-							<h2>Temperature History</h2>
-							<span class="chart-subtitle" id="tempChartSubtitle">All Rooms</span>
+							<h2 id="tempChartTitle">Temperaturverlauf</h2>
+							<span class="chart-subtitle" id="tempChartSubtitle">Alle Räume</span>
 						</div>
 						<div class="chart-container">
 							<canvas id="tempChart"></canvas>
 						</div>
 						<div class="chart-placeholder" id="tempPlaceholder">
 							<div class="placeholder-icon">📊</div>
-							<div class="placeholder-text">Select a specific room to view its temperature history</div>
+							<div class="placeholder-text" id="tempPlaceholderText">Wähle einen Raum um den Temperaturverlauf anzuzeigen</div>
 						</div>
 					</div>
 
 					<div class="chart-card full-width">
 						<div class="chart-header">
-							<h2>CO₂ History</h2>
-							<span class="chart-subtitle" id="co2ChartSubtitle">All Rooms</span>
+							<h2 id="co2ChartTitle">CO₂-Verlauf</h2>
+							<span class="chart-subtitle" id="co2ChartSubtitle">Alle Räume</span>
 						</div>
 						<div class="chart-container">
 							<canvas id="co2Chart"></canvas>
 						</div>
 						<div class="chart-placeholder" id="co2Placeholder">
 							<div class="placeholder-icon">💨</div>
-							<div class="placeholder-text">Select a specific room to view its CO₂ history</div>
+							<div class="placeholder-text" id="co2PlaceholderText">Wähle einen Raum um den CO₂-Verlauf anzuzeigen</div>
 						</div>
 					</div>
 				</section>
@@ -148,18 +154,18 @@
 				<!-- Room Details Table -->
 				<section class="table-card">
 					<div class="chart-header">
-						<h2>All Sensors Overview</h2>
-						<span class="chart-subtitle" id="tableLastRefresh">Last refresh: --</span>
+						<h2 id="allSensorsTitle">Alle Sensoren</h2>
+						<span class="chart-subtitle" id="tableLastRefresh">--</span>
 					</div>
 					<div class="table-container">
 						<table id="roomTable">
 							<thead>
 								<tr>
-									<th>Room</th>
-									<th>Temperature</th>
+									<th id="thRoom">Raum</th>
+									<th id="thTemp">Temperatur</th>
 									<th>CO₂</th>
-									<th>Last Update</th>
-									<th>Status</th>
+									<th id="thLastUpdate">Letztes Update</th>
+									<th id="thStatus">Status</th>
 								</tr>
 							</thead>
 							<tbody id="roomTableBody">
@@ -169,7 +175,7 @@
 					</div>
 					<div class="table-pagination">
 						<button id="showMoreBtn" class="show-more-btn" onclick="showMoreRooms()">
-							Show More <span id="showMoreCount">(10/117)</span>
+							<span id="showMoreText">Mehr anzeigen</span> <span id="showMoreCount">(10/117)</span>
 						</button>
 					</div>
 				</section>
@@ -181,33 +187,33 @@
 					<div class="card summary-card">
 						<div class="card-icon">☀️</div>
 						<div class="card-content">
-							<h3 id="pvSolarPowerTitle">Solar Power Today</h3>
+							<h3 id="pvSolarPowerTitle">Solarertrag heute</h3>
 							<div class="value" id="pvDailyYield">-- kWh</div>
-							<div class="sensor-label" id="pvTimeLabel">Updated: --</div>
+							<div class="sensor-label" id="pvTimeLabel">Aktualisiert: --</div>
 						</div>
 					</div>
 					<div class="card summary-card">
 						<div class="card-icon">🌍</div>
 						<div class="card-content">
-							<h3>Lifetime Total</h3>
+							<h3 id="pvLifetimeTotalTitle">Gesamtertrag</h3>
 							<div class="value" id="pvTotalYield">-- kWh</div>
-							<div class="sensor-label">Total Generated</div>
+							<div class="sensor-label" id="pvTotalGeneratedLabel">Gesamte Erzeugung</div>
 						</div>
 					</div>
 					<div class="card summary-card">
 						<div class="card-icon">🔋</div>
 						<div class="card-content">
-							<h3 id="pvBatteryUsageTitle">Battery Usage</h3>
+							<h3 id="pvBatteryUsageTitle">Batterienutzung</h3>
 							<div class="value" id="pvBatteryFlow">-- kWh</div>
-							<div class="sensor-label" id="pvBatteryStatus">Today's Activity</div>
+							<div class="sensor-label" id="pvBatteryStatus">Heutige Aktivität</div>
 						</div>
 					</div>
 					<div class="card summary-card">
 						<div class="card-icon">⚡</div>
 						<div class="card-content">
-							<h3 id="pvGridUsageTitle">Grid Usage</h3>
+							<h3 id="pvGridUsageTitle">Netznutzung</h3>
 							<div class="value" id="pvGridFlow">-- kWh</div>
-							<div class="sensor-label" id="pvGridStatus">Imported / Exported</div>
+							<div class="sensor-label" id="pvGridStatus">Bezug / Einspeisung</div>
 						</div>
 					</div>
 				</section>
@@ -216,7 +222,7 @@
 					<div class="chart-card full-width">
 						<div class="chart-header">
 							<h2 id="pvSolarChartTitle">Solarertrag (kWh, kumuliert)</h2>
-							<span class="chart-subtitle">Energy produced by solar panels</span>
+							<span class="chart-subtitle" id="pvSolarSubtitle">Vom Solarpanel erzeugte Energie</span>
 						</div>
 						<div class="chart-container">
 							<canvas id="pvSolarChart"></canvas>
@@ -226,7 +232,7 @@
 					<div class="chart-card full-width">
 						<div class="chart-header">
 							<h2 id="pvConsumptionChartTitle">Gebäudeverbrauch (kWh, kumuliert)</h2>
-							<span class="chart-subtitle">Energy used by the building</span>
+							<span class="chart-subtitle" id="pvConsumptionSubtitle">Vom Gebäude verbrauchte Energie</span>
 						</div>
 						<div class="chart-container">
 							<canvas id="pvConsumptionChart"></canvas>
@@ -235,25 +241,25 @@
 
 					<div class="chart-card full-width">
 						<div class="chart-header">
-							<h2>Detailed Statistics</h2>
-							<span class="chart-subtitle">Daily totals breakdown</span>
+							<h2 id="pvDetailedStatsTitle">Detailstatistiken</h2>
+							<span class="chart-subtitle" id="pvDailyBreakdownSubtitle">Tagesübersicht</span>
 						</div>
 						<div class="chart-container" style="height: auto;">
 							<div class="pv-details-grid">
 								<div class="pv-detail-item">
-									<span class="label">Saved in Battery:</span>
+									<span class="label" id="pvLabelCharged">In Batterie gespeichert:</span>
 									<span id="pvDailyCharged" class="value">-- kWh</span>
 								</div>
 								<div class="pv-detail-item">
-									<span class="label">Taken from Battery:</span>
+									<span class="label" id="pvLabelDischarged">Aus Batterie entnommen:</span>
 									<span id="pvDailyDischarged" class="value">-- kWh</span>
 								</div>
 								<div class="pv-detail-item">
-									<span class="label">Bought from Grid:</span>
+									<span class="label" id="pvLabelImported">Aus Netz bezogen:</span>
 									<span id="pvDailyImported" class="value">-- kWh</span>
 								</div>
 								<div class="pv-detail-item">
-									<span class="label">Sold to Grid:</span>
+									<span class="label" id="pvLabelExported">Ins Netz eingespeist:</span>
 									<span id="pvDailyExported" class="value">-- kWh</span>
 								</div>
 							</div>

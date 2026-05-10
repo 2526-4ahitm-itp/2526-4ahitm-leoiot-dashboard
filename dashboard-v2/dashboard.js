@@ -20,6 +20,88 @@ let availableRooms = [];
 let currentTimeRange = '6h';
 let customDate = null;
 let currentFloorFilter = 'all';
+let currentLang = 'de';
+
+const TRANSLATIONS = {
+	de: {
+		loading: 'Dashboard laden',
+		btnSensors: 'Sensoren', btnPV: 'PV System',
+		prevDay: 'Vorheriger Tag', nextDay: 'Nächster Tag', pickDate: 'Datum auswählen',
+		searchPlaceholder: '🔍 Raum suchen...', floorAll: 'Alle', floorBasement: 'Keller',
+		allRooms: 'Alle Räume', allRoomsAvg: 'Alle Räume (Durchschnitt)', room: 'Raum',
+		temperature: 'Temperatur', highestTemp: 'Höchste Temp.', co2Level: 'CO₂-Wert',
+		highestCo2: 'Höchste CO₂', avg24h: '24h Durchschnitt', avgTemp24h: '24h Durchschn. Temp.',
+		avgCo224h: '24h Durchschnitt CO₂',
+		tempHistory: 'Temperaturverlauf', co2History: 'CO₂-Verlauf',
+		tempPlaceholder: 'Wähle einen Raum um den Temperaturverlauf anzuzeigen',
+		co2Placeholder: 'Wähle einen Raum um den CO₂-Verlauf anzuzeigen',
+		axisTime: 'Uhrzeit', axisTempUnit: 'Temperatur (°C)', axisCo2Unit: 'CO₂ (ppm)', axisEnergy: 'Energie (kWh)',
+		allSensors: 'Alle Sensoren', colRoom: 'Raum', colTemp: 'Temperatur',
+		colLastUpdate: 'Letztes Update', colStatus: 'Status', showMore: 'Mehr anzeigen',
+		noRooms: 'Keine Räume gefunden',
+		justNow: 'Gerade eben', minAgo: 'vor {n} Min.', hoursAgo: 'vor {n} Std.',
+		liveMqtt: 'Live MQTT-Stream', historicalData: '📅 Historische Daten ({date})',
+		statusAlert: '⚠️ Alarm', statusMedium: '⚡ Mittel', statusOk: '✅ OK',
+		solarPowerToday: 'Solarertrag heute', lifetimeTotal: 'Gesamtertrag',
+		totalGenerated: 'Gesamte Erzeugung', batteryUsage: 'Batterienutzung',
+		gridUsage: 'Netznutzung', importedExported: 'Bezug / Einspeisung',
+		updatedAt: 'Aktualisiert: {time}',
+		chargingNet: 'Laden (netto)', dischargingNet: 'Entladen (netto)',
+		buyingNet: 'Bezug (netto)', sellingNet: 'Einspeisung (netto)',
+		pvSolarChartTitle: 'Solarertrag (kWh, kumuliert)',
+		pvConsumptionChartTitle: 'Gebäudeverbrauch (kWh, kumuliert)',
+		pvSolarSubtitle: 'Vom Solarpanel erzeugte Energie',
+		pvConsumptionSubtitle: 'Vom Gebäude verbrauchte Energie',
+		pvDetailedStats: 'Detailstatistiken', pvDailyBreakdown: 'Tagesübersicht',
+		savedInBattery: 'In Batterie gespeichert:', takenFromBattery: 'Aus Batterie entnommen:',
+		boughtFromGrid: 'Aus Netz bezogen:', soldToGrid: 'Ins Netz eingespeist:',
+		datasetSolar: 'Solarertrag kumuliert (kWh)', datasetConsumption: 'Verbrauch kumuliert (kWh)',
+		sensorDashTitle: '🏢 LeoIOT Sensor Dashboard', pvDashTitle: '☀️ LeoIOT PV Dashboard',
+		solarPowerOn: 'Solarertrag am {date}',
+	},
+	en: {
+		loading: 'Loading Dashboard',
+		btnSensors: 'Sensors', btnPV: 'PV System',
+		prevDay: 'Previous day', nextDay: 'Next day', pickDate: 'Pick a specific date',
+		searchPlaceholder: '🔍 Search room...', floorAll: 'All', floorBasement: 'Basement',
+		allRooms: 'All Rooms', allRoomsAvg: 'All Rooms (Average)', room: 'Room',
+		temperature: 'Temperature', highestTemp: 'Highest Temp', co2Level: 'CO₂ Level',
+		highestCo2: 'Highest CO₂', avg24h: '24h Average', avgTemp24h: '24h Avg Temp',
+		avgCo224h: '24h Average CO₂',
+		tempHistory: 'Temperature History', co2History: 'CO₂ History',
+		tempPlaceholder: 'Select a specific room to view its temperature history',
+		co2Placeholder: 'Select a specific room to view its CO₂ history',
+		axisTime: 'Time', axisTempUnit: 'Temperature (°C)', axisCo2Unit: 'CO₂ (ppm)', axisEnergy: 'Energy (kWh)',
+		allSensors: 'All Sensors Overview', colRoom: 'Room', colTemp: 'Temperature',
+		colLastUpdate: 'Last Update', colStatus: 'Status', showMore: 'Show More',
+		noRooms: 'No rooms found',
+		justNow: 'Just now', minAgo: '{n} min ago', hoursAgo: '{n} hours ago',
+		liveMqtt: 'Live MQTT Stream', historicalData: '📅 Historical Data ({date})',
+		statusAlert: '⚠️ Alert', statusMedium: '⚡ Medium', statusOk: '✅ OK',
+		solarPowerToday: 'Solar Power Today', lifetimeTotal: 'Lifetime Total',
+		totalGenerated: 'Total Generated', batteryUsage: 'Battery Usage',
+		gridUsage: 'Grid Usage', importedExported: 'Imported / Exported',
+		updatedAt: 'Updated: {time}',
+		chargingNet: 'Charging (Net)', dischargingNet: 'Discharging (Net)',
+		buyingNet: 'Buying (Net)', sellingNet: 'Selling (Net)',
+		pvSolarChartTitle: 'Solar Yield (kWh, cumulative)',
+		pvConsumptionChartTitle: 'Building Consumption (kWh, cumulative)',
+		pvSolarSubtitle: 'Energy produced by solar panels',
+		pvConsumptionSubtitle: 'Energy used by the building',
+		pvDetailedStats: 'Detailed Statistics', pvDailyBreakdown: 'Daily totals breakdown',
+		savedInBattery: 'Saved in Battery:', takenFromBattery: 'Taken from Battery:',
+		boughtFromGrid: 'Bought from Grid:', soldToGrid: 'Sold to Grid:',
+		datasetSolar: 'Cumulative yield (kWh)', datasetConsumption: 'Cumulative consumption (kWh)',
+		sensorDashTitle: '🏢 LeoIOT Sensor Dashboard', pvDashTitle: '☀️ LeoIOT PV Dashboard',
+		solarPowerOn: 'Solar Power on {date}',
+	}
+};
+
+function t(key, vars = {}) {
+	let str = (TRANSLATIONS[currentLang] || TRANSLATIONS.de)[key] ?? key;
+	Object.entries(vars).forEach(([k, v]) => { str = str.replace(`{${k}}`, v); });
+	return str;
+}
 
 function isTodaySelected() {
 	if (currentTimeRange !== 'custom' || !customDate) return false;
@@ -57,6 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	// Initialize charts
 	initCharts();
+	applyTranslations();
 
 	// Load initial data
 	await refreshAllData();
@@ -70,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// Set status to Live
 	const refreshEl = document.getElementById('tableLastRefresh');
 	if (refreshEl) {
-		refreshEl.innerHTML = '<span style="color: #4ade80">●</span> Live MQTT Stream';
+		refreshEl.innerHTML = `<span style="color: #4ade80">●</span> ${t('liveMqtt')}`;
 	}
 });
 
@@ -262,7 +345,7 @@ function initCharts() {
 		},
 		scales: {
 			x: {
-				title: { display: true, text: 'Uhrzeit', color: axisLabelColor, font: { size: 12 } },
+				title: { display: true, text: t('axisTime'), color: axisLabelColor, font: { size: 12 } },
 				ticks: {
 					color: 'rgba(255, 255, 255, 0.5)',
 					maxRotation: 0,
@@ -284,7 +367,7 @@ function initCharts() {
 	tempOptions.scales.y.suggestedMin = 15;
 	tempOptions.scales.y.suggestedMax = 30;
 	tempOptions.scales.y.ticks.stepSize = 1;
-	tempOptions.scales.y.title.text = 'Temperatur (°C)';
+	tempOptions.scales.y.title.text = t('axisTempUnit');
 
 	// Temperature History Chart
 	const tempCtx = document.getElementById('tempChart').getContext('2d');
@@ -299,7 +382,7 @@ function initCharts() {
 	co2Options.scales.y.suggestedMin = 400;
 	co2Options.scales.y.suggestedMax = 1200;
 	co2Options.scales.y.ticks.stepSize = 200;
-	co2Options.scales.y.title.text = 'CO₂ (ppm)';
+	co2Options.scales.y.title.text = t('axisCo2Unit');
 
 	// CO2 History Chart
 	const co2Ctx = document.getElementById('co2Chart').getContext('2d');
@@ -318,7 +401,7 @@ function initCharts() {
 			...baseOptions,
 			scales: {
 				...baseOptions.scales,
-				y: { ...baseOptions.scales.y, suggestedMin: 0, title: { display: true, text: 'Energie (kWh)', color: axisLabelColor, font: { size: 12 } } }
+				y: { ...baseOptions.scales.y, suggestedMin: 0, title: { display: true, text: t('axisEnergy'), color: axisLabelColor, font: { size: 12 } } }
 			}
 		}
 	});
@@ -332,7 +415,7 @@ function initCharts() {
 			...baseOptions,
 			scales: {
 				...baseOptions.scales,
-				y: { ...baseOptions.scales.y, suggestedMin: 0, title: { display: true, text: 'Energie (kWh)', color: axisLabelColor, font: { size: 12 } } }
+				y: { ...baseOptions.scales.y, suggestedMin: 0, title: { display: true, text: t('axisEnergy'), color: axisLabelColor, font: { size: 12 } } }
 			}
 		}
 	});
@@ -353,11 +436,11 @@ window.setTimeRange = async (range) => {
 	
 	// Reset titles
 	const solarTitle = document.getElementById('pvSolarPowerTitle');
-	if (solarTitle) solarTitle.textContent = 'Solar Power Today';
+	if (solarTitle) solarTitle.textContent = t('solarPowerToday');
 	const chartTitle1 = document.getElementById('pvSolarChartTitle');
-	if (chartTitle1) chartTitle1.textContent = 'Solarertrag (kWh, kumuliert)';
+	if (chartTitle1) chartTitle1.textContent = t('pvSolarChartTitle');
 	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
-	if (chartTitle2) chartTitle2.textContent = 'Gebäudeverbrauch (kWh, kumuliert)';
+	if (chartTitle2) chartTitle2.textContent = t('pvConsumptionChartTitle');
 
 	await refreshAllData();
 };
@@ -375,7 +458,7 @@ window.setSpecificDate = async (dateStr) => {
 	if (dateBtn) {
 		dateBtn.classList.add('active');
 		if (isTodaySelected()) {
-			dateBtn.textContent = `🗓️ Today`;
+			dateBtn.textContent = `🗓️ ${currentLang === 'de' ? 'Heute' : 'Today'}`;
 		} else {
 			// Format as DD.MM.YYYY
 			const parts = dateStr.split('-');
@@ -388,11 +471,11 @@ window.setSpecificDate = async (dateStr) => {
 	// Update titles
 	const formattedDate = dateBtn ? dateBtn.textContent.replace('🗓️ ', '') : dateStr;
 	const solarTitle = document.getElementById('pvSolarPowerTitle');
-	if (solarTitle) solarTitle.textContent = isTodaySelected() ? `Solar Power Today` : `Solar Power on ${formattedDate}`;
+	if (solarTitle) solarTitle.textContent = isTodaySelected() ? t('solarPowerToday') : t('solarPowerOn', { date: formattedDate });
 	const chartTitle1 = document.getElementById('pvSolarChartTitle');
-	if (chartTitle1) chartTitle1.textContent = isTodaySelected() ? `Solarertrag (kWh, kumuliert)` : `Solarertrag (kWh, kumuliert) – ${formattedDate}`;
+	if (chartTitle1) chartTitle1.textContent = isTodaySelected() ? t('pvSolarChartTitle') : `${t('pvSolarChartTitle')} – ${formattedDate}`;
 	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
-	if (chartTitle2) chartTitle2.textContent = isTodaySelected() ? `Gebäudeverbrauch (kWh, kumuliert)` : `Gebäudeverbrauch (kWh, kumuliert) – ${formattedDate}`;
+	if (chartTitle2) chartTitle2.textContent = isTodaySelected() ? t('pvConsumptionChartTitle') : `${t('pvConsumptionChartTitle')} – ${formattedDate}`;
 
 	await refreshAllData();
 };
@@ -411,6 +494,180 @@ window.navigateDay = async (direction) => {
 	document.getElementById('datePicker').value = newDate;
 	await setSpecificDate(newDate);
 };
+
+window.switchLang = (lang) => {
+	currentLang = lang;
+	document.querySelectorAll('.lang-btn').forEach(btn => {
+		btn.classList.toggle('active', btn.dataset.lang === lang);
+	});
+	applyTranslations();
+	refreshAllData();
+};
+
+function applyTranslations() {
+	// Loading screen
+	const loadingEl = document.querySelector('.loading-text');
+	if (loadingEl) loadingEl.textContent = t('loading');
+
+	// Header buttons
+	const btnSensors = document.getElementById('btnSensors');
+	if (btnSensors) btnSensors.textContent = t('btnSensors');
+	const btnPV = document.getElementById('btnPV');
+	if (btnPV) btnPV.textContent = t('btnPV');
+
+	// Nav buttons titles
+	const btnPrev = document.getElementById('btnPrevDay');
+	if (btnPrev) btnPrev.title = t('prevDay');
+	const btnNext = document.getElementById('btnNextDay');
+	if (btnNext) btnNext.title = t('nextDay');
+	const btnDate = document.getElementById('btnDatePicker');
+	if (btnDate && !customDate) btnDate.title = t('pickDate');
+
+	// Search & floor tabs
+	const search = document.getElementById('sensorSearch');
+	if (search) search.placeholder = t('searchPlaceholder');
+	document.querySelectorAll('.filter-tab').forEach(btn => {
+		if (btn.dataset.floor === 'all') btn.textContent = t('floorAll');
+		if (btn.dataset.floor === 'U') btn.textContent = t('floorBasement');
+	});
+
+	// Summary card titles (only if not dynamically overridden)
+	const c1 = document.getElementById('card1Title');
+	if (c1) c1.textContent = (currentTimeRange === 'custom' && !isTodaySelected()) ? t('highestTemp') : t('temperature');
+	const c2 = document.getElementById('card2Title');
+	if (c2) c2.textContent = (currentTimeRange === 'custom' && !isTodaySelected()) ? t('highestCo2') : t('co2Level');
+	const c3 = document.getElementById('card3Title');
+	if (c3) c3.textContent = (currentTimeRange === 'custom' && !isTodaySelected()) ? t('avgTemp24h') : t('avg24h');
+	const c4 = document.getElementById('card4Title');
+	if (c4) c4.textContent = t('avgCo224h');
+
+	// Sensor labels (all rooms / selected room)
+	const roomLabel = selectedSensor === 'all' ? t('allRooms') : `${t('room')} ${selectedSensor}`;
+	['tempSensorLabel', 'co2SensorLabel'].forEach(id => {
+		const el = document.getElementById(id);
+		if (el) el.textContent = roomLabel;
+	});
+	['tempChartSubtitle', 'co2ChartSubtitle'].forEach(id => {
+		const el = document.getElementById(id);
+		if (el) el.textContent = roomLabel;
+	});
+	['tempSensorLabel2', 'co2SensorLabel2'].forEach(id => {
+		const el = document.getElementById(id);
+		if (el) el.textContent = selectedSensor === 'all' ? t('allRooms') : `${t('room')} ${selectedSensor}`;
+	});
+
+	// Room dropdown trigger
+	const trigger = document.getElementById('roomDropdownTrigger');
+	if (trigger) trigger.textContent = selectedSensor === 'all' ? `📊 ${t('allRooms')}` : `🏠 ${t('room')} ${selectedSensor}`;
+
+	// Chart titles & placeholders
+	const tempChartTitle = document.getElementById('tempChartTitle');
+	if (tempChartTitle) tempChartTitle.textContent = t('tempHistory');
+	const co2ChartTitle = document.getElementById('co2ChartTitle');
+	if (co2ChartTitle) co2ChartTitle.textContent = t('co2History');
+	const tempPH = document.getElementById('tempPlaceholderText');
+	if (tempPH) tempPH.textContent = t('tempPlaceholder');
+	const co2PH = document.getElementById('co2PlaceholderText');
+	if (co2PH) co2PH.textContent = t('co2Placeholder');
+
+	// Table
+	const allSensorsTitle = document.getElementById('allSensorsTitle');
+	if (allSensorsTitle) allSensorsTitle.textContent = t('allSensors');
+	const thRoom = document.getElementById('thRoom');
+	if (thRoom) thRoom.textContent = t('colRoom');
+	const thTemp = document.getElementById('thTemp');
+	if (thTemp) thTemp.textContent = t('colTemp');
+	const thLastUpdate = document.getElementById('thLastUpdate');
+	if (thLastUpdate) thLastUpdate.textContent = t('colLastUpdate');
+	const thStatus = document.getElementById('thStatus');
+	if (thStatus) thStatus.textContent = t('colStatus');
+	const showMoreText = document.getElementById('showMoreText');
+	if (showMoreText) showMoreText.textContent = t('showMore');
+
+	// PV cards
+	const pvSolarTitle = document.getElementById('pvSolarPowerTitle');
+	if (pvSolarTitle) pvSolarTitle.textContent = customDate && !isTodaySelected()
+		? t('solarPowerOn', { date: customDate.split('-').reverse().join('.') })
+		: t('solarPowerToday');
+	const pvLifetime = document.getElementById('pvLifetimeTotalTitle');
+	if (pvLifetime) pvLifetime.textContent = t('lifetimeTotal');
+	const pvTotalGenLabel = document.getElementById('pvTotalGeneratedLabel');
+	if (pvTotalGenLabel) pvTotalGenLabel.textContent = t('totalGenerated');
+	const pvBattTitle = document.getElementById('pvBatteryUsageTitle');
+	if (pvBattTitle) pvBattTitle.textContent = t('batteryUsage');
+	const pvGridTitle = document.getElementById('pvGridUsageTitle');
+	if (pvGridTitle) pvGridTitle.textContent = t('gridUsage');
+
+	// PV chart titles & subtitles
+	const pvSolarChart = document.getElementById('pvSolarChartTitle');
+	if (pvSolarChart) pvSolarChart.textContent = t('pvSolarChartTitle');
+	const pvConsChart = document.getElementById('pvConsumptionChartTitle');
+	if (pvConsChart) pvConsChart.textContent = t('pvConsumptionChartTitle');
+	const pvSolarSub = document.getElementById('pvSolarSubtitle');
+	if (pvSolarSub) pvSolarSub.textContent = t('pvSolarSubtitle');
+	const pvConsSub = document.getElementById('pvConsumptionSubtitle');
+	if (pvConsSub) pvConsSub.textContent = t('pvConsumptionSubtitle');
+	const pvStatsTitle = document.getElementById('pvDetailedStatsTitle');
+	if (pvStatsTitle) pvStatsTitle.textContent = t('pvDetailedStats');
+	const pvStatsSub = document.getElementById('pvDailyBreakdownSubtitle');
+	if (pvStatsSub) pvStatsSub.textContent = t('pvDailyBreakdown');
+
+	// PV detail labels
+	const lblCharged = document.getElementById('pvLabelCharged');
+	if (lblCharged) lblCharged.textContent = t('savedInBattery');
+	const lblDischarged = document.getElementById('pvLabelDischarged');
+	if (lblDischarged) lblDischarged.textContent = t('takenFromBattery');
+	const lblImported = document.getElementById('pvLabelImported');
+	if (lblImported) lblImported.textContent = t('boughtFromGrid');
+	const lblExported = document.getElementById('pvLabelExported');
+	if (lblExported) lblExported.textContent = t('soldToGrid');
+
+	// Chart axis labels
+	if (tempChart) {
+		tempChart.options.scales.x.title.text = t('axisTime');
+		tempChart.options.scales.y.title.text = t('axisTempUnit');
+		tempChart.update('none');
+	}
+	if (co2Chart) {
+		co2Chart.options.scales.x.title.text = t('axisTime');
+		co2Chart.options.scales.y.title.text = t('axisCo2Unit');
+		co2Chart.update('none');
+	}
+	if (pvSolarChart) {
+		pvSolarChart.options.scales.x.title.text = t('axisTime');
+		pvSolarChart.options.scales.y.title.text = t('axisEnergy');
+		pvSolarChart.update('none');
+	}
+	if (pvConsumptionChart) {
+		pvConsumptionChart.options.scales.x.title.text = t('axisTime');
+		pvConsumptionChart.options.scales.y.title.text = t('axisEnergy');
+		pvConsumptionChart.update('none');
+	}
+
+	// Rebuild room dropdown with translated labels
+	updateRoomSelectorTranslations();
+}
+
+function updateRoomSelectorTranslations() {
+	const popup = document.getElementById('roomDropdownPopup');
+	if (!popup) return;
+	let html = `<div class="search-result-item ${selectedSensor === 'all' ? 'active' : ''}" onclick="selectSensor('all')">
+		<span class="room-id">📊 ${t('allRoomsAvg')}</span>
+	</div>`;
+	availableRooms.forEach(room => {
+		const matchesFloor = currentFloorFilter === 'all' ||
+			(currentFloorFilter === '1' && room.startsWith('1')) ||
+			(currentFloorFilter === '2' && room.startsWith('2')) ||
+			(currentFloorFilter === 'E' && room.startsWith('E')) ||
+			(currentFloorFilter === 'U' && room.startsWith('U'));
+		if (matchesFloor) {
+			html += `<div class="search-result-item ${selectedSensor === room ? 'active' : ''}" onclick="selectSensor('${room}')">
+				<span class="room-id">🏠 ${t('room')} ${room}</span>
+			</div>`;
+		}
+	});
+	popup.innerHTML = html;
+}
 
 // Build full-day timeline (00:00–23:55 every 5 min) and merge actual data into it
 function buildDayTimeline(dateStr, dataPoints) {
@@ -450,7 +707,7 @@ window.switchView = async (view) => {
 		btnPV.classList.remove('active');
 		btnSensors.setAttribute('aria-selected', 'true');
 		btnPV.setAttribute('aria-selected', 'false');
-		title.textContent = '🏢 LeoIOT Sensor Dashboard';
+		title.textContent = t('sensorDashTitle');
 
 		// Stop PV polling
 		if (pvInterval) {
@@ -464,7 +721,7 @@ window.switchView = async (view) => {
 		btnPV.classList.add('active');
 		btnSensors.setAttribute('aria-selected', 'false');
 		btnPV.setAttribute('aria-selected', 'true');
-		title.textContent = '☀️ LeoIOT PV Dashboard';
+		title.textContent = t('pvDashTitle');
 
 		// Start PV polling (every 30s)
 		await refreshPVData();
@@ -620,7 +877,7 @@ function updatePVCharts(dataByField) {
 		pvSolarChart.data.labels = yieldData.map(({ time }) => formatTime(time));
 		pvSolarChart.data.tooltipLabels = yieldData.map(({ time }) => formatTooltipTime(time));
 		pvSolarChart.data.datasets = [{
-			label: 'Solarertrag kumuliert (kWh)',
+			label: t('datasetSolar'),
 			data: yieldData.map(({ value }) => value),
 			borderColor: '#f59e0b',
 			backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -635,7 +892,7 @@ function updatePVCharts(dataByField) {
 		pvConsumptionChart.data.labels = consumptionData.map(({ time }) => formatTime(time));
 		pvConsumptionChart.data.tooltipLabels = consumptionData.map(({ time }) => formatTooltipTime(time));
 		pvConsumptionChart.data.datasets = [{
-			label: 'Verbrauch kumuliert (kWh)',
+			label: t('datasetConsumption'),
 			data: consumptionData.map(({ value }) => value),
 			borderColor: '#3b82f6',
 			backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -653,14 +910,14 @@ function updatePVDashboard(data) {
 	// Battery Usage (Charged - Discharged)
 	const batteryFlow = data.dailyCharged - data.dailyDischarged;
 	document.getElementById('pvBatteryFlow').textContent = `${Math.abs(batteryFlow).toFixed(1)} kWh`;
-	document.getElementById('pvBatteryStatus').textContent = batteryFlow >= 0 ? 'Charging (Net)' : 'Discharging (Net)';
+	document.getElementById('pvBatteryStatus').textContent = batteryFlow >= 0 ? t('chargingNet') : t('dischargingNet');
 	
 	// Grid Usage (Imported - Exported)
 	const gridFlow = data.dailyImported - data.dailyExported;
 	document.getElementById('pvGridFlow').textContent = `${Math.abs(gridFlow).toFixed(1)} kWh`;
-	document.getElementById('pvGridStatus').textContent = gridFlow >= 0 ? 'Buying (Net)' : 'Selling (Net)';
+	document.getElementById('pvGridStatus').textContent = gridFlow >= 0 ? t('buyingNet') : t('sellingNet');
 	
-	document.getElementById('pvTimeLabel').textContent = `Updated: ${data.plantLocalTime}`;
+	document.getElementById('pvTimeLabel').textContent = t('updatedAt', { time: data.plantLocalTime });
 	
 	// Details
 	document.getElementById('pvDailyCharged').textContent = `${data.dailyCharged.toFixed(1)} kWh`;
@@ -696,12 +953,9 @@ window.selectSensor = async (sensor) => {
 	
 	// Update custom dropdown display
 	const trigger = document.getElementById('roomDropdownTrigger');
-	if (trigger) {
-		const label = sensor === 'all' ? '📊 All Rooms' : `🏠 Room ${sensor}`;
-		trigger.textContent = label;
-	}
+	if (trigger) trigger.textContent = sensor === 'all' ? `📊 ${t('allRooms')}` : `🏠 ${t('room')} ${sensor}`;
 
-	const label = sensor === 'all' ? 'All Rooms' : `Room ${sensor}`;
+	const label = sensor === 'all' ? t('allRooms') : `${t('room')} ${sensor}`;
 	document.getElementById('tempChartSubtitle').textContent = label;
 	document.getElementById('co2ChartSubtitle').textContent = label;
 	document.getElementById('tempSensorLabel').textContent = label;
@@ -751,12 +1005,12 @@ window.filterSensors = () => {
 	if (matches.length > 0) {
 		resultsPopup.innerHTML = matches.map(room => `
 			<div class="search-result-item" onclick="selectSensor('${room}')">
-				<span class="room-id">🏠 Room ${room}</span>
+				<span class="room-id">🏠 ${t('room')} ${room}</span>
 			</div>
 		`).join('');
 		resultsPopup.classList.add('visible');
 	} else {
-		resultsPopup.innerHTML = '<div class="search-result-item">No rooms found</div>';
+		resultsPopup.innerHTML = `<div class="search-result-item">${t('noRooms')}</div>`;
 		resultsPopup.classList.add('visible');
 	}
 };
@@ -842,12 +1096,11 @@ function updateRoomSelector(tempData) {
 
 	let html = `
        <div class="search-result-item ${selectedSensor === 'all' ? 'active' : ''}" onclick="selectSensor('all')">
-          <span class="room-id">📊 All Rooms (Average)</span>
+          <span class="room-id">📊 ${t('allRoomsAvg')}</span>
        </div>
     `;
 
 	rooms.forEach(room => {
-		// Apply floor filters
 		const matchesFloor = currentFloorFilter === 'all' ||
 			(currentFloorFilter === '1' && room.startsWith('1')) ||
 			(currentFloorFilter === '2' && room.startsWith('2')) ||
@@ -857,19 +1110,16 @@ function updateRoomSelector(tempData) {
 		if (matchesFloor) {
 			html += `
 				<div class="search-result-item ${selectedSensor === room ? 'active' : ''}" onclick="selectSensor('${room}')">
-					<span class="room-id">🏠 Room ${room}</span>
+					<span class="room-id">🏠 ${t('room')} ${room}</span>
 				</div>
 			`;
 		}
 	});
-	
+
 	popup.innerHTML = html;
-	
-	// Update trigger label too
+
 	const trigger = document.getElementById('roomDropdownTrigger');
-	if (trigger) {
-		trigger.textContent = selectedSensor === 'all' ? '📊 All Rooms' : `🏠 Room ${selectedSensor}`;
-	}
+	if (trigger) trigger.textContent = selectedSensor === 'all' ? `📊 ${t('allRooms')}` : `🏠 ${t('room')} ${selectedSensor}`;
 }
 
 // Fetch temperature data
@@ -1163,13 +1413,13 @@ function updateSummaryCards(tempData, co2Data, room105CO2 = []) {
 
 	// Set Titles based on isPast
 	const title1 = document.getElementById('card1Title');
-	if (title1) title1.textContent = isPast ? 'Highest Temp' : 'Temperature';
+	if (title1) title1.textContent = isPast ? t('highestTemp') : t('temperature');
 	const title2 = document.getElementById('card2Title');
-	if (title2) title2.textContent = isPast ? 'Highest CO₂' : 'CO₂ Level';
+	if (title2) title2.textContent = isPast ? t('highestCo2') : t('co2Level');
 	const title3 = document.getElementById('card3Title');
-	if (title3) title3.textContent = isPast ? '24h Avg Temp' : '24h Average';
+	if (title3) title3.textContent = isPast ? t('avgTemp24h') : t('avg24h');
 	const title4 = document.getElementById('card4Title');
-	if (title4) title4.textContent = '24h Average CO₂';
+	if (title4) title4.textContent = t('avgCo224h');
 
 	if (selectedSensor === 'all') {
 		// Get only rooms that match the current floor filter
@@ -1307,7 +1557,7 @@ function updateTemperatureChart(tempData) {
 		tempChart.data.labels = timeline.labels;
 		tempChart.data.tooltipLabels = timeline.tooltipLabels;
 		tempChart.data.datasets = [{
-			label: `Room ${selectedSensor}`,
+			label: `${t('room')} ${selectedSensor}`,
 			data: timeline.values,
 			borderColor: '#ef4444',
 			backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -1319,7 +1569,7 @@ function updateTemperatureChart(tempData) {
 		tempChart.data.labels = roomData.map(({ time }) => formatTime(time));
 		tempChart.data.tooltipLabels = roomData.map(({ time }) => formatTooltipTime(time));
 		tempChart.data.datasets = [{
-			label: `Room ${selectedSensor}`,
+			label: `${t('room')} ${selectedSensor}`,
 			data: roomData.map(({ value }) => value),
 			borderColor: '#ef4444',
 			backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -1358,7 +1608,7 @@ function updateCO2Chart(co2Data) {
 		co2Chart.data.labels = timeline.labels;
 		co2Chart.data.tooltipLabels = timeline.tooltipLabels;
 		co2Chart.data.datasets = [{
-			label: `Room ${selectedSensor}`,
+			label: `${t('room')} ${selectedSensor}`,
 			data: timeline.values,
 			borderColor: '#f59e0b',
 			backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -1370,7 +1620,7 @@ function updateCO2Chart(co2Data) {
 		co2Chart.data.labels = roomCo2Data.map(({ time }) => formatTime(time));
 		co2Chart.data.tooltipLabels = roomCo2Data.map(({ time }) => formatTooltipTime(time));
 		co2Chart.data.datasets = [{
-			label: `Room ${selectedSensor}`,
+			label: `${t('room')} ${selectedSensor}`,
 			data: roomCo2Data.map(({ value }) => value),
 			borderColor: '#f59e0b',
 			backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -1392,9 +1642,9 @@ function updateRoomTable(roomData) {
 	const isPast = currentTimeRange === 'custom' && !isTodaySelected();
 	if (refreshEl) {
 		if (isPast) {
-			refreshEl.innerHTML = `<span style="color: #60a5fa">📅</span> Historical Data (${customDate})`;
+			refreshEl.innerHTML = t('historicalData', { date: customDate });
 		} else {
-			refreshEl.innerHTML = '<span style="color: #4ade80">●</span> Live MQTT Stream';
+			refreshEl.innerHTML = `<span style="color: #4ade80">●</span> ${t('liveMqtt')}`;
 		}
 	}
 
@@ -1432,13 +1682,13 @@ function updateRoomTable(roomData) {
 
 		let statusText, statusClass;
 		if (tempBad || co2Bad) {
-			statusText = '⚠️ Alert';
+			statusText = t('statusAlert');
 			statusClass = 'status-warning';
 		} else if (co2Medium) {
-			statusText = '⚡ Medium';
+			statusText = t('statusMedium');
 			statusClass = 'status-medium';
 		} else {
-			statusText = '✅ OK';
+			statusText = t('statusOk');
 			statusClass = 'status-ok';
 		}
 
@@ -1508,8 +1758,8 @@ function formatTooltipTime(date) {
 function formatRelativeTime(date) {
 	const now = new Date();
 	const diff = Math.floor((now - date) / 1000);
-	if (diff < 60) return 'Just now';
-	if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
-	if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+	if (diff < 60) return t('justNow');
+	if (diff < 3600) return t('minAgo', { n: Math.floor(diff / 60) });
+	if (diff < 86400) return t('hoursAgo', { n: Math.floor(diff / 3600) });
 	return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
