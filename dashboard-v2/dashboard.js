@@ -20,7 +20,7 @@ let availableRooms = [];
 let currentTimeRange = '6h';
 let customDate = null;
 let currentFloorFilter = 'all';
-let currentLang = 'de';
+let currentLang = localStorage.getItem('dashboard-lang') || 'de';
 
 const TRANSLATIONS = {
 	de: {
@@ -111,6 +111,18 @@ function isTodaySelected() {
 	return customDate === todayStr;
 }
 
+function updateNextDayBtn() {
+	const btn = document.getElementById('btnNextDay');
+	if (!btn) return;
+	const pad = n => n.toString().padStart(2, '0');
+	const d = new Date();
+	const todayStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+	const isToday = currentTimeRange !== 'custom' || !customDate || customDate >= todayStr;
+	btn.disabled = isToday;
+	btn.style.opacity = isToday ? '0.3' : '';
+	btn.style.cursor = isToday ? 'not-allowed' : '';
+}
+
 function getRangeQuery() {
 	if (currentTimeRange === 'custom' && customDate) {
 		const start = new Date(customDate + 'T00:00:00').toISOString();
@@ -137,9 +149,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 		}, 500);
 	}, 1000);
 
+	// Restore lang button state from localStorage
+	document.querySelectorAll('.lang-btn').forEach(btn => {
+		btn.classList.toggle('active', btn.dataset.lang === currentLang);
+	});
+
 	// Initialize charts
 	initCharts();
 	applyTranslations();
+	updateNextDayBtn();
 
 	// Load initial data
 	await refreshAllData();
@@ -341,6 +359,18 @@ function initCharts() {
 						return chart.data.tooltipLabels ? chart.data.tooltipLabels[index] : context[0].label;
 					}
 				}
+			},
+			zoom: {
+				zoom: {
+					wheel: { enabled: true },
+					pinch: { enabled: true },
+					mode: 'x'
+				},
+				pan: {
+					enabled: true,
+					mode: 'x'
+				},
+				limits: { x: { minRange: 3 } }
 			}
 		},
 		scales: {
@@ -376,6 +406,7 @@ function initCharts() {
 		data: { labels: [], datasets: [] },
 		options: tempOptions
 	});
+	document.getElementById('tempChart').addEventListener('dblclick', () => tempChart.resetZoom());
 
 	// CO2 History Chart Options
 	const co2Options = JSON.parse(JSON.stringify(baseOptions));
@@ -391,6 +422,7 @@ function initCharts() {
 		data: { labels: [], datasets: [] },
 		options: co2Options
 	});
+	document.getElementById('co2Chart').addEventListener('dblclick', () => co2Chart.resetZoom());
 
 	// PV Solar Chart
 	const solarCtx = document.getElementById('pvSolarChart').getContext('2d');
@@ -405,6 +437,7 @@ function initCharts() {
 			}
 		}
 	});
+	document.getElementById('pvSolarChart').addEventListener('dblclick', () => pvSolarChart.resetZoom());
 
 	// PV Consumption Chart
 	const consumptionCtx = document.getElementById('pvConsumptionChart').getContext('2d');
@@ -419,6 +452,7 @@ function initCharts() {
 			}
 		}
 	});
+	document.getElementById('pvConsumptionChart').addEventListener('dblclick', () => pvConsumptionChart.resetZoom());
 }
 
 // Set time range
@@ -442,6 +476,7 @@ window.setTimeRange = async (range) => {
 	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
 	if (chartTitle2) chartTitle2.textContent = t('pvConsumptionChartTitle');
 
+	updateNextDayBtn();
 	await refreshAllData();
 };
 
@@ -477,6 +512,7 @@ window.setSpecificDate = async (dateStr) => {
 	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
 	if (chartTitle2) chartTitle2.textContent = isTodaySelected() ? t('pvConsumptionChartTitle') : `${t('pvConsumptionChartTitle')} – ${formattedDate}`;
 
+	updateNextDayBtn();
 	await refreshAllData();
 };
 
@@ -495,8 +531,27 @@ window.navigateDay = async (direction) => {
 	await setSpecificDate(newDate);
 };
 
+function setChartNoData(canvasId, hasData) {
+	const canvas = document.getElementById(canvasId);
+	if (!canvas) return;
+	const container = canvas.closest('.chart-container');
+	if (!container) return;
+	let overlay = container.querySelector('.no-data-overlay');
+	if (!hasData) {
+		if (!overlay) {
+			overlay = document.createElement('div');
+			overlay.className = 'no-data-overlay';
+			container.appendChild(overlay);
+		}
+		overlay.textContent = currentLang === 'de' ? 'Keine Daten für diesen Zeitraum' : 'No data for this period';
+	} else if (overlay) {
+		overlay.remove();
+	}
+}
+
 window.switchLang = (lang) => {
 	currentLang = lang;
+	localStorage.setItem('dashboard-lang', lang);
 	document.querySelectorAll('.lang-btn').forEach(btn => {
 		btn.classList.toggle('active', btn.dataset.lang === lang);
 	});
@@ -886,6 +941,7 @@ function updatePVCharts(dataByField) {
 		}];
 		pvSolarChart.update();
 	}
+	setChartNoData('pvSolarChart', dataByField.daily_yield?.length > 0);
 
 	if (dataByField.consumption && dataByField.consumption.length > 0) {
 		const consumptionData = dataByField.consumption.sort((a, b) => a.time - b.time);
@@ -901,6 +957,7 @@ function updatePVCharts(dataByField) {
 		}];
 		pvConsumptionChart.update();
 	}
+	setChartNoData('pvConsumptionChart', dataByField.consumption?.length > 0);
 }
 
 function updatePVDashboard(data) {
@@ -1578,6 +1635,7 @@ function updateTemperatureChart(tempData) {
 		}];
 	}
 	tempChart.update();
+	setChartNoData('tempChart', roomData.length > 0);
 }
 
 // Update CO2 chart
@@ -1629,6 +1687,7 @@ function updateCO2Chart(co2Data) {
 		}];
 	}
 	co2Chart.update();
+	setChartNoData('co2Chart', roomCo2Data.length > 0);
 }
 
 // Update room table with pagination
@@ -1754,12 +1813,24 @@ function formatTooltipTime(date) {
 	return `${dateStr} ${timeStr}`;
 }
 
+// Keyboard navigation: ← / → to switch days
+document.addEventListener('keydown', (e) => {
+	const tag = document.activeElement?.tagName;
+	if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+	if (e.key === 'ArrowLeft') navigateDay(-1);
+	if (e.key === 'ArrowRight' && !document.getElementById('btnNextDay')?.disabled) navigateDay(1);
+});
+
 // Helper: Format relative time
 function formatRelativeTime(date) {
+	const isPast = currentTimeRange === 'custom' && !isTodaySelected();
+	if (isPast) {
+		return date.toLocaleTimeString(currentLang === 'de' ? 'de-AT' : 'en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+	}
 	const now = new Date();
 	const diff = Math.floor((now - date) / 1000);
 	if (diff < 60) return t('justNow');
 	if (diff < 3600) return t('minAgo', { n: Math.floor(diff / 60) });
 	if (diff < 86400) return t('hoursAgo', { n: Math.floor(diff / 3600) });
-	return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+	return date.toLocaleDateString(currentLang === 'de' ? 'de-AT' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
