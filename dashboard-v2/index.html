@@ -32,7 +32,9 @@
 				<button onclick="setTimeRange('24h')" class="time-btn" aria-label="Last 24 hours">24h</button>
 				<button onclick="setTimeRange('7d')" class="time-btn" aria-label="Last 7 days">7d</button>
 					<div class="date-picker-trigger">
+						<button onclick="navigateDay(-1)" class="time-btn day-nav-btn" id="btnPrevDay" title="Previous day" aria-label="Previous day">◀</button>
 						<button onclick="document.getElementById('datePicker').showPicker()" class="time-btn" id="btnDatePicker" title="Pick a specific date" aria-label="Select custom date">🗓️</button>
+						<button onclick="navigateDay(1)" class="time-btn day-nav-btn" id="btnNextDay" title="Next day" aria-label="Next day">▶</button>
 						<input type="date" id="datePicker" onchange="setSpecificDate(this.value)" class="hidden-date-picker" aria-hidden="true">
 					</div>
 			</div>

@@ -392,6 +392,21 @@ window.setSpecificDate = async (dateStr) => {
 	await refreshAllData();
 };
 
+window.navigateDay = async (direction) => {
+	let baseDate = customDate;
+	if (!baseDate) {
+		const d = new Date();
+		const pad = n => n.toString().padStart(2, '0');
+		baseDate = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+	}
+	const d = new Date(baseDate + 'T12:00:00');
+	d.setDate(d.getDate() + direction);
+	const pad = n => n.toString().padStart(2, '0');
+	const newDate = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+	document.getElementById('datePicker').value = newDate;
+	await setSpecificDate(newDate);
+};
+
 // Switch between Sensors and PV view
 window.switchView = async (view) => {
 	if (currentView === view) return;
