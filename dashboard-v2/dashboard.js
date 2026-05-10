@@ -239,6 +239,7 @@ function triggerRoomAnimation() {
 
 // Initialize Chart.js charts
 function initCharts() {
+	const axisLabelColor = 'rgba(255, 255, 255, 0.6)';
 	const baseOptions = {
 		responsive: true,
 		maintainAspectRatio: false,
@@ -261,7 +262,8 @@ function initCharts() {
 		},
 		scales: {
 			x: {
-				ticks: { 
+				title: { display: true, text: 'Uhrzeit', color: axisLabelColor, font: { size: 12 } },
+				ticks: {
 					color: 'rgba(255, 255, 255, 0.5)',
 					maxRotation: 0,
 					autoSkip: true,
@@ -270,6 +272,7 @@ function initCharts() {
 				grid: { color: 'rgba(255, 255, 255, 0.05)' }
 			},
 			y: {
+				title: { display: true, text: '', color: axisLabelColor, font: { size: 12 } },
 				ticks: { color: 'rgba(255, 255, 255, 0.5)' },
 				grid: { color: 'rgba(255, 255, 255, 0.05)' }
 			}
@@ -281,6 +284,7 @@ function initCharts() {
 	tempOptions.scales.y.suggestedMin = 15;
 	tempOptions.scales.y.suggestedMax = 30;
 	tempOptions.scales.y.ticks.stepSize = 1;
+	tempOptions.scales.y.title.text = 'Temperatur (°C)';
 
 	// Temperature History Chart
 	const tempCtx = document.getElementById('tempChart').getContext('2d');
@@ -295,6 +299,7 @@ function initCharts() {
 	co2Options.scales.y.suggestedMin = 400;
 	co2Options.scales.y.suggestedMax = 1200;
 	co2Options.scales.y.ticks.stepSize = 200;
+	co2Options.scales.y.title.text = 'CO₂ (ppm)';
 
 	// CO2 History Chart
 	const co2Ctx = document.getElementById('co2Chart').getContext('2d');
@@ -313,7 +318,7 @@ function initCharts() {
 			...baseOptions,
 			scales: {
 				...baseOptions.scales,
-				y: { ...baseOptions.scales.y, suggestedMin: 0 }
+				y: { ...baseOptions.scales.y, suggestedMin: 0, title: { display: true, text: 'Energie (kWh)', color: axisLabelColor, font: { size: 12 } } }
 			}
 		}
 	});
@@ -327,7 +332,7 @@ function initCharts() {
 			...baseOptions,
 			scales: {
 				...baseOptions.scales,
-				y: { ...baseOptions.scales.y, suggestedMin: 0 }
+				y: { ...baseOptions.scales.y, suggestedMin: 0, title: { display: true, text: 'Energie (kWh)', color: axisLabelColor, font: { size: 12 } } }
 			}
 		}
 	});
@@ -407,6 +412,26 @@ window.navigateDay = async (direction) => {
 	await setSpecificDate(newDate);
 };
 
+// Build full-day timeline (00:00–23:55 every 5 min) and merge actual data into it
+function buildDayTimeline(dateStr, dataPoints) {
+	const intervalMs = 5 * 60 * 1000;
+	const dataMap = new Map();
+	dataPoints.forEach(p => {
+		const rounded = Math.round(p.time.getTime() / intervalMs) * intervalMs;
+		dataMap.set(rounded, p.value);
+	});
+
+	const labels = [], tooltipLabels = [], values = [];
+	const start = new Date(dateStr + 'T00:00:00');
+	const end   = new Date(dateStr + 'T23:55:00');
+	for (let t = start.getTime(); t <= end.getTime(); t += intervalMs) {
+		const d = new Date(t);
+		labels.push(formatTime(d));
+		tooltipLabels.push(formatTooltipTime(d));
+		values.push(dataMap.has(t) ? dataMap.get(t) : null);
+	}
+	return { labels, tooltipLabels, values };
+}
 // Switch between Sensors and PV view
 window.switchView = async (view) => {
 	if (currentView === view) return;
@@ -1277,16 +1302,31 @@ function updateTemperatureChart(tempData) {
 
 	// Show single room
 	const roomData = tempData[selectedSensor] || [];
-	tempChart.data.labels = roomData.map(({ time }) => formatTime(time));
-	tempChart.data.tooltipLabels = roomData.map(({ time }) => formatTooltipTime(time));
-	tempChart.data.datasets = [{
-		label: `Room ${selectedSensor}`,
-		data: roomData.map(({ value }) => value),
-		borderColor: '#ef4444',
-		backgroundColor: 'rgba(239, 68, 68, 0.1)',
-		fill: true,
-		tension: 0.4
-	}];
+	if (currentTimeRange === 'custom' && customDate) {
+		const timeline = buildDayTimeline(customDate, roomData);
+		tempChart.data.labels = timeline.labels;
+		tempChart.data.tooltipLabels = timeline.tooltipLabels;
+		tempChart.data.datasets = [{
+			label: `Room ${selectedSensor}`,
+			data: timeline.values,
+			borderColor: '#ef4444',
+			backgroundColor: 'rgba(239, 68, 68, 0.1)',
+			fill: true,
+			tension: 0.4,
+			spanGaps: false
+		}];
+	} else {
+		tempChart.data.labels = roomData.map(({ time }) => formatTime(time));
+		tempChart.data.tooltipLabels = roomData.map(({ time }) => formatTooltipTime(time));
+		tempChart.data.datasets = [{
+			label: `Room ${selectedSensor}`,
+			data: roomData.map(({ value }) => value),
+			borderColor: '#ef4444',
+			backgroundColor: 'rgba(239, 68, 68, 0.1)',
+			fill: true,
+			tension: 0.4
+		}];
+	}
 	tempChart.update();
 }
 
@@ -1313,16 +1353,31 @@ function updateCO2Chart(co2Data) {
 	}
 	const roomCo2Data = co2Data[topic] || [];
 
-	co2Chart.data.labels = roomCo2Data.map(({ time }) => formatTime(time));
-	co2Chart.data.tooltipLabels = roomCo2Data.map(({ time }) => formatTooltipTime(time));
-	co2Chart.data.datasets = [{
-		label: `Room ${selectedSensor}`,
-		data: roomCo2Data.map(({ value }) => value),
-		borderColor: '#f59e0b',
-		backgroundColor: 'rgba(245, 158, 11, 0.1)',
-		fill: true,
-		tension: 0.4
-	}];
+	if (currentTimeRange === 'custom' && customDate) {
+		const timeline = buildDayTimeline(customDate, roomCo2Data);
+		co2Chart.data.labels = timeline.labels;
+		co2Chart.data.tooltipLabels = timeline.tooltipLabels;
+		co2Chart.data.datasets = [{
+			label: `Room ${selectedSensor}`,
+			data: timeline.values,
+			borderColor: '#f59e0b',
+			backgroundColor: 'rgba(245, 158, 11, 0.1)',
+			fill: true,
+			tension: 0.4,
+			spanGaps: false
+		}];
+	} else {
+		co2Chart.data.labels = roomCo2Data.map(({ time }) => formatTime(time));
+		co2Chart.data.tooltipLabels = roomCo2Data.map(({ time }) => formatTooltipTime(time));
+		co2Chart.data.datasets = [{
+			label: `Room ${selectedSensor}`,
+			data: roomCo2Data.map(({ value }) => value),
+			borderColor: '#f59e0b',
+			backgroundColor: 'rgba(245, 158, 11, 0.1)',
+			fill: true,
+			tension: 0.4
+		}];
+	}
 	co2Chart.update();
 }
 
