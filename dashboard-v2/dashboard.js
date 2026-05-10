@@ -355,9 +355,9 @@ window.setTimeRange = async (range) => {
 	const solarTitle = document.getElementById('pvSolarPowerTitle');
 	if (solarTitle) solarTitle.textContent = 'Solar Power Today';
 	const chartTitle1 = document.getElementById('pvSolarChartTitle');
-	if (chartTitle1) chartTitle1.textContent = 'Solar Generation (Live)';
+	if (chartTitle1) chartTitle1.textContent = 'Solarertrag (kWh, kumuliert)';
 	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
-	if (chartTitle2) chartTitle2.textContent = 'Building Consumption (Live)';
+	if (chartTitle2) chartTitle2.textContent = 'Gebäudeverbrauch (kWh, kumuliert)';
 
 	await refreshAllData();
 };
@@ -390,9 +390,9 @@ window.setSpecificDate = async (dateStr) => {
 	const solarTitle = document.getElementById('pvSolarPowerTitle');
 	if (solarTitle) solarTitle.textContent = isTodaySelected() ? `Solar Power Today` : `Solar Power on ${formattedDate}`;
 	const chartTitle1 = document.getElementById('pvSolarChartTitle');
-	if (chartTitle1) chartTitle1.textContent = isTodaySelected() ? `Solar Generation (Live)` : `Solar Generation (${formattedDate})`;
+	if (chartTitle1) chartTitle1.textContent = isTodaySelected() ? `Solarertrag (kWh, kumuliert)` : `Solarertrag (kWh, kumuliert) – ${formattedDate}`;
 	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
-	if (chartTitle2) chartTitle2.textContent = isTodaySelected() ? `Building Consumption (Live)` : `Building Consumption (${formattedDate})`;
+	if (chartTitle2) chartTitle2.textContent = isTodaySelected() ? `Gebäudeverbrauch (kWh, kumuliert)` : `Gebäudeverbrauch (kWh, kumuliert) – ${formattedDate}`;
 
 	await refreshAllData();
 };
@@ -620,7 +620,7 @@ function updatePVCharts(dataByField) {
 		pvSolarChart.data.labels = yieldData.map(({ time }) => formatTime(time));
 		pvSolarChart.data.tooltipLabels = yieldData.map(({ time }) => formatTooltipTime(time));
 		pvSolarChart.data.datasets = [{
-			label: 'Solar Power Today (kWh)',
+			label: 'Solarertrag kumuliert (kWh)',
 			data: yieldData.map(({ value }) => value),
 			borderColor: '#f59e0b',
 			backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -635,7 +635,7 @@ function updatePVCharts(dataByField) {
 		pvConsumptionChart.data.labels = consumptionData.map(({ time }) => formatTime(time));
 		pvConsumptionChart.data.tooltipLabels = consumptionData.map(({ time }) => formatTooltipTime(time));
 		pvConsumptionChart.data.datasets = [{
-			label: 'Building Consumption (kWh)',
+			label: 'Verbrauch kumuliert (kWh)',
 			data: consumptionData.map(({ value }) => value),
 			borderColor: '#3b82f6',
 			backgroundColor: 'rgba(59, 130, 246, 0.1)',
