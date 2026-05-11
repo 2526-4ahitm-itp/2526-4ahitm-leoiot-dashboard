@@ -566,75 +566,26 @@ window.showOnly = (id) => {
         }
     }
 
-    // Handle model switching and camera animation based on model
-    console.log('SHOWONLY: About to handle camera animation for model:', id);
+    // Handle model switching based on model
     if (id === 'ModelT.gltf') {
-        // Going TO gym - add gym model to scene, animate camera, then remove school model
-        console.log('ANIMATING TO GYM - Adding gym model to scene');
+        // Going TO gym - add gym model, remove school model
         const gymModel = modelCache[id];
-        scene.add(gymModel); // Add gym model to scene
-        
-        const targetRotation = getCameraRotationForModel(id);
-        console.log('ANIMATING TO GYM - targetRotation:', targetRotation.toArray());
-        console.log('Current rotation before anim:', camera.rotation.clone().toArray());
-        // Temporarily disable OrbitControls to prevent conflict
-        controls.enabled = false;
-        animateCameraRotationTo(targetRotation, () => {
-            // After animation completes, remove school model and keep only gym model
-            if(currentModel) scene.remove(currentModel);
-            currentModel = gymModel;
-            
-            // Re-enable OrbitControls after animation
-            controls.enabled = true;
-            
-            // If heatmap was already on, refresh it for the new floor
-            if (activeHeatmapType === 'temp') {
-                activeHeatmapType = null;
-                window.updateBuildingHeatmap();
-            } else if (activeHeatmapType === 'co2') {
-                activeHeatmapType = null;
-                window.updateCO2Heatmap();
-            }
-        });
-    } else if (window.initialCameraRotation) {
-        // Going FROM gym back to school - add school model to scene, animate camera, then remove gym model
-        console.log('ANIMATING FROM GYM - Adding school model to scene');
-        const schoolModel = modelCache[id];
-        scene.add(schoolModel); // Add school model to scene
-        
-        console.log('ANIMATING FROM GYM - targetRotation:', window.initialCameraRotation.toArray());
-        console.log('Current rotation before anim:', camera.rotation.clone().toArray());
-        // Temporarily disable OrbitControls to prevent conflict
-        controls.enabled = false;
-        animateCameraRotationTo(window.initialCameraRotation, () => {
-            // After animation completes, remove gym model and keep only school model
-            if(currentModel) scene.remove(currentModel);
-            currentModel = schoolModel;
-            
-            // Re-enable OrbitControls after animation
-            controls.enabled = true;
-            // Reset stored values after use so we capture them again next time
-            window.initialCameraPosition = null;
-            window.initialCameraRotation = null;
-            if (window.initialControlsTarget) {
-                window.initialControlsTarget = null;
-            }
-        });
-    } else {
-        // For other model switches (not involving gym), switch immediately
         if(currentModel) scene.remove(currentModel);
-        currentModel = modelCache[id];
-        scene.add(currentModel);
-        
-        // If heatmap was already on, refresh it for the new floor
-        if (activeHeatmapType === 'temp') {
-            activeHeatmapType = null;
-            window.updateBuildingHeatmap();
-        } else if (activeHeatmapType === 'co2') {
-            activeHeatmapType = null;
-            window.updateCO2Heatmap();
-        }
-    }
+        scene.add(gymModel);
+        currentModel = gymModel;
+    } else if (currentModel && currentModel === modelCache['ModelT.gltf']) {
+        // Going FROM gym back to school - add school model, remove gym model
+        const schoolModel = modelCache[id];
+        scene.remove(currentModel);
+        scene.add(schoolModel);
+        currentModel = schoolModel;
+    } else {
+        // Normal model switching
+        if(currentModel) scene.remove(currentModel);
+        const newModel = modelCache[id];
+        scene.add(newModel);
+        currentModel = newModel;
+}
 };
 
 // Get target camera rotation for each model
