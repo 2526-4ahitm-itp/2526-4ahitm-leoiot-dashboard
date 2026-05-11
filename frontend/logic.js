@@ -1496,16 +1496,20 @@ window.startNavigation = async (targetRoomName) => {
     navPoints.push(new THREE.Vector3(startPos.x, startPos.y, startPos.z));
     
     if (isGroundFloor) {
-        // Always go to intersection one or two first (pick closest to start)
+        // Pick intersection one or two that brings you closer to destination
         const groundIntersectionsOneTwo = groundIntersections.filter(i => 
             i.name.includes('Intersection_one') || i.name.includes('Intersection_two')
         );
         let firstWP = null;
         if (groundIntersectionsOneTwo.length > 0) {
-            let minDist = Infinity;
+            // Pick the one that gets closer to destination
+            const currentToDest = Math.hypot(startPos.x - destPoint.x, startPos.z - destPoint.z);
             for (const i of groundIntersectionsOneTwo) {
-                const d = Math.hypot(i.x - startPos.x, i.z - startPos.z);
-                if (d < minDist) { minDist = d; firstWP = i; }
+                const iToDest = Math.hypot(i.x - destPoint.x, i.z - destPoint.z);
+                if (iToDest < currentToDest) {
+                    firstWP = i;
+                    break; // Take first one that gets closer
+                }
             }
             if (firstWP) navPoints.push(new THREE.Vector3(firstWP.x, groundY, firstWP.z));
         }
@@ -1597,16 +1601,19 @@ window.startNavigation = async (targetRoomName) => {
             navPoints.push(new THREE.Vector3(targetStart.x, targetFloorY, targetStart.z));
         }
         
-        // Then always go to intersection one or two next (pick closest to start)
+        // Then always go to intersection one or two next (pick one that gets closer to destination)
         const targetIntersectionsOneTwo = targetIntersections.filter(i => 
             i.name.includes('Intersection_one') || i.name.includes('Intersection_two')
         );
         let targetFirstWP = null;
         if (targetIntersectionsOneTwo.length > 0 && targetStart) {
-            let minDist = Infinity;
+            const currentToDest = Math.hypot(targetStart.x - destPoint.x, targetStart.z - destPoint.z);
             for (const i of targetIntersectionsOneTwo) {
-                const d = Math.hypot(i.x - targetStart.x, i.z - targetStart.z);
-                if (d < minDist) { minDist = d; targetFirstWP = i; }
+                const iToDest = Math.hypot(i.x - destPoint.x, i.z - destPoint.z);
+                if (iToDest < currentToDest) {
+                    targetFirstWP = i;
+                    break;
+                }
             }
             if (targetFirstWP) navPoints.push(new THREE.Vector3(targetFirstWP.x, targetFloorY, targetFirstWP.z));
         }
