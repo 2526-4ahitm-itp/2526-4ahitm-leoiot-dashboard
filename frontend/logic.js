@@ -1496,9 +1496,10 @@ window.startNavigation = async (targetRoomName) => {
     navPoints.push(new THREE.Vector3(startPos.x, startPos.y, startPos.z));
     
     if (isGroundFloor) {
-        // Pick intersection one or two that brings you closer to destination
+        // Pick intersection that brings you closer to destination
         const groundIntersectionsOneTwo = groundIntersections.filter(i => 
-            i.name.includes('Intersection_one') || i.name.includes('Intersection_two')
+            i.name.includes('Intersection_one') || i.name.includes('Intersection_two') ||
+            i.name.includes('intersection_three') || i.name.includes('intersection_four') || i.name.includes('intersection_five')
         );
         let firstWP = null;
         if (groundIntersectionsOneTwo.length > 0) {
@@ -1601,9 +1602,10 @@ window.startNavigation = async (targetRoomName) => {
             navPoints.push(new THREE.Vector3(targetStart.x, targetFloorY, targetStart.z));
         }
         
-        // Then always go to intersection one or two next (pick one that gets closer to destination)
+        // Then always go to intersection next (pick one that gets closer to destination)
         const targetIntersectionsOneTwo = targetIntersections.filter(i => 
-            i.name.includes('Intersection_one') || i.name.includes('Intersection_two')
+            i.name.includes('Intersection_one') || i.name.includes('Intersection_two') ||
+            i.name.includes('intersection_three') || i.name.includes('intersection_four') || i.name.includes('intersection_five')
         );
         let targetFirstWP = null;
         if (targetIntersectionsOneTwo.length > 0 && targetStart) {
