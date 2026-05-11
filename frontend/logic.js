@@ -170,7 +170,25 @@ Promise.all(loadPromises).then(() => {
                 }
             });
             console.log('Waypoints loaded:', window.waypointsData);
-            resolve();
+            
+            // Also load gym waypoints from waypoints_t.gltf
+            loader.load(`./waypoints_t.gltf?v=${Date.now()}`, (gltf) => {
+                gltf.scene.traverse((child) => {
+                    if (child.isMesh && child.name) {
+                        const parts = child.name.split('_');
+                        if (parts.length >= 2) {
+                            const floor = parts[0];
+                            const type = parts.slice(1).join('_');
+                            const pos = child.position;
+                            if (!window.waypointsData[floor]) window.waypointsData[floor] = {};
+                            if (!window.waypointsData[floor][type]) window.waypointsData[floor][type] = [];
+                            window.waypointsData[floor][type].push({ x: pos.x, z: pos.z, name: child.name });
+                        }
+                    }
+                });
+                console.log('Waypoints loaded (including gym):', window.waypointsData);
+                resolve();
+            }, undefined, reject);
         }, undefined, reject);
     });
 }).then(() => {
@@ -1074,7 +1092,7 @@ window.initNavigationUI = () => {
     Object.values(modelCache).forEach(model => {
         if (!model) return;
         model.traverse(child => {
-            if (child.isMesh && /^[EU12]/.test(child.name)) {
+            if (child.isMesh && /^[EU12T]/.test(child.name)) {
                 roomNames.add(normalizeRoomName(child.name));
             }
         });
@@ -1186,6 +1204,8 @@ const segments = [
     // ── Basement-only north extension ─────────────────────────────────────────
     { id: 'U_WestN', x1: -41.45, x2: -41.45, z1: -51.0, z2:   5.1, type: 'V', floors: 'U' },
     { id: 'U_TopH',  x1: -57.9,  x2:  16.2,  z1: -52.0, z2: -52.0, type: 'H', floors: 'U' },
+    // ── Gym corridor ─────────────────────────────────────────────────────────
+    { id: 'GymHall', x1: -41.44, x2:  28.12, z1:  3.06, z2:  3.06, type: 'H', floors: 'T' },
 ];
 
 // Graph nodes (X, Z only — Y is resolved at runtime from FLOOR_Y).
@@ -1355,16 +1375,19 @@ window.startNavigation = async (targetRoomName) => {
     if (name.startsWith('1'))      floorId = 'Model1F.gltf';
     else if (name.startsWith('2')) floorId = 'Model2F.gltf';
     else if (name.startsWith('U')) floorId = 'ModelU.gltf';
+    else if (name.startsWith('T')) floorId = 'ModelT.gltf';
 
     const isGroundFloor = (floorId === 'ModelE.gltf');
+    const isGymFloor = (floorId === 'ModelT.gltf');
     const groundY      = FLOOR_Y['ModelE.gltf'] + TRAIL_OFFSET;
-    const targetFloorY = FLOOR_Y[floorId]       + TRAIL_OFFSET;
+    const targetFloorY = isGymFloor ? FLOOR_Y['ModelT.gltf'] + TRAIL_OFFSET : FLOOR_Y[floorId] + TRAIL_OFFSET;
 
     // Snap room centre to nearest hallway centreline (door point)
     const activeSegs = segments.filter(s => {
         if (s.floors === 'all')   return true;
-        if (s.floors === 'upper') return floorId !== 'ModelU.gltf';
+        if (s.floors === 'upper') return floorId !== 'ModelU.gltf' && floorId !== 'ModelT.gltf';
         if (s.floors === 'U')     return floorId === 'ModelU.gltf';
+        if (s.floors === 'T')     return floorId === 'ModelT.gltf';
         return false;
     });
 
@@ -1384,25 +1407,36 @@ window.startNavigation = async (targetRoomName) => {
         if (d < minDist) { minDist = d; doorPoint = { x: px, z: pz }; doorSeg = seg; }
     }
 
-    // Always start by showing the ground floor model (navigation begins at the entrance)
-    if (modelCache['ModelE.gltf']) {
-        if(currentModel) scene.remove(currentModel);
-        currentModel = modelCache['ModelE.gltf'];
-        scene.add(currentModel);
+    // Start by showing appropriate model
+    if (isGymFloor) {
+        // Show gym model immediately for gym navigation
+        if (modelCache['ModelT.gltf']) {
+            if(currentModel) scene.remove(currentModel);
+            currentModel = modelCache['ModelT.gltf'];
+            scene.add(currentModel);
+        }
+    } else {
+        // Show ground floor for school navigation
+        if (modelCache['ModelE.gltf']) {
+            if(currentModel) scene.remove(currentModel);
+            currentModel = modelCache['ModelE.gltf'];
+            scene.add(currentModel);
+        }
     }
-    // Update button active state to reflect ground floor
+    // Update button active state
     {
         const container = document.getElementById('button-container');
         if (container) {
             container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-            const groundBtn = Array.from(container.querySelectorAll('button'))
-                .find(b => b.textContent.trim() === 'Ground');
-            if (groundBtn) groundBtn.classList.add('active');
+            const targetBtn = isGymFloor 
+                ? Array.from(container.querySelectorAll('button')).find(b => b.textContent.trim() === 'Gym')
+                : Array.from(container.querySelectorAll('button')).find(b => b.textContent.trim() === 'Ground');
+            if (targetBtn) targetBtn.classList.add('active');
         }
     }
 
-    // Use waypoints from waypoints.gltf - greedy pathfinding to next closest waypoint that gets closer to room
-    const floorKey = name.startsWith('U') ? 'U' : (name.startsWith('1') ? '1' : (name.startsWith('2') ? '2' : 'E'));
+    // Use waypoints - greedy pathfinding to next closest waypoint that gets closer to room
+    const floorKey = name.startsWith('U') ? 'U' : (name.startsWith('1') ? '1' : (name.startsWith('2') ? '2' : (name.startsWith('T') ? 'T' : 'E')));
     
     navPoints = [];
     const destPoint = { x: doorPoint.x, z: doorPoint.z };
@@ -1442,9 +1476,11 @@ window.startNavigation = async (targetRoomName) => {
         { x: doorPoint.x, y: targetFloorY, z: doorPoint.z, name: 'door_target', isDoor: true }
     ].filter(Boolean);
     
-    // Start at ground floor entrance
+    // Start at ground floor entrance (skip for gym - starts at T_entrance instead)
     const startPos = groundStart ? { x: groundStart.x, y: groundY, z: groundStart.z } : { x: 4, y: groundY, z: -8 };
-    navPoints.push(new THREE.Vector3(startPos.x, startPos.y, startPos.z));
+    if (!isGymFloor) {
+        navPoints.push(new THREE.Vector3(startPos.x, startPos.y, startPos.z));
+    }
     
     if (isGroundFloor) {
         // Pick intersection that brings you closer to destination
@@ -1509,6 +1545,129 @@ window.startNavigation = async (targetRoomName) => {
         if (navPoints.length === 1) {
             navPoints.push(new THREE.Vector3(doorPoint.x, groundY, doorPoint.z));
             navPoints.push(new THREE.Vector3(endCenter.x, groundY, endCenter.z));
+        }
+    } else if (isGymFloor) {
+        // Gym navigation: start at T_entrance and navigate to target room
+        const gymEntrance = window.waypointsData['T']?.['entrance']?.[0];
+        const gymIntersections = [];
+        for (const [type, points] of Object.entries(window.waypointsData['T'] || {})) {
+            if (type.includes('Intersection') || type.includes('intersection')) {
+                gymIntersections.push(...points);
+            }
+        }
+        
+        // Priority intersections: one, two, three, four
+        const priorityIntersections = gymIntersections.filter(i => 
+            i.name.includes('Intersection_one') || i.name.includes('Intersection_two') ||
+            i.name.includes('Intersection_three') || i.name.includes('Intersection_four')
+        );
+        
+        const gymWaypoints = [
+            ...gymIntersections.map(i => ({ ...i, y: targetFloorY, isHallway: true })),
+            gymEntrance ? { ...gymEntrance, y: targetFloorY, isHallway: true } : null,
+            { x: doorPoint.x, y: targetFloorY, z: doorPoint.z, name: 'door_gym', isDoor: true }
+        ].filter(Boolean);
+        
+        // Start at T_entrance
+        if (gymEntrance) {
+            navPoints.push(new THREE.Vector3(gymEntrance.x, targetFloorY, gymEntrance.z));
+        }
+        
+        // First go to intersection_one (except for T2)
+        if (name !== 'T2') {
+            const intOne = gymIntersections.find(i => i.name.toLowerCase().includes('intersection_one'));
+            if (intOne && gymEntrance) {
+                navPoints.push(new THREE.Vector3(intOne.x, targetFloorY, intOne.z));
+            }
+        }
+        
+        // Set up current position and visited set
+        let current = gymEntrance ? { x: gymEntrance.x, y: targetFloorY, z: gymEntrance.z } : { x: 0, y: targetFloorY, z: 0 };
+        const visited = new Set();
+        if (gymEntrance) visited.add(gymEntrance.name);
+        
+        // For T6: also go through intersection_thirteen
+        if (name === 'T6') {
+            const intThirteen = gymIntersections.find(i => /intersection_thirteen/i.test(i.name));
+            if (intThirteen) {
+                navPoints.push(new THREE.Vector3(intThirteen.x, targetFloorY, intThirteen.z));
+                visited.add(intThirteen.name);
+                current = { x: intThirteen.x, y: targetFloorY, z: intThirteen.z };
+            }
+        }
+        
+        // Navigate through gym to target room
+        
+        // Continue with regular gym navigation
+        while (true) {
+            let bestWP = null;
+            let bestScore = Infinity;
+            
+// Check if current position is at intersection 9, 10, 11, or 12 - if so, skip to door
+            const lastWP = navPoints.length > 0 ? navPoints[navPoints.length - 1] : null;
+            const lastWPName = lastWP ? gymWaypoints.find(wp => Math.abs(wp.x - lastWP.x) < 0.1 && Math.abs(wp.z - lastWP.z) < 0.1)?.name : null;
+            const isTerminal = lastWPName && /intersection_(nine|ten|eleven|twelve)/i.test(lastWPName);
+            
+            if (isTerminal) {
+                // Skip directly to door
+                navPoints.push(new THREE.Vector3(doorPoint.x, targetFloorY, doorPoint.z));
+                navPoints.push(new THREE.Vector3(endCenter.x, targetFloorY, endCenter.z));
+                break;
+            }
+            
+            for (const wp of gymWaypoints) {
+                if (visited.has(wp.name)) continue;
+                
+                // If coming from intersection_one, only allow intersection_two, intersection_thirteen, or T19
+                const fromIntOne = /intersection_one/i.test(lastWPName || '');
+                if (fromIntOne && name === 'T19') {
+                    // T19 can go anywhere from intersection_one
+                } else if (fromIntOne) {
+                    // Only allow intersection_two or intersection_thirteen
+                    if (!/intersection_(two|three|thirteen)/i.test(wp.name)) continue;
+                }
+                
+                // Skip intersections 11,12 unless target is T4
+                if (/intersection_(eleven|twelve)/i.test(wp.name) && name !== 'T4') continue;
+                // Skip intersections 9,10 unless target is T1
+                if (/intersection_(nine|ten)/i.test(wp.name) && name !== 'T1') continue;
+                // Skip intersection 13 unless target is T6, T3, or T4
+                if (/intersection_thirteen/i.test(wp.name) && name !== 'T6' && name !== 'T3' && name !== 'T4') continue;
+                // Skip intersection 7 unless target is T11, T10, or T13
+                if (/intersection_seven/i.test(wp.name) && name !== 'T11' && name !== 'T10' && name !== 'T13') continue;
+                // Skip intersection 8 unless target is T10 or T13
+                if (/intersection_eight/i.test(wp.name) && name !== 'T10' && name !== 'T13') continue;
+                // Skip intersection 6 unless target is T6
+                if (/intersection_six/i.test(wp.name) && name !== 'T6') continue;
+                
+                const distToWP = Math.hypot(wp.x - current.x, wp.z - current.z);
+                const remainingToDest = Math.hypot(wp.x - destPoint.x, wp.z - destPoint.z);
+                const currentToDest = Math.hypot(current.x - destPoint.x, current.z - destPoint.z);
+                
+                if (remainingToDest >= currentToDest) continue;
+                
+                const score = distToWP;
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestWP = wp;
+                }
+            }
+            
+            if (!bestWP) break;
+            visited.add(bestWP.name);
+            current = { x: bestWP.x, y: bestWP.y, z: bestWP.z };
+            navPoints.push(new THREE.Vector3(bestWP.x, bestWP.y, bestWP.z));
+            
+            if (bestWP.isDoor) {
+                navPoints.push(new THREE.Vector3(endCenter.x, targetFloorY, endCenter.z));
+                break;
+            }
+        }
+        
+        // Fallback: if no path found
+        if (navPoints.length <= 1) {
+            navPoints.push(new THREE.Vector3(doorPoint.x, targetFloorY, doorPoint.z));
+            navPoints.push(new THREE.Vector3(endCenter.x, targetFloorY, endCenter.z));
         }
     } else {
         // Multi-floor: go to stairs first
@@ -1628,6 +1787,7 @@ window.startNavigation = async (targetRoomName) => {
             break;
         }
     }
+    
     const splitProgress = navSplitIdx / (navPoints.length - 1);
     
     // Create tube geometry from waypoints
@@ -1703,7 +1863,7 @@ window.startNavigation = async (targetRoomName) => {
                 navPathLower.geometry.setDrawRange(0, lv);
             }
         }
-
+        
         tubeGeom.setDrawRange(0, Math.floor(totalVerts * navAnimationProgress));
 
         if (navAnimationProgress < 1) {
