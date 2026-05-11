@@ -152,6 +152,28 @@ Promise.all(loadPromises).then(() => {
     // Initial view is the full building model.
     setHeatmapButtonState('ModelFull.gltf');
 
+    // Load waypoints from waypoints.gltf
+    return new Promise((resolve, reject) => {
+        loader.load('./waypoints.gltf', (gltf) => {
+            window.waypointsData = {};
+            gltf.scene.traverse((child) => {
+                if (child.isMesh && child.name) {
+                    const parts = child.name.split('_');
+                    if (parts.length >= 2) {
+                        const floor = parts[0];
+                        const type = parts.slice(1).join('_');
+                        const pos = child.position;
+                        if (!window.waypointsData[floor]) window.waypointsData[floor] = {};
+                        if (!window.waypointsData[floor][type]) window.waypointsData[floor][type] = [];
+                        window.waypointsData[floor][type].push({ x: pos.x, z: pos.z, name: child.name });
+                    }
+                }
+            });
+            console.log('Waypoints loaded:', window.waypointsData);
+            resolve();
+        }, undefined, reject);
+    });
+}).then(() => {
     // Wire up navigation search suggestions now that all models are loaded.
     window.initNavigationUI();
 });
@@ -531,9 +553,8 @@ window.showOnly = (id) => {
     // Clear old labels first
     clearHeatmap();
 
-    if(currentModel) scene.remove(currentModel);
-    currentModel = modelCache[id];
-    scene.add(currentModel);
+    console.log('SHOWONLY: Switching to model:', id);
+    console.log('SHOWONLY: Current camera rotation before animation:', camera.rotation.clone().toArray());
 
     // Store initial camera state for reset (when not going to gym)
     if (id !== 'ModelT.gltf' && !window.initialCameraPosition) {
@@ -545,25 +566,51 @@ window.showOnly = (id) => {
         }
     }
 
-// Handle camera animation based on model
+    // Handle model switching and camera animation based on model
+    console.log('SHOWONLY: About to handle camera animation for model:', id);
     if (id === 'ModelT.gltf') {
-        // Going TO gym - animate to gym rotation
+        // Going TO gym - add gym model to scene, animate camera, then remove school model
+        console.log('ANIMATING TO GYM - Adding gym model to scene');
+        const gymModel = modelCache[id];
+        scene.add(gymModel); // Add gym model to scene
+        
         const targetRotation = getCameraRotationForModel(id);
         console.log('ANIMATING TO GYM - targetRotation:', targetRotation.toArray());
         console.log('Current rotation before anim:', camera.rotation.clone().toArray());
         // Temporarily disable OrbitControls to prevent conflict
         controls.enabled = false;
         animateCameraRotationTo(targetRotation, () => {
+            // After animation completes, remove school model and keep only gym model
+            if(currentModel) scene.remove(currentModel);
+            currentModel = gymModel;
+            
             // Re-enable OrbitControls after animation
             controls.enabled = true;
+            
+            // If heatmap was already on, refresh it for the new floor
+            if (activeHeatmapType === 'temp') {
+                activeHeatmapType = null;
+                window.updateBuildingHeatmap();
+            } else if (activeHeatmapType === 'co2') {
+                activeHeatmapType = null;
+                window.updateCO2Heatmap();
+            }
         });
     } else if (window.initialCameraRotation) {
-        // Going FROM gym back to school - restore initial camera state
+        // Going FROM gym back to school - add school model to scene, animate camera, then remove gym model
+        console.log('ANIMATING FROM GYM - Adding school model to scene');
+        const schoolModel = modelCache[id];
+        scene.add(schoolModel); // Add school model to scene
+        
         console.log('ANIMATING FROM GYM - targetRotation:', window.initialCameraRotation.toArray());
         console.log('Current rotation before anim:', camera.rotation.clone().toArray());
         // Temporarily disable OrbitControls to prevent conflict
         controls.enabled = false;
         animateCameraRotationTo(window.initialCameraRotation, () => {
+            // After animation completes, remove gym model and keep only school model
+            if(currentModel) scene.remove(currentModel);
+            currentModel = schoolModel;
+            
             // Re-enable OrbitControls after animation
             controls.enabled = true;
             // Reset stored values after use so we capture them again next time
@@ -573,15 +620,20 @@ window.showOnly = (id) => {
                 window.initialControlsTarget = null;
             }
         });
-    }
-
-    // If heatmap was already on, refresh it for the new floor
-    if (activeHeatmapType === 'temp') {
-        activeHeatmapType = null;
-        window.updateBuildingHeatmap();
-    } else if (activeHeatmapType === 'co2') {
-        activeHeatmapType = null;
-        window.updateCO2Heatmap();
+    } else {
+        // For other model switches (not involving gym), switch immediately
+        if(currentModel) scene.remove(currentModel);
+        currentModel = modelCache[id];
+        scene.add(currentModel);
+        
+        // If heatmap was already on, refresh it for the new floor
+        if (activeHeatmapType === 'temp') {
+            activeHeatmapType = null;
+            window.updateBuildingHeatmap();
+        } else if (activeHeatmapType === 'co2') {
+            activeHeatmapType = null;
+            window.updateCO2Heatmap();
+        }
     }
 };
 
@@ -592,10 +644,10 @@ function getCameraRotationForModel(modelId) {
     
     switch(modelId) {
         case 'ModelT.gltf': // Gym model
-            // Rotate camera to the right (negative Y rotation in Three.js)
-            // Increased rotation for more noticeable effect
-            // This will bring the gym (positioned to the right) into center view
-            return new THREE.Euler(0, -0.8, 0, 'YXZ'); // Approximately 46 degrees to the right
+            // Rotate camera slightly to the LEFT (negative Y rotation in Three.js) 
+            // to begin showing the gym (positioned to the RIGHT) 
+            // Using a small rotation so gym only becomes visible near end of animation
+            return new THREE.Euler(0, -0.2, 0, 'YXZ'); // Approximately -11.5 degrees (left)
         default:
             // Default rotation for all other models (face center)
             return defaultRotation;
@@ -606,7 +658,7 @@ function getCameraRotationForModel(modelId) {
 function animateCameraRotationTo(targetRotation, callback) {
     console.log('Starting animation from:', camera.rotation.clone(), 'to:', targetRotation.clone());
     const startRotation = camera.rotation.clone();
-    const duration = 1000; // 1 second animation
+    const duration = 800; // Reduced duration for quicker response
     const startTime = performance.now();
 
     function animateRotation(currentTime) {
@@ -626,10 +678,20 @@ function animateCameraRotationTo(targetRotation, callback) {
         // Update the camera's projection matrix (important for Three.js)
         camera.updateProjectionMatrix();
         
+        // Render the scene during animation
+        renderer.render(scene, camera);
+        labelRenderer.render(scene, camera);
+        
+        // Log progress every 100ms to reduce console spam
+        if (Math.floor(elapsed / 100) !== Math.floor((elapsed - 16) / 100)) {
+            console.log(`Animation progress: ${Math.round(progress * 100)}% - rotation: [${camera.rotation.x.toFixed(3)}, ${camera.rotation.y.toFixed(3)}, ${camera.rotation.z.toFixed(3)}]`);
+        }
+        
         if (progress < 1) {
             requestAnimationFrame(animateRotation);
         } else {
             console.log('Animation complete. Final rotation:', camera.rotation.clone());
+            console.log('Camera position after animation:', camera.position.clone());
             // Call callback if provided
             if (callback && typeof callback === 'function') {
                 callback();
@@ -642,6 +704,8 @@ function animateCameraRotationTo(targetRotation, callback) {
 
 window.handleButtonClick = (buttonElement, modelId) => {
     console.log('Button clicked for model:', modelId);
+    console.log('Camera position before:', camera.position.clone().toArray());
+    console.log('Camera rotation before:', camera.rotation.clone().toArray());
     clearNavigation();
     const container = document.getElementById('button-container');
     const buttons = container.querySelectorAll('button');
@@ -656,6 +720,8 @@ window.handleButtonClick = (buttonElement, modelId) => {
         camera.rotation.copy(initialCameraRotation);
         controls.target.copy(initialControlsTarget);
         controls.update();
+        console.log('Camera position after reset:', camera.position.clone().toArray());
+        console.log('Camera rotation after reset:', camera.rotation.clone().toArray());
     }
     
     window.showOnly(modelId);
@@ -1380,72 +1446,175 @@ window.startNavigation = async (targetRoomName) => {
         }
     }
 
-    // Build 3D waypoints — all Y values are fixed floor heights + trail offset.
-    // The trail stops at the door point on the corridor and never enters room geometry.
-    const entX = graphNodes['Entrance'].x;
-    const entZ = graphNodes['Entrance'].z;
-
-    const waypoints3D = [];
-    let stairClimbEndPos = null; // set for multi-floor: top of the vertical rise
-
-    if (isGroundFloor) {
-        // Entrance → corridor graph (axis-aligned) → door point on corridor
-        waypoints3D.push(new THREE.Vector3(entX, groundY, entZ));
-        const eNode = entryNode('Entrance', doorSeg, doorPoint);
-        const graphPath = findShortestPath('Entrance', eNode);
-        for (let i = 1; i < graphPath.length; i++)
-            waypoints3D.push(new THREE.Vector3(graphPath[i].x, groundY, graphPath[i].z));
-        waypoints3D.push(new THREE.Vector3(doorPoint.x, groundY, doorPoint.z));
-    } else {
-        // Phase 1: go straight up (or down for basement) at the Entrance XZ position
-        waypoints3D.push(new THREE.Vector3(entX, groundY,      entZ));
-        waypoints3D.push(new THREE.Vector3(entX, targetFloorY, entZ));
-        stairClimbEndPos = waypoints3D[waypoints3D.length - 1].clone();
-
-        // Phase 2: navigate from Entrance on the target floor along corridors to door point
-        const eNode = entryNode('Entrance', doorSeg, doorPoint);
-        const fromEntrance = findShortestPath('Entrance', eNode);
-        for (let i = 1; i < fromEntrance.length; i++)
-            waypoints3D.push(new THREE.Vector3(fromEntrance[i].x, targetFloorY, fromEntrance[i].z));
-        waypoints3D.push(new THREE.Vector3(doorPoint.x, targetFloorY, doorPoint.z));
+    // Use waypoints from waypoints.gltf - greedy pathfinding to next closest waypoint that gets closer to room
+    const floorKey = name.startsWith('U') ? 'U' : (name.startsWith('1') ? '1' : (name.startsWith('2') ? '2' : 'E'));
+    
+    navPoints = [];
+    const destPoint = { x: doorPoint.x, z: doorPoint.z };
+    
+    // Get waypoints for ground floor
+    const groundStart = window.waypointsData['E']?.['start']?.[0];
+    const groundStairs = window.waypointsData['E']?.['stairs']?.[0];
+    const groundIntersections = [];
+    for (const [type, points] of Object.entries(window.waypointsData['E'] || {})) {
+        if (type.startsWith('Intersection')) groundIntersections.push(...points);
     }
-
-    // Densely interpolate waypoints into a smooth point array
-    const rawPath = [];
-    for (let i = 0; i < waypoints3D.length - 1; i++) {
-        const p1 = waypoints3D[i], p2 = waypoints3D[i + 1];
-        const steps = Math.max(2, Math.ceil(p1.distanceTo(p2) / 0.5));
-        for (let j = 0; j < steps; j++) {
-            const t = j / steps;
-            rawPath.push(new THREE.Vector3(
-                p1.x + (p2.x - p1.x) * t,
-                p1.y + (p2.y - p1.y) * t,
-                p1.z + (p2.z - p1.z) * t
-            ));
+    
+    // Get waypoints for target floor
+    const targetStart = window.waypointsData[floorKey]?.['start']?.[0];
+    const targetStairs = window.waypointsData[floorKey]?.['stairs']?.[0];
+    const targetIntersections = [];
+    for (const [type, points] of Object.entries(window.waypointsData[floorKey] || {})) {
+        if (type.startsWith('Intersection')) targetIntersections.push(...points);
+    }
+    
+// Build waypoint lists with Y coordinates (include door as internal waypoint)
+    const groundWaypoints = [
+        groundStart ? { ...groundStart, y: groundY } : null,
+        ...groundIntersections.map(i => ({ ...i, y: groundY })),
+        groundStairs ? { ...groundStairs, y: groundY } : null,
+        { x: doorPoint.x, y: groundY, z: doorPoint.z, name: 'door_ground', isDoor: true }
+    ].filter(Boolean);
+    
+    const targetWaypoints = [
+        ...targetIntersections.map(i => ({ ...i, y: targetFloorY })),
+        targetStart ? { ...targetStart, y: targetFloorY } : null,
+        { x: doorPoint.x, y: targetFloorY, z: doorPoint.z, name: 'door_target', isDoor: true }
+    ].filter(Boolean);
+    
+    // Start at ground floor entrance
+    const startPos = groundStart ? { x: groundStart.x, y: groundY, z: groundStart.z } : { x: 4, y: groundY, z: -8 };
+    navPoints.push(new THREE.Vector3(startPos.x, startPos.y, startPos.z));
+    
+    if (isGroundFloor) {
+        // Same floor - greedy path to room
+        let current = { x: startPos.x, y: startPos.y, z: startPos.z };
+        const visited = new Set();
+        
+        while (true) {
+            let bestWP = null;
+            let bestScore = Infinity;
+            
+            for (const wp of groundWaypoints) {
+                if (visited.has(wp.name)) continue;
+                
+                const distToWP = Math.hypot(wp.x - current.x, wp.z - current.z);
+                const remainingToDest = Math.hypot(wp.x - destPoint.x, wp.z - destPoint.z);
+                const currentToDest = Math.hypot(current.x - destPoint.x, current.z - destPoint.z);
+                
+                // Must get closer to destination
+                if (remainingToDest >= currentToDest) continue;
+                
+                // Pick waypoint with best score (closest that gets closer)
+                const score = distToWP;
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestWP = wp;
+                }
+            }
+            
+            if (!bestWP) break;
+            visited.add(bestWP.name);
+            current = { x: bestWP.x, y: bestWP.y, z: bestWP.z };
+            navPoints.push(new THREE.Vector3(bestWP.x, bestWP.y, bestWP.z));
+            
+            // Stop at door - no need to go to other waypoints
+            if (bestWP.isDoor) break;
+        }
+    } else {
+        // Multi-floor: go to stairs first
+        let current = { x: startPos.x, y: startPos.y, z: startPos.z };
+        const visited = new Set();
+        
+        // Phase 1: Ground floor path to stairs
+        while (groundStairs && !(Math.abs(current.x - groundStairs.x) < 0.1 && Math.abs(current.z - groundStairs.z) < 0.1)) {
+            let bestWP = null;
+            let bestScore = Infinity;
+            
+            for (const wp of groundWaypoints) {
+                if (visited.has(wp.name)) continue;
+                
+                const distToWP = Math.hypot(wp.x - current.x, wp.z - current.z);
+                const remainingToStairs = Math.hypot(wp.x - groundStairs.x, wp.z - groundStairs.z);
+                const currentToStairs = Math.hypot(current.x - groundStairs.x, current.z - groundStairs.z);
+                
+                if (remainingToStairs >= currentToStairs) continue;
+                
+                const score = distToWP;
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestWP = wp;
+                }
+            }
+            
+            if (!bestWP) break;
+            visited.add(bestWP.name);
+            current = { x: bestWP.x, y: bestWP.y, z: bestWP.z };
+            navPoints.push(new THREE.Vector3(bestWP.x, bestWP.y, bestWP.z));
+        }
+        
+        // Add stairs transition
+        if (groundStairs) {
+            navPoints.push(new THREE.Vector3(groundStairs.x, groundY, groundStairs.z));
+            navPoints.push(new THREE.Vector3(targetStairs?.x || groundStairs.x, targetFloorY, targetStairs?.z || groundStairs.z));
+        }
+        
+        // Phase 2: After stairs, always go to start first
+        if (targetStart) {
+            navPoints.push(new THREE.Vector3(targetStart.x, targetFloorY, targetStart.z));
+        }
+        
+// Then greedy path to room from start
+        current = { x: targetStart?.x || targetStairs?.x || current.x, y: targetFloorY, z: targetStart?.z || targetStairs?.z || current.z };
+        const visited2 = new Set();
+        targetStart && visited2.add(targetStart.name);
+        
+        while (true) {
+            let bestWP = null;
+            let bestScore = Infinity;
+            
+            for (const wp of targetWaypoints) {
+                if (visited2.has(wp.name)) continue;
+                
+                const distToWP = Math.hypot(wp.x - current.x, wp.z - current.z);
+                const remainingToDest = Math.hypot(wp.x - destPoint.x, wp.z - destPoint.z);
+                const currentToDest = Math.hypot(current.x - destPoint.x, current.z - destPoint.z);
+                
+                if (remainingToDest >= currentToDest) continue;
+                
+                const score = distToWP;
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestWP = wp;
+                }
+            }
+            
+            if (!bestWP) break;
+            visited2.add(bestWP.name);
+            current = { x: bestWP.x, y: bestWP.y, z: bestWP.z };
+            navPoints.push(new THREE.Vector3(bestWP.x, bestWP.y, bestWP.z));
+            
+            // Stop at door - no need to go to other waypoints
+            if (bestWP.isDoor) break;
         }
     }
-    rawPath.push(waypoints3D[waypoints3D.length - 1].clone());
-
-    navPoints = rawPath.filter((p, i, arr) => i === 0 || p.distanceTo(arr[i - 1]) > 0.01);
-    if (navPoints.length < 2)
-        navPoints.push(navPoints[0].clone().add(new THREE.Vector3(0, 0.01, 0)));
-
-    // Find where the staircase climb ends in navPoints (for floor-switch timing)
+    
+    // Add room center (door already added during greedy path if applicable)
+    navPoints.push(new THREE.Vector3(endCenter.x, targetFloorY, endCenter.z));
+    
+    // Find split index for floor transition
     let navSplitIdx = navPoints.length - 1;
-    if (stairClimbEndPos) {
-        for (let i = 0; i < navPoints.length; i++) {
-            if (navPoints[i].distanceTo(stairClimbEndPos) < 1.0) {
-                navSplitIdx = i;
-                break;
-            }
+    for (let i = 0; i < navPoints.length - 1; i++) {
+        if (Math.abs(navPoints[i].y - groundY) < 0.1 && Math.abs(navPoints[i + 1].y - targetFloorY) < 0.1) {
+            navSplitIdx = i + 1;
+            break;
         }
     }
     const splitProgress = navSplitIdx / (navPoints.length - 1);
-
-    // Main tube (full path, animated incrementally)
+    
+    // Create tube geometry from waypoints
     const curve = new THREE.CatmullRomCurve3(navPoints, false, 'catmullrom', 0);
-    const totalSubdivs = Math.max(128, navPoints.length * 2);
-    const tubeGeom = new THREE.TubeGeometry(curve, totalSubdivs, 0.3, 8, false);
+    const tubeGeom = new THREE.TubeGeometry(curve, Math.max(128, navPoints.length * 2), 0.3, 8, false);
     const tubeMat  = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.85, depthTest: false });
     navPath = new THREE.Mesh(tubeGeom, tubeMat);
     tubeGeom.setDrawRange(0, 0);
