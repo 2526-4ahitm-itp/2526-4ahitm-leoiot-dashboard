@@ -1434,7 +1434,11 @@ window.startNavigation = async (targetRoomName) => {
     }
 
     // Always start by showing the ground floor model (navigation begins at the entrance)
-    window.showOnly('ModelE.gltf');
+    if (modelCache['ModelE.gltf']) {
+        if(currentModel) scene.remove(currentModel);
+        currentModel = modelCache['ModelE.gltf'];
+        scene.add(currentModel);
+    }
     // Update button active state to reflect ground floor
     {
         const container = document.getElementById('button-container');
@@ -1468,17 +1472,17 @@ window.startNavigation = async (targetRoomName) => {
         if (type.startsWith('Intersection')) targetIntersections.push(...points);
     }
     
-// Build waypoint lists with Y coordinates (include door as internal waypoint)
+// Build waypoint lists with Y coordinates (NO door - add it after greedy path)
     const groundWaypoints = [
         groundStart ? { ...groundStart, y: groundY } : null,
-        ...groundIntersections.map(i => ({ ...i, y: groundY })),
-        groundStairs ? { ...groundStairs, y: groundY } : null,
+        ...groundIntersections.map(i => ({ ...i, y: groundY, isHallway: true })),
+        groundStairs ? { ...groundStairs, y: groundY, isHallway: true } : null,
         { x: doorPoint.x, y: groundY, z: doorPoint.z, name: 'door_ground', isDoor: true }
     ].filter(Boolean);
     
     const targetWaypoints = [
-        ...targetIntersections.map(i => ({ ...i, y: targetFloorY })),
-        targetStart ? { ...targetStart, y: targetFloorY } : null,
+        ...targetIntersections.map(i => ({ ...i, y: targetFloorY, isHallway: true })),
+        targetStart ? { ...targetStart, y: targetFloorY, isHallway: true } : null,
         { x: doorPoint.x, y: targetFloorY, z: doorPoint.z, name: 'door_target', isDoor: true }
     ].filter(Boolean);
     
@@ -1519,7 +1523,10 @@ window.startNavigation = async (targetRoomName) => {
             navPoints.push(new THREE.Vector3(bestWP.x, bestWP.y, bestWP.z));
             
             // Stop at door - no need to go to other waypoints
-            if (bestWP.isDoor) break;
+            if (bestWP.isDoor) {
+                navPoints.push(new THREE.Vector3(endCenter.x, groundY, endCenter.z));
+                break;
+            }
         }
     } else {
         // Multi-floor: go to stairs first
@@ -1595,12 +1602,12 @@ window.startNavigation = async (targetRoomName) => {
             navPoints.push(new THREE.Vector3(bestWP.x, bestWP.y, bestWP.z));
             
             // Stop at door - no need to go to other waypoints
-            if (bestWP.isDoor) break;
+            if (bestWP.isDoor) {
+                navPoints.push(new THREE.Vector3(endCenter.x, targetFloorY, endCenter.z));
+                break;
+            }
         }
     }
-    
-    // Add room center (door already added during greedy path if applicable)
-    navPoints.push(new THREE.Vector3(endCenter.x, targetFloorY, endCenter.z));
     
     // Find split index for floor transition
     let navSplitIdx = navPoints.length - 1;
@@ -1660,7 +1667,12 @@ window.startNavigation = async (targetRoomName) => {
 
         // Switch to target floor model exactly when the staircase climb finishes
         if (!isGroundFloor && !floorSwitched && navAnimationProgress >= splitProgress) {
-            window.showOnly(floorId);
+            // Directly switch model instead of calling showOnly (avoids extra logic)
+            if (modelCache[floorId]) {
+                if(currentModel) scene.remove(currentModel);
+                currentModel = modelCache[floorId];
+                scene.add(currentModel);
+            }
             // Update button active state
             const floorLabel = { 'ModelU.gltf': 'Basement', 'Model1F.gltf': 'Floor\u00a01', 'Model2F.gltf': 'Floor\u00a02' }[floorId];
             const container = document.getElementById('button-container');
