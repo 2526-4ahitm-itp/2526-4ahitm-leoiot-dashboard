@@ -152,9 +152,9 @@ Promise.all(loadPromises).then(() => {
     // Initial view is the full building model.
     setHeatmapButtonState('ModelFull.gltf');
 
-    // Load waypoints from waypoints.gltf
+    // Load waypoints from waypoints.gltf (with cache busting)
     return new Promise((resolve, reject) => {
-        loader.load('./waypoints.gltf', (gltf) => {
+        loader.load(`./waypoints.gltf?v=${Date.now()}`, (gltf) => {
             window.waypointsData = {};
             gltf.scene.traverse((child) => {
                 if (child.isMesh && child.name) {
@@ -1461,16 +1461,22 @@ window.startNavigation = async (targetRoomName) => {
     const groundStairs = window.waypointsData['E']?.['stairs']?.[0];
     const groundIntersections = [];
     for (const [type, points] of Object.entries(window.waypointsData['E'] || {})) {
-        if (type.startsWith('Intersection')) groundIntersections.push(...points);
+        if (type.includes('Intersection') || type.includes('intersection')) {
+            groundIntersections.push(...points);
+        }
     }
+    console.log('Ground: start=', groundStart, 'stairs=', groundStairs, 'intersections=', groundIntersections.length, 'doorPoint=', doorPoint);
     
     // Get waypoints for target floor
     const targetStart = window.waypointsData[floorKey]?.['start']?.[0];
     const targetStairs = window.waypointsData[floorKey]?.['stairs']?.[0];
     const targetIntersections = [];
     for (const [type, points] of Object.entries(window.waypointsData[floorKey] || {})) {
-        if (type.startsWith('Intersection')) targetIntersections.push(...points);
+        if (type.includes('Intersection') || type.includes('intersection')) {
+            targetIntersections.push(...points);
+        }
     }
+    console.log('Target: start=', targetStart, 'stairs=', targetStairs, 'intersections=', targetIntersections.length);
     
 // Build waypoint lists with Y coordinates (NO door - add it after greedy path)
     const groundWaypoints = [
@@ -1479,7 +1485,6 @@ window.startNavigation = async (targetRoomName) => {
         groundStairs ? { ...groundStairs, y: groundY, isHallway: true } : null,
         { x: doorPoint.x, y: groundY, z: doorPoint.z, name: 'door_ground', isDoor: true }
     ].filter(Boolean);
-    
     const targetWaypoints = [
         ...targetIntersections.map(i => ({ ...i, y: targetFloorY, isHallway: true })),
         targetStart ? { ...targetStart, y: targetFloorY, isHallway: true } : null,
@@ -1491,9 +1496,24 @@ window.startNavigation = async (targetRoomName) => {
     navPoints.push(new THREE.Vector3(startPos.x, startPos.y, startPos.z));
     
     if (isGroundFloor) {
-        // Same floor - greedy path to room
-        let current = { x: startPos.x, y: startPos.y, z: startPos.z };
+        // Always go to intersection one or two first (pick closest to start)
+        const groundIntersectionsOneTwo = groundIntersections.filter(i => 
+            i.name.includes('Intersection_one') || i.name.includes('Intersection_two')
+        );
+        let firstWP = null;
+        if (groundIntersectionsOneTwo.length > 0) {
+            let minDist = Infinity;
+            for (const i of groundIntersectionsOneTwo) {
+                const d = Math.hypot(i.x - startPos.x, i.z - startPos.z);
+                if (d < minDist) { minDist = d; firstWP = i; }
+            }
+            if (firstWP) navPoints.push(new THREE.Vector3(firstWP.x, groundY, firstWP.z));
+        }
+        
+        // Then greedy path to room from that intersection
+        let current = firstWP ? { x: firstWP.x, y: groundY, z: firstWP.z } : { x: startPos.x, y: startPos.y, z: startPos.z };
         const visited = new Set();
+        if (firstWP) visited.add(firstWP.name);
         
         while (true) {
             let bestWP = null;
@@ -1522,11 +1542,17 @@ window.startNavigation = async (targetRoomName) => {
             current = { x: bestWP.x, y: bestWP.y, z: bestWP.z };
             navPoints.push(new THREE.Vector3(bestWP.x, bestWP.y, bestWP.z));
             
-            // Stop at door - no need to go to other waypoints
+            // Stop at door - then go to room center
             if (bestWP.isDoor) {
                 navPoints.push(new THREE.Vector3(endCenter.x, groundY, endCenter.z));
                 break;
             }
+        }
+        
+        // Fallback: if no waypoints were visited, go directly to door then room center
+        if (navPoints.length === 1) {
+            navPoints.push(new THREE.Vector3(doorPoint.x, groundY, doorPoint.z));
+            navPoints.push(new THREE.Vector3(endCenter.x, groundY, endCenter.z));
         }
     } else {
         // Multi-floor: go to stairs first
@@ -1571,10 +1597,29 @@ window.startNavigation = async (targetRoomName) => {
             navPoints.push(new THREE.Vector3(targetStart.x, targetFloorY, targetStart.z));
         }
         
+        // Then always go to intersection one or two next (pick closest to start)
+        const targetIntersectionsOneTwo = targetIntersections.filter(i => 
+            i.name.includes('Intersection_one') || i.name.includes('Intersection_two')
+        );
+        let targetFirstWP = null;
+        if (targetIntersectionsOneTwo.length > 0 && targetStart) {
+            let minDist = Infinity;
+            for (const i of targetIntersectionsOneTwo) {
+                const d = Math.hypot(i.x - targetStart.x, i.z - targetStart.z);
+                if (d < minDist) { minDist = d; targetFirstWP = i; }
+            }
+            if (targetFirstWP) navPoints.push(new THREE.Vector3(targetFirstWP.x, targetFloorY, targetFirstWP.z));
+        }
+        
 // Then greedy path to room from start
-        current = { x: targetStart?.x || targetStairs?.x || current.x, y: targetFloorY, z: targetStart?.z || targetStairs?.z || current.z };
+        current = { 
+            x: targetFirstWP?.x || targetStart?.x || targetStairs?.x || current.x, 
+            y: targetFloorY, 
+            z: targetFirstWP?.z || targetStart?.z || targetStairs?.z || current.z 
+        };
         const visited2 = new Set();
-        targetStart && visited2.add(targetStart.name);
+        if (targetStart) visited2.add(targetStart.name);
+        if (targetFirstWP) visited2.add(targetFirstWP.name);
         
         while (true) {
             let bestWP = null;
@@ -1601,11 +1646,17 @@ window.startNavigation = async (targetRoomName) => {
             current = { x: bestWP.x, y: bestWP.y, z: bestWP.z };
             navPoints.push(new THREE.Vector3(bestWP.x, bestWP.y, bestWP.z));
             
-            // Stop at door - no need to go to other waypoints
+            // Stop at door - then go to room center
             if (bestWP.isDoor) {
                 navPoints.push(new THREE.Vector3(endCenter.x, targetFloorY, endCenter.z));
                 break;
             }
+        }
+        
+        // Fallback: if only start was visited (no other waypoints), add door then room center
+        if (navPoints.length <= 2) {
+            navPoints.push(new THREE.Vector3(doorPoint.x, targetFloorY, doorPoint.z));
+            navPoints.push(new THREE.Vector3(endCenter.x, targetFloorY, endCenter.z));
         }
     }
     
