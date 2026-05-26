@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTL Leonding PV Dashboard</title>
+  <link rel="stylesheet" href="kiosk.css" />
+</head>
+<body>
+  <div class="kiosk-root">
+    <header class="kiosk-header">
+      <img src="htllogo.png" class="kiosk-logo" alt="HTL Leonding" />
+      <div class="kiosk-meta">
+        <span id="kioskClock">--</span>
+        <span class="meta-sep">&middot;</span>
+        <span id="kioskUpdated">Updated: --</span>
+      </div>
+    </header>
+
+    <div class="kiosk-body">
+      <!-- Left column: info boxes + main chart -->
+      <div class="left-col">
+        <div class="info-boxes">
+          <div class="info-box" style="--accent:#0ea5e9">
+            <div class="info-box-label">Current Weather &middot; <span id="boxWeatherTemp">--&deg;C</span></div>
+            <div class="info-box-value" id="boxWeather">--</div>
+          </div>
+          <div class="info-box" style="--accent:#f59e0b">
+            <div class="info-box-label">Generated Today</div>
+            <div class="info-box-value" id="boxGenerated">-- kWh</div>
+          </div>
+          <div class="info-box" style="--accent:#3b82f6">
+            <div class="info-box-label">Consumed Today</div>
+            <div class="info-box-value" id="boxConsumed">-- kWh</div>
+          </div>
+          <div class="info-box" style="--accent:#22c55e">
+            <div class="info-box-label">CO&#8322; Avoided Today</div>
+            <div class="info-box-value" id="boxCO2">-- kg</div>
+          </div>
+          <div class="info-box" style="--accent:#a78bfa">
+            <div class="info-box-label">Lifetime Generated</div>
+            <div class="info-box-value" id="boxLifetime">-- kWh</div>
+          </div>
+        </div>
+
+        <section class="main-panel">
+          <div class="panel-header">
+            <h2 id="mainTitle">Today's PV Overview</h2>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="mainChart"></canvas>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right column: last 6 days -->
+      <aside class="history-panel">
+        <!-- Populated by kiosk.js -->
+      </aside>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script src="kiosk.js" type="module"></script>
+</body>
+</html>

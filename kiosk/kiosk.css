@@ -1,0 +1,287 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --g: 10px; /* single gap used everywhere so all edges align */
+}
+
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #1a1c20;
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.kiosk-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: var(--g);
+  gap: var(--g);
+}
+
+/* ── Header ── */
+.kiosk-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.kiosk-logo {
+  height: 38px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.kiosk-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.meta-sep {
+  opacity: 0.3;
+}
+
+/* ── Body: left col + history panel ── */
+.kiosk-body {
+  flex: 1;
+  display: flex;
+  gap: var(--g);
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Left column (70%) ── */
+.left-col {
+  flex: 7;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--g);
+}
+
+/* ── Info boxes ── */
+.info-boxes {
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--g);
+}
+
+.info-box {
+  flex: 1;
+  background: #22252b;
+  border-radius: 10px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent, #f59e0b);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.info-box-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.info-box-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent, #fff);
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Main chart panel ── */
+.main-panel {
+  flex: 1;
+  min-height: 0;
+  background: #22252b;
+  border-radius: 12px;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel-header h2 {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.2px;
+}
+
+.chart-wrap {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.chart-wrap canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── History panel (30%) ── */
+.history-panel {
+  flex: 3;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--g);
+  overflow: hidden;
+}
+
+.day-panel {
+  flex: 1;
+  min-height: 0;
+  background: #22252b;
+  border-radius: 8px;
+  padding: 5px 10px 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.day-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.day-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.3px;
+}
+
+.day-stats {
+  display: flex;
+  gap: 7px;
+}
+
+.day-stat-gen,
+.day-stat-con,
+.day-stat-co2 {
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.day-chart-wrap {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.day-chart-wrap canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── Responsive / Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .kiosk-root {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .kiosk-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .kiosk-title {
+    font-size: 16px;
+  }
+
+  .kiosk-meta {
+    font-size: 10px;
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .kiosk-body {
+    flex-direction: column;
+    overflow: visible;
+    height: auto;
+    min-height: unset;
+  }
+
+  .left-col {
+    flex: none;
+    min-height: unset;
+  }
+
+  /* Info boxes: 2 × 3 grid on mobile */
+  .info-boxes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--g);
+  }
+
+  .info-box-value {
+    font-size: 16px;
+  }
+
+  /* Main chart: fixed height */
+  .main-panel {
+    flex: none;
+    height: 300px;
+  }
+
+  /* History: 2-column grid of day cards */
+  .history-panel {
+    flex: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--g);
+    overflow: visible;
+    height: auto;
+  }
+
+  .day-panel {
+    flex: none;
+    height: 140px;
+  }
+
+  .day-stat-gen,
+  .day-stat-con,
+  .day-stat-co2 {
+    font-size: 8px;
+  }
+}
