@@ -7,6 +7,7 @@ export default defineConfig({
   root: './frontend',
   server: {
     port: 5173,
+    allowedHosts: ['localhost', 'vm23.htl-leonding.ac.at'],
     proxy: {
       '/grafana': {
         target: 'http://localhost:3000',
