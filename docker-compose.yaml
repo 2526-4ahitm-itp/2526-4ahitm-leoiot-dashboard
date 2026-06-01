@@ -128,6 +128,23 @@ services:
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     ports:
       - "8082:8082"
+    environment:
+      - DOCKER_ENV=1
+    depends_on:
+      - influxdb
+    networks:
+      - leoiot
+
+  kiosk2:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./kiosk2:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "8083:8083"
+    environment:
+      - DOCKER_ENV=1
     depends_on:
       - influxdb
     networks:

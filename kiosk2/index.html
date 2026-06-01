@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTL Leonding PV Overview</title>
+  <link rel="stylesheet" href="kiosk2.css" />
+</head>
+<body>
+  <div class="k2-root">
+    <header class="k2-header">
+      <div class="k2-header-brand">
+        <img src="../kiosk/htllogo.png" class="k2-logo" alt="HTL Leonding" onerror="this.style.display='none'" />
+        <div class="k2-brand-text">
+          <span class="k2-brand-name">HTL Leonding</span>
+          <span class="k2-brand-sub">next level</span>
+        </div>
+      </div>
+      <div class="k2-header-meta">
+        <span id="k2Clock">--</span>
+        <span class="k2-sep">&middot;</span>
+        <span id="k2Updated">Updated: --</span>
+      </div>
+    </header>
+
+    <div class="k2-main">
+      <!-- Top: 3 large stats -->
+      <div class="k2-top-stats">
+        <div class="k2-stat" style="--c:#f59e0b">
+          <div class="k2-stat-label">PV GENERATED</div>
+          <div class="k2-stat-value" id="statGenerated">-- W</div>
+        </div>
+        <div class="k2-stat" style="--c:#3b82f6">
+          <div class="k2-stat-label">CONSUMED</div>
+          <div class="k2-stat-value" id="statConsumed">-- W</div>
+        </div>
+        <div class="k2-stat" style="--c:#ef4444">
+          <div class="k2-stat-label">FROM GRID</div>
+          <div class="k2-stat-value" id="statGrid">-- W</div>
+        </div>
+      </div>
+
+      <!-- Chart: last 7 days grouped bars -->
+      <section class="k2-chart-panel">
+        <canvas id="historyChart"></canvas>
+      </section>
+
+      <!-- Bottom: 5 summary stats -->
+      <div class="k2-bottom-stats">
+        <div class="k2-bottom-stat">
+          <div class="k2-bottom-label">GENERATED</div>
+          <div class="k2-bottom-value" id="bGenerated" style="color:#f59e0b">-- W</div>
+        </div>
+        <div class="k2-bottom-stat">
+          <div class="k2-bottom-label">CONSUMED</div>
+          <div class="k2-bottom-value" id="bConsumed" style="color:#3b82f6">-- W</div>
+        </div>
+        <div class="k2-bottom-stat">
+          <div class="k2-bottom-label">DIRECT</div>
+          <div class="k2-bottom-value" id="bDirect" style="color:#22c55e">--%</div>
+          <div class="k2-bottom-sub" id="bDirectKwh">-- W</div>
+        </div>
+        <div class="k2-bottom-stat">
+          <div class="k2-bottom-label">FROM GRID</div>
+          <div class="k2-bottom-value" id="bGrid" style="color:#ef4444">--%</div>
+          <div class="k2-bottom-sub" id="bGridKwh">-- W</div>
+        </div>
+        <div class="k2-bottom-stat">
+          <div class="k2-bottom-label">CO&#8322; AVOIDED</div>
+          <div class="k2-bottom-value" id="bCo2" style="color:#a78bfa">-- kg</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script src="kiosk2.js" type="module"></script>
+</body>
+</html>
