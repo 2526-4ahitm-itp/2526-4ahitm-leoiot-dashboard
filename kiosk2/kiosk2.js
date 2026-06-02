@@ -15,19 +15,19 @@ function getCETMidnightMs() {
   return new Date(`${dateStr}T00:00:00Z`).getTime() - offset * 3600000;
 }
 
-async function fetchPowerData() {
+async function fetchHourlyData() {
   const startMs = getCETMidnightMs();
   const startISO = new Date(startMs).toISOString();
 
+  // Get last cumulative value per 1h window — compute diffs in JS to avoid Flux derivative spikes
   const query = `
 from(bucket: "${INFLUX_BUCKET}")
   |> range(start: ${startISO})
   |> filter(fn: (r) => r._measurement == "solax_stats")
   |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption"
        or r._field == "daily_imported" or r._field == "daily_exported")
-  |> aggregateWindow(every: 5m, fn: last, createEmpty: false)
-  |> derivative(unit: 1h, nonNegative: true)
-  |> yield(name: "power")`;
+  |> aggregateWindow(every: 1h, fn: last, createEmpty: false)
+  |> yield(name: "hourly")`;
 
   try {
     const resp = await fetch(`${INFLUX_URL}/api/v2/query?org=${INFLUX_ORG}&t=${Date.now()}`, {
@@ -42,14 +42,14 @@ from(bucket: "${INFLUX_BUCKET}")
       body: query,
     });
     if (!resp.ok) return null;
-    return parsePowerCSV(await resp.text(), startMs);
+    return parseHourlyCSV(await resp.text(), startMs);
   } catch (e) {
     console.error('[kiosk2] fetch error:', e);
     return null;
   }
 }
 
-function parsePowerCSV(csv, startMs) {
+function parseHourlyCSV(csv, startMs) {
   const lines = csv.trim().split('\n');
   if (lines.length < 2) return null;
 
@@ -59,22 +59,55 @@ function parsePowerCSV(csv, startMs) {
   const ti = headers.indexOf('_time');
   if (vi < 0 || fi < 0 || ti < 0) return null;
 
-  const byTime = new Map();
+  const byHour = new Map();
 
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
     if (!cols[vi] || !cols[fi] || !cols[ti]) continue;
     const field = cols[fi];
     const val = parseFloat(cols[vi]);
+    if (!isFinite(val)) continue;
     const t = new Date(cols[ti]).getTime();
-    const hourDec = (t - startMs) / 3600000;
-    if (!isFinite(val) || hourDec < 0 || hourDec > 24.1) continue;
-    const key = cols[ti];
-    if (!byTime.has(key)) byTime.set(key, { x: hourDec });
-    byTime.get(key)[field] = val;
+    const hourDec = Math.round((t - startMs) / 3600000); // hour index 0-23
+    if (hourDec < 0 || hourDec > 24) continue;
+    if (!byHour.has(hourDec)) byHour.set(hourDec, { hour: hourDec });
+    byHour.get(hourDec)[field] = val;
   }
 
-  return [...byTime.values()].sort((a, b) => a.x - b.x);
+  return [...byHour.values()].sort((a, b) => a.hour - b.hour);
+}
+
+// Compute per-hour kWh by diffing consecutive cumulative values
+function computeHourlyKwh(snapshots) {
+  const result = [];
+  for (let i = 1; i < snapshots.length; i++) {
+    const prev = snapshots[i - 1];
+    const curr = snapshots[i];
+
+    const diff = (field) => {
+      const d = (curr[field] ?? prev[field] ?? 0) - (prev[field] ?? 0);
+      return Math.max(0, d);
+    };
+
+    const produktion    = diff('daily_yield');
+    const vomNetz       = diff('daily_imported');
+    const insNetz       = diff('daily_exported');
+    const consumption   = diff('consumption');
+    const direktverbrauch = Math.max(0, consumption - vomNetz);
+
+    result.push({
+      hour: curr.hour,
+      produktion,
+      direktverbrauch,
+      vomNetz,
+      insNetz,
+    });
+  }
+  return result;
+}
+
+function hourLabel(h) {
+  return `${String(h - 1).padStart(2, '0')}:00`;
 }
 
 // Plugin: vertical line at current time
@@ -85,32 +118,31 @@ const currentTimePlugin = {
     const hourNow = (Date.now() - startMs) / 3600000;
     if (hourNow < 0 || hourNow > 24) return;
     const { ctx, chartArea, scales } = chart;
-    const x = scales.x.getPixelForValue(hourNow);
+    const x = scales.x.getPixelForValue(Math.floor(hourNow));
+    if (x < chartArea.left || x > chartArea.right) return;
     ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 1.5;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
     ctx.moveTo(x, chartArea.top);
     ctx.lineTo(x, chartArea.bottom);
     ctx.stroke();
-
-    // time label above line
     const hh = String(Math.floor(hourNow)).padStart(2, '0');
     const mm = String(Math.round((hourNow % 1) * 60)).padStart(2, '0');
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${hh}:${mm}`, x, chartArea.top - 4);
+    ctx.fillText(`${hh}:${mm}`, x, chartArea.top - 6);
     ctx.restore();
   },
 };
 
 function initChart() {
   dsChart = new Chart(document.getElementById('dsChart').getContext('2d'), {
-    type: 'line',
-    data: { datasets: [] },
+    type: 'bar',
+    data: { labels: [], datasets: [] },
     plugins: [currentTimePlugin],
     options: {
       responsive: true,
@@ -125,7 +157,7 @@ function initChart() {
             color: 'rgba(255,255,255,0.6)',
             font: { size: 13 },
             usePointStyle: true,
-            pointStyle: 'circle',
+            pointStyle: 'rect',
             padding: 22,
           },
         },
@@ -137,39 +169,39 @@ function initChart() {
           titleColor: 'rgba(255,255,255,0.8)',
           bodyColor: 'rgba(255,255,255,0.65)',
           callbacks: {
-            title: items => {
-              const h = items[0].parsed.x;
-              const hh = String(Math.floor(h)).padStart(2, '0');
-              const mm = String(Math.round((h % 1) * 60)).padStart(2, '0');
-              return `${hh}:${mm}`;
+            label: ctx => {
+              const val = Math.abs(ctx.parsed.y).toFixed(3);
+              return ` ${ctx.dataset.label}: ${val} kWh`;
             },
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} kW`,
           },
         },
       },
       scales: {
         x: {
-          type: 'linear',
-          min: 0,
-          max: 24,
+          stacked: true,
           ticks: {
-            stepSize: 2,
             color: 'rgba(255,255,255,0.35)',
             font: { size: 11 },
-            callback: v => `${String(v).padStart(2, '0')}:00`,
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 13,
           },
           grid: { color: 'rgba(255,255,255,0.05)' },
           border: { color: 'rgba(255,255,255,0.06)' },
         },
         y: {
-          suggestedMin: 0,
+          stacked: true,
           ticks: {
             color: 'rgba(255,255,255,0.35)',
             font: { size: 11 },
-            callback: v => `${v} kW`,
-            maxTicksLimit: 8,
+            callback: v => `${v} kWh`,
+            maxTicksLimit: 9,
           },
-          grid: { color: 'rgba(255,255,255,0.05)' },
+          grid: {
+            color: ctx => ctx.tick.value === 0
+              ? 'rgba(255,255,255,0.2)'
+              : 'rgba(255,255,255,0.05)',
+          },
           border: { color: 'rgba(255,255,255,0.06)' },
         },
       },
@@ -177,97 +209,101 @@ function initChart() {
   });
 }
 
-function buildDatasets(points) {
-  const produktion    = points.map(p => ({ x: p.x, y: +(p.daily_yield ?? 0).toFixed(3) }));
-  const direktverbrauch = points.map(p => ({
-    x: p.x,
-    y: +Math.max(0, (p.consumption ?? 0) - (p.daily_imported ?? 0)).toFixed(3),
-  }));
-  const insNetz = points.map(p => ({ x: p.x, y: +(p.daily_exported ?? 0).toFixed(3) }));
-  const vomNetz = points.map(p => ({ x: p.x, y: +(p.daily_imported ?? 0).toFixed(3) }));
+function buildDatasets(hourly) {
+  const labels        = hourly.map(h => hourLabel(h.hour));
+  const direktData    = hourly.map(h => +h.direktverbrauch.toFixed(3));
+  const vomNetzData   = hourly.map(h => +h.vomNetz.toFixed(3));
+  const insNetzData   = hourly.map(h => +(-h.insNetz).toFixed(3)); // negative → goes below zero
+  const prodData      = hourly.map(h => +h.produktion.toFixed(3));
 
-  return [
-    {
-      label: 'Produktion',
-      data: produktion,
-      borderColor: '#f59e0b',
-      backgroundColor: 'rgba(245,158,11,0.18)',
-      fill: true,
-      borderWidth: 2.5,
-      pointRadius: 0,
-      tension: 0.4,
-      order: 4,
-    },
-    {
-      label: 'Direktverbrauch',
-      data: direktverbrauch,
-      borderColor: '#14b8a6',
-      backgroundColor: 'rgba(20,184,166,0.12)',
-      fill: true,
-      borderWidth: 2,
-      pointRadius: 0,
-      tension: 0.4,
-      order: 3,
-    },
-    {
-      label: 'Ins Netz',
-      data: insNetz,
-      borderColor: '#a78bfa',
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      pointRadius: 0,
-      tension: 0.4,
-      order: 2,
-    },
-    {
-      label: 'Vom Netz',
-      data: vomNetz,
-      borderColor: '#ef4444',
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      pointRadius: 0,
-      tension: 0.4,
-      order: 1,
-    },
-  ];
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'Direktverbrauch',
+        data: direktData,
+        backgroundColor: 'rgba(34,197,94,0.85)',
+        borderColor: 'rgba(34,197,94,0.4)',
+        borderWidth: 0,
+        stack: 'use',
+        order: 2,
+      },
+      {
+        label: 'Vom Netz',
+        data: vomNetzData,
+        backgroundColor: 'rgba(14,165,233,0.85)',
+        borderColor: 'rgba(14,165,233,0.4)',
+        borderWidth: 0,
+        stack: 'use',
+        order: 1,
+      },
+      {
+        label: 'Ins Netz (Export)',
+        data: insNetzData,
+        backgroundColor: 'rgba(245,158,11,0.85)',
+        borderColor: 'rgba(245,158,11,0.4)',
+        borderWidth: 0,
+        stack: 'export',
+        order: 3,
+      },
+      {
+        label: 'Produktion',
+        data: prodData,
+        type: 'line',
+        borderColor: 'rgba(167,139,250,0.8)',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.4,
+        stack: undefined,
+        order: 0,
+      },
+    ],
+  };
 }
 
-function updateStats(points) {
-  if (!points.length) return;
-  const last = points[points.length - 1];
-  const gen  = last.daily_yield    ?? 0;
-  const con  = last.consumption    ?? 0;
-  const imp  = last.daily_imported ?? 0;
-  const exp  = last.daily_exported ?? 0;
-  const direkt = Math.max(0, con - imp);
+function updateStats(snapshots) {
+  if (!snapshots.length) return;
+  const last = snapshots[snapshots.length - 1];
+  const gen   = last.daily_yield    ?? 0;
+  const cons  = last.consumption    ?? 0;
+  const imp   = last.daily_imported ?? 0;
+  const exp   = last.daily_exported ?? 0;
+  const direkt = Math.max(0, cons - imp);
 
-  const fmt = v => `${v.toFixed(2)} kW`;
+  const fmt = v => `${v.toFixed(2)} kWh`;
   document.getElementById('statProduktion').textContent = fmt(gen);
-  document.getElementById('statVerbrauch').textContent  = fmt(con);
+  document.getElementById('statVerbrauch').textContent  = fmt(cons);
   document.getElementById('statInsNetz').textContent    = fmt(exp);
   document.getElementById('statVomNetz').textContent    = fmt(imp);
   document.getElementById('statDirekt').textContent     = fmt(direkt);
 }
 
 async function refresh() {
-  const points = await fetchPowerData();
-  if (!points || !points.length) return;
+  const snapshots = await fetchHourlyData();
+  if (!snapshots || snapshots.length < 2) return;
 
-  dsChart.data.datasets = buildDatasets(points);
+  const hourly = computeHourlyKwh(snapshots);
+  if (!hourly.length) return;
+
+  const { labels, datasets } = buildDatasets(hourly);
+  dsChart.data.labels   = labels;
+  dsChart.data.datasets = datasets;
   dsChart.update();
-  updateStats(points);
 
-  const now = new Date();
+  updateStats(snapshots);
+
   document.getElementById('dsUpdated').textContent =
-    `Updated: ${now.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })}`;
+    `Updated: ${new Date().toLocaleTimeString('de-AT', {
+      timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit',
+    })}`;
 }
 
 function startClock() {
   const tick = () => {
     document.getElementById('dsClock').textContent =
       new Date().toLocaleTimeString('de-AT', {
-        timeZone: 'Europe/Vienna',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit', second: '2-digit',
       });
   };
   tick();
