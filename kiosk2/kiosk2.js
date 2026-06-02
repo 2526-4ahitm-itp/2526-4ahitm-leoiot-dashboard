@@ -49,7 +49,8 @@ from(bucket: "${INFLUX_BUCKET}")
   |> range(start: ${startISO}, stop: ${stopISO})
   |> filter(fn: (r) => r._measurement == "solax_stats")
   |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption"
-       or r._field == "daily_imported" or r._field == "daily_exported")
+       or r._field == "daily_imported" or r._field == "daily_exported"
+       or r._field == "daily_charged")
   |> aggregateWindow(every: 1h, fn: last, createEmpty: false)
   |> yield(name: "hourly")`;
 
@@ -114,8 +115,9 @@ function computeHourlyKwh(snapshots) {
     const insNetz         = diff('daily_exported');
     const consumption     = diff('consumption');
     const direktverbrauch = Math.max(0, consumption - vomNetz);
+    const batterie        = diff('daily_charged');
 
-    result.push({ hour: curr.hour, produktion, direktverbrauch, vomNetz, insNetz });
+    result.push({ hour: curr.hour, produktion, direktverbrauch, vomNetz, insNetz, batterie });
   }
   return result;
 }
@@ -125,8 +127,6 @@ function computeHourlyKwh(snapshots) {
 function hourLabel(h) {
   return `${String(h - 1).padStart(2, '0')}:00`;
 }
-
-const NULL_ZERO = v => (v === 0 ? null : v);
 
 const currentTimePlugin = {
   id: 'currentTimeLine',
@@ -227,12 +227,30 @@ function initChart() {
   });
 }
 
+// Always render full 24-hour x-axis; missing or zero → null (no bar stub)
 function buildDatasets(hourly) {
-  const labels          = hourly.map(h => hourLabel(h.hour));
-  const direktData      = hourly.map(h => NULL_ZERO(+h.direktverbrauch.toFixed(3)));
-  const vomNetzData     = hourly.map(h => NULL_ZERO(+h.vomNetz.toFixed(3)));
-  const insNetzData     = hourly.map(h => NULL_ZERO(+(-h.insNetz).toFixed(3)));
-  const prodData        = hourly.map(h => NULL_ZERO(+h.produktion.toFixed(3)));
+  const byHour = new Map(hourly.map(h => [h.hour, h]));
+  const hours  = Array.from({ length: 24 }, (_, i) => i + 1); // 1=00:00 … 24=23:00
+  const labels = hours.map(h => hourLabel(h));
+
+  const get = (h, field) => {
+    const e = byHour.get(h);
+    if (!e) return null;
+    const v = +e[field].toFixed(3);
+    return v === 0 ? null : v;
+  };
+  const getNeg = (h, field) => {
+    const e = byHour.get(h);
+    if (!e) return null;
+    const v = +(-e[field]).toFixed(3);
+    return v === 0 ? null : v;
+  };
+
+  const direktData   = hours.map(h => get(h, 'direktverbrauch'));
+  const vomNetzData  = hours.map(h => get(h, 'vomNetz'));
+  const insNetzData  = hours.map(h => getNeg(h, 'insNetz'));
+  const prodData     = hours.map(h => get(h, 'produktion'));
+  const batterieData = hours.map(h => get(h, 'batterie'));
 
   return {
     labels,
@@ -254,12 +272,20 @@ function buildDatasets(hourly) {
         order: 1,
       },
       {
+        label: 'Batterie Ladung',
+        data: batterieData,
+        backgroundColor: 'rgba(20,184,166,0.85)',
+        borderWidth: 0,
+        stack: 'use',
+        order: 3,
+      },
+      {
         label: 'Ins Netz (Export)',
         data: insNetzData,
         backgroundColor: 'rgba(245,158,11,0.85)',
         borderWidth: 0,
         stack: 'export',
-        order: 3,
+        order: 4,
       },
       {
         label: 'Produktion',
@@ -268,9 +294,9 @@ function buildDatasets(hourly) {
         borderColor: 'rgba(167,139,250,0.85)',
         backgroundColor: 'transparent',
         borderWidth: 2.5,
-        pointRadius: 3,
-        pointBackgroundColor: 'rgba(167,139,250,0.85)',
-        tension: 0.4,
+        pointRadius: 0,
+        tension: 0,
+        stepped: true,
         spanGaps: false,
         stack: undefined,
         order: 0,
