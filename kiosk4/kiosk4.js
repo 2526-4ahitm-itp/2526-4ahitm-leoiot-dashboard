@@ -256,6 +256,15 @@ function buildDatasets(hourly) {
         stack: 'production',
         order: 3,
       },
+      // ── Verbrauch ─────────────────────────────────────────────────────────
+      {
+        label: 'Verbrauch',
+        data: hours.map(h => get(h, 'verbrauch')),
+        backgroundColor: 'rgba(168,85,247,0.85)',
+        borderWidth: 0,
+        stack: 'verbrauch',
+        order: 5,
+      },
       // ── Export ────────────────────────────────────────────────────────────
       {
         label: 'Ins Netz (Export)',
