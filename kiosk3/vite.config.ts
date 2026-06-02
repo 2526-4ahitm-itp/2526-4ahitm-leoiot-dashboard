@@ -1,14 +1,14 @@
 import { defineConfig } from 'vite'
 
 const isDocker = !!process.env.DOCKER_ENV
-const influx  = isDocker ? 'http://influxdb:8086'       : 'http://localhost:8086'
-const grafana = isDocker ? 'http://grafana:3000'         : 'http://localhost:3000'
-const ws      = isDocker ? 'http://mqtt-ws-bridge:8090'  : 'http://localhost:8090'
+const influx  = isDocker ? 'http://influxdb:8086'      : 'http://localhost:8086'
+const grafana = isDocker ? 'http://grafana:3000'        : 'http://localhost:3000'
+const ws      = isDocker ? 'http://mqtt-ws-bridge:8090' : 'http://localhost:8090'
 
 export default defineConfig({
-  base: isDocker ? '/kiosk2/' : '/',
+  base: isDocker ? '/kiosk3/' : '/',
   server: {
-    port: 8083,
+    port: 8084,
     allowedHosts: true,
     proxy: {
       '/grafana': {

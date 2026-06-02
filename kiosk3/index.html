@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTL Leonding – Systemübersicht</title>
+  <link rel="stylesheet" href="kiosk3.css" />
+</head>
+<body>
+  <div class="k3-root">
+    <header class="k3-header">
+      <span class="k3-title">SYSTEMÜBERSICHT</span>
+      <div class="k3-header-right">
+        <span id="k3Clock">--</span>
+        <span class="k3-sep">&middot;</span>
+        <span id="k3Updated">Updated: --</span>
+      </div>
+    </header>
+
+    <div class="k3-cards">
+
+      <!-- Produktion -->
+      <div class="k3-card k3-card--amber">
+        <div class="k3-card-top">
+          <span class="k3-kwh" id="prodTotal">-- kWh</span>
+          <span class="k3-card-label">Produktion</span>
+        </div>
+        <div class="k3-donut-wrap">
+          <canvas id="chartProd"></canvas>
+        </div>
+        <div class="k3-bullets">
+          <div class="k3-bullet">
+            <span class="k3-dot" style="--c:#f59e0b"></span>
+            <span class="k3-name">Eigenverbrauch</span>
+            <span class="k3-val"><span id="prodEigenKwh">--</span> kWh</span>
+            <span class="k3-pct" id="prodEigenPct">-- %</span>
+          </div>
+          <div class="k3-bullet">
+            <span class="k3-dot" style="--c:rgba(245,158,11,0.35)"></span>
+            <span class="k3-name">Netzeinspeisung</span>
+            <span class="k3-val"><span id="prodNetzKwh">--</span> kWh</span>
+            <span class="k3-pct" id="prodNetzPct">-- %</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verbrauch -->
+      <div class="k3-card k3-card--cyan">
+        <div class="k3-card-top">
+          <span class="k3-kwh" id="verbTotal">-- kWh</span>
+          <span class="k3-card-label">Verbrauch</span>
+        </div>
+        <div class="k3-donut-wrap">
+          <canvas id="chartVerb"></canvas>
+        </div>
+        <div class="k3-bullets">
+          <div class="k3-bullet">
+            <span class="k3-dot" style="--c:#0ea5e9"></span>
+            <span class="k3-name">Autarkie</span>
+            <span class="k3-val"><span id="verbAutKwh">--</span> kWh</span>
+            <span class="k3-pct" id="verbAutPct">-- %</span>
+          </div>
+          <div class="k3-bullet">
+            <span class="k3-dot" style="--c:rgba(14,165,233,0.35)"></span>
+            <span class="k3-name">Netzbezug</span>
+            <span class="k3-val"><span id="verbNetzKwh">--</span> kWh</span>
+            <span class="k3-pct" id="verbNetzPct">-- %</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script src="kiosk3.js" type="module"></script>
+</body>
+</html>

@@ -3,20 +3,31 @@ const INFLUX_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWt
 const INFLUX_ORG = 'leoiot';
 const INFLUX_BUCKET = 'server_data';
 const REFRESH_MS = 5 * 60 * 1000;
-const CO2_KG_PER_KWH = 0.4;
-const DAYS = 45;
 
-let historyChart = null;
+let dsChart = null;
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
+function getCETMidnightMs() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('sv-SE', { timeZone: 'Europe/Vienna' });
+  const fmt = new Intl.DateTimeFormat('en', { timeZone: 'Europe/Vienna', timeZoneName: 'shortOffset' });
+  const tzPart = fmt.formatToParts(now).find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1';
+  const offset = parseInt(tzPart.replace('GMT', '')) || 1;
+  return new Date(`${dateStr}T00:00:00Z`).getTime() - offset * 3600000;
+}
 
-async function fetchHistory() {
-  const query = `from(bucket: "${INFLUX_BUCKET}")
-  |> range(start: -${DAYS}d)
+async function fetchPowerData() {
+  const startMs = getCETMidnightMs();
+  const startISO = new Date(startMs).toISOString();
+
+  const query = `
+from(bucket: "${INFLUX_BUCKET}")
+  |> range(start: ${startISO})
   |> filter(fn: (r) => r._measurement == "solax_stats")
-  |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption" or r._field == "daily_imported")
-  |> aggregateWindow(every: 1d, fn: last, createEmpty: false)
-  |> yield(name: "daily")`;
+  |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption"
+       or r._field == "daily_imported" or r._field == "daily_exported")
+  |> aggregateWindow(every: 5m, fn: last, createEmpty: false)
+  |> derivative(unit: 1h, nonNegative: true)
+  |> yield(name: "power")`;
 
   try {
     const resp = await fetch(`${INFLUX_URL}/api/v2/query?org=${INFLUX_ORG}&t=${Date.now()}`, {
@@ -30,230 +41,238 @@ async function fetchHistory() {
       },
       body: query,
     });
-    if (!resp.ok) return [];
-    return parseCSV(await resp.text());
+    if (!resp.ok) return null;
+    return parsePowerCSV(await resp.text(), startMs);
   } catch (e) {
     console.error('[kiosk2] fetch error:', e);
-    return [];
+    return null;
   }
 }
 
-// Returns array of {date, daily_yield, consumption, daily_imported} sorted oldest→newest
-function parseCSV(csv) {
+function parsePowerCSV(csv, startMs) {
   const lines = csv.trim().split('\n');
-  if (lines.length < 2) return [];
+  if (lines.length < 2) return null;
 
   const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
   const vi = headers.indexOf('_value');
   const fi = headers.indexOf('_field');
   const ti = headers.indexOf('_time');
+  if (vi < 0 || fi < 0 || ti < 0) return null;
 
-  const byDate = new Map();
+  const byTime = new Map();
 
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
     if (!cols[vi] || !cols[fi] || !cols[ti]) continue;
     const field = cols[fi];
     const val = parseFloat(cols[vi]);
-    const date = cols[ti].substring(0, 10);
-    if (!isFinite(val)) continue;
-    if (!byDate.has(date)) byDate.set(date, { date });
-    byDate.get(date)[field] = val;
+    const t = new Date(cols[ti]).getTime();
+    const hourDec = (t - startMs) / 3600000;
+    if (!isFinite(val) || hourDec < 0 || hourDec > 24.1) continue;
+    const key = cols[ti];
+    if (!byTime.has(key)) byTime.set(key, { x: hourDec });
+    byTime.get(key)[field] = val;
   }
 
-  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return [...byTime.values()].sort((a, b) => a.x - b.x);
 }
 
-// ── Chart ─────────────────────────────────────────────────────────────────────
+// Plugin: vertical line at current time
+const currentTimePlugin = {
+  id: 'currentTimeLine',
+  afterDraw(chart) {
+    const startMs = getCETMidnightMs();
+    const hourNow = (Date.now() - startMs) / 3600000;
+    if (hourNow < 0 || hourNow > 24) return;
+    const { ctx, chartArea, scales } = chart;
+    const x = scales.x.getPixelForValue(hourNow);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
 
-function fmtDate(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00Z');
-  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
-}
+    // time label above line
+    const hh = String(Math.floor(hourNow)).padStart(2, '0');
+    const mm = String(Math.round((hourNow % 1) * 60)).padStart(2, '0');
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${hh}:${mm}`, x, chartArea.top - 4);
+    ctx.restore();
+  },
+};
 
 function initChart() {
-  historyChart = new Chart(document.getElementById('historyChart').getContext('2d'), {
-    type: 'bar',
-    data: { labels: [], datasets: [] },
+  dsChart = new Chart(document.getElementById('dsChart').getContext('2d'), {
+    type: 'line',
+    data: { datasets: [] },
+    plugins: [currentTimePlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: {
           display: true,
           position: 'top',
           labels: {
-            color: 'rgba(255,255,255,0.65)',
-            font: { size: 12 },
+            color: 'rgba(255,255,255,0.6)',
+            font: { size: 13 },
             usePointStyle: true,
-            pointStyle: 'rect',
-            boxWidth: 14,
-            padding: 16,
+            pointStyle: 'circle',
+            padding: 22,
           },
         },
         tooltip: {
-          backgroundColor: 'rgba(15,17,22,0.92)',
-          borderColor: 'rgba(255,255,255,0.08)',
+          backgroundColor: 'rgba(8,10,18,0.94)',
+          borderColor: 'rgba(255,255,255,0.09)',
           borderWidth: 1,
-          padding: 10,
-          titleColor: 'rgba(255,255,255,0.85)',
-          bodyColor: 'rgba(255,255,255,0.7)',
+          padding: 12,
+          titleColor: 'rgba(255,255,255,0.8)',
+          bodyColor: 'rgba(255,255,255,0.65)',
           callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toFixed(2)} W`,
+            title: items => {
+              const h = items[0].parsed.x;
+              const hh = String(Math.floor(h)).padStart(2, '0');
+              const mm = String(Math.round((h % 1) * 60)).padStart(2, '0');
+              return `${hh}:${mm}`;
+            },
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} kW`,
           },
         },
       },
       scales: {
         x: {
-          stacked: true,
+          type: 'linear',
+          min: 0,
+          max: 24,
           ticks: {
-            color: 'rgba(255,255,255,0.45)',
-            font: { size: 10 },
-            maxRotation: 0,
-            autoSkip: true,
-            maxTicksLimit: 14,
+            stepSize: 2,
+            color: 'rgba(255,255,255,0.35)',
+            font: { size: 11 },
+            callback: v => `${String(v).padStart(2, '0')}:00`,
           },
-          grid: { color: 'rgba(255,255,255,0.04)' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          border: { color: 'rgba(255,255,255,0.06)' },
         },
         y: {
-          stacked: true,
+          suggestedMin: 0,
           ticks: {
-            color: 'rgba(255,255,255,0.45)',
+            color: 'rgba(255,255,255,0.35)',
             font: { size: 11 },
+            callback: v => `${v} kW`,
             maxTicksLimit: 8,
-            callback: v => `${v}`,
           },
-          grid: {
-            color: ctx => ctx.tick.value === 0
-              ? 'rgba(255,255,255,0.25)'
-              : 'rgba(255,255,255,0.04)',
-          },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          border: { color: 'rgba(255,255,255,0.06)' },
         },
       },
     },
   });
 }
 
-function buildDatasets(rows) {
-  const labels   = rows.map(r => fmtDate(r.date));
-  const generated = rows.map(r => r.daily_yield      ?? 0);
-  const gridUse   = rows.map(r => r.daily_imported   ?? 0);
-  const consumed  = rows.map(r => r.consumption      ?? 0);
-  const exported  = rows.map(r => {
-    const direct = Math.max(0, (r.consumption ?? 0) - (r.daily_imported ?? 0));
-    return -Math.max(0, (r.daily_yield ?? 0) - direct);
-  });
+function buildDatasets(points) {
+  const produktion    = points.map(p => ({ x: p.x, y: +(p.daily_yield ?? 0).toFixed(3) }));
+  const direktverbrauch = points.map(p => ({
+    x: p.x,
+    y: +Math.max(0, (p.consumption ?? 0) - (p.daily_imported ?? 0)).toFixed(3),
+  }));
+  const insNetz = points.map(p => ({ x: p.x, y: +(p.daily_exported ?? 0).toFixed(3) }));
+  const vomNetz = points.map(p => ({ x: p.x, y: +(p.daily_imported ?? 0).toFixed(3) }));
 
-  return {
-    labels,
-    datasets: [
-      {
-        label: 'Generated',
-        data: generated,
-        backgroundColor: 'rgba(196,222,50,0.80)',
-        borderWidth: 0,
-        stack: 'usage',
-      },
-      {
-        label: 'Grid Import',
-        data: gridUse,
-        backgroundColor: 'rgba(56,189,248,0.80)',
-        borderWidth: 0,
-        stack: 'usage',
-      },
-      {
-        label: 'Consumed',
-        data: consumed,
-        backgroundColor: 'rgba(239,68,68,0.80)',
-        borderWidth: 0,
-        stack: 'usage',
-      },
-      {
-        label: 'Exported Solar',
-        data: exported,
-        backgroundColor: 'rgba(196,222,50,0.65)',
-        borderWidth: 0,
-        stack: 'export',
-      },
-    ],
-  };
+  return [
+    {
+      label: 'Produktion',
+      data: produktion,
+      borderColor: '#f59e0b',
+      backgroundColor: 'rgba(245,158,11,0.18)',
+      fill: true,
+      borderWidth: 2.5,
+      pointRadius: 0,
+      tension: 0.4,
+      order: 4,
+    },
+    {
+      label: 'Direktverbrauch',
+      data: direktverbrauch,
+      borderColor: '#14b8a6',
+      backgroundColor: 'rgba(20,184,166,0.12)',
+      fill: true,
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.4,
+      order: 3,
+    },
+    {
+      label: 'Ins Netz',
+      data: insNetz,
+      borderColor: '#a78bfa',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.4,
+      order: 2,
+    },
+    {
+      label: 'Vom Netz',
+      data: vomNetz,
+      borderColor: '#ef4444',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.4,
+      order: 1,
+    },
+  ];
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
+function updateStats(points) {
+  if (!points.length) return;
+  const last = points[points.length - 1];
+  const gen  = last.daily_yield    ?? 0;
+  const con  = last.consumption    ?? 0;
+  const imp  = last.daily_imported ?? 0;
+  const exp  = last.daily_exported ?? 0;
+  const direkt = Math.max(0, con - imp);
 
-function fmtKwh(v) {
-  if (v == null) return '-- W';
-  return `${v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} W`;
+  const fmt = v => `${v.toFixed(2)} kW`;
+  document.getElementById('statProduktion').textContent = fmt(gen);
+  document.getElementById('statVerbrauch').textContent  = fmt(con);
+  document.getElementById('statInsNetz').textContent    = fmt(exp);
+  document.getElementById('statVomNetz').textContent    = fmt(imp);
+  document.getElementById('statDirekt').textContent     = fmt(direkt);
 }
-
-function fmtPct(v) {
-  if (v == null) return '--%';
-  return `${Math.round(v)}%`;
-}
-
-function updateStats(today) {
-  const gen  = today?.daily_yield  ?? null;
-  const con  = today?.consumption  ?? null;
-  const grid = today?.daily_imported ?? null;
-
-  document.getElementById('statGenerated').textContent = fmtKwh(gen);
-  document.getElementById('statConsumed').textContent  = fmtKwh(con);
-  document.getElementById('statGrid').textContent      = fmtKwh(grid);
-
-  const direct    = con != null && grid != null ? Math.max(0, con - grid) : null;
-  const directPct = con != null && con > 0 && direct != null ? (direct / con * 100) : null;
-  const gridPct   = con != null && con > 0 && grid  != null ? (grid  / con * 100) : null;
-  const co2       = gen != null ? gen * CO2_KG_PER_KWH : null;
-
-  document.getElementById('bGenerated').textContent = fmtKwh(gen);
-  document.getElementById('bConsumed').textContent  = fmtKwh(con);
-  document.getElementById('bDirect').textContent    = fmtPct(directPct);
-  document.getElementById('bDirectKwh').textContent = fmtKwh(direct);
-  document.getElementById('bGrid').textContent      = fmtPct(gridPct);
-  document.getElementById('bGridKwh').textContent   = fmtKwh(grid);
-  document.getElementById('bCo2').textContent       =
-    co2 != null
-      ? `${co2.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg`
-      : '-- kg';
-}
-
-// ── Refresh ───────────────────────────────────────────────────────────────────
 
 async function refresh() {
-  const rows = await fetchHistory();
-  if (!rows.length) return;
+  const points = await fetchPowerData();
+  if (!points || !points.length) return;
 
-  const { labels, datasets } = buildDatasets(rows);
-  historyChart.data.labels   = labels;
-  historyChart.data.datasets = datasets;
-  historyChart.update();
-
-  updateStats(rows[rows.length - 1]);
+  dsChart.data.datasets = buildDatasets(points);
+  dsChart.update();
+  updateStats(points);
 
   const now = new Date();
-  document.getElementById('k2Updated').textContent =
+  document.getElementById('dsUpdated').textContent =
     `Updated: ${now.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })}`;
 }
 
-// ── Clock ─────────────────────────────────────────────────────────────────────
-
 function startClock() {
   const tick = () => {
-    const now = new Date();
-    const date = now.toLocaleDateString('en-GB', {
-      timeZone: 'Europe/Vienna', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
-    });
-    const time = now.toLocaleTimeString('en-GB', {
-      timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit', second: '2-digit',
-    });
-    document.getElementById('k2Clock').textContent = `${date}, ${time}`;
+    document.getElementById('dsClock').textContent =
+      new Date().toLocaleTimeString('de-AT', {
+        timeZone: 'Europe/Vienna',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      });
   };
   tick();
   setInterval(tick, 1000);
 }
-
-// ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
   initChart();

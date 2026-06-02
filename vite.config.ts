@@ -13,6 +13,11 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/kiosk3': {
+        target: 'http://localhost:8084',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/kiosk3/, '') || '/',
+      },
       '/kiosk2': {
         target: 'http://localhost:8083',
         changeOrigin: true,

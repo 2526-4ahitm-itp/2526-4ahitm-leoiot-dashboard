@@ -6,6 +6,7 @@ const grafana = isDocker ? 'http://grafana:3000'         : 'http://localhost:300
 const ws      = isDocker ? 'http://mqtt-ws-bridge:8090'  : 'http://localhost:8090'
 
 export default defineConfig({
+  base: isDocker ? '/kiosk/' : '/',
   server: {
     port: 8082,
     allowedHosts: true,

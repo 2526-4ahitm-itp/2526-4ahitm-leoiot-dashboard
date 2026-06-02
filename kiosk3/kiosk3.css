@@ -1,0 +1,164 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #0b0d14;
+  color: #fff;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.k3-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 18px 22px;
+  gap: 16px;
+}
+
+/* ── Header ── */
+.k3-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.k3-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+}
+
+.k3-header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.k3-sep { color: rgba(255, 255, 255, 0.2); }
+
+/* ── Cards ── */
+.k3-cards {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.k3-card {
+  flex: 1;
+  background: #13161f;
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.k3-card-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.k3-kwh {
+  font-size: 52px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.k3-card-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── Donut ── */
+.k3-donut-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.k3-donut-wrap canvas {
+  max-width: 300px;
+  max-height: 300px;
+}
+
+/* ── Bullets ── */
+.k3-bullets {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.k3-bullet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.k3-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--c);
+  flex-shrink: 0;
+}
+
+.k3-name {
+  flex: 1;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.k3-val {
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+}
+
+.k3-pct {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* divider between bullets */
+.k3-bullet + .k3-bullet {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Accent glow per card ── */
+.k3-card--amber {
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.04);
+}
+
+.k3-card--cyan {
+  box-shadow: 0 0 40px rgba(14, 165, 233, 0.04);
+}
