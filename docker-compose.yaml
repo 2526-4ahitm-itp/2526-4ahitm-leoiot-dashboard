@@ -165,6 +165,21 @@ services:
     networks:
       - leoiot
 
+  kiosk4:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./kiosk4:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "8085:8085"
+    environment:
+      - DOCKER_ENV=1
+    depends_on:
+      - influxdb
+    networks:
+      - leoiot
+
   solax-collector:
     image: node:20-alpine
     working_dir: /app

@@ -1,0 +1,153 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #0b0d14;
+  color: #fff;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.ds-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 18px 22px;
+  gap: 14px;
+}
+
+.ds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.ds-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ds-header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.ds-sep { color: rgba(255, 255, 255, 0.2); }
+
+.ds-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ds-date {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  min-width: 110px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.ds-nav-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.65);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ds-nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ds-nav-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.ds-stats {
+  display: flex;
+  gap: 10px;
+  background: #13161f;
+  border-radius: 14px;
+  padding: 14px 20px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ds-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-stat + .ds-stat {
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding-left: 12px;
+}
+
+.ds-stat-pill {
+  width: 12px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--c);
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.ds-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ds-stat-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ds-stat-val {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+}
+
+.ds-chart-wrap {
+  flex: 1;
+  min-height: 0;
+  background: #13161f;
+  border-radius: 14px;
+  padding: 18px 20px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.ds-chart-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
