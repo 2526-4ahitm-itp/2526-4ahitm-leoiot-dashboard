@@ -3,12 +3,10 @@ const INFLUX_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWt
 const INFLUX_ORG = 'leoiot';
 const INFLUX_BUCKET = 'server_data';
 const REFRESH_MS = 5 * 60 * 1000;
-const ROTATE_MS = 15 * 1000;
 const MAX_DAYS_BACK = 6;
 
 let dsChart = null;
 let currentDayOffset = 0;
-let rotateTimer = null;
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -201,6 +199,7 @@ function initChart() {
         },
         y: {
           stacked: true,
+          min: 0,
           ticks: {
             color: 'rgba(255,255,255,0.35)',
             font: { size: 11 },
@@ -208,9 +207,7 @@ function initChart() {
             maxTicksLimit: 9,
           },
           grid: {
-            color: ctx => ctx.tick.value === 0
-              ? 'rgba(255,255,255,0.2)'
-              : 'rgba(255,255,255,0.05)',
+            color: 'rgba(255,255,255,0.05)',
           },
           border: { color: 'rgba(255,255,255,0.06)' },
         },
@@ -230,13 +227,6 @@ function buildDatasets(hourly) {
     const v = +e[field].toFixed(3);
     return v === 0 ? null : v;
   };
-  const getNeg = (h, field) => {
-    const e = byHour.get(h);
-    if (!e) return null;
-    const v = +(-e[field]).toFixed(3);
-    return v === 0 ? null : v;
-  };
-
   return {
     labels,
     datasets: [
@@ -266,10 +256,10 @@ function buildDatasets(hourly) {
         stack: 'production',
         order: 3,
       },
-      // ── Export (negative, below zero) ─────────────────────────────────────
+      // ── Export ────────────────────────────────────────────────────────────
       {
         label: 'Ins Netz (Export)',
-        data: hours.map(h => getNeg(h, 'insNetz')),
+        data: hours.map(h => get(h, 'insNetz')),
         backgroundColor: 'rgba(34,197,94,0.85)',
         borderWidth: 0,
         stack: 'export',
@@ -296,14 +286,6 @@ function updateNavUI() {
   document.getElementById('navDate').textContent = getDayLabel(currentDayOffset);
   document.getElementById('navNext').disabled = currentDayOffset <= 0;
   document.getElementById('navPrev').disabled = currentDayOffset >= MAX_DAYS_BACK;
-}
-
-function resetRotateTimer() {
-  clearInterval(rotateTimer);
-  rotateTimer = setInterval(() => {
-    currentDayOffset = currentDayOffset >= MAX_DAYS_BACK ? 0 : currentDayOffset + 1;
-    loadAndRender();
-  }, ROTATE_MS);
 }
 
 async function loadAndRender() {
@@ -342,13 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
   startClock();
 
   document.getElementById('navPrev').addEventListener('click', () => {
-    if (currentDayOffset < MAX_DAYS_BACK) { currentDayOffset++; loadAndRender(); resetRotateTimer(); }
+    if (currentDayOffset < MAX_DAYS_BACK) { currentDayOffset++; loadAndRender(); }
   });
   document.getElementById('navNext').addEventListener('click', () => {
-    if (currentDayOffset > 0) { currentDayOffset--; loadAndRender(); resetRotateTimer(); }
+    if (currentDayOffset > 0) { currentDayOffset--; loadAndRender(); }
   });
 
   loadAndRender();
-  resetRotateTimer();
   setInterval(() => { if (currentDayOffset === 0) loadAndRender(); }, REFRESH_MS);
 });

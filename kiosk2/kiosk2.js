@@ -3,12 +3,10 @@ const INFLUX_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWt
 const INFLUX_ORG = 'leoiot';
 const INFLUX_BUCKET = 'server_data';
 const REFRESH_MS = 5 * 60 * 1000;
-const ROTATE_MS = 15 * 1000;
 const MAX_DAYS_BACK = 6;
 
 let dsChart = null;
 let currentDayOffset = 0; // 0 = today, 1 = yesterday, ...
-let rotateTimer = null;
 let refreshTimer = null;
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
@@ -209,6 +207,7 @@ function initChart() {
         },
         y: {
           stacked: true,
+          min: 0,
           ticks: {
             color: 'rgba(255,255,255,0.35)',
             font: { size: 11 },
@@ -216,9 +215,7 @@ function initChart() {
             maxTicksLimit: 9,
           },
           grid: {
-            color: ctx => ctx.tick.value === 0
-              ? 'rgba(255,255,255,0.2)'
-              : 'rgba(255,255,255,0.05)',
+            color: 'rgba(255,255,255,0.05)',
           },
           border: { color: 'rgba(255,255,255,0.06)' },
         },
@@ -239,16 +236,9 @@ function buildDatasets(hourly) {
     const v = +e[field].toFixed(3);
     return v === 0 ? null : v;
   };
-  const getNeg = (h, field) => {
-    const e = byHour.get(h);
-    if (!e) return null;
-    const v = +(-e[field]).toFixed(3);
-    return v === 0 ? null : v;
-  };
-
   const direktData   = hours.map(h => get(h, 'direktverbrauch'));
   const vomNetzData  = hours.map(h => get(h, 'vomNetz'));
-  const insNetzData  = hours.map(h => getNeg(h, 'insNetz'));
+  const insNetzData  = hours.map(h => get(h, 'insNetz'));
   const prodData     = hours.map(h => get(h, 'produktion'));
   const batterieData = hours.map(h => get(h, 'batterie'));
 
@@ -330,14 +320,6 @@ function updateNavUI() {
   document.getElementById('navPrev').disabled = currentDayOffset >= MAX_DAYS_BACK;
 }
 
-function resetRotateTimer() {
-  clearInterval(rotateTimer);
-  rotateTimer = setInterval(() => {
-    currentDayOffset = currentDayOffset >= MAX_DAYS_BACK ? 0 : currentDayOffset + 1;
-    loadAndRender();
-  }, ROTATE_MS);
-}
-
 // ── Load & render ─────────────────────────────────────────────────────────────
 
 async function loadAndRender() {
@@ -385,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentDayOffset < MAX_DAYS_BACK) {
       currentDayOffset++;
       loadAndRender();
-      resetRotateTimer();
     }
   });
 
@@ -393,12 +374,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentDayOffset > 0) {
       currentDayOffset--;
       loadAndRender();
-      resetRotateTimer();
     }
   });
 
   loadAndRender();
-  resetRotateTimer();
 
   // Also refresh data every 5 min (for today's live updates)
   refreshTimer = setInterval(() => {
