@@ -3,26 +3,50 @@ const INFLUX_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWt
 const INFLUX_ORG = 'leoiot';
 const INFLUX_BUCKET = 'server_data';
 const REFRESH_MS = 5 * 60 * 1000;
+const ROTATE_MS = 15 * 1000;
+const MAX_DAYS_BACK = 6;
 
 let dsChart = null;
+let currentDayOffset = 0; // 0 = today, 1 = yesterday, ...
+let rotateTimer = null;
+let refreshTimer = null;
 
-function getCETMidnightMs() {
+// ── Date helpers ──────────────────────────────────────────────────────────────
+
+function getCETDayRange(daysAgo) {
   const now = new Date();
-  const dateStr = now.toLocaleDateString('sv-SE', { timeZone: 'Europe/Vienna' });
+  const target = new Date(now.getTime() - daysAgo * 86400000);
+  const dateStr = target.toLocaleDateString('sv-SE', { timeZone: 'Europe/Vienna' });
+  // Use noon of that day to safely detect CET vs CEST offset
   const fmt = new Intl.DateTimeFormat('en', { timeZone: 'Europe/Vienna', timeZoneName: 'shortOffset' });
-  const tzPart = fmt.formatToParts(now).find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1';
+  const tzPart = fmt.formatToParts(new Date(`${dateStr}T12:00:00Z`))
+    .find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1';
   const offset = parseInt(tzPart.replace('GMT', '')) || 1;
-  return new Date(`${dateStr}T00:00:00Z`).getTime() - offset * 3600000;
+  const startMs = new Date(`${dateStr}T00:00:00Z`).getTime() - offset * 3600000;
+  return { startMs, endMs: startMs + 86400000, dateStr };
 }
 
-async function fetchHourlyData() {
-  const startMs = getCETMidnightMs();
-  const startISO = new Date(startMs).toISOString();
+function getDayLabel(daysAgo) {
+  if (daysAgo === 0) return 'Heute';
+  if (daysAgo === 1) return 'Gestern';
+  const { startMs } = getCETDayRange(daysAgo);
+  return new Date(startMs + 7200000).toLocaleDateString('de-AT', {
+    timeZone: 'Europe/Vienna', weekday: 'short', day: '2-digit', month: '2-digit',
+  });
+}
 
-  // Get last cumulative value per 1h window — compute diffs in JS to avoid Flux derivative spikes
+// ── Data fetching ─────────────────────────────────────────────────────────────
+
+async function fetchHourlyData(daysAgo) {
+  const { startMs, endMs } = getCETDayRange(daysAgo);
+  const startISO = new Date(startMs).toISOString();
+  const stopISO  = daysAgo === 0
+    ? new Date().toISOString()           // today: only passed hours
+    : new Date(endMs).toISOString();     // past:  full 24 h
+
   const query = `
 from(bucket: "${INFLUX_BUCKET}")
-  |> range(start: ${startISO})
+  |> range(start: ${startISO}, stop: ${stopISO})
   |> filter(fn: (r) => r._measurement == "solax_stats")
   |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption"
        or r._field == "daily_imported" or r._field == "daily_exported")
@@ -64,62 +88,56 @@ function parseHourlyCSV(csv, startMs) {
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
     if (!cols[vi] || !cols[fi] || !cols[ti]) continue;
-    const field = cols[fi];
     const val = parseFloat(cols[vi]);
     if (!isFinite(val)) continue;
     const t = new Date(cols[ti]).getTime();
-    const hourDec = Math.round((t - startMs) / 3600000); // hour index 0-23
-    if (hourDec < 0 || hourDec > 24) continue;
-    if (!byHour.has(hourDec)) byHour.set(hourDec, { hour: hourDec });
-    byHour.get(hourDec)[field] = val;
+    const hourIdx = Math.round((t - startMs) / 3600000);
+    if (hourIdx < 0 || hourIdx > 24) continue;
+    if (!byHour.has(hourIdx)) byHour.set(hourIdx, { hour: hourIdx });
+    byHour.get(hourIdx)[cols[fi]] = val;
   }
 
   return [...byHour.values()].sort((a, b) => a.hour - b.hour);
 }
 
-// Compute per-hour kWh by diffing consecutive cumulative values
+// ── kWh per hour (diff between consecutive 1h snapshots) ─────────────────────
+
 function computeHourlyKwh(snapshots) {
   const result = [];
   for (let i = 1; i < snapshots.length; i++) {
     const prev = snapshots[i - 1];
     const curr = snapshots[i];
+    const diff = field => Math.max(0, (curr[field] ?? prev[field] ?? 0) - (prev[field] ?? 0));
 
-    const diff = (field) => {
-      const d = (curr[field] ?? prev[field] ?? 0) - (prev[field] ?? 0);
-      return Math.max(0, d);
-    };
-
-    const produktion    = diff('daily_yield');
-    const vomNetz       = diff('daily_imported');
-    const insNetz       = diff('daily_exported');
-    const consumption   = diff('consumption');
+    const produktion      = diff('daily_yield');
+    const vomNetz         = diff('daily_imported');
+    const insNetz         = diff('daily_exported');
+    const consumption     = diff('consumption');
     const direktverbrauch = Math.max(0, consumption - vomNetz);
 
-    result.push({
-      hour: curr.hour,
-      produktion,
-      direktverbrauch,
-      vomNetz,
-      insNetz,
-    });
+    result.push({ hour: curr.hour, produktion, direktverbrauch, vomNetz, insNetz });
   }
   return result;
 }
+
+// ── Chart ─────────────────────────────────────────────────────────────────────
 
 function hourLabel(h) {
   return `${String(h - 1).padStart(2, '0')}:00`;
 }
 
-// Plugin: vertical line at current time
+const NULL_ZERO = v => (v === 0 ? null : v);
+
 const currentTimePlugin = {
   id: 'currentTimeLine',
   afterDraw(chart) {
-    const startMs = getCETMidnightMs();
+    if (currentDayOffset !== 0) return; // only today
+    const { startMs } = getCETDayRange(0);
     const hourNow = (Date.now() - startMs) / 3600000;
     if (hourNow < 0 || hourNow > 24) return;
     const { ctx, chartArea, scales } = chart;
     const x = scales.x.getPixelForValue(Math.floor(hourNow));
-    if (x < chartArea.left || x > chartArea.right) return;
+    if (!x || x < chartArea.left || x > chartArea.right) return;
     ctx.save();
     ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 1.5;
@@ -171,7 +189,7 @@ function initChart() {
           callbacks: {
             label: ctx => {
               const val = Math.abs(ctx.parsed.y).toFixed(3);
-              return ` ${ctx.dataset.label}: ${val} kWh`;
+              return ` ${ctx.dataset.label}: ${val} kW`;
             },
           },
         },
@@ -194,7 +212,7 @@ function initChart() {
           ticks: {
             color: 'rgba(255,255,255,0.35)',
             font: { size: 11 },
-            callback: v => `${v} kWh`,
+            callback: v => `${v} kW`,
             maxTicksLimit: 9,
           },
           grid: {
@@ -210,11 +228,11 @@ function initChart() {
 }
 
 function buildDatasets(hourly) {
-  const labels        = hourly.map(h => hourLabel(h.hour));
-  const direktData    = hourly.map(h => +h.direktverbrauch.toFixed(3));
-  const vomNetzData   = hourly.map(h => +h.vomNetz.toFixed(3));
-  const insNetzData   = hourly.map(h => +(-h.insNetz).toFixed(3)); // negative → goes below zero
-  const prodData      = hourly.map(h => +h.produktion.toFixed(3));
+  const labels          = hourly.map(h => hourLabel(h.hour));
+  const direktData      = hourly.map(h => NULL_ZERO(+h.direktverbrauch.toFixed(3)));
+  const vomNetzData     = hourly.map(h => NULL_ZERO(+h.vomNetz.toFixed(3)));
+  const insNetzData     = hourly.map(h => NULL_ZERO(+(-h.insNetz).toFixed(3)));
+  const prodData        = hourly.map(h => NULL_ZERO(+h.produktion.toFixed(3)));
 
   return {
     labels,
@@ -223,7 +241,6 @@ function buildDatasets(hourly) {
         label: 'Direktverbrauch',
         data: direktData,
         backgroundColor: 'rgba(34,197,94,0.85)',
-        borderColor: 'rgba(34,197,94,0.4)',
         borderWidth: 0,
         stack: 'use',
         order: 2,
@@ -232,7 +249,6 @@ function buildDatasets(hourly) {
         label: 'Vom Netz',
         data: vomNetzData,
         backgroundColor: 'rgba(14,165,233,0.85)',
-        borderColor: 'rgba(14,165,233,0.4)',
         borderWidth: 0,
         stack: 'use',
         order: 1,
@@ -241,7 +257,6 @@ function buildDatasets(hourly) {
         label: 'Ins Netz (Export)',
         data: insNetzData,
         backgroundColor: 'rgba(245,158,11,0.85)',
-        borderColor: 'rgba(245,158,11,0.4)',
         borderWidth: 0,
         stack: 'export',
         order: 3,
@@ -250,11 +265,13 @@ function buildDatasets(hourly) {
         label: 'Produktion',
         data: prodData,
         type: 'line',
-        borderColor: 'rgba(167,139,250,0.8)',
+        borderColor: 'rgba(167,139,250,0.85)',
         backgroundColor: 'transparent',
-        borderWidth: 2,
-        pointRadius: 0,
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointBackgroundColor: 'rgba(167,139,250,0.85)',
         tension: 0.4,
+        spanGaps: false,
         stack: undefined,
         order: 0,
       },
@@ -265,13 +282,13 @@ function buildDatasets(hourly) {
 function updateStats(snapshots) {
   if (!snapshots.length) return;
   const last = snapshots[snapshots.length - 1];
-  const gen   = last.daily_yield    ?? 0;
-  const cons  = last.consumption    ?? 0;
-  const imp   = last.daily_imported ?? 0;
-  const exp   = last.daily_exported ?? 0;
+  const gen    = last.daily_yield    ?? 0;
+  const cons   = last.consumption    ?? 0;
+  const imp    = last.daily_imported ?? 0;
+  const exp    = last.daily_exported ?? 0;
   const direkt = Math.max(0, cons - imp);
 
-  const fmt = v => `${v.toFixed(2)} kWh`;
+  const fmt = v => `${v.toFixed(2)} kW`;  // daily kWh, labeled kW per request
   document.getElementById('statProduktion').textContent = fmt(gen);
   document.getElementById('statVerbrauch').textContent  = fmt(cons);
   document.getElementById('statInsNetz').textContent    = fmt(exp);
@@ -279,8 +296,28 @@ function updateStats(snapshots) {
   document.getElementById('statDirekt').textContent     = fmt(direkt);
 }
 
-async function refresh() {
-  const snapshots = await fetchHourlyData();
+// ── Navigation ────────────────────────────────────────────────────────────────
+
+function updateNavUI() {
+  document.getElementById('navDate').textContent = getDayLabel(currentDayOffset);
+  document.getElementById('navNext').disabled = currentDayOffset <= 0;
+  document.getElementById('navPrev').disabled = currentDayOffset >= MAX_DAYS_BACK;
+}
+
+function resetRotateTimer() {
+  clearInterval(rotateTimer);
+  rotateTimer = setInterval(() => {
+    currentDayOffset = currentDayOffset >= MAX_DAYS_BACK ? 0 : currentDayOffset + 1;
+    loadAndRender();
+  }, ROTATE_MS);
+}
+
+// ── Load & render ─────────────────────────────────────────────────────────────
+
+async function loadAndRender() {
+  updateNavUI();
+
+  const snapshots = await fetchHourlyData(currentDayOffset);
   if (!snapshots || snapshots.length < 2) return;
 
   const hourly = computeHourlyKwh(snapshots);
@@ -299,6 +336,8 @@ async function refresh() {
     })}`;
 }
 
+// ── Clock ─────────────────────────────────────────────────────────────────────
+
 function startClock() {
   const tick = () => {
     document.getElementById('dsClock').textContent =
@@ -310,9 +349,33 @@ function startClock() {
   setInterval(tick, 1000);
 }
 
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
   initChart();
   startClock();
-  refresh();
-  setInterval(refresh, REFRESH_MS);
+
+  document.getElementById('navPrev').addEventListener('click', () => {
+    if (currentDayOffset < MAX_DAYS_BACK) {
+      currentDayOffset++;
+      loadAndRender();
+      resetRotateTimer();
+    }
+  });
+
+  document.getElementById('navNext').addEventListener('click', () => {
+    if (currentDayOffset > 0) {
+      currentDayOffset--;
+      loadAndRender();
+      resetRotateTimer();
+    }
+  });
+
+  loadAndRender();
+  resetRotateTimer();
+
+  // Also refresh data every 5 min (for today's live updates)
+  refreshTimer = setInterval(() => {
+    if (currentDayOffset === 0) loadAndRender();
+  }, REFRESH_MS);
 });
