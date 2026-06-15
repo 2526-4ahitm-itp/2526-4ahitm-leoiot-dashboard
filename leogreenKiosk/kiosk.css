@@ -84,20 +84,13 @@ html, body {
 .theme-toggle-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-shrink: 0;
-}
-
-.theme-icon {
-  font-size: 16px;
-  opacity: 0.6;
-  line-height: 1;
 }
 
 .toggle-switch {
   position: relative;
-  width: 46px;
-  height: 26px;
+  width: 62px;
+  height: 28px;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -109,7 +102,7 @@ html, body {
   inset: 0;
   background: rgba(255,255,255,0.12);
   border: 1px solid var(--border);
-  border-radius: 13px;
+  border-radius: 14px;
   transition: background 0.25s;
 }
 
@@ -120,8 +113,8 @@ body.light .toggle-slider {
 .toggle-slider::after {
   content: '';
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   background: var(--text);
   border-radius: 50%;
   top: 2px;
@@ -131,8 +124,30 @@ body.light .toggle-slider {
 }
 
 .toggle-switch input:checked + .toggle-slider::after {
-  transform: translateX(20px);
+  transform: translateX(34px);
 }
+
+/* Icons inside the track, each on the side opposite the thumb */
+.t-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+/* Dark mode (unchecked): thumb left → sun on right */
+.t-icon-sun  { right: 7px; }
+.t-icon-moon { left:  7px; }
+
+.toggle-switch input:not(:checked) + .toggle-slider .t-icon-sun  { opacity: 0.8; }
+.toggle-switch input:not(:checked) + .toggle-slider .t-icon-moon { opacity: 0; }
+
+/* Light mode (checked): thumb right → moon on left */
+.toggle-switch input:checked + .toggle-slider .t-icon-sun  { opacity: 0; }
+.toggle-switch input:checked + .toggle-slider .t-icon-moon { opacity: 0.8; }
 
 .updated-label {
   font-size: 16px;
