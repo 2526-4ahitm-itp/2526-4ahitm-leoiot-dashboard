@@ -65,8 +65,47 @@
       </div>
     </section>
 
-    <!-- Bottom-right 1/4 -->
-    <section class="panel future-panel"></section>
+    <!-- Bottom-right 1/4: energy flow diagram -->
+    <section class="panel flow-panel">
+      <span class="flow-title">Energiefluss</span>
+
+      <svg class="flow-svg" aria-hidden="true">
+        <circle cx="50%" cy="50%" r="6" fill="rgba(255,255,255,0.12)"/>
+        <!-- lines defined FROM outer node TOWARD center; animation direction = flow direction -->
+        <line id="lineSolar"   x1="50%" y1="20%" x2="50%" y2="47%" class="flow-line" stroke="#f59e0b"/>
+        <line id="lineLoad"    x1="18%" y1="50%" x2="47%" y2="50%" class="flow-line" stroke="#60a5fa"/>
+        <line id="lineGrid"    x1="82%" y1="50%" x2="53%" y2="50%" class="flow-line" stroke="#ef4444"/>
+        <line id="lineBattery" x1="50%" y1="80%" x2="50%" y2="53%" class="flow-line" stroke="#22c55e"/>
+      </svg>
+
+      <!-- Solar (top center) -->
+      <div class="flow-node" id="nodeSolar">
+        <span class="flow-val" id="fvSolar">--</span>
+        <div class="flow-circle fc-solar">☀</div>
+        <span class="flow-lbl">Solar</span>
+      </div>
+
+      <!-- Verbrauch (left center) -->
+      <div class="flow-node" id="nodeLoad">
+        <span class="flow-val" id="fvLoad">--</span>
+        <div class="flow-circle fc-load">⌂</div>
+        <span class="flow-lbl">Verbrauch</span>
+      </div>
+
+      <!-- Netz (right center) -->
+      <div class="flow-node" id="nodeGrid">
+        <span class="flow-val" id="fvGrid">--</span>
+        <div class="flow-circle fc-grid">⚡</div>
+        <span class="flow-lbl">Netz</span>
+      </div>
+
+      <!-- Batterie (bottom center) -->
+      <div class="flow-node" id="nodeBattery">
+        <span class="flow-val" id="fvBattery">--</span>
+        <div class="flow-circle fc-battery">🔋</div>
+        <span class="flow-lbl">Batterie</span>
+      </div>
+    </section>
 
   </main>
 

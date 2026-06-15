@@ -125,7 +125,7 @@ function updateProductionDonut(production, exported_, charged, selfConsumed) {
   const segs = sortedSegments([
     { label: 'Eigenverbrauch', value: safePos(selfConsumed), color: '#22c55e' },
     { label: 'Ins Netz',       value: safePos(exported_),    color: '#ef4444' },
-    { label: 'Batterie',       value: safePos(charged),      color: '#14b8a6' },
+    { label: 'In Batterie',    value: safePos(charged),      color: '#14b8a6' },
   ]);
   const total = segs.reduce((s, seg) => s + seg.value, 0);
 
@@ -189,6 +189,8 @@ function applyPvData(d) {
   pvHistory.ts          = now;
   pvHistory.yield       = production;
   pvHistory.consumption = consumption;
+
+  updateFlowDiagram(production, imported_, exported_, charged, discharged);
 
   const nowDate = new Date();
   document.getElementById('updated').textContent =
@@ -476,11 +478,19 @@ function makePowerChart() {
       },
       scales: {
         x: {
+          offset: false,
           ticks: {
             color: 'rgba(255,255,255,0.6)',
             font: { size: 12 },
-            maxTicksLimit: 8,
+            maxTicksLimit: 300,
             maxRotation: 0,
+            // Always show 00:00 at left edge; display every 3 hours
+            callback: (val) => {
+              const lbl = POWER_LABELS[val];
+              if (!lbl) return null;
+              const [h, m] = lbl.split(':').map(Number);
+              return m === 0 && h % 3 === 0 ? lbl : null;
+            },
           },
           grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] },
           border: { color: 'rgba(255,255,255,0.1)' },
@@ -585,6 +595,34 @@ function parsePowerCSV(csv) {
   };
 }
 
+// ── Energy flow diagram ───────────────────────────────────────────────────────
+
+function setFlowLine(id, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('flow-in', 'flow-out', 'flow-idle');
+  el.classList.add(state === 'in' ? 'flow-in' : state === 'out' ? 'flow-out' : 'flow-idle');
+}
+
+function updateFlowDiagram(production, imported_, exported_, charged, discharged) {
+  const selfConsumed = (production != null && exported_ != null && charged != null)
+    ? Math.max(0, production - exported_ - charged) : null;
+  const totalConsumption = selfConsumed != null
+    ? selfConsumed + (imported_ ?? 0) + (discharged ?? 0) : null;
+  const netGrid    = imported_ != null && exported_ != null ? imported_ - exported_    : null;
+  const netBattery = discharged != null && charged != null  ? discharged - charged     : null;
+
+  document.getElementById('fvSolar').textContent    = fmtKwh(production);
+  document.getElementById('fvLoad').textContent     = fmtKwh(totalConsumption);
+  document.getElementById('fvGrid').textContent     = netGrid != null ? fmtKwh(Math.abs(netGrid)) : '--';
+  document.getElementById('fvBattery').textContent  = netBattery != null ? fmtKwh(Math.abs(netBattery)) : '--';
+
+  setFlowLine('lineSolar',   (production  ?? 0) > 0.01 ? 'in'  : 'idle');
+  setFlowLine('lineLoad',    (totalConsumption ?? 0) > 0.01 ? 'out' : 'idle');
+  setFlowLine('lineGrid',    netGrid == null || Math.abs(netGrid) < 0.01 ? 'idle' : netGrid > 0 ? 'in' : 'out');
+  setFlowLine('lineBattery', netBattery == null || Math.abs(netBattery) < 0.01 ? 'idle' : netBattery > 0 ? 'in' : 'out');
+}
+
 // ── Clock ─────────────────────────────────────────────────────────────────────
 
 function startClock() {
@@ -605,8 +643,12 @@ document.addEventListener('DOMContentLoaded', () => {
   makeBarChart();
   makePowerChart();
   startClock();
-  loadTodayData();        // seeds donuts + today's bar from InfluxDB
+  loadTodayData();        // seeds donuts + today's bar + flow from InfluxDB
   loadWeeklyData();       // seeds past 7 days in bar chart from InfluxDB
   loadTodayPowerData();   // seeds power curve from InfluxDB
-  connectMqttBridge();    // all live updates from here on
+  connectMqttBridge();    // live updates via MQTT when available
+  // Fallback polling — keeps data fresh when MQTT broker is unreachable
+  setInterval(loadTodayData,     5 * 60 * 1000);
+  setInterval(loadWeeklyData,    5 * 60 * 1000);
+  setInterval(loadTodayPowerData, 5 * 60 * 1000);
 });
