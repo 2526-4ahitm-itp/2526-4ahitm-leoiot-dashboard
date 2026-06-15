@@ -46,45 +46,34 @@ html, body {
   flex-shrink: 0;
 }
 
-.logo-text {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--text);
-}
-
 .header-right {
   display: flex;
   align-items: center;
-}
-
-.header-clock-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 1px;
+  gap: 10px;
+  font-size: 18px;
+  color: var(--text-dim);
 }
 
 .clock {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: 0.04em;
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
+.header-sep {
+  opacity: 0.35;
+}
+
 .updated-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: 16px;
   color: var(--text-dim);
-  opacity: 0.6;
 }
 
 .updated-time {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--text-dim);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
