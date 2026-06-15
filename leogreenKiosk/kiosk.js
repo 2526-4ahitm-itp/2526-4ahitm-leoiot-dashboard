@@ -45,16 +45,17 @@ function makeDonut(canvasId) {
   });
 }
 
-// ── Donut 1: Consumption (PV self-consumed vs grid import) ────────────────────
+// ── Donut 1: Consumption (PV self-consumed / battery / grid) ─────────────────
 
-function updateConsumptionDonut(consumption, imported_) {
-  const fromPV   = safePos(consumption - imported_);
+function updateConsumptionDonut(consumption, imported_, discharged) {
+  const fromBatt = safePos(discharged);
   const fromGrid = safePos(imported_);
-  const total    = fromPV + fromGrid;
+  const fromPV   = safePos(consumption - fromGrid - fromBatt);
+  const total    = fromPV + fromGrid + fromBatt;
 
-  consumptionChart.data.datasets[0].data            = total > 0 ? [fromPV, fromGrid] : [1];
+  consumptionChart.data.datasets[0].data            = total > 0 ? [fromPV, fromGrid, fromBatt] : [1];
   consumptionChart.data.datasets[0].backgroundColor = total > 0
-    ? ['#22c55e', '#f97316']
+    ? ['#22c55e', '#f97316', '#a78bfa']
     : [PLACEHOLDER_COLOR];
   consumptionChart.update();
 
@@ -64,6 +65,7 @@ function updateConsumptionDonut(consumption, imported_) {
 
   el('legConFromPV').textContent   = fmtKwh(fromPV);
   el('legConFromGrid').textContent = fmtKwh(fromGrid);
+  el('legConFromBatt').textContent = fmtKwh(fromBatt);
 }
 
 // ── Donut 2: Production (self-consumed / exported / charged) ──────────────────
@@ -93,16 +95,17 @@ function updateProductionDonut(production, exported_, charged) {
 
 function applyPvData(d) {
   // Accept both camelCase (Solax API) and snake_case (InfluxDB)
-  const production  = d.dailyYield      ?? d.daily_yield      ?? null;
-  const imported_   = d.dailyImported   ?? d.daily_imported   ?? null;
-  const exported_   = d.dailyExported   ?? d.daily_exported   ?? null;
-  const charged     = d.dailyCharged    ?? d.daily_charged    ?? null;
+  const production  = d.dailyYield        ?? d.daily_yield        ?? null;
+  const imported_   = d.dailyImported     ?? d.daily_imported     ?? null;
+  const exported_   = d.dailyExported     ?? d.daily_exported     ?? null;
+  const charged     = d.dailyCharged      ?? d.daily_charged      ?? null;
+  const discharged  = d.dailyDischarged   ?? d.daily_discharged   ?? null;
   const consumption = d.consumption
     ?? (production != null && exported_ != null && imported_ != null
         ? production - exported_ + imported_ : null);
 
   if (consumption != null && imported_ != null) {
-    updateConsumptionDonut(consumption, imported_);
+    updateConsumptionDonut(consumption, imported_, discharged ?? 0);
   }
   if (production != null && exported_ != null && charged != null) {
     updateProductionDonut(production, exported_, charged);
