@@ -97,9 +97,22 @@ function sendSnapshot(ws, room) {
   }
 }
 
+// ── PV live data (broadcast to all clients) ───────────────────────────────────
+let latestPvData = null;
+
+function broadcastPv(data) {
+  const msg = JSON.stringify({ type: 'pv', data });
+  for (const [ws] of subscriptions.entries()) {
+    if (ws.readyState === ws.OPEN) ws.send(msg);
+  }
+}
+
 wss.on('connection', (ws) => {
   subscriptions.set(ws, new Set());
   safeSend(ws, { type: 'hello', wsPort: WS_PORT });
+
+  // Send cached PV snapshot immediately on connect
+  if (latestPvData) safeSend(ws, { type: 'pv', data: latestPvData });
 
   ws.on('message', (data) => {
     let msg;
@@ -195,3 +208,43 @@ mqttClient.on('message', (topic, payloadBuf) => {
 
 mqttClient.on('reconnect', () => console.log('[mqtt-ws-bridge] MQTT reconnecting...'));
 mqttClient.on('error', (err) => console.error('[mqtt-ws-bridge] MQTT error:', err.message));
+
+// ── External PV MQTT broker (TLS) ─────────────────────────────────────────────
+const PV_MQTT_HOST = process.env.PV_MQTT_HOST || 'mqtt.htl-leonding.ac.at';
+const PV_MQTT_PORT = parseInt(process.env.PV_MQTT_PORT || '8883', 10);
+const PV_MQTT_USER = process.env.PV_MQTT_USER || 'leo-student';
+const PV_MQTT_PASS = process.env.PV_MQTT_PASS || 'sTuD@w0rck';
+const PV_TOPIC = 'leoenergy/solax_pv/overall_inverter';
+
+const pvMqttClient = mqtt.connect(`mqtts://${PV_MQTT_HOST}:${PV_MQTT_PORT}`, {
+  username: PV_MQTT_USER,
+  password: PV_MQTT_PASS,
+  reconnectPeriod: 5000,
+  rejectUnauthorized: false,
+});
+
+pvMqttClient.on('connect', () => {
+  console.log(`[mqtt-ws-bridge] Connected to PV MQTT at ${PV_MQTT_HOST}:${PV_MQTT_PORT}`);
+  pvMqttClient.subscribe(PV_TOPIC, { qos: 0 }, (err) => {
+    if (err) console.error('[mqtt-ws-bridge] PV subscribe error:', err.message);
+    else console.log(`[mqtt-ws-bridge] Subscribed to ${PV_TOPIC}`);
+  });
+});
+
+pvMqttClient.on('message', (topic, payloadBuf) => {
+  if (topic !== PV_TOPIC) return;
+  const raw = payloadBuf.toString('utf8');
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    console.error('[mqtt-ws-bridge] PV payload is not JSON:', raw);
+    return;
+  }
+  latestPvData = { ...data, _ts: Date.now() };
+  console.log('[mqtt-ws-bridge] PV update:', JSON.stringify(latestPvData));
+  broadcastPv(latestPvData);
+});
+
+pvMqttClient.on('reconnect', () => console.log('[mqtt-ws-bridge] PV MQTT reconnecting...'));
+pvMqttClient.on('error', (err) => console.error('[mqtt-ws-bridge] PV MQTT error:', err.message));

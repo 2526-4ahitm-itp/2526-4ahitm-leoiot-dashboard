@@ -113,6 +113,10 @@ services:
     environment:
       - MQTT_HOST=mosquitto
       - WS_PORT=8090
+      - PV_MQTT_HOST=mqtt.htl-leonding.ac.at
+      - PV_MQTT_PORT=8883
+      - PV_MQTT_USER=leo-student
+      - PV_MQTT_PASS=sTuD@w0rck
     ports:
       - "8090:8090"
     depends_on:

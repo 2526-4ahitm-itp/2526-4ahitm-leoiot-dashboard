@@ -378,11 +378,81 @@ function startClock() {
   setInterval(tick, 1000);
 }
 
+// ── MQTT live updates via WebSocket bridge ────────────────────────────────────
+
+function addLiveChartPoint(generated, consumed, discharged, imported_) {
+  if (!mainChart || !mainChart.data.datasets.length) return;
+  const { midnightUTC } = getCETDayRange(0);
+  const x = (Date.now() - midnightUTC) / 3_600_000;
+  const values = { daily_yield: generated, consumption: consumed, daily_discharged: discharged, daily_imported: imported_ };
+  SERIES.forEach((s, i) => {
+    const v = values[s.field];
+    if (v == null || !isFinite(v)) return;
+    const dataset = mainChart.data.datasets[i];
+    if (!dataset) return;
+    dataset.data = dataset.data.filter(p => Math.abs(p.x - x) > 0.008);
+    dataset.data.push({ x, y: v });
+    dataset.data.sort((a, b) => a.x - b.x);
+  });
+  mainChart.update('none');
+}
+
+function applyPvMessage(d) {
+  // Accept both camelCase (Solax API) and snake_case (InfluxDB) field names
+  const generated  = d.dailyYield      ?? d.daily_yield      ?? null;
+  const discharged = d.dailyDischarged ?? d.daily_discharged ?? null;
+  const imported_  = d.dailyImported   ?? d.daily_imported   ?? null;
+  const exported_  = d.dailyExported   ?? d.daily_exported   ?? null;
+  const lifetime   = d.totalYield      ?? d.total_yield      ?? null;
+  const consumed   = d.consumption
+    ?? (generated != null && exported_ != null && imported_ != null
+        ? generated - exported_ + imported_ : null);
+  const co2 = generated != null ? generated * CO2_KG_PER_KWH : null;
+
+  const el = id => document.getElementById(id);
+  if (generated != null) el('boxGenerated').textContent = fmtKwh(generated);
+  if (consumed  != null) el('boxConsumed').textContent  = fmtKwh(consumed);
+  if (co2       != null) el('boxCO2').textContent       =
+    `${co2.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg`;
+  if (lifetime  != null) el('boxLifetime').textContent  =
+    `${lifetime.toLocaleString('de-AT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} kWh`;
+
+  addLiveChartPoint(generated, consumed, discharged, imported_);
+
+  const now = new Date();
+  el('kioskUpdated').textContent =
+    `Updated: ${now.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })}`;
+}
+
+function connectMqttBridge() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsUrl = `${proto}://${location.host}/ws`;
+
+  function connect() {
+    const ws = new WebSocket(wsUrl);
+
+    ws.addEventListener('message', (evt) => {
+      let msg;
+      try { msg = JSON.parse(evt.data); } catch { return; }
+      if (msg.type === 'pv') applyPvMessage(msg.data);
+    });
+
+    ws.addEventListener('close', () => {
+      setTimeout(connect, 5000);
+    });
+
+    ws.addEventListener('error', () => {});
+  }
+
+  connect();
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
   initCharts();
   startClock();
   refresh();
+  connectMqttBridge();
   setInterval(refresh, REFRESH_MS);
 });
