@@ -10,17 +10,21 @@ let productionChart  = null;
 
 function fmtKwh(v) {
   if (v == null) return '--';
-  if (v >= 1000) return (v / 1000).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MWh';
-  if (v >= 100)  return v.toLocaleString('de-AT', { maximumFractionDigits: 0 }) + ' kWh';
+  if (v >= 100) return v.toLocaleString('de-AT', { maximumFractionDigits: 0 }) + ' kWh';
   return v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kWh';
 }
 
-// For the donut center: value and unit are separate spans so unit adapts too
-function fmtCenter(v) {
-  if (v == null || !isFinite(v)) return { val: '--', unit: 'kWh' };
-  if (v >= 1000) return { val: (v / 1000).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), unit: 'MWh' };
-  if (v >= 100)  return { val: v.toLocaleString('de-AT', { maximumFractionDigits: 0 }), unit: 'kWh' };
-  return { val: v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }), unit: 'kWh' };
+function setCenter(id, v) {
+  const str = v == null || !isFinite(v) ? '--'
+    : v >= 100 ? v.toLocaleString('de-AT', { maximumFractionDigits: 0 })
+    : v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const digits = str.replace(/\D/g, '').length;
+  const size = digits <= 3 ? 'clamp(1.4rem, 3.2vw, 2.8rem)'
+             : digits <= 4 ? 'clamp(1.1rem, 2.4vw, 2.1rem)'
+             :                'clamp(0.9rem, 1.8vw, 1.6rem)';
+  const el = document.getElementById(id);
+  el.querySelector('.donut-val').style.fontSize = size;
+  el.querySelector('.donut-val').textContent = str;
 }
 
 function safePos(v) {
@@ -87,9 +91,7 @@ function updateConsumptionDonut(selfConsumed, imported_, discharged) {
   consumptionChart.data.datasets[0].backgroundColor = total > 0 ? segs.map(s => s.color) : [PLACEHOLDER_COLOR];
   consumptionChart.update();
 
-  const cc = fmtCenter(total > 0 ? total : null);
-  document.getElementById('consumptionCenter').querySelector('.donut-val').textContent  = cc.val;
-  document.getElementById('consumptionCenter').querySelector('.donut-unit').textContent = cc.unit;
+  setCenter('consumptionCenter', total > 0 ? total : null);
 
   renderLegend('consumptionLegend', segs);
 }
@@ -108,9 +110,7 @@ function updateProductionDonut(production, exported_, charged, selfConsumed) {
   productionChart.data.datasets[0].backgroundColor = total > 0 ? segs.map(s => s.color) : [PLACEHOLDER_COLOR];
   productionChart.update();
 
-  const pc = fmtCenter(production);
-  document.getElementById('productionCenter').querySelector('.donut-val').textContent  = pc.val;
-  document.getElementById('productionCenter').querySelector('.donut-unit').textContent = pc.unit;
+  setCenter('productionCenter', production);
 
   renderLegend('productionLegend', segs);
 }
