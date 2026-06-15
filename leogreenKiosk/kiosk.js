@@ -46,11 +46,13 @@ function makeDonut(canvasId) {
 }
 
 // ── Donut 1: Consumption (PV self-consumed / battery / grid) ─────────────────
+// selfConsumed is passed in — same value as "Eigenverbrauch" in production chart.
+// Total consumption = selfConsumed + imported + discharged (battery-aware formula).
 
-function updateConsumptionDonut(consumption, imported_, discharged) {
-  const fromBatt = safePos(discharged);
+function updateConsumptionDonut(selfConsumed, imported_, discharged) {
+  const fromPV   = safePos(selfConsumed);
   const fromGrid = safePos(imported_);
-  const fromPV   = safePos(consumption - fromGrid - fromBatt);
+  const fromBatt = safePos(discharged);
   const total    = fromPV + fromGrid + fromBatt;
 
   consumptionChart.data.datasets[0].data            = total > 0 ? [fromPV, fromGrid, fromBatt] : [1];
@@ -61,7 +63,7 @@ function updateConsumptionDonut(consumption, imported_, discharged) {
 
   const el = id => document.getElementById(id);
   el('consumptionCenter').querySelector('.donut-val').textContent =
-    consumption != null ? consumption.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
+    total > 0 ? total.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
 
   el('legConFromPV').textContent   = fmtKwh(fromPV);
   el('legConFromGrid').textContent = fmtKwh(fromGrid);
@@ -70,11 +72,10 @@ function updateConsumptionDonut(consumption, imported_, discharged) {
 
 // ── Donut 2: Production (self-consumed / exported / charged) ──────────────────
 
-function updateProductionDonut(production, exported_, charged) {
-  const selfConsumed = safePos(production - exported_ - charged);
-  const toGrid       = safePos(exported_);
-  const toBattery    = safePos(charged);
-  const total        = selfConsumed + toGrid + toBattery;
+function updateProductionDonut(production, exported_, charged, selfConsumed) {
+  const toGrid    = safePos(exported_);
+  const toBattery = safePos(charged);
+  const total     = selfConsumed + toGrid + toBattery;
 
   productionChart.data.datasets[0].data            = total > 0 ? [selfConsumed, toGrid, toBattery] : [1];
   productionChart.data.datasets[0].backgroundColor = total > 0
@@ -95,20 +96,23 @@ function updateProductionDonut(production, exported_, charged) {
 
 function applyPvData(d) {
   // Accept both camelCase (Solax API) and snake_case (InfluxDB)
-  const production  = d.dailyYield        ?? d.daily_yield        ?? null;
-  const imported_   = d.dailyImported     ?? d.daily_imported     ?? null;
-  const exported_   = d.dailyExported     ?? d.daily_exported     ?? null;
-  const charged     = d.dailyCharged      ?? d.daily_charged      ?? null;
-  const discharged  = d.dailyDischarged   ?? d.daily_discharged   ?? null;
-  const consumption = d.consumption
-    ?? (production != null && exported_ != null && imported_ != null
-        ? production - exported_ + imported_ : null);
+  const production = d.dailyYield      ?? d.daily_yield      ?? null;
+  const imported_  = d.dailyImported   ?? d.daily_imported   ?? null;
+  const exported_  = d.dailyExported   ?? d.daily_exported   ?? null;
+  const charged    = d.dailyCharged    ?? d.daily_charged    ?? null;
+  const discharged = d.dailyDischarged ?? d.daily_discharged ?? null;
 
-  if (consumption != null && imported_ != null) {
-    updateConsumptionDonut(consumption, imported_, discharged ?? 0);
+  // Single authoritative formula: PV energy used on-site (not exported, not stored).
+  // Used identically as "Von PV" and "Eigenverbrauch" so both charts always match.
+  const selfConsumed = (production != null && exported_ != null && charged != null)
+    ? safePos(production - exported_ - charged)
+    : null;
+
+  if (selfConsumed != null && imported_ != null && discharged != null) {
+    updateConsumptionDonut(selfConsumed, imported_, discharged);
   }
-  if (production != null && exported_ != null && charged != null) {
-    updateProductionDonut(production, exported_, charged);
+  if (selfConsumed != null && production != null && exported_ != null && charged != null) {
+    updateProductionDonut(production, exported_, charged, selfConsumed);
   }
 
   const now = new Date();
