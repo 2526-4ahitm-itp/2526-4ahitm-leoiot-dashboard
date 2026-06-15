@@ -293,7 +293,13 @@ function makeBarChart() {
           ticks: {
             color: 'rgba(255,255,255,0.6)',
             font: { size: 13 },
-            callback: v => v === 0 ? '0' : (v >= 100 ? Math.round(v) : v.toFixed(1)) + ' kWh',
+            callback: v => v === 0 ? '0' : (v >= 100 ? Math.round(v) : v.toFixed(1)),
+          },
+          title: {
+            display: true,
+            text: 'Werte in kWh',
+            color: 'rgba(255,255,255,0.5)',
+            font: { size: 12 },
           },
           grid: { color: 'rgba(255,255,255,0.08)', borderDash: [4, 4] },
           border: { color: 'rgba(255,255,255,0.1)' },
