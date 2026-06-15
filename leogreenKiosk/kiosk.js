@@ -1,0 +1,223 @@
+const INFLUX_URL   = '/influx';
+const INFLUX_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==';
+const INFLUX_ORG   = 'leoiot';
+const INFLUX_BUCKET = 'server_data';
+
+let consumptionChart = null;
+let productionChart  = null;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtKwh(v) {
+  if (v == null) return '--';
+  return v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kWh';
+}
+
+function safePos(v) {
+  return (v != null && isFinite(v) && v > 0) ? v : 0;
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+
+const PLACEHOLDER_COLOR = 'rgba(255,255,255,0.06)';
+
+function makeDonut(canvasId) {
+  return new Chart(document.getElementById(canvasId).getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [1],
+        backgroundColor: [PLACEHOLDER_COLOR],
+        borderWidth: 0,
+        hoverOffset: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '70%',
+      animation: { duration: 500, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+      },
+    },
+  });
+}
+
+// ── Donut 1: Consumption (PV self-consumed vs grid import) ────────────────────
+
+function updateConsumptionDonut(consumption, imported_) {
+  const fromPV   = safePos(consumption - imported_);
+  const fromGrid = safePos(imported_);
+  const total    = fromPV + fromGrid;
+
+  consumptionChart.data.datasets[0].data            = total > 0 ? [fromPV, fromGrid] : [1];
+  consumptionChart.data.datasets[0].backgroundColor = total > 0
+    ? ['#22c55e', '#f97316']
+    : [PLACEHOLDER_COLOR];
+  consumptionChart.update();
+
+  const el = id => document.getElementById(id);
+  el('consumptionCenter').querySelector('.donut-val').textContent =
+    consumption != null ? consumption.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
+
+  el('legConFromPV').textContent   = fmtKwh(fromPV);
+  el('legConFromGrid').textContent = fmtKwh(fromGrid);
+}
+
+// ── Donut 2: Production (self-consumed / exported / charged) ──────────────────
+
+function updateProductionDonut(production, exported_, charged) {
+  const selfConsumed = safePos(production - exported_ - charged);
+  const toGrid       = safePos(exported_);
+  const toBattery    = safePos(charged);
+  const total        = selfConsumed + toGrid + toBattery;
+
+  productionChart.data.datasets[0].data            = total > 0 ? [selfConsumed, toGrid, toBattery] : [1];
+  productionChart.data.datasets[0].backgroundColor = total > 0
+    ? ['#22c55e', '#ef4444', '#14b8a6']
+    : [PLACEHOLDER_COLOR];
+  productionChart.update();
+
+  const el = id => document.getElementById(id);
+  el('productionCenter').querySelector('.donut-val').textContent =
+    production != null ? production.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
+
+  el('legProdSelf').textContent = fmtKwh(selfConsumed);
+  el('legProdGrid').textContent = fmtKwh(toGrid);
+  el('legProdBatt').textContent = fmtKwh(toBattery);
+}
+
+// ── Apply PV data (shared between MQTT and InfluxDB paths) ────────────────────
+
+function applyPvData(d) {
+  // Accept both camelCase (Solax API) and snake_case (InfluxDB)
+  const production  = d.dailyYield      ?? d.daily_yield      ?? null;
+  const imported_   = d.dailyImported   ?? d.daily_imported   ?? null;
+  const exported_   = d.dailyExported   ?? d.daily_exported   ?? null;
+  const charged     = d.dailyCharged    ?? d.daily_charged    ?? null;
+  const consumption = d.consumption
+    ?? (production != null && exported_ != null && imported_ != null
+        ? production - exported_ + imported_ : null);
+
+  if (consumption != null && imported_ != null) {
+    updateConsumptionDonut(consumption, imported_);
+  }
+  if (production != null && exported_ != null && charged != null) {
+    updateProductionDonut(production, exported_, charged);
+  }
+
+  const now = new Date();
+  document.getElementById('updated').textContent =
+    `Updated: ${now.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })}`;
+}
+
+// ── MQTT live updates via WebSocket bridge ────────────────────────────────────
+
+function connectMqttBridge() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsUrl = `${proto}://${location.host}/ws`;
+
+  function connect() {
+    const ws = new WebSocket(wsUrl);
+
+    ws.addEventListener('message', (evt) => {
+      let msg;
+      try { msg = JSON.parse(evt.data); } catch { return; }
+      if (msg.type === 'pv') applyPvData(msg.data);
+    });
+
+    ws.addEventListener('close', () => setTimeout(connect, 5000));
+    ws.addEventListener('error', () => {});
+  }
+
+  connect();
+}
+
+// ── InfluxDB initial load (today, start-of-CET-day until now) ─────────────────
+
+function getTodayCETStart() {
+  const dateStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Vienna' });
+  const tzPart  = new Intl.DateTimeFormat('en', {
+    timeZone: 'Europe/Vienna', timeZoneName: 'shortOffset',
+  }).formatToParts(new Date(`${dateStr}T12:00:00Z`))
+    .find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1';
+  const offset = parseInt(tzPart.replace('GMT', '')) || 1;
+  return new Date(new Date(`${dateStr}T00:00:00Z`).getTime() - offset * 3_600_000).toISOString();
+}
+
+async function loadInitialData() {
+  const startISO = getTodayCETStart();
+  const stopISO  = new Date().toISOString();
+
+  const query = `
+from(bucket: "${INFLUX_BUCKET}")
+  |> range(start: ${startISO}, stop: ${stopISO})
+  |> filter(fn: (r) => r._measurement == "solax_stats")
+  |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption"
+       or r._field == "daily_imported" or r._field == "daily_exported"
+       or r._field == "daily_charged")
+  |> last()
+  |> yield(name: "last")`;
+
+  try {
+    const resp = await fetch(`${INFLUX_URL}/api/v2/query?org=${INFLUX_ORG}&t=${Date.now()}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${INFLUX_TOKEN}`,
+        'Content-Type': 'application/vnd.flux',
+        'Accept': 'application/csv',
+        'Cache-Control': 'no-cache',
+      },
+      body: query,
+    });
+    if (!resp.ok) return;
+    const vals = parseLastCSV(await resp.text());
+    if (vals) applyPvData(vals);
+  } catch (e) {
+    console.error('[leogreenKiosk] InfluxDB error:', e);
+  }
+}
+
+function parseLastCSV(csv) {
+  const lines = csv.trim().split('\n').filter(l => l && !l.startsWith('#'));
+  if (lines.length < 2) return null;
+
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  const vi = headers.indexOf('_value');
+  const fi = headers.indexOf('_field');
+  if (vi < 0 || fi < 0) return null;
+
+  const result = {};
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
+    if (!cols[vi] || !cols[fi]) continue;
+    const v = parseFloat(cols[vi]);
+    if (isFinite(v)) result[cols[fi]] = v;
+  }
+  return Object.keys(result).length ? result : null;
+}
+
+// ── Clock ─────────────────────────────────────────────────────────────────────
+
+function startClock() {
+  const tick = () => {
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('de-AT', {
+      timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  consumptionChart = makeDonut('consumptionChart');
+  productionChart  = makeDonut('productionChart');
+  startClock();
+  loadInitialData();
+  connectMqttBridge();
+  setInterval(loadInitialData, 5 * 60 * 1000);
+});

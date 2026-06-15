@@ -184,6 +184,22 @@ services:
     networks:
       - leoiot
 
+  leogreen-kiosk:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./leogreenKiosk:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "8087:8087"
+    environment:
+      - DOCKER_ENV=1
+    depends_on:
+      - influxdb
+      - mqtt-ws-bridge
+    networks:
+      - leoiot
+
   solax-collector:
     image: node:20-alpine
     working_dir: /app

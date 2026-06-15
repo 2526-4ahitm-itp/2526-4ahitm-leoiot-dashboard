@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeoGreen – HTL Leonding</title>
+  <link rel="stylesheet" href="kiosk.css" />
+</head>
+<body>
+  <header class="header">
+    <span class="logo">HTL Leonding · LeoGreen</span>
+    <div class="header-right">
+      <span id="clock">--</span>
+      <span class="sep">·</span>
+      <span id="updated">Updated: --</span>
+    </div>
+  </header>
+
+  <main class="main-grid">
+
+    <!-- Top-left 1/4: two donut charts -->
+    <section class="panel donut-panel">
+
+      <div class="donut-wrap">
+        <h3 class="donut-title">Verbrauch</h3>
+        <div class="donut-container">
+          <canvas id="consumptionChart"></canvas>
+          <div class="donut-center" id="consumptionCenter">
+            <span class="donut-val">--</span>
+            <span class="donut-unit">kWh</span>
+          </div>
+        </div>
+        <ul class="donut-legend" id="consumptionLegend">
+          <li class="legend-item">
+            <span class="legend-dot" style="background:#22c55e"></span>
+            <span class="legend-label">Von PV</span>
+            <span class="legend-value" id="legConFromPV">--</span>
+          </li>
+          <li class="legend-item">
+            <span class="legend-dot" style="background:#f97316"></span>
+            <span class="legend-label">Vom Netz</span>
+            <span class="legend-value" id="legConFromGrid">--</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="donut-wrap">
+        <h3 class="donut-title">Produktion</h3>
+        <div class="donut-container">
+          <canvas id="productionChart"></canvas>
+          <div class="donut-center" id="productionCenter">
+            <span class="donut-val">--</span>
+            <span class="donut-unit">kWh</span>
+          </div>
+        </div>
+        <ul class="donut-legend" id="productionLegend">
+          <li class="legend-item">
+            <span class="legend-dot" style="background:#22c55e"></span>
+            <span class="legend-label">Eigenverbrauch</span>
+            <span class="legend-value" id="legProdSelf">--</span>
+          </li>
+          <li class="legend-item">
+            <span class="legend-dot" style="background:#ef4444"></span>
+            <span class="legend-label">Ins Netz</span>
+            <span class="legend-value" id="legProdGrid">--</span>
+          </li>
+          <li class="legend-item">
+            <span class="legend-dot" style="background:#14b8a6"></span>
+            <span class="legend-label">Batterie</span>
+            <span class="legend-value" id="legProdBatt">--</span>
+          </li>
+        </ul>
+      </div>
+
+    </section>
+
+    <!-- Top-right 1/4 -->
+    <section class="panel future-panel"></section>
+
+    <!-- Bottom-left 1/4 -->
+    <section class="panel future-panel"></section>
+
+    <!-- Bottom-right 1/4 -->
+    <section class="panel future-panel"></section>
+
+  </main>
+
+  <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script type="module" src="kiosk.js"></script>
+</body>
+</html>
