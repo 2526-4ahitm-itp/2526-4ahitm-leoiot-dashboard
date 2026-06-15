@@ -667,7 +667,7 @@ function initTheme() {
   const isLight = localStorage.getItem('leogreen-theme') === 'light';
 
   const applyLogo = (light) => {
-    logo.src = light ? './htllogoblack.png' : './htllogo.webp';
+    logo.src = light ? './htllogoblack.png' : './htllogo.png';
   };
 
   if (isLight) {
