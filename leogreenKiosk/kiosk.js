@@ -194,7 +194,7 @@ function applyPvData(d) {
 
   const nowDate = new Date();
   document.getElementById('updated').textContent =
-    `Updated: ${nowDate.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })}`;
+    nowDate.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' });
 }
 
 // ── MQTT live updates via WebSocket bridge ────────────────────────────────────
