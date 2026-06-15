@@ -37,6 +37,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex: 1;
 }
 
 .htl-logo {
@@ -49,9 +50,11 @@ html, body {
 .header-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   font-size: 18px;
   color: var(--text-dim);
+  flex: 1;
 }
 
 .clock {
