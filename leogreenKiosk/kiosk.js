@@ -287,8 +287,8 @@ function makeBarChart() {
       labels: [],
       datasets: [
         { label: 'Produziert', data: [], backgroundColor: '#f59e0b', borderRadius: 4, borderSkipped: false },
-        { label: 'Exportiert', data: [], backgroundColor: '#60a5fa', borderRadius: 4, borderSkipped: false },
         { label: 'Verbraucht', data: [], backgroundColor: '#f87171', borderRadius: 4, borderSkipped: false },
+        { label: 'Exportiert', data: [], backgroundColor: '#60a5fa', borderRadius: 4, borderSkipped: false },
       ],
     },
     options: {
@@ -343,14 +343,14 @@ function makeBarChart() {
 function updateBarChart(byDate) {
   const days = Object.keys(byDate).sort();
   weeklyChart.data.labels = days.map(fmtDayLabel);
-  weeklyChart.data.datasets[0].data = days.map(d => byDate[d].daily_yield    ?? 0);
-  weeklyChart.data.datasets[1].data = days.map(d => byDate[d].daily_exported ?? 0);
-  weeklyChart.data.datasets[2].data = days.map(d => {
+  weeklyChart.data.datasets[0].data = days.map(d => byDate[d].daily_yield ?? 0);
+  weeklyChart.data.datasets[1].data = days.map(d => {
     const y = byDate[d].daily_yield    ?? 0;
     const e = byDate[d].daily_exported ?? 0;
     const c = byDate[d].daily_charged  ?? 0;
     return Math.max(0, y - e - c);
   });
+  weeklyChart.data.datasets[2].data = days.map(d => byDate[d].daily_exported ?? 0);
   weeklyChart.update();
 }
 
@@ -412,15 +412,25 @@ function parseWeeklyCSV(csv) {
 
 // ── Line chart: today's power curve (kW) ─────────────────────────────────────
 
+function generate24hLabels() {
+  const labels = [];
+  for (let h = 0; h < 24; h++)
+    for (let m = 0; m < 60; m += 5)
+      labels.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+  return labels; // 288 slots: 00:00 … 23:55
+}
+
+const POWER_LABELS = generate24hLabels();
+
 function makePowerChart() {
   powerChart = new Chart(document.getElementById('powerChart').getContext('2d'), {
     type: 'line',
     data: {
-      labels: [],
+      labels: [...POWER_LABELS],
       datasets: [
         {
           label: 'Produktion',
-          data: [],
+          data: new Array(288).fill(null),
           borderColor: '#22c55e',
           backgroundColor: 'rgba(34,197,94,0.08)',
           fill: true,
@@ -431,7 +441,7 @@ function makePowerChart() {
         },
         {
           label: 'Verbrauch',
-          data: [],
+          data: new Array(288).fill(null),
           borderColor: '#f97316',
           backgroundColor: 'rgba(249,115,22,0.08)',
           fill: true,
@@ -496,9 +506,11 @@ function makePowerChart() {
 }
 
 function appendToPowerChart(timestamp, prodKw, consKw) {
-  powerChart.data.labels.push(fmtTimeLabel(timestamp));
-  powerChart.data.datasets[0].data.push(prodKw);
-  powerChart.data.datasets[1].data.push(consKw ?? null);
+  const label = fmtTimeLabel(timestamp);
+  const idx = POWER_LABELS.indexOf(label);
+  if (idx < 0) return;
+  powerChart.data.datasets[0].data[idx] = prodKw;
+  powerChart.data.datasets[1].data[idx] = consKw ?? null;
   powerChart.update('none');
 }
 
@@ -530,9 +542,15 @@ from(bucket: "${INFLUX_BUCKET}")
     if (!resp.ok) return;
     const { labels, production, consumption } = parsePowerCSV(await resp.text());
     if (!labels.length) return;
-    powerChart.data.labels                = labels;
-    powerChart.data.datasets[0].data      = production;
-    powerChart.data.datasets[1].data      = consumption;
+    // Merge into fixed 24h slots; leave future slots as null
+    const prod288 = new Array(288).fill(null);
+    const cons288 = new Array(288).fill(null);
+    labels.forEach((lbl, i) => {
+      const idx = POWER_LABELS.indexOf(lbl);
+      if (idx >= 0) { prod288[idx] = production[i]; cons288[idx] = consumption[i]; }
+    });
+    powerChart.data.datasets[0].data = prod288;
+    powerChart.data.datasets[1].data = cons288;
     powerChart.update();
   } catch (e) {
     console.error('[leogreenKiosk] InfluxDB power error:', e);
