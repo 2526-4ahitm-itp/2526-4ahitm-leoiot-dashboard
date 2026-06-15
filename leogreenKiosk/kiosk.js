@@ -10,7 +10,17 @@ let productionChart  = null;
 
 function fmtKwh(v) {
   if (v == null) return '--';
+  if (v >= 1000) return (v / 1000).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MWh';
+  if (v >= 100)  return v.toLocaleString('de-AT', { maximumFractionDigits: 0 }) + ' kWh';
   return v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kWh';
+}
+
+// For the donut center: value and unit are separate spans so unit adapts too
+function fmtCenter(v) {
+  if (v == null || !isFinite(v)) return { val: '--', unit: 'kWh' };
+  if (v >= 1000) return { val: (v / 1000).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), unit: 'MWh' };
+  if (v >= 100)  return { val: v.toLocaleString('de-AT', { maximumFractionDigits: 0 }), unit: 'kWh' };
+  return { val: v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }), unit: 'kWh' };
 }
 
 function safePos(v) {
@@ -77,8 +87,9 @@ function updateConsumptionDonut(selfConsumed, imported_, discharged) {
   consumptionChart.data.datasets[0].backgroundColor = total > 0 ? segs.map(s => s.color) : [PLACEHOLDER_COLOR];
   consumptionChart.update();
 
-  document.getElementById('consumptionCenter').querySelector('.donut-val').textContent =
-    total > 0 ? total.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
+  const cc = fmtCenter(total > 0 ? total : null);
+  document.getElementById('consumptionCenter').querySelector('.donut-val').textContent  = cc.val;
+  document.getElementById('consumptionCenter').querySelector('.donut-unit').textContent = cc.unit;
 
   renderLegend('consumptionLegend', segs);
 }
@@ -97,8 +108,9 @@ function updateProductionDonut(production, exported_, charged, selfConsumed) {
   productionChart.data.datasets[0].backgroundColor = total > 0 ? segs.map(s => s.color) : [PLACEHOLDER_COLOR];
   productionChart.update();
 
-  document.getElementById('productionCenter').querySelector('.donut-val').textContent =
-    production != null ? production.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
+  const pc = fmtCenter(production);
+  document.getElementById('productionCenter').querySelector('.donut-val').textContent  = pc.val;
+  document.getElementById('productionCenter').querySelector('.donut-unit').textContent = pc.unit;
 
   renderLegend('productionLegend', segs);
 }
