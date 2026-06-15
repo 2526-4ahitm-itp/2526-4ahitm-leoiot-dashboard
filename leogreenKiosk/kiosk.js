@@ -119,8 +119,8 @@ function applyPvData(d) {
     ? safePos(production - exported_ - charged)
     : null;
 
-  if (selfConsumed != null && imported_ != null && discharged != null) {
-    updateConsumptionDonut(selfConsumed, imported_, discharged);
+  if (selfConsumed != null && imported_ != null) {
+    updateConsumptionDonut(selfConsumed, imported_, discharged ?? 0);
   }
   if (selfConsumed != null && production != null && exported_ != null && charged != null) {
     updateProductionDonut(production, exported_, charged, selfConsumed);
@@ -175,7 +175,7 @@ from(bucket: "${INFLUX_BUCKET}")
   |> filter(fn: (r) => r._measurement == "solax_stats")
   |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption"
        or r._field == "daily_imported" or r._field == "daily_exported"
-       or r._field == "daily_charged")
+       or r._field == "daily_charged" or r._field == "daily_discharged")
   |> last()
   |> yield(name: "last")`;
 
