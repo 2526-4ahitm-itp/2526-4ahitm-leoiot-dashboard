@@ -45,51 +45,62 @@ function makeDonut(canvasId) {
   });
 }
 
+// ── Shared legend renderer (sorted highest → lowest) ──────────────────────────
+
+function renderLegend(ulId, segments) {
+  document.getElementById(ulId).innerHTML = segments
+    .map(s => `<li class="legend-item">
+      <span class="legend-dot" style="background:${s.color}"></span>
+      <span class="legend-label">${s.label}</span>
+      <span class="legend-value">${fmtKwh(s.value)}</span>
+    </li>`)
+    .join('');
+}
+
+function sortedSegments(segs) {
+  return [...segs].sort((a, b) => b.value - a.value);
+}
+
 // ── Donut 1: Consumption (PV self-consumed / battery / grid) ─────────────────
 // selfConsumed is passed in — same value as "Eigenverbrauch" in production chart.
 // Total consumption = selfConsumed + imported + discharged (battery-aware formula).
 
 function updateConsumptionDonut(selfConsumed, imported_, discharged) {
-  const fromPV   = safePos(selfConsumed);
-  const fromGrid = safePos(imported_);
-  const fromBatt = safePos(discharged);
-  const total    = fromPV + fromGrid + fromBatt;
+  const segs = sortedSegments([
+    { label: 'Von PV',       value: safePos(selfConsumed), color: '#22c55e' },
+    { label: 'Vom Netz',     value: safePos(imported_),    color: '#f97316' },
+    { label: 'Von Batterie', value: safePos(discharged),   color: '#a78bfa' },
+  ]);
+  const total = segs.reduce((s, seg) => s + seg.value, 0);
 
-  consumptionChart.data.datasets[0].data            = total > 0 ? [fromPV, fromGrid, fromBatt] : [1];
-  consumptionChart.data.datasets[0].backgroundColor = total > 0
-    ? ['#22c55e', '#f97316', '#a78bfa']
-    : [PLACEHOLDER_COLOR];
+  consumptionChart.data.datasets[0].data            = total > 0 ? segs.map(s => s.value) : [1];
+  consumptionChart.data.datasets[0].backgroundColor = total > 0 ? segs.map(s => s.color) : [PLACEHOLDER_COLOR];
   consumptionChart.update();
 
-  const el = id => document.getElementById(id);
-  el('consumptionCenter').querySelector('.donut-val').textContent =
+  document.getElementById('consumptionCenter').querySelector('.donut-val').textContent =
     total > 0 ? total.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
 
-  el('legConFromPV').textContent   = fmtKwh(fromPV);
-  el('legConFromGrid').textContent = fmtKwh(fromGrid);
-  el('legConFromBatt').textContent = fmtKwh(fromBatt);
+  renderLegend('consumptionLegend', segs);
 }
 
 // ── Donut 2: Production (self-consumed / exported / charged) ──────────────────
 
 function updateProductionDonut(production, exported_, charged, selfConsumed) {
-  const toGrid    = safePos(exported_);
-  const toBattery = safePos(charged);
-  const total     = selfConsumed + toGrid + toBattery;
+  const segs = sortedSegments([
+    { label: 'Eigenverbrauch', value: safePos(selfConsumed), color: '#22c55e' },
+    { label: 'Ins Netz',       value: safePos(exported_),    color: '#ef4444' },
+    { label: 'Batterie',       value: safePos(charged),      color: '#14b8a6' },
+  ]);
+  const total = segs.reduce((s, seg) => s + seg.value, 0);
 
-  productionChart.data.datasets[0].data            = total > 0 ? [selfConsumed, toGrid, toBattery] : [1];
-  productionChart.data.datasets[0].backgroundColor = total > 0
-    ? ['#22c55e', '#ef4444', '#14b8a6']
-    : [PLACEHOLDER_COLOR];
+  productionChart.data.datasets[0].data            = total > 0 ? segs.map(s => s.value) : [1];
+  productionChart.data.datasets[0].backgroundColor = total > 0 ? segs.map(s => s.color) : [PLACEHOLDER_COLOR];
   productionChart.update();
 
-  const el = id => document.getElementById(id);
-  el('productionCenter').querySelector('.donut-val').textContent =
+  document.getElementById('productionCenter').querySelector('.donut-val').textContent =
     production != null ? production.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
 
-  el('legProdSelf').textContent = fmtKwh(selfConsumed);
-  el('legProdGrid').textContent = fmtKwh(toGrid);
-  el('legProdBatt').textContent = fmtKwh(toBattery);
+  renderLegend('productionLegend', segs);
 }
 
 // ── Apply PV data (shared between MQTT and InfluxDB paths) ────────────────────
