@@ -623,6 +623,63 @@ function updateFlowDiagram(production, imported_, exported_, charged, discharged
   setFlowLine('lineBattery', netBattery == null || Math.abs(netBattery) < 0.01 ? 'idle' : netBattery > 0 ? 'in' : 'out');
 }
 
+// ── Theme toggle ──────────────────────────────────────────────────────────────
+
+const CHART_THEME = {
+  dark: {
+    tick:   'rgba(255,255,255,0.6)',
+    grid:   'rgba(255,255,255,0.08)',
+    border: 'rgba(255,255,255,0.1)',
+    legend: 'rgba(255,255,255,0.7)',
+    title:  'rgba(255,255,255,0.5)',
+  },
+  light: {
+    tick:   'rgba(0,0,0,0.5)',
+    grid:   'rgba(0,0,0,0.08)',
+    border: 'rgba(0,0,0,0.12)',
+    legend: 'rgba(0,0,0,0.7)',
+    title:  'rgba(0,0,0,0.45)',
+  },
+};
+
+function applyChartTheme(isLight) {
+  const t = isLight ? CHART_THEME.light : CHART_THEME.dark;
+
+  for (const chart of [weeklyChart, powerChart]) {
+    if (!chart) continue;
+    const x = chart.options.scales.x;
+    const y = chart.options.scales.y;
+    x.ticks.color  = t.tick;
+    x.grid.color   = t.grid;
+    x.border.color = t.border;
+    y.ticks.color  = t.tick;
+    y.grid.color   = t.grid;
+    y.border.color = t.border;
+    if (y.title) y.title.color = t.title;
+    chart.options.plugins.legend.labels.color = t.legend;
+    chart.update('none');
+  }
+}
+
+function initTheme() {
+  const toggle = document.getElementById('themeToggle');
+  const isLight = localStorage.getItem('leogreen-theme') === 'light';
+
+  if (isLight) {
+    document.body.classList.add('light');
+    toggle.checked = true;
+    // Charts exist now but have no data yet; re-apply after first data load
+    setTimeout(() => applyChartTheme(true), 100);
+  }
+
+  toggle.addEventListener('change', () => {
+    const light = toggle.checked;
+    document.body.classList.toggle('light', light);
+    localStorage.setItem('leogreen-theme', light ? 'light' : 'dark');
+    applyChartTheme(light);
+  });
+}
+
 // ── Clock ─────────────────────────────────────────────────────────────────────
 
 function startClock() {
@@ -642,6 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
   productionChart  = makeDonut('productionChart');
   makeBarChart();
   makePowerChart();
+  initTheme();
   startClock();
   loadTodayData();        // seeds donuts + today's bar + flow from InfluxDB
   loadWeeklyData();       // seeds past 7 days in bar chart from InfluxDB

@@ -9,6 +9,14 @@
   --header-h: 64px;
 }
 
+body.light {
+  --bg:       #f0f4f8;
+  --surface:  #ffffff;
+  --border:   rgba(0,0,0,0.09);
+  --text:     rgba(0,0,0,0.88);
+  --text-dim: rgba(0,0,0,0.50);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -64,8 +72,61 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
-.header-sep {
-  opacity: 0.35;
+.header-sep { opacity: 0.35; }
+
+/* ── THEME TOGGLE ────────────────────────────────────────────────────────── */
+
+.theme-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.theme-icon {
+  font-size: 16px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { display: none; }
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  transition: background 0.25s;
+}
+
+body.light .toggle-slider {
+  background: rgba(0,0,0,0.1);
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--text);
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.toggle-switch input:checked + .toggle-slider::after {
+  transform: translateX(20px);
 }
 
 .updated-label {
