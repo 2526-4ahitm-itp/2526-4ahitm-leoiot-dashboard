@@ -179,15 +179,15 @@ html, body {
   white-space: nowrap;
 }
 
-/* ── BAR PANEL ───────────────────────────────────────────────────────────── */
+/* ── CHART PANELS (bar + line) ───────────────────────────────────────────── */
 
-.bar-panel {
+.chart-panel {
   display: flex;
   flex-direction: column;
   padding: 24px 24px 16px;
 }
 
-.bar-title {
+.chart-title {
   font-size: 20px;
   font-weight: 700;
   color: var(--text);
@@ -195,13 +195,13 @@ html, body {
   flex-shrink: 0;
 }
 
-.bar-wrap {
+.chart-wrap {
   flex: 1;
   min-height: 0;
   position: relative;
 }
 
-.bar-wrap canvas {
+.chart-wrap canvas {
   position: absolute;
   inset: 0;
 }

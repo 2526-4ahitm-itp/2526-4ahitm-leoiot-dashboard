@@ -6,9 +6,13 @@ const INFLUX_BUCKET = 'server_data';
 let consumptionChart = null;
 let productionChart  = null;
 let weeklyChart      = null;
+let powerChart       = null;
 
 // Persisted across MQTT updates so today's bar can be patched live
 let weeklyByDate = {};
+
+// Tracks consecutive MQTT messages to derive instantaneous power (kWh → kW)
+const pvHistory = { ts: null, yield: null, consumption: null };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -51,6 +55,12 @@ function fmtDayLabel(dateStr) {
   const day = d.getUTCDate().toString().padStart(2, '0');
   const months = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
   return `${day} ${months[d.getUTCMonth()]}`;
+}
+
+function fmtTimeLabel(ts) {
+  return new Date(ts).toLocaleTimeString('de-AT', {
+    timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit',
+  });
 }
 
 // ── Donut charts ──────────────────────────────────────────────────────────────
@@ -159,9 +169,30 @@ function applyPvData(d) {
     updateBarChart(weeklyByDate);
   }
 
-  const now = new Date();
+  // Derive instantaneous power (kW) from consecutive MQTT messages and append to power chart.
+  // Formula: Δ(kWh) / Δt(h) = kW. Consumption = daily_yield - daily_exported + daily_imported.
+  const consumption = (production != null && exported_ != null && imported_ != null)
+    ? production - exported_ + imported_
+    : null;
+
+  const now = Date.now();
+  if (pvHistory.ts !== null && pvHistory.yield !== null && production !== null) {
+    const dtHrs = (now - pvHistory.ts) / 3_600_000;
+    if (dtHrs > 0 && dtHrs < 0.25) { // only trust intervals under 15 min
+      const prodKw = Math.max(0, (production - pvHistory.yield) / dtHrs);
+      const consKw = (consumption !== null && pvHistory.consumption !== null)
+        ? Math.max(0, (consumption - pvHistory.consumption) / dtHrs)
+        : null;
+      appendToPowerChart(now, prodKw, consKw);
+    }
+  }
+  pvHistory.ts          = now;
+  pvHistory.yield       = production;
+  pvHistory.consumption = consumption;
+
+  const nowDate = new Date();
   document.getElementById('updated').textContent =
-    `Updated: ${now.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })}`;
+    `Updated: ${nowDate.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })}`;
 }
 
 // ── MQTT live updates via WebSocket bridge ────────────────────────────────────
@@ -379,6 +410,164 @@ function parseWeeklyCSV(csv) {
   return byDate;
 }
 
+// ── Line chart: today's power curve (kW) ─────────────────────────────────────
+
+function makePowerChart() {
+  powerChart = new Chart(document.getElementById('powerChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Produktion',
+          data: [],
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,0.08)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2,
+        },
+        {
+          label: 'Verbrauch',
+          data: [],
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249,115,22,0.08)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            color: 'rgba(255,255,255,0.7)',
+            usePointStyle: true,
+            pointStyle: 'circle',
+            padding: 20,
+            font: { size: 14 },
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} kW`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: 'rgba(255,255,255,0.6)',
+            font: { size: 12 },
+            maxTicksLimit: 8,
+            maxRotation: 0,
+          },
+          grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] },
+          border: { color: 'rgba(255,255,255,0.1)' },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: 'rgba(255,255,255,0.6)',
+            font: { size: 13 },
+            callback: v => v.toFixed(1),
+          },
+          title: {
+            display: true,
+            text: 'Leistung in kW',
+            color: 'rgba(255,255,255,0.5)',
+            font: { size: 12 },
+          },
+          grid: { color: 'rgba(255,255,255,0.08)', borderDash: [4, 4] },
+          border: { color: 'rgba(255,255,255,0.1)' },
+        },
+      },
+    },
+  });
+}
+
+function appendToPowerChart(timestamp, prodKw, consKw) {
+  powerChart.data.labels.push(fmtTimeLabel(timestamp));
+  powerChart.data.datasets[0].data.push(prodKw);
+  powerChart.data.datasets[1].data.push(consKw ?? null);
+  powerChart.update('none');
+}
+
+// Loads today's power history by computing derivative of cumulative kWh fields.
+// derivative(unit: 1h) on kWh values yields kW (power = dEnergy/dTime).
+async function loadTodayPowerData() {
+  const startISO = getTodayCETStart();
+
+  const query = `
+from(bucket: "${INFLUX_BUCKET}")
+  |> range(start: ${startISO})
+  |> filter(fn: (r) => r._measurement == "solax_stats")
+  |> filter(fn: (r) => r._field == "daily_yield" or r._field == "consumption")
+  |> aggregateWindow(every: 5m, fn: last, createEmpty: false)
+  |> derivative(unit: 1h, nonNegative: true)
+  |> yield(name: "power_kw")`;
+
+  try {
+    const resp = await fetch(`${INFLUX_URL}/api/v2/query?org=${INFLUX_ORG}&t=${Date.now()}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${INFLUX_TOKEN}`,
+        'Content-Type': 'application/vnd.flux',
+        'Accept': 'application/csv',
+        'Cache-Control': 'no-cache',
+      },
+      body: query,
+    });
+    if (!resp.ok) return;
+    const { labels, production, consumption } = parsePowerCSV(await resp.text());
+    if (!labels.length) return;
+    powerChart.data.labels                = labels;
+    powerChart.data.datasets[0].data      = production;
+    powerChart.data.datasets[1].data      = consumption;
+    powerChart.update();
+  } catch (e) {
+    console.error('[leogreenKiosk] InfluxDB power error:', e);
+  }
+}
+
+function parsePowerCSV(csv) {
+  const lines = csv.trim().split('\n').filter(l => l && !l.startsWith('#'));
+  if (lines.length < 2) return { labels: [], production: [], consumption: [] };
+  const headers  = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  const timeIdx  = headers.indexOf('_time');
+  const valIdx   = headers.indexOf('_value');
+  const fieldIdx = headers.indexOf('_field');
+  if ([timeIdx, valIdx, fieldIdx].includes(-1)) return { labels: [], production: [], consumption: [] };
+
+  const byTime = {};
+  for (let i = 1; i < lines.length; i++) {
+    const cols  = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
+    const time  = cols[timeIdx];
+    const val   = parseFloat(cols[valIdx]);
+    const field = cols[fieldIdx];
+    if (!time || !field || !isFinite(val)) continue;
+    if (!byTime[time]) byTime[time] = {};
+    byTime[time][field] = val;
+  }
+
+  const times = Object.keys(byTime).sort();
+  return {
+    labels:      times.map(t => fmtTimeLabel(t)),
+    production:  times.map(t => byTime[t].daily_yield  ?? null),
+    consumption: times.map(t => byTime[t].consumption  ?? null),
+  };
+}
+
 // ── Clock ─────────────────────────────────────────────────────────────────────
 
 function startClock() {
@@ -397,8 +586,10 @@ document.addEventListener('DOMContentLoaded', () => {
   consumptionChart = makeDonut('consumptionChart');
   productionChart  = makeDonut('productionChart');
   makeBarChart();
+  makePowerChart();
   startClock();
-  loadTodayData();   // one-time: seeds donuts + today's bar from InfluxDB
-  loadWeeklyData();  // one-time: seeds past 7 days in bar chart from InfluxDB
-  connectMqttBridge(); // all live updates from here on
+  loadTodayData();        // seeds donuts + today's bar from InfluxDB
+  loadWeeklyData();       // seeds past 7 days in bar chart from InfluxDB
+  loadTodayPowerData();   // seeds power curve from InfluxDB
+  connectMqttBridge();    // all live updates from here on
 });

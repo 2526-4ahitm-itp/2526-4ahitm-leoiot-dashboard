@@ -50,15 +50,20 @@
     </section>
 
     <!-- Top-right 1/4: weekly bar chart -->
-    <section class="panel bar-panel">
-      <h3 class="bar-title">Wochenübersicht</h3>
-      <div class="bar-wrap">
+    <section class="panel chart-panel">
+      <h3 class="chart-title">Wochenübersicht</h3>
+      <div class="chart-wrap">
         <canvas id="weeklyChart"></canvas>
       </div>
     </section>
 
-    <!-- Bottom-left 1/4 -->
-    <section class="panel future-panel"></section>
+    <!-- Bottom-left 1/4: today's power curve -->
+    <section class="panel chart-panel">
+      <h3 class="chart-title">Leistung heute</h3>
+      <div class="chart-wrap">
+        <canvas id="powerChart"></canvas>
+      </div>
+    </section>
 
     <!-- Bottom-right 1/4 -->
     <section class="panel future-panel"></section>
