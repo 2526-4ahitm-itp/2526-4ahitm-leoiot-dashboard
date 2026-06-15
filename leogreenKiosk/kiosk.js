@@ -181,7 +181,7 @@ function applyPvData(d) {
     if (dtHrs > 0 && dtHrs < 0.25) { // only trust intervals under 15 min
       const prodKw = Math.max(0, (production - pvHistory.yield) / dtHrs);
       const consKw = (consumption !== null && pvHistory.consumption !== null)
-        ? Math.max(0, (consumption - pvHistory.consumption) / dtHrs)
+        ? -Math.max(0, (consumption - pvHistory.consumption) / dtHrs)
         : null;
       appendToPowerChart(now, prodKw, consKw);
     }
@@ -476,7 +476,6 @@ function makePowerChart() {
           border: { color: 'rgba(255,255,255,0.1)' },
         },
         y: {
-          beginAtZero: true,
           ticks: {
             color: 'rgba(255,255,255,0.6)',
             font: { size: 13 },
@@ -564,7 +563,7 @@ function parsePowerCSV(csv) {
   return {
     labels:      times.map(t => fmtTimeLabel(t)),
     production:  times.map(t => byTime[t].daily_yield  ?? null),
-    consumption: times.map(t => byTime[t].consumption  ?? null),
+    consumption: times.map(t => byTime[t].consumption != null ? -byTime[t].consumption : null),
   };
 }
 
