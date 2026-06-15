@@ -14,17 +14,29 @@ function fmtKwh(v) {
   return v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kWh';
 }
 
-function setCenter(id, v) {
-  const str = v == null || !isFinite(v) ? '--'
-    : v >= 100 ? v.toLocaleString('de-AT', { maximumFractionDigits: 0 })
-    : v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const digits = str.replace(/\D/g, '').length;
-  const size = digits <= 3 ? 'clamp(1.4rem, 3.2vw, 2.8rem)'
-             : digits <= 4 ? 'clamp(1.1rem, 2.4vw, 2.1rem)'
-             :                'clamp(0.9rem, 1.8vw, 1.6rem)';
-  const el = document.getElementById(id);
-  el.querySelector('.donut-val').style.fontSize = size;
-  el.querySelector('.donut-val').textContent = str;
+function fmtCenterStr(v) {
+  if (v == null || !isFinite(v)) return '--';
+  if (v >= 100) return v.toLocaleString('de-AT', { maximumFractionDigits: 0 });
+  return v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+function centerFontSize(digits) {
+  return digits <= 3 ? 'clamp(1.4rem, 3.2vw, 2.8rem)'
+       : digits <= 4 ? 'clamp(1.1rem, 2.4vw, 2.1rem)'
+       :               'clamp(0.9rem, 1.8vw, 1.6rem)';
+}
+
+// Sets text on both centers with the same font size (driven by the larger number)
+function syncCenters(consumptionVal, productionVal) {
+  const cs = fmtCenterStr(consumptionVal);
+  const ps = fmtCenterStr(productionVal);
+  const maxDigits = Math.max(cs.replace(/\D/g, '').length, ps.replace(/\D/g, '').length);
+  const size = centerFontSize(maxDigits);
+  ['consumptionCenter', 'productionCenter'].forEach((id, i) => {
+    const el = document.getElementById(id).querySelector('.donut-val');
+    el.style.fontSize = size;
+    el.textContent = i === 0 ? cs : ps;
+  });
 }
 
 function safePos(v) {
@@ -91,7 +103,8 @@ function updateConsumptionDonut(selfConsumed, imported_, discharged) {
   consumptionChart.data.datasets[0].backgroundColor = total > 0 ? segs.map(s => s.color) : [PLACEHOLDER_COLOR];
   consumptionChart.update();
 
-  setCenter('consumptionCenter', total > 0 ? total : null);
+  // center synced together after both donuts update; store total for syncCenters
+  updateConsumptionDonut._total = total > 0 ? total : null;
 
   renderLegend('consumptionLegend', segs);
 }
@@ -110,7 +123,7 @@ function updateProductionDonut(production, exported_, charged, selfConsumed) {
   productionChart.data.datasets[0].backgroundColor = total > 0 ? segs.map(s => s.color) : [PLACEHOLDER_COLOR];
   productionChart.update();
 
-  setCenter('productionCenter', production);
+  updateProductionDonut._production = production;
 
   renderLegend('productionLegend', segs);
 }
@@ -137,6 +150,9 @@ function applyPvData(d) {
   if (selfConsumed != null && production != null && exported_ != null && charged != null) {
     updateProductionDonut(production, exported_, charged, selfConsumed);
   }
+
+  // Sync both center font sizes to the same value based on the larger number
+  syncCenters(updateConsumptionDonut._total, updateProductionDonut._production);
 
   const now = new Date();
   document.getElementById('updated').textContent =
