@@ -663,12 +663,17 @@ function applyChartTheme(isLight) {
 
 function initTheme() {
   const toggle = document.getElementById('themeToggle');
+  const logo   = document.querySelector('.htl-logo');
   const isLight = localStorage.getItem('leogreen-theme') === 'light';
+
+  const applyLogo = (light) => {
+    logo.src = light ? './htllogoblack.png' : './htllogo.webp';
+  };
 
   if (isLight) {
     document.body.classList.add('light');
     toggle.checked = true;
-    // Charts exist now but have no data yet; re-apply after first data load
+    applyLogo(true);
     setTimeout(() => applyChartTheme(true), 100);
   }
 
@@ -676,6 +681,7 @@ function initTheme() {
     const light = toggle.checked;
     document.body.classList.toggle('light', light);
     localStorage.setItem('leogreen-theme', light ? 'light' : 'dark');
+    applyLogo(light);
     applyChartTheme(light);
   });
 }
