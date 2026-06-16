@@ -163,9 +163,11 @@ function applyPvData(d) {
   if (production != null || exported_ != null || charged != null) {
     const todayKey = new Date().toISOString().slice(0, 10);
     if (!weeklyByDate[todayKey]) weeklyByDate[todayKey] = {};
-    if (production != null) weeklyByDate[todayKey].daily_yield    = production;
-    if (exported_  != null) weeklyByDate[todayKey].daily_exported = exported_;
-    if (charged    != null) weeklyByDate[todayKey].daily_charged  = charged;
+    if (production != null) weeklyByDate[todayKey].daily_yield      = production;
+    if (exported_  != null) weeklyByDate[todayKey].daily_exported   = exported_;
+    if (charged    != null) weeklyByDate[todayKey].daily_charged    = charged;
+    if (imported_  != null) weeklyByDate[todayKey].daily_imported   = imported_;
+    if (discharged != null) weeklyByDate[todayKey].daily_discharged = discharged;
     updateBarChart(weeklyByDate);
   }
 
@@ -361,10 +363,12 @@ function updateBarChart(byDate) {
   weeklyChart.data.labels = days.map(fmtDayLabel);
   weeklyChart.data.datasets[0].data = days.map(d => byDate[d].daily_yield ?? 0);
   weeklyChart.data.datasets[1].data = days.map(d => {
-    const y = byDate[d].daily_yield    ?? 0;
-    const e = byDate[d].daily_exported ?? 0;
-    const c = byDate[d].daily_charged  ?? 0;
-    return Math.max(0, y - e - c);
+    const y  = byDate[d].daily_yield      ?? 0;
+    const e  = byDate[d].daily_exported   ?? 0;
+    const c  = byDate[d].daily_charged    ?? 0;
+    const im = byDate[d].daily_imported   ?? 0;
+    const di = byDate[d].daily_discharged ?? 0;
+    return Math.max(0, (y - e - c) + im + di);
   });
   weeklyChart.data.datasets[2].data = days.map(d => byDate[d].daily_exported ?? 0);
   weeklyChart.update();
@@ -377,7 +381,7 @@ async function loadWeeklyData() {
 from(bucket: "${INFLUX_BUCKET}")
   |> range(start: -7d)
   |> filter(fn: (r) => r._measurement == "solax_stats")
-  |> filter(fn: (r) => r._field == "daily_yield" or r._field == "daily_exported" or r._field == "daily_charged")
+  |> filter(fn: (r) => r._field == "daily_yield" or r._field == "daily_exported" or r._field == "daily_charged" or r._field == "daily_imported" or r._field == "daily_discharged")
   |> aggregateWindow(every: 1d, fn: max, createEmpty: false, timeSrc: "_start")
   |> yield(name: "daily_max")`;
 
