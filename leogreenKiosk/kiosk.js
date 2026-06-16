@@ -29,9 +29,9 @@ function fmtCenterStr(v) {
 }
 
 function centerFontSize(digits) {
-  return digits <= 3 ? 'clamp(1.4rem, 3.2vw, 2.8rem)'
-       : digits <= 4 ? 'clamp(1.1rem, 2.4vw, 2.1rem)'
-       :               'clamp(0.9rem, 1.8vw, 1.6rem)';
+  return digits <= 3 ? 'clamp(1.1rem, 2.4vw, 2.1rem)'
+       : digits <= 4 ? 'clamp(0.9rem, 1.9vw, 1.7rem)'
+       :               'clamp(0.75rem, 1.5vw, 1.3rem)';
 }
 
 function syncCenters(consumptionVal, productionVal) {
