@@ -22,6 +22,11 @@ function fmtKwh(v) {
   return v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kWh';
 }
 
+function fmtKw(v) {
+  if (v == null) return '--';
+  return v.toLocaleString('de-AT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kW';
+}
+
 function fmtCenterStr(v) {
   if (v == null || !isFinite(v)) return '--';
   if (v >= 100) return v.toLocaleString('de-AT', { maximumFractionDigits: 0 });
@@ -140,6 +145,16 @@ function updateProductionDonut(production, exported_, charged, selfConsumed) {
 // ── Apply PV data (MQTT + initial InfluxDB) ───────────────────────────────────
 
 function applyPvData(d) {
+  // External MQTT format: instantaneous kW values from the live broker
+  if (d.pv_power_kw != null) {
+    updateFlowDiagramKw(d.pv_power_kw, d.load_power_kw, d.grid_power_kw, d.battery_power_kw);
+    appendToPowerChart(Date.now(), d.pv_power_kw ?? 0, d.load_power_kw != null ? -d.load_power_kw : null);
+    document.getElementById('updated').textContent =
+      new Date().toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' });
+    return;
+  }
+
+  // Solax collector format: cumulative daily kWh values
   const production = d.dailyYield      ?? d.daily_yield      ?? null;
   const imported_  = d.dailyImported   ?? d.daily_imported   ?? null;
   const exported_  = d.dailyExported   ?? d.daily_exported   ?? null;
@@ -171,8 +186,7 @@ function applyPvData(d) {
     updateBarChart(weeklyByDate);
   }
 
-  // Derive instantaneous power (kW) from consecutive MQTT messages and append to power chart.
-  // Formula: Δ(kWh) / Δt(h) = kW. Consumption = daily_yield - daily_exported + daily_imported.
+  // Derive instantaneous power (kW) from consecutive messages via Δ(kWh)/Δt(h)
   const consumption = (production != null && exported_ != null && imported_ != null)
     ? production - exported_ + imported_
     : null;
@@ -180,7 +194,7 @@ function applyPvData(d) {
   const now = Date.now();
   if (pvHistory.ts !== null && pvHistory.yield !== null && production !== null) {
     const dtHrs = (now - pvHistory.ts) / 3_600_000;
-    if (dtHrs > 0 && dtHrs < 0.25) { // only trust intervals under 15 min
+    if (dtHrs > 0 && dtHrs < 0.25) {
       const prodKw = Math.max(0, (production - pvHistory.yield) / dtHrs);
       const consKw = (consumption !== null && pvHistory.consumption !== null)
         ? -Math.max(0, (consumption - pvHistory.consumption) / dtHrs)
@@ -194,9 +208,8 @@ function applyPvData(d) {
 
   updateFlowDiagram(production, imported_, exported_, charged, discharged);
 
-  const nowDate = new Date();
   document.getElementById('updated').textContent =
-    nowDate.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' });
+    new Date().toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' });
 }
 
 // ── MQTT live updates via WebSocket bridge ────────────────────────────────────
@@ -639,6 +652,21 @@ function updateFlowDiagram(production, imported_, exported_, charged, discharged
   setFlowLine('lineLoad',    (totalConsumption ?? 0) > 0.01 ? 'out' : 'idle');
   setFlowLine('lineGrid',    netGrid == null || Math.abs(netGrid) < 0.01 ? 'idle' : netGrid > 0 ? 'in' : 'out');
   setFlowLine('lineBattery', netBattery == null || Math.abs(netBattery) < 0.01 ? 'idle' : netBattery > 0 ? 'in' : 'out');
+}
+
+// Variant for external MQTT which provides instantaneous kW values directly.
+// grid_power_kw > 0 = importing from grid, < 0 = exporting to grid.
+// battery_power_kw > 0 = discharging, < 0 = charging.
+function updateFlowDiagramKw(pvKw, loadKw, gridKw, batteryKw) {
+  document.getElementById('fvSolar').textContent    = fmtKw(pvKw);
+  document.getElementById('fvLoad').textContent     = fmtKw(loadKw);
+  document.getElementById('fvGrid').textContent     = gridKw != null ? fmtKw(Math.abs(gridKw)) : '--';
+  document.getElementById('fvBattery').textContent  = batteryKw != null ? fmtKw(Math.abs(batteryKw)) : '--';
+
+  setFlowLine('lineSolar',   (pvKw ?? 0) > 0.01 ? 'in' : 'idle');
+  setFlowLine('lineLoad',    (loadKw ?? 0) > 0.01 ? 'out' : 'idle');
+  setFlowLine('lineGrid',    gridKw == null || Math.abs(gridKw) < 0.01 ? 'idle' : gridKw > 0 ? 'in' : 'out');
+  setFlowLine('lineBattery', batteryKw == null || Math.abs(batteryKw) < 0.01 ? 'idle' : batteryKw > 0 ? 'in' : 'out');
 }
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
