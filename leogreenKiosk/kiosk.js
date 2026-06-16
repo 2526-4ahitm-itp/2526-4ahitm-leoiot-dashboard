@@ -757,12 +757,22 @@ function startClock() {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
+function setWeeklyDateRange() {
+  const now   = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - 6);
+  const fmt = (d) => `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}`;
+  const el = document.getElementById('weeklyDateRange');
+  if (el) el.textContent = `${fmt(start)} – ${fmt(now)}.${now.getFullYear()}`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   consumptionChart = makeDonut('consumptionChart');
   productionChart  = makeDonut('productionChart');
   makeBarChart();
   makePowerChart();
   initTheme();
+  setWeeklyDateRange();
   startClock();
   loadTodayData();        // seeds donuts + today's bar + flow from InfluxDB
   loadWeeklyData();       // seeds past 7 days in bar chart from InfluxDB

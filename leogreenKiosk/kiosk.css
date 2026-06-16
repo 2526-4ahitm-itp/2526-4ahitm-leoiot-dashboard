@@ -177,6 +177,18 @@ body.light .toggle-slider {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  position: relative;
+}
+
+.panel-corner-label {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: clamp(11px, 1.1vw, 14px);
+  color: var(--text-dim);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* ── DONUT PANEL ─────────────────────────────────────────────────────────── */
