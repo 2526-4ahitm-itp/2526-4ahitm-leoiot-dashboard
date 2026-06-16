@@ -1,4 +1,5 @@
 const axios = require('axios');
+const mqtt  = require('mqtt');
 
 // Configuration from environment variables
 const SOLAX_HOST = 'https://openapi-eu.solaxcloud.com';
@@ -12,6 +13,18 @@ const INFLUX_URL = process.env.INFLUX_URL || 'http://influxdb:8086';
 const INFLUX_TOKEN = process.env.INFLUX_TOKEN || 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-RcWtlL1yYGUaaSg6NOtcW_TEjQdGGA5A==';
 const INFLUX_ORG = process.env.INFLUX_ORG || 'leoiot';
 const INFLUX_BUCKET = process.env.INFLUX_BUCKET || 'server_data';
+
+const MQTT_HOST = process.env.MQTT_HOST || 'mosquitto';
+const MQTT_PORT = process.env.MQTT_PORT || '1883';
+const PV_TOPIC  = 'leoenergy/solax_pv/overall_inverter';
+
+const mqttClient = mqtt.connect(`mqtt://${MQTT_HOST}:${MQTT_PORT}`, {
+  username: 'leoiot',
+  password: 'leogreen',
+  reconnectPeriod: 5000,
+});
+mqttClient.on('connect', () => console.log(`[Collector] MQTT connected to ${MQTT_HOST}:${MQTT_PORT}`));
+mqttClient.on('error',   (err) => console.error('[Collector] MQTT error:', err.message));
 
 let cachedToken = null;
 
@@ -28,7 +41,6 @@ async function getSolaxToken() {
         });
         if (response.data.code === 0) {
             cachedToken = response.data.result.access_token;
-            // Token usually valid for 30 days, we'll just keep it in memory for now
             return cachedToken;
         }
         console.error('[Collector] Token error:', response.data);
@@ -51,16 +63,16 @@ async function collectData() {
         if (response.data.code === 10000) {
             const data = response.data.result;
             const consumption = data.dailyYield - data.dailyExported + data.dailyImported;
-            
+
             console.log(`[Collector] Data fetched at ${data.plantLocalTime}: Yield=${data.dailyYield}, Consumption=${consumption}`);
-            
+
             await writeToInflux(data, consumption);
+            publishToMqtt(data);
         } else {
             console.error('[Collector] Data fetch error:', response.data);
-            // 10401 = Token expired, 10402 = Invalid token
             if (response.data.code === 10401 || response.data.code === 10402) {
                 console.log('[Collector] Clearing invalid token...');
-                cachedToken = null; 
+                cachedToken = null;
             }
         }
     } catch (error) {
@@ -68,17 +80,23 @@ async function collectData() {
     }
 }
 
+function publishToMqtt(data) {
+    if (mqttClient.connected) {
+        mqttClient.publish(PV_TOPIC, JSON.stringify(data), { qos: 0, retain: true });
+        console.log('[Collector] Published PV data to MQTT');
+    }
+}
+
 async function writeToInflux(data, consumption) {
     const timestamp = new Date().getTime() * 1000000; // Nanoseconds
-    
-    // Line protocol format
+
     const lines = [
         `solax_stats,plant_id=${SOLAX_PLANT_ID} daily_yield=${data.dailyYield},total_yield=${data.totalYield},consumption=${consumption},daily_charged=${data.dailyCharged},daily_discharged=${data.dailyDischarged},daily_imported=${data.dailyImported},daily_exported=${data.dailyExported} ${timestamp}`
     ];
 
     try {
-        await axios.post(`${INFLUX_URL}/api/v2/write?org=${INFLUX_ORG}&bucket=${INFLUX_BUCKET}&precision=ns`, 
-            lines.join('\n'), 
+        await axios.post(`${INFLUX_URL}/api/v2/write?org=${INFLUX_ORG}&bucket=${INFLUX_BUCKET}&precision=ns`,
+            lines.join('\n'),
             {
                 headers: {
                     'Authorization': `Token ${INFLUX_TOKEN}`,
