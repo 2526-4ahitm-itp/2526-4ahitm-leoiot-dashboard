@@ -547,7 +547,9 @@ function makePowerChart() {
 }
 
 function appendToPowerChart(timestamp, prodKw, consKw) {
-  const label = fmtTimeLabel(timestamp);
+  const d = new Date(timestamp);
+  d.setMinutes(Math.floor(d.getMinutes() / 5) * 5, 0, 0);
+  const label = fmtTimeLabel(d.getTime());
   const idx = POWER_LABELS.indexOf(label);
   if (idx < 0) return;
   powerChart.data.datasets[0].data[idx] = prodKw;
