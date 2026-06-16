@@ -199,22 +199,36 @@ function applyPvData(d) {
 
 // ── MQTT live updates via WebSocket bridge ────────────────────────────────────
 
+let pvWs = null;
+
 function connectMqttBridge() {
-  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const wsUrl = `${proto}://${location.host}/ws`;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? `${proto}//${location.hostname}:8090`
+    : `${proto}//${location.hostname}/ws`;
 
-  function connect() {
-    const ws = new WebSocket(wsUrl);
-    ws.addEventListener('message', (evt) => {
-      let msg;
-      try { msg = JSON.parse(evt.data); } catch { return; }
-      if (msg.type === 'pv') applyPvData(msg.data);
-    });
-    ws.addEventListener('close', () => setTimeout(connect, 5000));
-    ws.addEventListener('error', () => {});
-  }
+  console.log(`[MQTT] Connecting to ${wsUrl}...`);
+  pvWs = new WebSocket(wsUrl);
 
-  connect();
+  pvWs.onopen = () => {
+    console.log('[MQTT] Connected to WebSocket bridge');
+  };
+
+  pvWs.onmessage = (evt) => {
+    let msg;
+    try { msg = JSON.parse(evt.data); } catch { return; }
+    if (msg.type === 'hello' || msg.type === 'subscribed') return;
+    if (msg.type === 'pv') applyPvData(msg.data);
+  };
+
+  pvWs.onclose = (e) => {
+    console.log(`[MQTT] Connection closed (${e.code}). Retrying in 5s...`);
+    setTimeout(connectMqttBridge, 5000);
+  };
+
+  pvWs.onerror = (err) => {
+    console.error('[MQTT] WebSocket error:', err);
+  };
 }
 
 // ── InfluxDB: one-time initial load for donuts (today) ───────────────────────
