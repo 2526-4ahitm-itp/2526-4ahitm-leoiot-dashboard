@@ -184,7 +184,7 @@ body.light .toggle-slider {
   position: absolute;
   top: 8px;
   left: 12px;
-  font-size: clamp(11px, 1.1vw, 14px);
+  font-size: clamp(9px, 0.8vw, 11px);
   color: var(--text-dim);
   white-space: nowrap;
   pointer-events: none;
