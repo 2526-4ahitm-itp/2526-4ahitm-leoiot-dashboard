@@ -149,6 +149,15 @@ function applyPvData(d) {
   if (d.pv_power_kw != null) {
     updateFlowDiagramKw(d.pv_power_kw, d.load_power_kw, d.grid_power_kw, d.battery_power_kw);
     appendToPowerChart(Date.now(), d.pv_power_kw ?? 0, d.load_power_kw != null ? -d.load_power_kw : null);
+
+    // Patch today's Produziert bar — daily_pv_kwh is the only daily field in this payload
+    if (d.daily_pv_kwh != null) {
+      const todayKey = new Date().toISOString().slice(0, 10);
+      if (!weeklyByDate[todayKey]) weeklyByDate[todayKey] = {};
+      weeklyByDate[todayKey].daily_yield = d.daily_pv_kwh;
+      updateBarChart(weeklyByDate);
+    }
+
     document.getElementById('updated').textContent =
       new Date().toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' });
     return;
