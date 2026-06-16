@@ -237,7 +237,7 @@ body.light .toggle-slider {
 }
 
 .donut-val {
-  font-size: clamp(1.4rem, 3.2vw, 2.8rem);
+  font-size: clamp(1.1rem, 2.4vw, 2.1rem);
   font-weight: 800;
   line-height: 1;
   color: var(--text);
