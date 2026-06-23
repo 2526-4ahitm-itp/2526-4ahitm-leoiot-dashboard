@@ -1,0 +1,417 @@
+:root {
+  --bg:       #0a0c11;
+  --surface:  #13161f;
+  --border:   rgba(255,255,255,0.08);
+  --text:     rgba(255,255,255,0.95);
+  --text-dim: rgba(255,255,255,0.6);
+  --gap:      12px;
+  --radius:   16px;
+  --header-h: 64px;
+}
+
+body.light {
+  --bg:       #f0f4f8;
+  --surface:  #ffffff;
+  --border:   rgba(0,0,0,0.09);
+  --text:     rgba(0,0,0,0.88);
+  --text-dim: rgba(0,0,0,0.50);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────────────── */
+
+.header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.htl-logo {
+  height: 70px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  padding: 8px 0;
+}
+
+.clock {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.updated-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── THEME TOGGLE ────────────────────────────────────────────────────────── */
+
+.theme-toggle-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 62px;
+  height: 28px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { display: none; }
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition: background 0.25s;
+}
+
+body.light .toggle-slider {
+  background: rgba(0,0,0,0.1);
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: var(--text);
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.toggle-switch input:checked + .toggle-slider::after {
+  transform: translateX(34px);
+}
+
+/* Icons inside the track, each on the side opposite the thumb */
+.t-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+/* Dark mode (unchecked): thumb left → sun on right */
+.t-icon-sun  { right: 7px; }
+.t-icon-moon { left:  7px; }
+
+.toggle-switch input:not(:checked) + .toggle-slider .t-icon-sun  { opacity: 0.8; }
+.toggle-switch input:not(:checked) + .toggle-slider .t-icon-moon { opacity: 0; }
+
+/* Light mode (checked): thumb right → moon on left */
+.toggle-switch input:checked + .toggle-slider .t-icon-sun  { opacity: 0; }
+.toggle-switch input:checked + .toggle-slider .t-icon-moon { opacity: 0.8; }
+
+.updated-label {
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+.updated-time {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── MAIN GRID (2 × 2) ───────────────────────────────────────────────────── */
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: calc(100vh - var(--header-h));
+  gap: var(--gap);
+  padding: var(--gap);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.panel-corner-label {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: clamp(9px, 0.8vw, 11px);
+  color: var(--text-dim);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── DONUT PANEL ─────────────────────────────────────────────────────────── */
+
+.donut-panel {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  padding: 24px 28px;
+}
+
+.divider {
+  width: 1px;
+  background: var(--border);
+  margin: 12px 24px;
+  flex-shrink: 0;
+}
+
+.donut-wrap {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  gap: 16px;
+}
+
+.donut-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.donut-container {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 1;
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+}
+
+.donut-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  gap: 4px;
+}
+
+.donut-val {
+  font-size: clamp(1.1rem, 2.4vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+}
+
+.donut-unit {
+  font-size: clamp(0.9rem, 1.6vw, 1.3rem);
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* ── LEGEND ──────────────────────────────────────────────────────────────── */
+
+.donut-legend {
+  list-style: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(14px, 1.5vw, 20px);
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  color: var(--text-dim);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend-value {
+  font-weight: 700;
+  font-size: clamp(14px, 1.5vw, 20px);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* ── CHART PANELS (bar + line) ───────────────────────────────────────────── */
+
+.chart-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 24px 16px;
+}
+
+.chart-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.chart-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.chart-wrap canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── ENERGY FLOW PANEL ───────────────────────────────────────────────────── */
+
+.flow-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.flow-title {
+  position: absolute;
+  top: 24px;
+  left: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.flow-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.flow-line {
+  stroke-width: 3;
+  stroke-dasharray: 8 6;
+  fill: none;
+  opacity: 0.7;
+  transition: opacity 0.4s;
+}
+
+.flow-line.flow-idle { opacity: 0.15; }
+
+/* flow-in: dashes travel from node toward center (forward along path) */
+@keyframes flow-in  { to { stroke-dashoffset: -14; } }
+/* flow-out: dashes travel from center toward node (backward along path) */
+@keyframes flow-out { to { stroke-dashoffset:  14; } }
+
+.flow-line.flow-in  { animation: flow-in  0.9s linear infinite; }
+.flow-line.flow-out { animation: flow-out 0.9s linear infinite; }
+
+.flow-node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+}
+
+#nodeSolar   { top: 4%;    left: 50%; transform: translateX(-50%); }
+#nodeLoad    { top: 50%;   left: 4%;  transform: translateY(-50%); }
+#nodeGrid    { top: 50%;   right: 4%; transform: translateY(-50%); }
+#nodeBattery { bottom: 4%; left: 50%; transform: translateX(-50%); }
+
+.flow-circle {
+  width: clamp(58px, 6.5vw, 84px);
+  height: clamp(58px, 6.5vw, 84px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(20px, 2.5vw, 32px);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+  flex-shrink: 0;
+}
+
+.fc-solar   { background: radial-gradient(circle at 35% 35%, #fcd34d, #d97706); }
+.fc-load    { background: radial-gradient(circle at 35% 35%, #93c5fd, #2563eb); }
+.fc-grid    { background: radial-gradient(circle at 35% 35%, #fca5a5, #dc2626); }
+.fc-battery { background: radial-gradient(circle at 35% 35%, #86efac, #16a34a); }
+
+.flow-val {
+  font-size: clamp(12px, 1.3vw, 17px);
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.flow-lbl {
+  font-size: clamp(11px, 1.1vw, 14px);
+  color: var(--text-dim);
+  white-space: nowrap;
+}

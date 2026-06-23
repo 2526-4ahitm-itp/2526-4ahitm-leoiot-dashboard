@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeoGreen – HTL Leonding</title>
+  <link rel="stylesheet" href="kiosk.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-logo">
+      <img src="./htllogo.png" alt="HTL Leonding" class="htl-logo" />
+    </div>
+
+    <div class="theme-toggle-wrap">
+      <label class="toggle-switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="toggle-slider">
+          <span class="t-icon t-icon-sun">☀</span>
+          <span class="t-icon t-icon-moon">🌙</span>
+        </span>
+      </label>
+    </div>
+
+    <div class="header-right">
+      <span id="clock" class="clock">--:--:--</span>
+      <span class="updated-row">
+        <span class="updated-label">Zuletzt aktualisiert:</span>
+        <span id="updated" class="updated-time">--:--</span>
+      </span>
+    </div>
+  </header>
+
+  <main class="main-grid">
+
+    <!-- Top-left 1/4: two donut charts -->
+    <section class="panel donut-panel">
+      <span class="panel-corner-label">Heute</span>
+
+      <div class="donut-wrap">
+        <h3 class="donut-title">Verbrauch</h3>
+        <div class="donut-container">
+          <canvas id="consumptionChart"></canvas>
+          <div class="donut-center" id="consumptionCenter">
+            <span class="donut-val">--</span>
+            <span class="donut-unit">kWh</span>
+          </div>
+        </div>
+        <ul class="donut-legend" id="consumptionLegend"></ul>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="donut-wrap">
+        <h3 class="donut-title">Produktion</h3>
+        <div class="donut-container">
+          <canvas id="productionChart"></canvas>
+          <div class="donut-center" id="productionCenter">
+            <span class="donut-val">--</span>
+            <span class="donut-unit">kWh</span>
+          </div>
+        </div>
+        <ul class="donut-legend" id="productionLegend"></ul>
+      </div>
+
+    </section>
+
+    <!-- Top-right 1/4: weekly bar chart -->
+    <section class="panel chart-panel">
+      <span class="panel-corner-label" id="weeklyDateRange"></span>
+      <h3 class="chart-title">Wochenübersicht</h3>
+      <div class="chart-wrap">
+        <canvas id="weeklyChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Bottom-left 1/4: today's power curve -->
+    <section class="panel chart-panel">
+      <span class="panel-corner-label">Heute</span>
+      <h3 class="chart-title">Leistung</h3>
+      <div class="chart-wrap">
+        <canvas id="powerChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Bottom-right 1/4: energy flow diagram -->
+    <section class="panel flow-panel">
+      <span class="flow-title">Energiefluss</span>
+      <span class="panel-corner-label">Live</span>
+
+      <svg class="flow-svg" aria-hidden="true">
+        <circle cx="50%" cy="50%" r="6" fill="rgba(255,255,255,0.12)"/>
+        <!-- lines defined FROM outer node TOWARD center; animation direction = flow direction -->
+        <line id="lineSolar"   x1="50%" y1="20%" x2="50%" y2="47%" class="flow-line" stroke="#f59e0b"/>
+        <line id="lineLoad"    x1="18%" y1="50%" x2="47%" y2="50%" class="flow-line" stroke="#60a5fa"/>
+        <line id="lineGrid"    x1="82%" y1="50%" x2="53%" y2="50%" class="flow-line" stroke="#ef4444"/>
+        <line id="lineBattery" x1="50%" y1="80%" x2="50%" y2="53%" class="flow-line" stroke="#22c55e"/>
+      </svg>
+
+      <!-- Solar (top center) -->
+      <div class="flow-node" id="nodeSolar">
+        <span class="flow-lbl">Solar</span>
+        <span class="flow-val" id="fvSolar">--</span>
+        <div class="flow-circle fc-solar">☀</div>
+      </div>
+
+      <!-- Verbrauch (left center) -->
+      <div class="flow-node" id="nodeLoad">
+        <span class="flow-val" id="fvLoad">--</span>
+        <div class="flow-circle fc-load">⌂</div>
+        <span class="flow-lbl">Verbrauch</span>
+      </div>
+
+      <!-- Netz (right center) -->
+      <div class="flow-node" id="nodeGrid">
+        <span class="flow-val" id="fvGrid">--</span>
+        <div class="flow-circle fc-grid">⚡</div>
+        <span class="flow-lbl">Netz</span>
+      </div>
+
+      <!-- Batterie (bottom center) -->
+      <div class="flow-node" id="nodeBattery">
+        <div class="flow-circle fc-battery">🔋</div>
+        <span class="flow-val" id="fvBattery">--</span>
+        <span class="flow-lbl">Batterie</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script type="module" src="kiosk.js"></script>
+</body>
+</html>

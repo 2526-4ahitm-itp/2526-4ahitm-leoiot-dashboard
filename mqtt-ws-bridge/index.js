@@ -97,9 +97,22 @@ function sendSnapshot(ws, room) {
   }
 }
 
+// ── PV live data (broadcast to all clients) ───────────────────────────────────
+let latestPvData = null;
+
+function broadcastPv(data) {
+  const msg = JSON.stringify({ type: 'pv', data });
+  for (const [ws] of subscriptions.entries()) {
+    if (ws.readyState === ws.OPEN) ws.send(msg);
+  }
+}
+
 wss.on('connection', (ws) => {
   subscriptions.set(ws, new Set());
   safeSend(ws, { type: 'hello', wsPort: WS_PORT });
+
+  // Send cached PV snapshot immediately on connect
+  if (latestPvData) safeSend(ws, { type: 'pv', data: latestPvData });
 
   ws.on('message', (data) => {
     let msg;
@@ -146,11 +159,14 @@ const mqttClient = mqtt.connect(MQTT_URL, {
   reconnectPeriod: 1000,
 });
 
+const PV_TOPIC = 'leoenergy/solax_pv/overall_inverter';
+
 mqttClient.on('connect', () => {
   console.log(`[mqtt-ws-bridge] Connected to MQTT at ${MQTT_URL}`);
-  mqttClient.subscribe(['room-temperature', 'nili3/sensor/#', 'nili3/sensor/nili3_temperature/state'], { qos: 0 }, (err) => {
+  const topics = ['room-temperature', 'nili3/sensor/#', 'nili3/sensor/nili3_temperature/state', PV_TOPIC];
+  mqttClient.subscribe(topics, { qos: 0 }, (err) => {
     if (err) console.error('[mqtt-ws-bridge] Subscribe error:', err.message);
-    else console.log('[mqtt-ws-bridge] Subscribed to room-temperature + nili3/sensor/# + nili3/sensor/nili3_temperature/state');
+    else console.log('[mqtt-ws-bridge] Subscribed to', topics.join(', '));
   });
 });
 
@@ -190,8 +206,56 @@ mqttClient.on('message', (topic, payloadBuf) => {
     const state = getRoomState(room);
     state.temp = { value, ts };
     broadcastToRoom(room, { type: 'temp', room, value, ts, topic });
+    return;
+  }
+
+  if (topic === PV_TOPIC) {
+    let data;
+    try { data = JSON.parse(payload); } catch {
+      console.error('[mqtt-ws-bridge] PV payload is not JSON:', payload);
+      return;
+    }
+    latestPvData = { ...data, _ts: Date.now() };
+    console.log('[mqtt-ws-bridge] PV update:', JSON.stringify(latestPvData));
+    broadcastPv(latestPvData);
   }
 });
 
 mqttClient.on('reconnect', () => console.log('[mqtt-ws-bridge] MQTT reconnecting...'));
 mqttClient.on('error', (err) => console.error('[mqtt-ws-bridge] MQTT error:', err.message));
+
+// ── External PV MQTT broker (TLS) — live feed when available ─────────────────
+const PV_EXT_HOST = process.env.PV_MQTT_HOST || 'mqtt.htl-leonding.ac.at';
+const PV_EXT_PORT = parseInt(process.env.PV_MQTT_PORT || '8883', 10);
+const PV_EXT_USER = process.env.PV_MQTT_USER || 'leo-student';
+const PV_EXT_PASS = process.env.PV_MQTT_PASS || 'sTuD@w0rck';
+
+const pvMqttClient = mqtt.connect(`mqtts://${PV_EXT_HOST}:${PV_EXT_PORT}`, {
+  username: PV_EXT_USER,
+  password: PV_EXT_PASS,
+  reconnectPeriod: 5000,
+  rejectUnauthorized: false,
+});
+
+pvMqttClient.on('connect', () => {
+  console.log(`[mqtt-ws-bridge] Connected to external PV broker at ${PV_EXT_HOST}:${PV_EXT_PORT}`);
+  pvMqttClient.subscribe(PV_TOPIC, { qos: 0 }, (err) => {
+    if (err) console.error('[mqtt-ws-bridge] PV subscribe error:', err.message);
+    else console.log(`[mqtt-ws-bridge] Subscribed to external ${PV_TOPIC}`);
+  });
+});
+
+pvMqttClient.on('message', (topic, payloadBuf) => {
+  if (topic !== PV_TOPIC) return;
+  let data;
+  try { data = JSON.parse(payloadBuf.toString('utf8')); } catch {
+    console.error('[mqtt-ws-bridge] PV payload is not JSON');
+    return;
+  }
+  latestPvData = { ...data, _ts: Date.now() };
+  console.log('[mqtt-ws-bridge] PV update (external):', JSON.stringify(latestPvData));
+  broadcastPv(latestPvData);
+});
+
+pvMqttClient.on('reconnect', () => console.log('[mqtt-ws-bridge] External PV broker reconnecting...'));
+pvMqttClient.on('error',     (err) => console.error('[mqtt-ws-bridge] External PV broker error:', err.message));

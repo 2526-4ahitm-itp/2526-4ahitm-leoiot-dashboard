@@ -113,6 +113,10 @@ services:
     environment:
       - MQTT_HOST=mosquitto
       - WS_PORT=8090
+      - PV_MQTT_HOST=mqtt.htl-leonding.ac.at
+      - PV_MQTT_PORT=8883
+      - PV_MQTT_USER=leo-student
+      - PV_MQTT_PASS=sTuD@w0rck
     ports:
       - "8090:8090"
     depends_on:
@@ -177,6 +181,22 @@ services:
       - DOCKER_ENV=1
     depends_on:
       - influxdb
+    networks:
+      - leoiot
+
+  leogreen-kiosk:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./leogreenKiosk:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "8087:8087"
+    environment:
+      - DOCKER_ENV=1
+    depends_on:
+      - influxdb
+      - mqtt-ws-bridge
     networks:
       - leoiot
 
