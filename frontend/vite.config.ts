@@ -1,4 +1,16 @@
-// THIS CONFIG IS INACTIVE — merged into root vite.config.ts
+import { defineConfig } from 'vite'
+
+// The dev server runs behind nginx on vm23, which already proxies /grafana,
+// /influx, /ws, /solax and the kiosks, so only allowedHosts is needed here.
+// Vite 8 requires this file to export a config object; a fully commented-out
+// file is a startup error.
+export default defineConfig({
+  server: {
+    allowedHosts: ['vm23.htl-leonding.ac.at'],
+  },
+})
+
+// Legacy variant below (inactive), kept for reference — it adds Vite-side proxies
 // Uncomment and use this if running `vite` from inside frontend/ directly
 // (without the root-level config that sets root: './frontend')
 
