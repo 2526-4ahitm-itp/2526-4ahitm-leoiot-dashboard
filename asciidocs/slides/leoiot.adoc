@@ -1,0 +1,344 @@
+= LeoIoT 🌿 | Stand: 5. Oktober 2026
+:title-separator: |
+:revnumber: 2.0
+:revdate: {docdate}
+:revremark: 4AHITM @ HTL Leonding
+:encoding: utf-8
+:lang: de
+:doctype: article
+:backend: revealjs
+:customcss: css/presentation.css
+:revealjs_width: 1408
+:revealjs_height: 792
+:source-highlighter: highlightjs
+:highlightjs-theme: css/atom-one-light.css
+:iconfont-remote!:
+:iconfont-name: fonts/fontawesome/css/all
+:title-slide-transition: none
+:imagesdir: images
+
+//------------------------------
+// TEAM
+//------------------------------
+[.lightbg.cards, transition=none]
+== Unser Team
+
+[cols="1,1,1", frame=none, grid=none]
+|===
+a|
+[.card.team]
+--
+[.names]
+* Elias Pointinger [.role]#(Projektleiter)#
+
+[.topic]
+Sensoren
+--
+
+a|
+[.card.team]
+--
+[.names]
+* Daniel Lettner
+* Stefan Schachner
+
+[.topic]
+PV-Dashboard
+--
+
+a|
+[.card.team]
+--
+[.names]
+* Paul Kreinecker
+* Jonas Leitner
+
+[.topic]
+3D-Modell
+--
+|===
+
+[.notes]
+--
+Drei Teams, jedes verantwortet einen Bereich vom Sensor bis zur Anzeige.
+Elias koordiniert das Gesamtprojekt.
+--
+
+//------------------------------
+// AUSGANGSLAGE
+//------------------------------
+[.lightbg.cards]
+== Ausgangslage
+
+[cols="1,1", frame=none, grid=none]
+|===
+a|
+[.card]
+--
+**PV-Anlage am Schuldach**
+
+* Erzeugt Strom für die Schule
+* Daten nur im Hersteller-Portal (Solax Cloud)
+* Für Schüler:innen und Lehrkräfte nicht sichtbar
+--
+
+a|
+[.card]
+--
+**Raumklima in den Klassen**
+
+* Bis zu 30 Personen pro Raum
+* Bei geschlossenen Fenstern steigt CO₂ stark an
+* Folgen: Müdigkeit, Konzentrationsschwäche
+* Niemand sieht, wann gelüftet werden muss
+--
+|===
+
+[.notes]
+--
+Vor dem Projekt waren Energie- und Klimadaten entweder gar nicht erfasst
+oder nur in einem Hersteller-Portal versteckt.
+--
+
+//------------------------------
+// PROBLEM
+//------------------------------
+[.lightbg.cards]
+== Das Problem
+
+[.card.single]
+--
+* Daten zu **Energie** und **Raumluft** sind verstreut oder nicht vorhanden
+* Keine zentrale, verständliche Übersicht für den Schulalltag
+* Schulleitung und Schulwarte können Räume nicht schnell überwachen
+* Ausfälle von Sensoren bleiben unbemerkt
+--
+
+//------------------------------
+// LÖSUNG
+//------------------------------
+[.lightbg.cards]
+== Unsere Lösung
+
+[cols="1,1,1", frame=none, grid=none]
+|===
+a|
+[.card]
+--
+**PV-Dashboard**
+
+* Erzeugung, Netzbezug, Batterie-Ladung/-Entladung
+* Tagesansicht mit Datumswahl
+* Kiosk-Modus für Bildschirme im Schulhaus
+--
+
+a|
+[.card]
+--
+**Raumklima**
+
+* CO₂ und Temperatur pro Raum
+* Ampel: 🟢 < 800 · 🟡 800–1000 · 🔴 > 1000 ppm
+* Zeit der letzten Messung je Sensor
+--
+
+a|
+[.card]
+--
+**3D-Schulmodell**
+
+* Raum anklicken → aktuelle Werte
+* Live-Updates per WebSocket
+* Navigation zu Räumen und Turnsaal
+--
+|===
+
+[.notes]
+--
+Alles läuft im Browser, ohne Login, auf Deutsch und Englisch.
+Gehostet auf der Schul-VM, automatisch deployt über GitHub Actions.
+--
+
+//------------------------------
+// KONTEXTDIAGRAMM (C4 Level 1)
+//------------------------------
+[.lightbg.diagram]
+== Kontextdiagramm
+
+[plantuml, c4-context, svg]
+----
+@startuml
+!include <C4/C4_Context>
+
+UpdateElementStyle("person", $bgColor="#1b5e20", $borderColor="#1b5e20")
+UpdateElementStyle("system", $bgColor="#2e7d32", $borderColor="#2e7d32")
+UpdateElementStyle("external_system", $bgColor="#8a9e8c", $borderColor="#8a9e8c")
+skinparam shadowing false
+UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
+
+LAYOUT_TOP_DOWN()
+HIDE_STEREOTYPE()
+
+Person(management, "Schulleitung & Schulwarte", "Überwachen Raumklima und Energie")
+Person(school, "Lehrkräfte & Schüler:innen", "Sehen Luftqualität und PV-Ertrag")
+
+System(leoiot, "LeoIoT", "Visualisiert PV- und Raumklimadaten in Dashboards, Kiosk-Ansichten und einem 3D-Schulmodell")
+
+System_Ext(sensors, "Sensorboxen", "ESP32 mit CO₂-/Temperatursensor in den Klassenräumen")
+System_Ext(solax, "Solax Cloud", "Hersteller-API des PV-Wechselrichters")
+
+Rel(management, leoiot, "Überwacht", "Browser")
+Rel(school, leoiot, "Schaut an", "Browser / Kiosk")
+Rel(sensors, leoiot, "Sendet Messwerte", "MQTT")
+Rel(leoiot, solax, "Fragt PV-Daten ab", "HTTPS / REST")
+@enduml
+----
+
+[.notes]
+--
+Level 1: LeoIoT als Blackbox. Zwei Datenquellen (Sensoren, Solax),
+zwei Benutzergruppen.
+--
+
+//------------------------------
+// CONTAINERDIAGRAMM (C4 Level 2)
+//------------------------------
+[.lightbg.diagram.wide]
+== Containerdiagramm
+
+[plantuml, c4-container, svg]
+----
+@startuml
+!include <C4/C4_Container>
+
+UpdateElementStyle("person", $bgColor="#1b5e20", $borderColor="#1b5e20")
+UpdateElementStyle("container", $bgColor="#43a047", $borderColor="#43a047")
+UpdateElementStyle("external_system", $bgColor="#8a9e8c", $borderColor="#8a9e8c")
+UpdateBoundaryStyle($elementName="system", $fontColor="#1b5e20", $borderColor="#2e7d32")
+UpdateBoundaryStyle($fontColor="#2e7d32", $borderColor="#81c784")
+UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
+
+LAYOUT_LEFT_RIGHT()
+HIDE_STEREOTYPE()
+skinparam shadowing false
+skinparam rectangle {
+  FontSize 20
+}
+skinparam database {
+  FontSize 20
+}
+skinparam person {
+  FontSize 20
+}
+skinparam arrow {
+  FontSize 16
+}
+!$TECHN_FONT_SIZE = 15
+skinparam ranksep 20
+skinparam nodesep 45
+
+System_Ext(solax, "Solax Cloud", "PV-API")
+System_Ext(sensors, "Sensorboxen", "ESP32 / ESPHome")
+
+System_Boundary(leoiot, "LeoIoT (Schul-VM, Docker)") {
+  Boundary(ingest, "Datenaufnahme") {
+    Container(collector, "Solax-Collector", "Node.js")
+    Container(broker, "MQTT-Broker", "Mosquitto")
+    Container(telegraf, "Telegraf", "")
+  }
+
+  Boundary(data, "Daten") {
+    Container(bridge, "MQTT-WS-Bridge", "Node.js")
+    ContainerDb(influx, "InfluxDB", "Zeitreihen")
+  }
+
+  Boundary(web, "Web-Oberflächen") {
+    Container(model3d, "3D-Schulmodell", "Three.js")
+    Container(dashboard, "Sensor- & PV-Dashboard", "Chart.js")
+    Container(kiosk, "Kiosk-Ansichten", "Chart.js")
+    Container(grafana, "Grafana", "")
+  }
+
+  Container(nginx, "Reverse Proxy", "nginx")
+}
+
+Person(user, "Benutzer:in", "Schulleitung, Lehrkräfte,\nSchüler:innen")
+
+Rel(solax, collector, "HTTPS")
+Rel(sensors, broker, "MQTT")
+Rel(collector, broker, "")
+Rel(broker, telegraf, "")
+Rel(broker, bridge, "")
+Rel(telegraf, influx, "")
+
+Rel(bridge, model3d, "Live")
+Rel(bridge, dashboard, "Live")
+Rel(influx, dashboard, "")
+Rel(influx, kiosk, "")
+Rel(influx, grafana, "")
+
+Rel_Back(model3d, nginx, "")
+Rel_Back(dashboard, nginx, "")
+Rel_Back(kiosk, nginx, "")
+Rel_Back(grafana, nginx, "")
+Rel_Back(nginx, user, "HTTPS")
+@enduml
+----
+
+[.notes]
+--
+Von links nach rechts: Quellen → Datenaufnahme → Daten → Web-Oberflächen → nginx → Benutzer:in.
+Sensoren und Solax-Collector → Mosquitto → Telegraf → InfluxDB.
+Frontends holen Historie aus InfluxDB, Live-Werte über die WebSocket-Bridge.
+nginx verteilt alles unter einer Domain.
+--
+
+//------------------------------
+// PROJEKTSTAND
+//------------------------------
+[.lightbg.cards]
+== Aktueller Stand
+
+[.card.single]
+--
+* PV-Dashboard mit Tagesansicht & Kiosk-Modi
+* Raumklima mit CO₂-Ampel
+* 3D-Modell mit Live-CO₂ & Raumnavigation
+* Mobile Ansicht, Deutsch/Englisch
+* Deployment auf Schul-VM mit HTTPS
+* Continuous Deployment & DB-Backups
+--
+
+//------------------------------
+// MEILENSTEINE
+//------------------------------
+[.lightbg.cards.grid]
+== Meilensteine
+
+[cols="1,1,1", frame=none, grid=none]
+|===
+a|
+[.card.milestone]
+--
+3D-Modell verbessern
+--
+
+a|
+[.card.milestone]
+--
+Weitere Klassenräume anbinden
+--
+
+a|
+[.card.milestone]
+--
+Warnung bei kritischen Werten
+--
+
+|===
+
+//------------------------------
+// END SLIDE
+//------------------------------
+[.center, .lightbg]
+== Danke für Ihre Aufmerksamkeit
