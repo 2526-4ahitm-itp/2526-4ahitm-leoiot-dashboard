@@ -4,6 +4,7 @@ import starlight from "@astrojs/starlight";
 export default defineConfig({
   site: "https://2526-4ahitm-itp.github.io",
   base: "/2526-4ahitm-leoiot-dashboard",
+  redirects: { "/en/slides": "/2526-4ahitm-leoiot-dashboard/slides/" },
   integrations: [
     starlight({
       title: "LeoIoT",
@@ -12,6 +13,10 @@ export default defineConfig({
         root: { label: "Deutsch", lang: "de" },
         en: { label: "English", lang: "en" },
       },
+      sidebar: [
+        { label: "Dokumentation", translations: { en: "Documentation" }, items: [{ autogenerate: { directory: "docs" } }] },
+        { label: "Slides", link: "/slides/" },
+      ],
       customCss: ["./src/styles/tokens.css"],
       components: {
         ThemeProvider: "./src/components/starlight/ThemeProvider.astro",
