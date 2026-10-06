@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteNav from '../../components/marketing/SiteNav.astro';
+import SiteFooter from '../../components/marketing/SiteFooter.astro';
+import AppOverview from '../../components/marketing/app/AppOverview.astro';
+---
+
+<BaseLayout title="LeoIoT App" description="Overview of the LeoIoT app: 3D explorer, dashboard, photovoltaics and kiosk display at HTL Leonding." lang="en">
+  <SiteNav slot="header" lang="en" current="app" />
+  <AppOverview lang="en" />
+  <SiteFooter slot="footer" lang="en" />
+</BaseLayout>
