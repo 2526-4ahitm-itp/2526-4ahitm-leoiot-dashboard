@@ -152,3 +152,178 @@
     color: #333;
     z-index: 10;
 }
+
+/* C4 diagrams: fit inside slide */
+.reveal .imageblock img[src$=".svg"] {
+    box-shadow: none;
+}
+
+.reveal .slides section.diagram h2 {
+    margin-bottom: 0.3em;
+}
+
+.reveal .slides section.diagram .imageblock img {
+    max-height: 660px;
+    max-width: 100%;
+    width: auto;
+    margin: 0 auto;
+}
+
+/* Card grids: all boxes on a slide get the same height */
+.reveal .slides section.cards table {
+    width: 100%;
+    height: 1px; /* lets cells and cards stretch to full row height */
+    border-collapse: separate;
+    border-spacing: 24px 0;
+}
+
+.reveal .slides section.cards table td {
+    height: 100%;
+    vertical-align: top;
+    padding: 0;
+    border: none;
+}
+
+.reveal .slides section.cards td > div {
+    height: 100%;
+}
+
+.reveal .slides section.cards .card {
+    box-sizing: border-box;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0.9em 1.2em;
+    text-align: left;
+    font-size: 0.8em;
+    line-height: 1.4;
+    border-top: 6px solid var(--leo-green);
+}
+
+.reveal .slides section.cards .card.single {
+    max-width: 1000px;
+    margin: 0 auto;
+    font-size: 0.9em;
+}
+
+.reveal .slides section.cards .card p {
+    margin: 0 0 0.4em;
+}
+
+.reveal .slides section.cards .card ul {
+    display: block;
+    list-style: disc outside;
+    margin: 0.3em 0 0 1.2em;
+    padding: 0;
+}
+
+.reveal .slides section.cards .card li {
+    display: list-item;
+    margin-bottom: 0.4em;
+}
+
+.reveal .slides section.cards .card li::marker {
+    color: var(--leo-green);
+}
+
+/* Team cards: names first, topic below */
+.reveal .slides section.cards .card.team {
+    font-size: 0.95em;
+}
+
+.reveal .slides section.cards .card.team .names li {
+    font-weight: 700;
+}
+
+.reveal .slides section.cards .card.team .role {
+    font-weight: 400;
+    font-style: italic;
+    color: var(--leo-green);
+}
+
+.reveal .slides section.cards .card.team .topic p {
+    margin-top: 0.8em;
+    padding-top: 0.5em;
+    border-top: 1px solid #dfe8df;
+    color: var(--leo-green-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.85em;
+}
+
+.reveal .slides section.cards .card.team > .content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.reveal .slides section.cards .card.team .topic {
+    margin-top: auto;
+}
+
+/* Flat look: no shadows anywhere */
+.reveal h1, .reveal h2, .reveal h3, .reveal h4,
+.reveal .title-slide h1 {
+    text-shadow: none !important;
+}
+
+.reveal .card,
+.reveal p > img,
+.reveal .imageblock img {
+    box-shadow: none !important;
+}
+
+.reveal .slides section.cards .card {
+    border: 1px solid #d5e3d6;
+    border-top: 6px solid var(--leo-green);
+}
+
+/* Title slide font */
+.reveal .slides section.title h1 {
+    font-family: 'Segoe UI', 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 800;
+    text-transform: none;
+    letter-spacing: -0.02em;
+    color: var(--leo-green-dark);
+}
+
+.reveal .slides section.title p {
+    font-family: 'Segoe UI', 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Wide container diagram: use full slide width */
+.reveal .slides section.diagram.wide .imageblock img {
+    display: block;
+    max-width: 100%;
+    max-height: none;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Milestone grid: 2x2 equal boxes */
+.reveal .slides section.cards.grid table {
+    border-spacing: 24px 24px;
+}
+
+.reveal .slides section.cards .card.milestone {
+    display: flex;
+    align-items: center;
+    font-size: 1em;
+    font-weight: 600;
+    padding: 1.1em 1.4em;
+}
+
+.reveal .slides section.cards.grid tr {
+    height: 180px;
+}
+
+/* Title slide subtitle (date) */
+.reveal .slides section.title h2 {
+    margin-top: 0.4em;
+    font-family: 'Segoe UI', 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1.1em;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #555;
+}
