@@ -70,12 +70,17 @@ Elias koordiniert das Gesamtprojekt.
 [.lightbg.cards]
 == Ausgangslage
 
+[.card.banner]
+--
+**Ziel der HTL Leonding: eine nachhaltige Schule werden**
+--
+
 [cols="1,1", frame=none, grid=none]
 |===
 a|
 [.card]
 --
-**PV-Anlage am Schuldach**
+**PV-Anlage**
 
 * Erzeugt Strom für die Schule
 * Daten nur im Hersteller-Portal (Solax Cloud)
@@ -96,6 +101,8 @@ a|
 
 [.notes]
 --
+Die Schule möchte nachhaltiger werden – dafür muss man Energie und Raumklima
+erst einmal sehen können.
 Vor dem Projekt waren Energie- und Klimadaten entweder gar nicht erfasst
 oder nur in einem Hersteller-Portal versteckt.
 --
@@ -110,7 +117,7 @@ oder nur in einem Hersteller-Portal versteckt.
 --
 * Daten zu **Energie** und **Raumluft** sind verstreut oder nicht vorhanden
 * Keine zentrale, verständliche Übersicht für den Schulalltag
-* Schulleitung und Schulwarte können Räume nicht schnell überwachen
+* Schulwarte sehen die Raumtemperatur nicht – offen gelassene Fenster bleiben unbemerkt
 * Ausfälle von Sensoren bleiben unbemerkt
 --
 
@@ -135,7 +142,7 @@ a|
 a|
 [.card]
 --
-**Raumklima**
+**Sensor**
 
 * CO₂ und Temperatur pro Raum
 * Ampel: 🟢 < 800 · 🟡 800–1000 · 🔴 > 1000 ppm
@@ -170,26 +177,26 @@ Gehostet auf der Schul-VM, automatisch deployt über GitHub Actions.
 @startuml
 !include <C4/C4_Context>
 
-UpdateElementStyle("person", $bgColor="#1b5e20", $borderColor="#1b5e20")
-UpdateElementStyle("system", $bgColor="#2e7d32", $borderColor="#2e7d32")
-UpdateElementStyle("external_system", $bgColor="#8a9e8c", $borderColor="#8a9e8c")
+UpdateElementStyle("person", $bgColor="#dcedc8", $fontColor="#1b3a1f", $borderColor="#9ccc65")
+UpdateElementStyle("system", $bgColor="#1b7a2b", $fontColor="#ffffff", $borderColor="#0d4d17")
+UpdateElementStyle("external_system", $bgColor="#e3eaf2", $fontColor="#1f2d3a", $borderColor="#9fb3c8")
 skinparam shadowing false
 UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
 
 LAYOUT_TOP_DOWN()
 HIDE_STEREOTYPE()
 
-Person(management, "Schulleitung & Schulwarte", "Überwachen Raumklima und Energie")
-Person(school, "Lehrkräfte & Schüler:innen", "Sehen Luftqualität und PV-Ertrag")
+Person(management, "Schulleitung & Schulwarte", "Prüfen bei Bedarf Raumtemperatur und Energie, z. B. offene Fenster")
+Person(school, "Lehrkräfte & Schüler:innen", "Sehen PV-Ertrag am Kiosk und CO₂-Werte im Dashboard")
 
 System(leoiot, "LeoIoT", "Visualisiert PV- und Raumklimadaten in Dashboards, Kiosk-Ansichten und einem 3D-Schulmodell")
 
 System_Ext(sensors, "Sensorboxen", "ESP32 mit CO₂-/Temperatursensor in den Klassenräumen")
 System_Ext(solax, "Solax Cloud", "Hersteller-API des PV-Wechselrichters")
 
-Rel(management, leoiot, "Überwacht", "Browser")
-Rel(school, leoiot, "Schaut an", "Browser / Kiosk")
-Rel(sensors, leoiot, "Sendet Messwerte", "MQTT")
+Rel(management, leoiot, "Prüfen bei Bedarf", "Browser")
+Rel(school, leoiot, "Sehen an", "Kiosk / Browser")
+Rel(sensors, leoiot, "Senden Messwerte", "MQTT")
 Rel(leoiot, solax, "Fragt PV-Daten ab", "HTTPS / REST")
 @enduml
 ----
@@ -336,9 +343,3 @@ Warnung bei kritischen Werten
 --
 
 |===
-
-//------------------------------
-// END SLIDE
-//------------------------------
-[.center, .lightbg]
-== Danke für Ihre Aufmerksamkeit
