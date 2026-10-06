@@ -1,0 +1,75 @@
+@startuml
+!include <C4/C4_Container>
+
+UpdateElementStyle("person", $bgColor="#1b5e20", $borderColor="#1b5e20")
+UpdateElementStyle("container", $bgColor="#43a047", $borderColor="#43a047")
+UpdateElementStyle("external_system", $bgColor="#8a9e8c", $borderColor="#8a9e8c")
+UpdateBoundaryStyle($elementName="system", $fontColor="#1b5e20", $borderColor="#2e7d32")
+UpdateBoundaryStyle($fontColor="#2e7d32", $borderColor="#81c784")
+UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
+
+LAYOUT_LEFT_RIGHT()
+HIDE_STEREOTYPE()
+skinparam shadowing false
+skinparam rectangle {
+  FontSize 20
+}
+skinparam database {
+  FontSize 20
+}
+skinparam person {
+  FontSize 20
+}
+skinparam arrow {
+  FontSize 16
+}
+!$TECHN_FONT_SIZE = 15
+skinparam ranksep 20
+skinparam nodesep 45
+
+System_Ext(solax, "Solax Cloud", "PV-API")
+System_Ext(sensors, "Sensorboxen", "ESP32 / ESPHome")
+
+System_Boundary(leoiot, "LeoIoT (Schul-VM, Docker)") {
+  Boundary(ingest, "Datenaufnahme") {
+    Container(collector, "Solax-Collector", "Node.js")
+    Container(broker, "MQTT-Broker", "Mosquitto")
+    Container(telegraf, "Telegraf", "")
+  }
+
+  Boundary(data, "Daten") {
+    Container(bridge, "MQTT-WS-Bridge", "Node.js")
+    ContainerDb(influx, "InfluxDB", "Zeitreihen")
+  }
+
+  Boundary(web, "Web-Oberflächen") {
+    Container(model3d, "3D-Schulmodell", "Three.js")
+    Container(dashboard, "Sensor- & PV-Dashboard", "Chart.js")
+    Container(kiosk, "Kiosk-Ansichten", "Chart.js")
+    Container(grafana, "Grafana", "")
+  }
+
+  Container(nginx, "Reverse Proxy", "nginx")
+}
+
+Person(user, "Benutzer:in", "Schulleitung, Lehrkräfte,\nSchüler:innen")
+
+Rel(solax, collector, "HTTPS")
+Rel(sensors, broker, "MQTT")
+Rel(collector, broker, "")
+Rel(broker, telegraf, "")
+Rel(broker, bridge, "")
+Rel(telegraf, influx, "")
+
+Rel(bridge, model3d, "Live")
+Rel(bridge, dashboard, "Live")
+Rel(influx, dashboard, "")
+Rel(influx, kiosk, "")
+Rel(influx, grafana, "")
+
+Rel_Back(model3d, nginx, "")
+Rel_Back(dashboard, nginx, "")
+Rel_Back(kiosk, nginx, "")
+Rel_Back(grafana, nginx, "")
+Rel_Back(nginx, user, "HTTPS")
+@enduml
