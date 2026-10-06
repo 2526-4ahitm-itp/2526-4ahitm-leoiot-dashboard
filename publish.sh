@@ -1,25 +1,7 @@
 #!/usr/bin/env bash
-
-source ./local-convert.sh
-
-echo $SLIDES
-echo $INPUTPATH
-echo $OUTPUTPATH
-# sudo chown ${USER}:${USER} dist
-
-remote=$(git remote get-url origin)
-cd "$OUTPUTPATH" || exit
-
-rm -rf .git
-
-git init
-
-git add .
-
-git commit -m "updating github pages"
-
-git switch -c gh-pages
-
-git remote add origin "$remote"
-
-git push -f origin gh-pages
+# Veraltet: Veroeffentlichung erfolgt ueber .github/workflows/docs.yaml (Push auf main
+# oder manuell per workflow_dispatch). Dieses Skript baut nur noch lokal, es pusht nichts.
+set -euo pipefail
+cd "$(dirname "$0")"
+./local-convert.sh
+echo "Nicht gepusht: Deployment laeuft ueber den Workflow 'Pages' auf GitHub."
