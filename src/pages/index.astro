@@ -1,12 +1,22 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
-const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+import SiteNav from '../components/marketing/SiteNav.astro';
+import Hero from '../components/marketing/Hero.astro';
+import Bento from '../components/marketing/Bento.astro';
+import DataFlow from '../components/marketing/DataFlow.astro';
+import SiteFooter from '../components/marketing/SiteFooter.astro';
 ---
 
-<BaseLayout title="LeoIoT" description="LeoIoT: 3D-Modell der HTL Leonding mit Live-Raumklimadaten." lang="de">
-  <h1>LeoIoT</h1>
-  <p>Platzhalter der Produktseite. Echte Inhalte folgen.</p>
-  <p><a href={`${base}/docs/`}>Docs</a></p>
-  <ThemeToggle label="Dunkles Design" />
+<BaseLayout
+  title="LeoIoT – Wie gut ist die Luft in unserer Schule?"
+  description="LeoIoT: 3D-Modell der HTL Leonding mit Live-Raumklimadaten und PV-Anlage."
+  lang="de"
+>
+  <SiteNav slot="header" lang="de" current="product" />
+  <div class="mk-wrap">
+    <Hero lang="de" />
+    <Bento lang="de" />
+  </div>
+  <DataFlow lang="de" />
+  <SiteFooter slot="footer" lang="de" />
 </BaseLayout>

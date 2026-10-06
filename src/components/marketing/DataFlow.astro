@@ -1,0 +1,73 @@
+---
+interface Props { lang: 'de' | 'en' }
+const { lang } = Astro.props;
+const en = lang === 'en';
+
+const T = en
+  ? { kicker: 'Technology', h2: 'How it works', intro: 'From the measuring point in the classroom to the browser display in four steps.',
+      steps: [
+        ['Sensor', 'IoT device', 'Measures temperature, CO₂ and humidity in the room.'],
+        ['MQTT', 'Message broker', 'Forwards the readings in a lightweight way.'],
+        ['InfluxDB', 'Time-series database', 'Stores the values as a time series for history and analysis.'],
+        ['Dashboard', '3D app in the browser', 'Shows rooms, traffic lights and PV data in the 3D model.'],
+      ] }
+  : { kicker: 'Technik', h2: 'So funktioniert’s', intro: 'Vom Messpunkt im Klassenzimmer bis zur Anzeige im Browser in vier Schritten.',
+      steps: [
+        ['Sensor', 'IoT-Gerät', 'Misst Temperatur, CO₂ und Luftfeuchte im Raum.'],
+        ['MQTT', 'Message Broker', 'Leitet die Messwerte leichtgewichtig weiter.'],
+        ['InfluxDB', 'Zeitreihen-Datenbank', 'Speichert die Werte als Zeitreihe für Verlauf und Auswertung.'],
+        ['Dashboard', '3D-App im Browser', 'Zeigt Räume, Ampeln und PV-Daten im 3D-Modell.'],
+      ] };
+---
+
+<div class="mk-band" id="technik">
+  <div class="mk-wrap">
+    <section aria-labelledby="mk-h-flow">
+      <div class="mk-sec-h mk-rv">
+        <div class="mk-kicker">{T.kicker}</div>
+        <h2 id="mk-h-flow">{T.h2}</h2>
+        <p>{T.intro}</p>
+      </div>
+      <ol class="mk-flow">
+        {T.steps.map((s, i) => (
+          <li style={`--i:${i}`}>
+            <div class="mk-node">
+              <div class="mk-n" aria-hidden="true">{i + 1}</div>
+              <h3>{s[0]}</h3>
+              <code>{s[1]}</code>
+              <p>{s[2]}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  </div>
+</div>
+
+<style is:global>
+  .mk-band { margin-top: var(--section-gap); background: var(--bg-soft); border-block: var(--bw) solid var(--line); padding: var(--space-9) 0; }
+  .mk-band section { padding: 0; }
+  .mk-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: var(--space-7) 0 0; position: relative; list-style: none; padding: 0; }
+  .mk-flow li { position: relative; padding: 0 18px 0 0; min-width: 0; }
+  .mk-node { transition: background-color var(--dur-theme) ease, color var(--dur-theme) ease; border: var(--bw) solid var(--line-ui); background: var(--surface); border-radius: var(--r-lg); padding: 20px; height: 100%; }
+  .mk-n { width: 30px; height: 30px; border-radius: var(--r-link); background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 650; font-size: var(--fs-small); margin-bottom: 14px; }
+  .mk-node h3 { margin: 0; font-size: var(--fs-node-h); font-weight: var(--fw-h3); }
+  .mk-node code { font: 500 13px var(--font-mono); color: var(--ink-2); display: block; margin-top: 2px; overflow-wrap: anywhere; }
+  .mk-node p { margin: 10px 0 0; font-size: var(--fs-node); color: var(--ink-2); line-height: var(--lh-card); }
+  .mk-flow li:not(:last-child)::after { content: ''; position: absolute; right: -2px; top: 50px; width: 22px; height: 2px; background: var(--line-ui); transform-origin: left center; }
+  .mk-flow li:not(:last-child)::before { content: ''; position: absolute; right: -3px; top: 46px; border: 5px solid transparent; border-left: 7px solid var(--line-ui); border-right: 0; z-index: 1; }
+  @media (prefers-reduced-motion: no-preference) {
+    .mk-js .mk-flow:not(.in) .mk-node { opacity: 0; transform: translateY(12px); }
+    .mk-js .mk-flow .mk-node { transition: opacity var(--dur) var(--ease) calc(var(--i) * 180ms), transform var(--dur) var(--ease) calc(var(--i) * 180ms), background-color var(--dur-theme) ease, color var(--dur-theme) ease; }
+    .mk-js .mk-flow li::after { transition: transform var(--dur) var(--ease) calc(var(--i) * 180ms + 250ms); }
+    .mk-js .mk-flow li::before { transition: opacity var(--dur) var(--ease) calc(var(--i) * 180ms + 500ms); }
+    .mk-js .mk-flow:not(.in) li::after { transform: scaleX(0); }
+    .mk-js .mk-flow:not(.in) li::before { opacity: 0; }
+  }
+  @media (max-width: 980px) {
+    .mk-flow { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4); }
+    .mk-flow li { padding: 0; }
+    .mk-flow li::before, .mk-flow li::after { display: none !important; }
+  }
+  @media (max-width: 720px) { .mk-band { margin-top: 80px; padding: 72px 0; } }
+</style>

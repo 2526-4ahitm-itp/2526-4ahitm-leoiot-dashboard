@@ -1,0 +1,36 @@
+/* Gemeinsame Basis der Marketing-Komponenten. Nur Variablen aus tokens.css. */
+html { scroll-padding-top: var(--nav-h); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body { overflow-x: clip; }
+.mk-wrap { max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); min-width: 0; }
+@media (max-width: 420px) { .mk-wrap { padding: 0 var(--space-4); } }
+
+.mk-brand { min-height: var(--tap); display: flex; align-items: center; gap: 9px; font-weight: var(--fw-brand); letter-spacing: var(--ls-brand); text-decoration: none; font-size: var(--fs-brand); color: var(--ink); }
+.mk-brand svg { flex: none; }
+
+.mk-btn { position: relative; isolation: isolate; transition: transform var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease); font: inherit; font-weight: var(--fw-button); font-size: var(--fs-btn); text-decoration: none; min-height: 46px; padding: 0 22px; border-radius: var(--r-btn); display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: var(--bw) solid var(--line-ui); color: var(--ink); background: var(--surface); }
+.mk-btn::after { content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: -1; pointer-events: none; box-shadow: var(--btn-shadow); opacity: 0; transition: opacity var(--dur-ui) var(--ease); }
+.mk-btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+@media (hover: hover) {
+  .mk-btn:hover { border-color: var(--ink); transform: translateY(-1px); }
+  .mk-btn.primary:hover { border-color: var(--accent); filter: brightness(1.08); }
+  .mk-btn:hover::after { opacity: 1; }
+}
+.mk-btn:active { transform: translateY(0); transition-duration: var(--dur-press); }
+
+.mk-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 2px 9px 2px 7px; border-radius: var(--r-pill); color: var(--ink); white-space: nowrap; }
+.mk-chip::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.mk-chip.g { background: var(--g-bg); } .mk-chip.g::before { background: var(--g); }
+.mk-chip.y { background: var(--y-bg); } .mk-chip.y::before { background: var(--y); }
+.mk-chip.r { background: var(--r-bg); } .mk-chip.r::before { background: var(--r); }
+
+/* Bewegung */
+@keyframes mk-rise { from { opacity: 0; transform: translateY(var(--y, 16px)); } }
+@media (prefers-reduced-motion: no-preference) {
+  .mk-hi { --y: 12px; animation: mk-rise var(--dur) var(--ease) calc(var(--i, 0) * 60ms) backwards; }
+  .mk-js .mk-rv:not(.in) { opacity: 0; }
+  .mk-js .mk-rv.in { --y: 16px; animation: mk-rise var(--dur) var(--ease) var(--d, 0ms) backwards; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-hi, .mk-rv, .mk-flow .mk-node { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+}

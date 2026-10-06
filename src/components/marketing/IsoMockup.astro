@@ -1,0 +1,148 @@
+---
+import IsoSvg from './IsoSvg.astro';
+
+interface Props { lang: 'de' | 'en' }
+const { lang } = Astro.props;
+const en = lang === 'en';
+
+const T = en
+  ? { fig: 'Illustration of the LeoIoT app', bar: 'LeoIoT · 3D view', tag: 'Illustration', floor: 'Floor', f2: '2nd floor', f1: '1st floor', f0: 'Ground',
+      svg: 'Isometric placeholder view of a school building with colour-coded rooms', cap: 'Placeholder, not the real model',
+      rooms: 'Rooms · example values', room: 'Room', good: 'Good', fair: 'Fair', poor: 'Poor',
+      note: 'All values in this preview are made-up example values, not measurements.' }
+  : { fig: 'Darstellung der LeoIoT-App', bar: 'LeoIoT · 3D-Ansicht', tag: 'Demo-Darstellung', floor: 'Stockwerk', f2: '2. Stock', f1: '1. Stock', f0: 'Erdgeschoss',
+      svg: 'Isometrische Platzhalter-Darstellung eines Schulgebäudes mit farblich markierten Räumen', cap: 'Platzhalter, kein echtes Modell',
+      rooms: 'Räume · Demo-Werte', room: 'Raum', good: 'Gut', fair: 'Mäßig', poor: 'Schlecht',
+      note: 'Alle Werte in dieser Vorschau sind erfundene Demo-Werte, keine Messdaten.' };
+
+const nb = '\u00a0';
+const rooms = [
+  { id: 'A', cls: 'g', st: T.good, temp: en ? '21.5' : '21,5', co2: '620', hum: '45' },
+  { id: 'B', cls: 'y', st: T.fair, temp: en ? '23.0' : '23,0', co2: en ? '1,100' : `1${nb}100`, hum: '52' },
+  { id: 'C', cls: 'r', st: T.poor, temp: en ? '25.1' : '25,1', co2: en ? '1,700' : `1${nb}700`, hum: '58' },
+];
+const roomLabels: Record<string, string> = Object.fromEntries(rooms.map((r) => [r.id, `${T.room} ${r.id} – ${r.st}`]));
+const floors = [{ f: 2, l: T.f2 }, { f: 1, l: T.f1 }, { f: 0, l: T.f0 }];
+---
+
+<div class="mk-stage mk-hi" style="--i:4">
+  <figure class="mk-frame" aria-label={T.fig}>
+    <div class="mk-bar">
+      <span class="mk-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="mk-url">{T.bar}</span>
+      <span class="mk-demo-tag">{T.tag}</span>
+    </div>
+    <div class="mk-app">
+      <div class="mk-side">
+        <h4>{T.floor}</h4>
+        {floors.map((x) => <button type="button" aria-pressed={x.f === 1 ? 'true' : 'false'} data-f={x.f}><span>{x.l}</span></button>)}
+      </div>
+      <div class="mk-canvas">
+        <IsoSvg variant="main" label={T.svg} roomLabels={roomLabels} />
+        <span class="mk-cap">{T.cap}</span>
+      </div>
+      <div class="mk-panel">
+        <h4>{T.rooms}</h4>
+        {rooms.map((r) => (
+          <div class="mk-room" data-room={r.id}>
+            <div class="mk-top"><b>{T.room} {r.id}</b><span class={`mk-chip ${r.cls}`}>{r.st}</span></div>
+            <div class="mk-vals"><span><b>{r.temp}{nb}°C</b></span><span><b>{r.co2}{nb}ppm</b> CO₂</span><span><b>{r.hum}{nb}%</b></span></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </figure>
+  <p class="mk-note">{T.note}</p>
+</div>
+
+<style is:global>
+  .mk-stage { margin: var(--space-8) auto 0; position: relative; isolation: isolate; min-width: 0; }
+  .mk-stage::before { content: ''; position: absolute; inset: -40px -20px auto; height: 70%; background: radial-gradient(60% 60% at 50% 0, var(--accent-soft), transparent 70%); z-index: -1; }
+  .mk-frame { margin: 0; border: var(--bw) solid var(--line); border-radius: var(--r-frame); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; text-align: left; }
+  .mk-bar { display: flex; align-items: center; gap: var(--space-2); padding: 11px 14px; border-bottom: var(--bw) solid var(--line); background: var(--bg-soft); }
+  .mk-dots { display: flex; gap: 6px; }
+  .mk-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-2); }
+  .mk-url { flex: 1; max-width: 340px; margin: 0 auto; font-size: 12.5px; color: var(--ink-2); text-align: center; background: var(--bg); border: var(--bw) solid var(--line); border-radius: 7px; padding: 3px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mk-demo-tag { font-size: var(--fs-meta); font-weight: 600; color: var(--ink-2); border: var(--bw) solid var(--line-ui); border-radius: var(--r-pill); padding: 2px 9px; white-space: nowrap; }
+  .mk-app { display: grid; grid-template-columns: 150px minmax(0, 1fr) 290px; min-height: 430px; }
+  .mk-side { border-right: var(--bw) solid var(--line); padding: var(--space-4) var(--space-3); font-size: var(--fs-small); background: var(--bg-soft); }
+  .mk-side h4, .mk-panel h4 { margin: 0 0 var(--space-2) 6px; font-size: var(--fs-overline); font-weight: 600; letter-spacing: var(--ls-overline); text-transform: uppercase; color: var(--ink-2); }
+  .mk-panel h4 { margin: 0; }
+  /* Stockwerk-Schalter braucht JS */
+  .mk-side { display: none; }
+  .mk-js .mk-side { display: block; }
+  .mk-side button { min-height: var(--tap); display: flex; align-items: center; justify-content: space-between; width: 100%; font: inherit; font-size: var(--fs-small); color: var(--ink-2); background: none; border: 0; padding: var(--space-2) 10px; border-radius: var(--r-link); cursor: pointer; text-align: left; }
+  .mk-side button:hover { background: var(--surface); }
+  .mk-side button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line-ui); }
+  .mk-canvas { position: relative; background: linear-gradient(var(--bg-soft), var(--surface)); display: flex; align-items: center; justify-content: center; padding: var(--space-2); min-width: 0; }
+  .mk-cap { position: absolute; left: 14px; bottom: 10px; font-size: var(--fs-meta); color: var(--ink-2); }
+  .mk-panel { border-left: var(--bw) solid var(--line); padding: var(--space-4); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .mk-room { border: var(--bw) solid var(--line); border-radius: var(--r-md); padding: 11px var(--space-3); background: var(--surface); }
+  .mk-room.hl { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .mk-top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+  .mk-top b { font-size: 15px; font-weight: 600; }
+  .mk-vals { display: flex; gap: 14px; font-size: 13.5px; color: var(--ink-2); margin-top: 6px; flex-wrap: wrap; }
+  .mk-vals span b { color: var(--ink); font-weight: 600; font-size: var(--fs-small); }
+  .mk-note { font-size: var(--fs-small); color: var(--ink-2); margin: var(--space-4) 0 0; text-align: center; }
+  @media (max-width: 980px) {
+    .mk-app { grid-template-columns: minmax(0, 1fr) 260px; }
+    .mk-js .mk-side { display: none; }
+  }
+  @media (max-width: 720px) {
+    .mk-app { grid-template-columns: minmax(0, 1fr); }
+    .mk-panel { border-left: 0; border-top: var(--bw) solid var(--line); }
+    .mk-url { display: none; }
+    .mk-demo-tag { margin-left: auto; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .mk-frame { animation: mk-drift linear both; animation-timeline: view(); animation-range: exit 0% exit 100%; }
+      @keyframes mk-drift { to { transform: translateY(-24px); } }
+    }
+  }
+</style>
+
+<script>
+  const iso = document.querySelector<SVGSVGElement>('.mk-iso-main');
+  document.querySelectorAll<SVGSVGElement>('.mk-iso-mini').forEach((m) => m.classList.add('go'));
+  if (iso) {
+    const reduced = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    // Stockwerk wechseln
+    const btns = document.querySelectorAll<HTMLButtonElement>('.mk-side button');
+    btns.forEach((b) => b.addEventListener('click', () => {
+      btns.forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      iso.setAttribute('data-floor', b.dataset.f ?? '1');
+    }));
+
+    // Raum im Modell hervorheben -> Karte im Panel
+    const hl = (e: Event, on: boolean) => {
+      const g = (e.target as Element).closest?.('[data-room]');
+      if (!g) return;
+      document.querySelector(`.mk-room[data-room="${g.getAttribute('data-room')}"]`)?.classList.toggle('hl', on);
+    };
+    iso.addEventListener('mouseover', (e) => hl(e, true));
+    iso.addEventListener('mouseout', (e) => hl(e, false));
+    iso.addEventListener('focusin', (e) => hl(e, true));
+    iso.addEventListener('focusout', (e) => hl(e, false));
+
+    // Räume werden einmalig ampelfarbig, danach dezentes Atmen solange sichtbar
+    let vis = false, revealed = false, done = false;
+    const updateLive = () => iso.classList.toggle('live', done && vis && !reduced());
+    const reveal = () => {
+      revealed = true;
+      iso.classList.add('go');
+      if (reduced()) { done = true; return; }
+      const count = iso.querySelectorAll('.mk-lit').length;
+      setTimeout(() => { done = true; updateLive(); }, 600 + count * 120 + 700);
+    };
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((es) => {
+        es.forEach((e) => { vis = e.isIntersecting; if (vis && !revealed) reveal(); updateLive(); });
+      }, { threshold: 0.3 }).observe(iso);
+    } else {
+      iso.classList.add('go');
+    }
+  }
+</script>

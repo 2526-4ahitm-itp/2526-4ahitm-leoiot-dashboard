@@ -45,8 +45,10 @@ const skip = lang === 'en' ? 'Skip to content' : 'Zum Inhalt springen';
   </head>
   <body>
     <a class="skip" href="#main">{skip}</a>
+    <slot name="header" />
     <main id="main" tabindex="-1">
       <slot />
     </main>
+    <slot name="footer" />
   </body>
 </html>
