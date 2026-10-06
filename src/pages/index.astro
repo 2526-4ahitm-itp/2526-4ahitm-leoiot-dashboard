@@ -1,11 +1,12 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
-<html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <title>LeoIoT</title>
-  </head>
-  <body>
-    <h1>LeoIoT</h1>
-  </body>
-</html>
+
+<BaseLayout title="LeoIoT" description="LeoIoT: 3D-Modell der HTL Leonding mit Live-Raumklimadaten." lang="de">
+  <h1>LeoIoT</h1>
+  <p>Platzhalter der Produktseite. Echte Inhalte folgen.</p>
+  <p><a href={`${base}/docs/`}>Docs</a></p>
+  <ThemeToggle label="Dunkles Design" />
+</BaseLayout>

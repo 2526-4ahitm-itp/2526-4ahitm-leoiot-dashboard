@@ -13,6 +13,10 @@ export default defineConfig({
         en: { label: "English", lang: "en" },
       },
       customCss: ["./src/styles/tokens.css"],
+      components: {
+        ThemeProvider: "./src/components/starlight/ThemeProvider.astro",
+        ThemeSelect: "./src/components/starlight/ThemeSelect.astro",
+      },
     }),
   ],
 });
