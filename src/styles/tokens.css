@@ -213,3 +213,8 @@
   --sl-color-hairline-light: var(--line-2);
   --sl-color-hairline-shade: var(--bg);
 }
+
+/* Docs-Tabellen: Zellen umbrechen statt horizontal zu scrollen (Tastaturzugang, 360 px) */
+.sl-markdown-content table { display: table; width: 100%; }
+.sl-markdown-content :is(th, td) { overflow-wrap: anywhere; }
+.sl-markdown-content :is(th, td) code { overflow-wrap: anywhere; white-space: normal; }

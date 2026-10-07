@@ -7,7 +7,7 @@ sidebar:
 
 ## Ausgangslage und Problem
 
-Die HTL Leonding will eine nachhaltige Schule werden. Die PV-Anlage erzeugt Strom für die Schule, die Daten liegen aber nur im Hersteller-Portal (Solax Cloud) und sind für Schüler:innen und Lehrkräfte nicht sichtbar. In den Klassen sind bis zu 30 Personen pro Raum; bei geschlossenen Fenstern steigt der CO₂-Gehalt stark an, was zu Müdigkeit und Konzentrationsschwäche führt. Niemand sieht, wann gelüftet werden muss.
+Die HTL Leonding will eine nachhaltige Schule werden. Die PV-Anlage (Solaranlage) erzeugt Strom für die Schule. Die Daten liegen aber nur im Hersteller-Portal (Solax Cloud). Schüler:innen und Lehrkräfte sehen sie nicht. In den Klassen sind bis zu 30 Personen pro Raum; bei geschlossenen Fenstern steigt der CO₂-Gehalt stark an, was zu Müdigkeit und Konzentrationsschwäche führt. Niemand sieht, wann gelüftet werden muss.
 
 Das Problem im Einzelnen:
 
@@ -27,15 +27,15 @@ Nicht Teil des Projekts: automatisches Öffnen/Schließen von Fenstern oder Tür
 
 ## Lösung
 
-- **PV-Dashboard:** Erzeugung, Netzbezug, Batterie-Ladung und -Entladung; Tagesansicht mit Datumswahl; Kiosk-Modus für Bildschirme im Schulhaus.
-- **Sensor-Dashboard:** CO₂ und Temperatur pro Raum; CO₂-Ampel (grün unter 800 ppm, gelb 800–1000 ppm, rot über 1000 ppm); Zeit der letzten Messung je Sensor.
-- **3D-Schulmodell:** Raum anklicken zeigt die aktuellen Werte; Live-Updates per WebSocket; Navigation zu Räumen und zum Turnsaal.
+- **PV-Dashboard:** Erzeugung, Netzbezug, Batterie-Ladung und -Entladung; Tagesansicht mit Datumswahl; Kiosk-Anzeige (Vollbild-Anzeige ohne Bedienung) für Bildschirme im Schulhaus.
+- **Sensor-Dashboard:** CO₂ und Temperatur pro Raum; CO₂-Ampel (ppm = Teile CO₂ pro Million Teile Luft; grün unter 800 ppm, gelb 800–1000 ppm, rot über 1000 ppm); Zeit der letzten Messung je Sensor.
+- **3D-Modell:** Raum anklicken zeigt die aktuellen Werte; Live-Updates per WebSocket; Navigation zu Räumen und zum Turnsaal.
 
-Alles läuft im Browser, ohne Login, auf Deutsch und Englisch. Gehostet wird auf der Schul-VM, deployt wird automatisch über GitHub Actions.
+Alles läuft im Browser, ohne Login, auf Deutsch und Englisch. Gehostet wird auf der Schul-VM, die Software wird automatisch über GitHub Actions veröffentlicht (Deployment).
 
 ## Anforderungen
 
-Aus der Funktionalen Spezifikation (Muss-Anforderungen):
+Aus der funktionalen Spezifikation (Muss-Anforderungen; FR-01 bedeutet Anforderung Nr. 1):
 
 - CO₂ und Temperatur pro Raum im Dashboard anzeigen, mit Raumauswahl (FR-01, FR-04).
 - CO₂ und Temperatur beim Klick auf einen Raum im 3D-Modell anzeigen (FR-02).
@@ -43,15 +43,13 @@ Aus der Funktionalen Spezifikation (Muss-Anforderungen):
 - Live-Updates per WebSocket (FR-05).
 - Sensorübersicht mit allen Sensoren (FR-06).
 - Warnsymbol, wenn ein Sensor 5 Minuten lang keine Daten geliefert hat (FR-08).
-- Meldung "No data for room" bei ungültigem Raum (FR-14).
+- Meldung „No data for room“ bei ungültigem Raum (FR-14).
 
-Sollte/Könnte: konfigurierbares Aktualisierungsintervall mit 10 Sekunden als Standard (FR-09), Historie für wählbare Tage und Zeiträume (FR-10), gut sichtbare Navigation (FR-11), Status "aktiv/inaktiv" (FR-12), zusätzliche Warnungen etwa bei Raumtemperatur unter 10 °C (FR-13).
+Sollte/Könnte: konfigurierbares Aktualisierungsintervall mit 10 Sekunden als Standard (FR-09), Historie für wählbare Tage und Zeiträume (FR-10), gut sichtbare Navigation (FR-11), Status „aktiv/inaktiv“ (FR-12), zusätzliche Warnungen etwa bei Raumtemperatur unter 10 °C (FR-13).
 
 Nichtfunktional: keine Authentifizierung, Betrieb in der Schulumgebung, mehrere moderne Browser, lokale Zeitzone der Schule, Ausfall eines Sensors darf die anderen nicht beeinträchtigen.
 
 Aus dem Projektantrag (Messkriterien): Dashboard im Schulnetz per Browser erreichbar; PV-Daten (kWh, eingespartes CO₂) werden periodisch aktualisiert; Raumklimadaten werden angezeigt; Warnschwelle bei CO₂ über 1000 ppm ist sichtbar. Als Technologien nennt der Antrag MQTT, InfluxDB und Grafana. Auftraggeber ist Professor Thomas Stütz; geplant war ein dokumentiertes, wartbares Dashboard bis Ende Juni 2026.
-
-Maßgeblich sind die CO₂-Schwellen 800 und 1000 ppm (Code und Slides).
 
 ## Team
 
@@ -63,9 +61,9 @@ Maßgeblich sind die CO₂-Schwellen 800 und 1000 ppm (Code und Slides).
 
 ## Aktueller Stand
 
-Stand der Slides vom 5. Oktober 2026:
+Stand der Präsentation vom 5. Oktober 2026:
 
-- PV-Dashboard mit Tagesansicht und Kiosk-Modi
+- PV-Dashboard mit Tagesansicht und Kiosk-Anzeigen
 - Raumklima mit CO₂-Ampel
 - 3D-Modell mit Live-CO₂ und Raumnavigation
 - Mobile Ansicht, Deutsch/Englisch
@@ -74,7 +72,7 @@ Stand der Slides vom 5. Oktober 2026:
 
 ## Meilensteine
 
-Als nächste Meilensteine nennen die Slides:
+Als nächste Meilensteine nennt die Präsentation:
 
 1. 3D-Modell verbessern
 2. Weitere Klassenräume anbinden
@@ -82,12 +80,12 @@ Als nächste Meilensteine nennen die Slides:
 
 ## Sprint-Reviews
 
-Dokumentiert ist bisher das Review vom 28.04.2026. Kritik und Wünsche:
+Dokumentiert ist bisher das Review vom 28. April 2026. Kritik und Wünsche:
 
 - **Sensor-Dashboard:** Skala, Achsenbeschriftung, Uhrzeitachse für einen Tag (00:00–23:59), Kiosk-System, Tage mit Pfeilen links/rechts überspringen.
-- **PV-Dashboard:** Skala, Batteriestand, Einheiten (kWh, kW), Beschriftung "Lifetime Total", aktuelle Solarleistung, Aufschlüsselung von Erzeugung, Verbrauch und Batterie, Sprachumschalter Deutsch/Englisch.
-- **3D-Modell:** Navigation mit Punkten (z. B. vor Türen, bei Treppen und Abzweigungen), kürzester Weg mit Dijkstra-Algorithmus, Navigation zum Turnsaal.
-- **Sonstiges:** User Stories sauber schreiben (Akzeptanzkriterien, Tasks).
+- **PV-Dashboard:** Skala, Batteriestand, Einheiten (kWh, kW), Beschriftung „Lifetime Total“, aktuelle Solarleistung, Aufschlüsselung von Erzeugung, Verbrauch und Batterie, Sprachumschalter Deutsch/Englisch.
+- **3D-Modell:** Navigation mit Punkten (z. B. vor Türen, bei Treppen und Abzweigungen), kürzester Weg mit dem Dijkstra-Algorithmus (Verfahren für den kürzesten Weg), Navigation zum Turnsaal.
+- **Sonstiges:** User Stories vollständig und einheitlich formulieren (Akzeptanzkriterien, Tasks).
 
 To-do bis zum nächsten Review: Kiosk-Modus, PV-Anzeigen, Navigation korrigieren, Skalen und Einheiten, Pfeile zum Überspringen von Tagen, DB-Backup.
 

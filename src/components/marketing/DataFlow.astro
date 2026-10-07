@@ -4,19 +4,19 @@ const { lang } = Astro.props;
 const en = lang === 'en';
 
 const T = en
-  ? { kicker: 'Technology', h2: 'How it works', intro: 'From the measuring point in the classroom to the browser display in four steps.',
+  ? { kicker: 'Technology', h2: 'How it works', intro: 'From the measuring point in the classroom to the browser display in four steps. PV data comes separately from the Solax Cloud.',
       steps: [
-        ['Sensor', 'IoT device', 'Measures temperature, CO₂ and humidity in the room.'],
-        ['MQTT', 'Message broker', 'Forwards the readings in a lightweight way.'],
-        ['InfluxDB', 'Time-series database', 'Stores the values as a time series for history and analysis.'],
-        ['Dashboard', '3D app in the browser', 'Shows rooms, traffic lights and PV data in the 3D model.'],
+        ['Sensor box', 'Small measuring computer (ESP32)', 'Measures temperature and CO₂ in the room.'],
+        ['MQTT', 'Message relay', 'Receives the readings and passes them on to the database and the app.'],
+        ['InfluxDB', 'Database for measurements over time', 'Stores every reading with its time, so the history can be viewed.'],
+        ['App', 'Web app in the browser', 'Shows rooms, traffic lights and PV data in the 3D explorer and the dashboard.'],
       ] }
-  : { kicker: 'Technik', h2: 'So funktioniert’s', intro: 'Vom Messpunkt im Klassenzimmer bis zur Anzeige im Browser in vier Schritten.',
+  : { kicker: 'Technik', h2: 'Funktionsweise', intro: 'Vom Messpunkt im Klassenzimmer bis zur Anzeige im Browser in vier Schritten. Die PV-Daten kommen separat aus der Solax Cloud.',
       steps: [
-        ['Sensor', 'IoT-Gerät', 'Misst Temperatur, CO₂ und Luftfeuchte im Raum.'],
-        ['MQTT', 'Message Broker', 'Leitet die Messwerte leichtgewichtig weiter.'],
-        ['InfluxDB', 'Zeitreihen-Datenbank', 'Speichert die Werte als Zeitreihe für Verlauf und Auswertung.'],
-        ['Dashboard', '3D-App im Browser', 'Zeigt Räume, Ampeln und PV-Daten im 3D-Modell.'],
+        ['Sensorbox', 'Kleiner Messcomputer (ESP32)', 'Misst Temperatur und CO₂ im Raum.'],
+        ['MQTT', 'Nachrichten-Vermittler', 'Nimmt die Messwerte entgegen und gibt sie an Datenbank und App weiter.'],
+        ['InfluxDB', 'Datenbank für Messreihen', 'Speichert jeden Messwert mit Uhrzeit, damit der Verlauf ansehbar ist.'],
+        ['App', 'Web-App im Browser', 'Zeigt Räume, Ampeln und PV-Daten im 3D-Explorer und im Dashboard.'],
       ] };
 ---
 

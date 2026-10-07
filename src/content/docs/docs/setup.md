@@ -1,16 +1,16 @@
 ---
-title: Setup
+title: Einrichtung
 description: Voraussetzungen, Start mit Docker Compose, Ports, benötigte Dateien und lokale Entwicklung der LeoIoT-Dienste.
 sidebar:
   order: 30
 ---
 
-Diese Seite beschreibt, wie das Gesamtsystem lokal gestartet wird. Alle Angaben stammen aus `docker-compose.yaml`, `config/` und den `package.json`-Dateien.
+Diese Seite beschreibt, wie das Gesamtsystem lokal gestartet wird. Docker Compose startet alle Dienste mit einem Befehl.
 
 ## Voraussetzungen
 
 - Docker mit dem Compose-Plugin (der Start erfolgt über `docker compose`).
-- Die Node-basierten Dienste laufen im Container (`node:20-alpine`) und führen beim Start selbst `npm install` aus; eine lokale Node-Installation ist für den Compose-Betrieb nicht nötig.
+- Die Node-Dienste (JavaScript-Programme) laufen im Container (`node:20-alpine`) und installieren ihre Bibliotheken beim Start selbst (`npm install`). Node muss daher nicht auf dem eigenen Rechner installiert sein.
 - Der Dienst `quarkus-app` wird aus `backend/sensor-data-generator` per Dockerfile gebaut (`src/main/docker/Dockerfile`).
 - Für den Dienst `mosquitto` muss die Datei `config/pwfile` existieren (siehe unten).
 
@@ -27,16 +27,16 @@ Compose startet folgende Dienste (alle im Netzwerk `leoiot`):
 
 | Dienst | Image / Quelle | Zweck |
 |---|---|---|
-| `mosquitto` | `eclipse-mosquitto:latest` | MQTT-Broker |
+| `mosquitto` | `eclipse-mosquitto:latest` | MQTT-Broker (Nachrichten-Vermittler) |
 | `influxdb` | `influxdb:2.7` | Zeitreihendatenbank (Setup-Modus beim ersten Start) |
 | `telegraf` | `telegraf:latest` | liest MQTT-Topics und schreibt nach InfluxDB (`telegraf.conf`) |
 | `grafana` | `grafana/grafana:latest` | Dashboards (Provisioning aus `grafana/`) |
 | `quarkus-app` | Build aus `backend/sensor-data-generator` | Sensordaten-Generator (publiziert u. a. `sine`, `room-temperature`) |
-| `frontend` | `node:20-alpine`, `./frontend` | 3D-Gebäudeansicht (Vite-Dev-Server) |
-| `dashboard-v2` | `node:20-alpine`, `./dashboard-v2` | Sensor-Dashboard (Vite-Dev-Server) |
-| `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, jeweils eigenes Verzeichnis | Kiosk-Ansichten (Vite-Dev-Server) |
+| `frontend` | `node:20-alpine`, `./frontend` | 3D-Explorer (Vite-Dev-Server) |
+| `dashboard-v2` | `node:20-alpine`, `./dashboard-v2` | Dashboard (Raumklima und PV, Vite-Dev-Server) |
+| `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, jeweils eigenes Verzeichnis | Kiosk-Anzeigen (Vite-Dev-Server) |
 | `leogreen-kiosk` | `node:20-alpine`, `./leogreenKiosk` | LeoGreen-Kiosk |
-| `mqtt-ws-bridge` | `node:20-alpine`, `./mqtt-ws-bridge` | WebSocket-Brücke zu MQTT |
+| `mqtt-ws-bridge` | `node:20-alpine`, `./mqtt-ws-bridge` | Bridge: gibt MQTT-Messwerte per WebSocket an den Browser weiter |
 | `solax-collector` | `node:20-alpine`, `./solax-collector` | schreibt Solax-Daten nach InfluxDB |
 | `fake-sensors` | `node:20-alpine`, `./fake-sensors` | simulierte Sensoren zum Testen |
 
@@ -47,7 +47,7 @@ Compose startet folgende Dienste (alle im Netzwerk `leoiot`):
 | 1883 | Mosquitto (MQTT) |
 | 8086 | InfluxDB |
 | 3000 | Grafana |
-| 8080 | `frontend` (3D-Ansicht) |
+| 8080 | `frontend` (3D-Explorer) |
 | 8081 | `dashboard-v2` |
 | 8082 / 8083 / 8084 / 8085 | `kiosk` / `kiosk2` / `kiosk3` / `kiosk4` |
 | 8087 | `leogreen-kiosk` |
@@ -64,23 +64,23 @@ Compose startet folgende Dienste (alle im Netzwerk `leoiot`):
 | `telegraf.conf` | im Repository | MQTT-Zugang (Benutzername/Passwort) und InfluxDB-Token; Werte hier bewusst nicht aufgeführt |
 | `MQTT_HOST` | Compose-Umgebung von `quarkus-app`, `fake-sensors`, `mqtt-ws-bridge` | Hostname des Brokers (im Compose-Netz `mosquitto`) |
 | `MQTT_PORT`, `UPDATE_INTERVAL` | optional, `fake-sensors` | Broker-Port (Standard 1883), Publish-Intervall in ms (Standard 10000) |
-| `WS_PORT` | `mqtt-ws-bridge` | Port der WebSocket-Brücke (in Compose 8090) |
+| `WS_PORT` | `mqtt-ws-bridge` | Port der WebSocket-Bridge (in Compose 8090) |
 | `PV_MQTT_HOST`, `PV_MQTT_PORT`, `PV_MQTT_USER`, `PV_MQTT_PASS` | `mqtt-ws-bridge` | Zugang zu einem externen MQTT-Broker (Photovoltaik) |
 | `INFLUX_URL`, `INFLUX_TOKEN`, `INFLUX_ORG`, `INFLUX_BUCKET` | `solax-collector` | InfluxDB-Zugang |
 | `DOCKER_INFLUXDB_INIT_*` | `influxdb` | Initiales Setup (Modus, Benutzer, Passwort, Organisation, Bucket, Admin-Token) |
 
 :::danger[Geheimnisse im Repository]
-`docker-compose.yaml`, `backup/*.sh`, `telegraf.conf` und die Anwendungskonfiguration des Backends enthalten Zugangsdaten und Tokens im Klartext. Diese Doku nennt sie bewusst nicht. Für einen öffentlichen Betrieb sollten sie ausgelagert und rotiert werden.
+`docker-compose.yaml`, `backup/*.sh`, `telegraf.conf` und die Anwendungskonfiguration des Backends enthalten Zugangsdaten und Tokens im Klartext. Diese Dokumentation nennt sie bewusst nicht. Für einen öffentlichen Betrieb sollten sie ausgelagert und rotiert werden.
 :::
 
 ## Fehlende `config/pwfile`
 
-Die Broker-Konfiguration verbietet anonyme Verbindungen und verweist auf `/mosquitto/config/pwfile`. Das Verzeichnis `config/` wird per Volume nach `/mosquitto/config` gemountet; die Datei `config/pwfile` steht in `.gitignore` und fehlt daher nach einem frischen Clone. Im Repository liegt nur `config/mosquitto.conf`.
+Mosquitto lässt nur angemeldete Benutzer zu. Dafür braucht es eine Passwortdatei (`config/pwfile`, im Container `/mosquitto/config/pwfile`). Sie steht aus Sicherheitsgründen in `.gitignore` und fehlt daher nach einem frischen Clone (Download des Projekts); im Repository liegt nur `config/mosquitto.conf`. Das Verzeichnis `config/` wird als Volume (gemeinsamer Ordner mit dem Container) eingebunden.
 
 Die Datei wird mit dem Mosquitto-Werkzeug `mosquitto_passwd` erzeugt. Prinzip (Platzhalter, keine realen Werte):
 
 ```bash
-# Datei neu anlegen und ersten Benutzer eintragen (fragt das Passwort ab)
+# Datei anlegen, ersten Benutzer eintragen (Passwortabfrage)
 docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest \
   mosquitto_passwd -c /mosquitto/config/pwfile <BENUTZER>
 
@@ -91,8 +91,6 @@ docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest 
 
 Die verwendeten Benutzer/Passwörter müssen zu den Clients passen: Telegraf, `fake-sensors` und das Backend (`quarkus-app`) melden sich mit Benutzername und Passwort am Broker an (Konfiguration in `telegraf.conf`, `fake-sensors/index.js` bzw. der Backend-`application.properties`). Welche Zugangsdaten das sind, steht dort.
 
-Die Benutzer werden mit `mosquitto_passwd` angelegt (so auch im Produktivsystem).
-
 ## Fake-Sensoren zum Testen
 
 Der Dienst `fake-sensors` startet mit `docker compose up -d` automatisch. Einzeln:
@@ -101,18 +99,14 @@ Der Dienst `fake-sensors` startet mit `docker compose up -d` automatisch. Einzel
 docker compose up -d fake-sensors
 ```
 
-Er veröffentlicht simulierte Temperatur- und CO2-Werte (Intervall standardmäßig 10 s, `UPDATE_INTERVAL`):
+Er veröffentlicht simulierte Temperatur- und CO₂-Werte für 117 Räume (Konfiguration `roomsConfig` in `fake-sensors/index.js`; Intervall standardmäßig 10 s, `UPDATE_INTERVAL`):
 
 | Messwert | Topic | Format |
 |---|---|---|
 | Temperatur | `room-temperature` | JSON, z. B. `{"room": "105", "temperature": 21.5}` |
-| CO2 | `nili3/sensor/{room_id}_co2/state` | einfache Zahl in ppm |
+| CO₂ | `nili3/sensor/{room_id}_co2/state` | einfache Zahl in ppm |
 
 Standalone (gegen einen Broker auf `localhost:1883`): `cd fake-sensors && npm install && npm start`; anderer Broker über `MQTT_HOST`.
-
-:::note
-Das README nennt 7 Räume; `index.js` konfiguriert 117 Räume und ist maßgeblich.
-:::
 
 ## Lokale Entwicklung der Frontends
 
@@ -132,12 +126,10 @@ npm install
 npm run dev
 ```
 
-Backend lokal (aus der veralteten `backend/guide-sine-generator.adoc`, siehe unten): Mosquitto starten (`mosquitto -v -p 1883`), mit `mosquitto_sub -h localhost -t sine -v` mitlesen und Quarkus mit `mvn quarkus:dev` starten.
-
-## Veraltete Anleitungen und Dateien
+## Nicht mehr gültige Dateien im Repository
 
 - `guide-sine-generator.adoc` ist veraltet: sie beschreibt anonymen Mosquitto-Betrieb, der Compose-Broker verbietet anonyme Verbindungen; ersetzt durch `fake-sensors`.
-- `api/requests.http` ist ein veralteter Demo-Rest: das Backend bietet nur `/hello` und einen WebSocket, kein `/api/sensors`.
+- `api/requests.http` ist eine veraltete Demo-Datei: das Backend bietet nur `/hello` und einen WebSocket, kein `/api/sensors`.
 
 ## Quellen im Repository
 

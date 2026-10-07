@@ -7,7 +7,7 @@ sidebar:
 
 ## Deployment
 
-On every push to `main`, two workflows in `.github/workflows/` run:
+A workflow is an automatic sequence of steps on GitHub (GitHub Actions). A runner is the computer that executes it; “self-hosted” means on the school VM instead of at GitHub. On every push to `main`, two workflows in `.github/workflows/` run:
 
 | Workflow | File | Runner | Action |
 |---|---|---|---|
@@ -16,19 +16,15 @@ On every push to `main`, two workflows in `.github/workflows/` run:
 
 The Pages workflow has `contents: write` permission and a `concurrency` group `pages` with `cancel-in-progress`.
 
-:::note[Documentation site being rebuilt]
-This documentation site is currently being rebuilt; the Pages workflow will be adapted accordingly. The description above matches the current `docs.yaml`.
-:::
-
-By hand, according to `README.adoc`, the VM is updated with `git pull` and `docker compose up -d --build` in the project directory. Access to the VM is not described here.
+To update the VM manually, run `git pull` and `docker compose up -d --build` in the project directory (see `README.adoc`).
 
 ## Nginx routing
 
-`deploy/nginx.conf` defines one server for the school hostname: port 80 redirects to HTTPS with a 301, port 443 terminates TLS (certificates under `/etc/letsencrypt`). The services run on `127.0.0.1`.
+`deploy/nginx.conf` defines one server for the school hostname: requests on port 80 (unencrypted) are automatically redirected to HTTPS (encrypted, port 443). Nginx handles the encryption (TLS); the certificates come from Let's Encrypt (`/etc/letsencrypt`). Nginx acts as the reverse proxy here: it receives all requests and passes them on to the services running on `127.0.0.1`.
 
 | Path | Target |
 |---|---|
-| `/` | `127.0.0.1:8080` (`frontend`, 3D view) |
+| `/` | `127.0.0.1:8080` (`frontend`, 3D explorer) |
 | `/dashboard/` | `127.0.0.1:8081/` (`dashboard-v2`, prefix stripped) |
 | `/kiosk/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` | ports 8082, 8083, 8084, 8085 |
 | `/leogreen/` | `127.0.0.1:8087` (`leogreen-kiosk`) |
@@ -41,7 +37,7 @@ Paths without a trailing slash (`/kiosk`, `/kiosk2`, `/kiosk3`, `/kiosk4`, `/leo
 
 ## Backup and restore
 
-InfluxDB is backed up with the `influx backup` CLI. Backups are stored in the container volume `influxdb_backups` (`/backups`) and additionally on the host.
+The InfluxDB database is backed up with the command-line tool `influx backup` (a backup is a safety copy). Backups are stored in the container volume `influxdb_backups` (`/backups`) and additionally on the host.
 
 ### Backup (`backup/backup.sh`)
 
@@ -68,11 +64,10 @@ According to the InfluxDB documentation, `--full` replaces the entire data set i
 
 - The Compose frontend services start Vite dev servers (`npm run dev`) and run `npm install` on every start; there is no production build in Compose operation.
 - Credentials and tokens are stored in plain text in `docker-compose.yaml`, `backup/*.sh` and other files (not reproduced here).
-- The backup cron job is not versioned; whether it is active on the VM cannot be verified from the repository.
+- The backup cron job is not versioned; its status on the VM is not documented.
 - Backups are stored only on the same VM; no external target is configured.
 - The deploy workflow uses a fixed path on the VM and a self-hosted runner; it cannot be reproduced without that VM.
-- The Nginx file is in the repository under `deploy/`; the README names `/etc/nginx/sites-available/leoiot` on the VM as its location. Nothing ensures both are identical (no workflow copies it).
-- The README lists Grafana directly on port 3000; the Nginx configuration serves it under `/grafana/`.
+- The Nginx configuration lives in `deploy/` but is not copied to the VM automatically (there: `/etc/nginx/sites-available/leoiot`); Grafana is reachable directly on port 3000 and via Nginx under `/grafana/`.
 
 ## Sources in the repository
 
