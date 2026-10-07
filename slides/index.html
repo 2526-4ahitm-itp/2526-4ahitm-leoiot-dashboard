@@ -1,0 +1,255 @@
+<!DOCTYPE html><html lang="de" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light dark"><title>LeoIoT – Präsentation</title><noscript><style>
+        .reveal .slides > section { display: block !important; position: static !important; margin: 2rem auto; max-width: 1000px; padding: 0 1rem; }
+        .slides-theme-toggle, .rotate-hint { display: none; }
+        .noscript-note { display: block !important; }
+      </style></noscript><script>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem('starlight-theme'); } catch (e) {}
+        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+      })();
+    </script><link rel="stylesheet" href="/2526-4ahitm-leoiot-dashboard/_astro/index.GRtQfdKH.css"><link rel="stylesheet" href="/2526-4ahitm-leoiot-dashboard/_astro/ThemeToggle.i2tH3vQ7.css"><script type="module" src="/2526-4ahitm-leoiot-dashboard/_astro/page.Dwipeu-R.js"></script></head><body><a class="back-link" href="/2526-4ahitm-leoiot-dashboard/">Zur Startseite</a><div class="slides-theme-toggle"><button type="button" class="theme-toggle" aria-label="Hell/Dunkel umschalten" aria-pressed="false" data-theme-toggle><svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button><script type="module">var e=document.documentElement,t=()=>{let t=e.dataset.theme===`dark`;document.querySelectorAll(`[data-theme-toggle]`).forEach(e=>e.setAttribute(`aria-pressed`,String(t)))};t(),document.querySelectorAll(`[data-theme-toggle]`).forEach(n=>{n.addEventListener(`click`,()=>{let n=e.dataset.theme===`dark`?`light`:`dark`;e.dataset.theme=n;try{localStorage.setItem(`starlight-theme`,n)}catch{}t()})});</script></div><noscript><p class="noscript-note" style="max-width:1000px;margin:5rem auto 0;padding:0 1rem;font-family:sans-serif">Für die Präsentation wird JavaScript benötigt. <a href="/2526-4ahitm-leoiot-dashboard/">Zur Startseite</a></p></noscript><p class="rotate-hint" aria-hidden="true">Für die Präsentation Gerät quer halten.</p><main><div class="reveal"><div class="slides"><section class="title" data-transition="none">
+<h1>LeoIoT 🌿</h1>
+<h2>Stand: 5. Oktober 2026</h2>
+<p class="classline">5AHITM @ HTL Leonding</p>
+</section>
+
+<section id="_unser_team" class="lightbg cards" data-transition="none">
+<h2>Unser Team</h2>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup><col style="width: 33.3333%;"><col style="width: 33.3333%;"><col style="width: 33.3334%;"></colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card team">
+<div class="content">
+<div class="ulist names">
+<ul>
+<li><p>Elias Pointinger <span class="role">(Projektleiter)</span></p></li>
+</ul>
+</div>
+<div class="paragraph topic">
+<p>Sensoren</p>
+</div>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card team">
+<div class="content">
+<div class="ulist names">
+<ul>
+<li><p>Daniel Lettner</p></li>
+<li><p>Stefan Schachner</p></li>
+</ul>
+</div>
+<div class="paragraph topic">
+<p>PV-Dashboard</p>
+</div>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card team">
+<div class="content">
+<div class="ulist names">
+<ul>
+<li><p>Paul Kreinecker</p></li>
+<li><p>Jonas Leitner</p></li>
+</ul>
+</div>
+<div class="paragraph topic">
+<p>3D-Modell</p>
+</div>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<div class="paragraph"><p>Drei Teams, jedes verantwortet einen Bereich vom Sensor bis zur Anzeige.
+Elias koordiniert das Gesamtprojekt.</p></div>
+</aside>
+</section>
+
+<section id="_ausgangslage" class="lightbg cards">
+<h2>Ausgangslage</h2>
+<div class="openblock card banner">
+<div class="content">
+<div class="paragraph"><p><strong>Ziel der HTL Leonding: eine nachhaltige Schule werden</strong></p></div>
+</div>
+</div>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card">
+<div class="content">
+<div class="paragraph"><p><strong>PV-Anlage</strong></p></div>
+<div class="ulist">
+<ul>
+<li><p>Erzeugt Strom für die Schule</p></li>
+<li><p>Daten nur im Hersteller-Portal (Solax Cloud)</p></li>
+<li><p>Für Schüler:innen und Lehrkräfte nicht sichtbar</p></li>
+</ul>
+</div>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card">
+<div class="content">
+<div class="paragraph"><p><strong>Raumklima in den Klassen</strong></p></div>
+<div class="ulist">
+<ul>
+<li><p>Bis zu 30 Personen pro Raum</p></li>
+<li><p>Bei geschlossenen Fenstern steigt CO₂ stark an</p></li>
+<li><p>Folgen: Müdigkeit, Konzentrationsschwäche</p></li>
+<li><p>Niemand sieht, wann gelüftet werden muss</p></li>
+</ul>
+</div>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<div class="paragraph"><p>Die Schule möchte nachhaltiger werden – dafür muss man Energie und Raumklima
+erst einmal sehen können.
+Vor dem Projekt waren Energie- und Klimadaten entweder gar nicht erfasst
+oder nur in einem Hersteller-Portal versteckt.</p></div>
+</aside>
+</section>
+
+<section id="_das_problem" class="lightbg cards">
+<h2>Das Problem</h2>
+<div class="openblock card single">
+<div class="content">
+<div class="ulist">
+<ul>
+<li><p>Daten zu <strong>Energie</strong> und <strong>Raumluft</strong> sind verstreut oder nicht vorhanden</p></li>
+<li><p>Keine zentrale, verständliche Übersicht für den Schulalltag</p></li>
+<li><p>Schulwarte sehen die Raumtemperatur nicht – offen gelassene Fenster bleiben unbemerkt</p></li>
+<li><p>Ausfälle von Sensoren bleiben unbemerkt</p></li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+
+<section id="_unsere_lösung" class="lightbg cards">
+<h2>Unsere Lösung</h2>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup><col style="width: 33.3333%;"><col style="width: 33.3333%;"><col style="width: 33.3334%;"></colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card">
+<div class="content">
+<div class="paragraph"><p><strong>PV-Dashboard</strong></p></div>
+<div class="ulist">
+<ul>
+<li><p>Erzeugung, Netzbezug, Batterie-Ladung/-Entladung</p></li>
+<li><p>Tagesansicht mit Datumswahl</p></li>
+<li><p>Kiosk-Modus für Bildschirme im Schulhaus</p></li>
+</ul>
+</div>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card">
+<div class="content">
+<div class="paragraph"><p><strong>Sensor</strong></p></div>
+<div class="ulist">
+<ul>
+<li><p>CO₂ und Temperatur pro Raum</p></li>
+<li><p>Ampel: 🟢 &lt; 800 · 🟡 800–1000 · 🔴 &gt; 1000 ppm</p></li>
+<li><p>Zeit der letzten Messung je Sensor</p></li>
+</ul>
+</div>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card">
+<div class="content">
+<div class="paragraph"><p><strong>3D-Schulmodell</strong></p></div>
+<div class="ulist">
+<ul>
+<li><p>Raum anklicken → aktuelle Werte</p></li>
+<li><p>Live-Updates per WebSocket</p></li>
+<li><p>Navigation zu Räumen und Turnsaal</p></li>
+</ul>
+</div>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<div class="paragraph"><p>Alles läuft im Browser, ohne Login, auf Deutsch und Englisch.
+Gehostet auf der Schul-VM, automatisch deployt über GitHub Actions.</p></div>
+</aside>
+</section>
+
+<section id="_kontextdiagramm" class="lightbg diagram">
+<h2>Kontextdiagramm</h2>
+<div class="imageblock">
+<div class="content">
+<img src="/2526-4ahitm-leoiot-dashboard/_astro/c4-context.Bc7TtCEq.svg" alt="Kontextdiagramm: LeoIoT mit Schulleitung, Lehrkräften und Schüler:innen als Nutzern sowie Sensorboxen und Solax Cloud als Fremdsystemen">
+</div>
+</div>
+<aside class="notes">
+<div class="paragraph"><p>Level 1: LeoIoT als Blackbox. Zwei Datenquellen (Sensoren, Solax),
+zwei Benutzergruppen.</p></div>
+</aside>
+</section>
+
+<section id="_containerdiagramm" class="lightbg diagram wide">
+<h2>Containerdiagramm</h2>
+<div class="imageblock">
+<div class="content">
+<img src="/2526-4ahitm-leoiot-dashboard/_astro/c4-container.4qJ4hWUb.svg" alt="Containerdiagramm: Datenfluss von Solax Cloud und Sensorboxen über MQTT-Broker, Telegraf, MQTT-WS-Bridge und InfluxDB zu 3D-Schulmodell, Dashboard, Kiosk-Ansichten und Grafana, über nginx zur Benutzer:in">
+</div>
+</div>
+<aside class="notes">
+<div class="paragraph"><p>Von links nach rechts: Quellen → Datenaufnahme → Daten → Web-Oberflächen → nginx → Benutzer:in.
+Sensoren und Solax-Collector → Mosquitto → Telegraf → InfluxDB.
+Frontends holen Historie aus InfluxDB, Live-Werte über die WebSocket-Bridge.
+nginx verteilt alles unter einer Domain.</p></div>
+</aside>
+</section>
+
+<section id="_aktueller_stand" class="lightbg cards">
+<h2>Aktueller Stand</h2>
+<div class="openblock card single">
+<div class="content">
+<div class="ulist">
+<ul>
+<li><p>PV-Dashboard mit Tagesansicht &amp; Kiosk-Modi</p></li>
+<li><p>Raumklima mit CO₂-Ampel</p></li>
+<li><p>3D-Modell mit Live-CO₂ &amp; Raumnavigation</p></li>
+<li><p>Mobile Ansicht, Deutsch/Englisch</p></li>
+<li><p>Deployment auf Schul-VM mit HTTPS</p></li>
+<li><p>Continuous Deployment &amp; DB-Backups</p></li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+
+<section id="_meilensteine" class="lightbg cards grid">
+<h2>Meilensteine</h2>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup><col style="width: 33.3333%;"><col style="width: 33.3333%;"><col style="width: 33.3334%;"></colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card milestone">
+<div class="content">
+<div class="paragraph"><p>3D-Modell verbessern</p></div>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card milestone">
+<div class="content">
+<div class="paragraph"><p>Weitere Klassenräume anbinden</p></div>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="openblock card milestone">
+<div class="content">
+<div class="paragraph"><p>Warnung bei kritischen Werten</p></div>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</section>
+</div></div></main><script type="module" src="/2526-4ahitm-leoiot-dashboard/_astro/index.astro_astro_type_script_index_0_lang.BAXO-UbI.js"></script></body></html>

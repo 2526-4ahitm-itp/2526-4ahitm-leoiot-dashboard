@@ -1,0 +1,215 @@
+<!DOCTYPE html><html lang="de" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-g5ptsecz"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Architektur | LeoIoT</title><link rel="canonical" href="https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/docs/architecture/"/><link rel="alternate" hreflang="de" href="https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/docs/architecture/"/><link rel="alternate" hreflang="en" href="https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/en/docs/architecture/"/><link rel="alternate" hreflang="x-default" href="https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/docs/architecture/"/><link rel="sitemap" href="/2526-4ahitm-leoiot-dashboard/sitemap-index.xml"/><script>document.addEventListener('DOMContentLoaded',function(){var l=document.documentElement.lang==='en'?'Table (scrollable)':'Tabelle (scrollbar)';var f=function(){document.querySelectorAll('.sl-markdown-content table').forEach(function(t){if(t.scrollWidth>t.clientWidth){t.setAttribute('tabindex','0');t.setAttribute('role','region');t.setAttribute('aria-label',l);}else{t.removeAttribute('tabindex');t.removeAttribute('role');t.removeAttribute('aria-label');}});};f();addEventListener('resize',f);});</script><link rel="shortcut icon" href="/2526-4ahitm-leoiot-dashboard/favicon.svg" type="image/svg+xml"/><meta name="generator" content="Astro v7.3.6"/><meta name="generator" content="Starlight v0.42.5"/><meta property="og:title" content="Architektur"/><meta property="og:type" content="article"/><meta property="og:url" content="https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/docs/architecture/"/><meta property="og:locale" content="de"/><meta property="og:description" content="Überblick über die Datenpipeline von den Sensoren bis zu den Dashboards, mit Diensten, Ports und Rollen der Komponenten."/><meta property="og:site_name" content="LeoIoT"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="Überblick über die Datenpipeline von den Sensoren bis zu den Dashboards, mit Diensten, Ports und Rollen der Komponenten."/><script>
+	window.StarlightThemeProvider = (() => {
+		let stored = null;
+		try {
+			stored = localStorage.getItem('starlight-theme');
+		} catch (e) {}
+		const theme = stored === 'dark' ? 'dark' : 'light';
+		document.documentElement.dataset.theme = theme;
+		return {
+			// Kompatibilität: Starlights ThemeSelect ruft updatePickers(). Unser Umschalter braucht es nicht.
+			updatePickers() {},
+		};
+	})();
+</script><link rel="stylesheet" href="/2526-4ahitm-leoiot-dashboard/_astro/print.ehPL0gv-.css" media="print"><link rel="stylesheet" href="/2526-4ahitm-leoiot-dashboard/_astro/ThemeToggle.i2tH3vQ7.css"><link rel="stylesheet" href="/2526-4ahitm-leoiot-dashboard/_astro/common.CDZPoAvc.css"><script type="module" src="/2526-4ahitm-leoiot-dashboard/_astro/page.Dwipeu-R.js"></script></head><body class="astro-g5ptsecz"><a class="sl-skip-link astro-qb7clj6f" href="#_top">Zum Inhalt springen</a><div class="page sl-flex astro-yntsjkba"><header class="header astro-yntsjkba"><div class="header astro-by6fddyj"><div class="title-wrapper sl-flex astro-by6fddyj"><a href="/2526-4ahitm-leoiot-dashboard/" class="site-title sl-flex astro-6rvad3va"><span class="astro-6rvad3va" translate="no">LeoIoT</span></a></div><div class="sl-flex print:hidden astro-by6fddyj"><site-search class="astro-by6fddyj astro-b5kgnn7o" data-translations="{&quot;placeholder&quot;:&quot;Suchen&quot;}"><button data-open-modal disabled aria-label="Suchen" aria-keyshortcuts="Control+K" class="astro-b5kgnn7o"><svg aria-hidden="true" class="astro-b5kgnn7o astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg><span class="sl-hidden md:sl-block astro-b5kgnn7o" aria-hidden="true">Suchen</span><kbd class="sl-hidden md:sl-flex astro-b5kgnn7o" style="display: none;"><kbd class="astro-b5kgnn7o">Strg</kbd><kbd class="astro-b5kgnn7o">K</kbd></kbd></button><dialog style="padding:0" aria-label="Suchen" class="astro-b5kgnn7o"><div class="dialog-frame sl-flex astro-b5kgnn7o"><button data-close-modal class="sl-flex md:sl-hidden astro-b5kgnn7o">Abbrechen</button><div class="search-container astro-b5kgnn7o"><div id="starlight__search" class="astro-b5kgnn7o"></div></div></div></dialog></site-search><script>
+	(() => {
+		const openBtn = document.querySelector('button[data-open-modal]');
+		const shortcut = openBtn?.querySelector('kbd');
+		if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+		const platformKey = shortcut.querySelector('kbd');
+		if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+			platformKey.textContent = '⌘';
+			openBtn.setAttribute('aria-keyshortcuts', 'Meta+K');
+		}
+		shortcut.style.display = '';
+	})();
+</script><script type="module" src="/2526-4ahitm-leoiot-dashboard/_astro/Search.astro_astro_type_script_index_0_lang.BJ5YuTgE.js"></script></div><div class="sl-hidden md:sl-flex print:hidden right-group astro-by6fddyj"><div class="sl-flex social-icons astro-by6fddyj"></div><button type="button" class="theme-toggle" aria-label="Dunkles Design" aria-pressed="false" data-theme-toggle><svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button><script type="module">var e=document.documentElement,t=()=>{let t=e.dataset.theme===`dark`;document.querySelectorAll(`[data-theme-toggle]`).forEach(e=>e.setAttribute(`aria-pressed`,String(t)))};t(),document.querySelectorAll(`[data-theme-toggle]`).forEach(n=>{n.addEventListener(`click`,()=>{let n=e.dataset.theme===`dark`?`light`:`dark`;e.dataset.theme=n;try{localStorage.setItem(`starlight-theme`,n)}catch{}t()})});</script><starlight-lang-select><label style="--sl-select-width: 7em" class="astro-2z5xp7gb"><span class="sr-only astro-2z5xp7gb">Sprache wählen</span><svg aria-hidden="true" class="icon label-icon astro-2z5xp7gb astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path fill-rule="evenodd" d="M8.516 3a.94.94 0 0 0-.941.94v1.15H2.94a.94.94 0 1 0 0 1.882h7.362a7.422 7.422 0 0 1-1.787 3.958 7.42 7.42 0 0 1-1.422-2.425.94.94 0 1 0-1.774.627 9.303 9.303 0 0 0 1.785 3.043 7.422 7.422 0 0 1-4.164 1.278.94.94 0 1 0 0 1.881 9.303 9.303 0 0 0 5.575-1.855 9.303 9.303 0 0 0 4.11 1.74l-.763 1.525a.968.968 0 0 0-.016.034l-1.385 2.77a.94.94 0 1 0 1.683.841l1.133-2.267h5.806l1.134 2.267a.94.94 0 0 0 1.683-.841l-1.385-2.769a.95.95 0 0 0-.018-.036l-3.476-6.951a.94.94 0 0 0-1.682 0l-1.82 3.639a7.423 7.423 0 0 1-3.593-1.256 9.303 9.303 0 0 0 2.27-5.203h1.894a.94.94 0 0 0 0-1.881H9.456V3.94A.94.94 0 0 0 8.516 3Zm6.426 11.794a1.068 1.068 0 0 1-.02.039l-.703 1.407h3.924l-1.962-3.924-1.24 2.478Z" clip-rule="evenodd"/></svg><select autocomplete="off" class="astro-2z5xp7gb"><option value="/2526-4ahitm-leoiot-dashboard/docs/architecture/" class="astro-2z5xp7gb">Deutsch</option><option value="/2526-4ahitm-leoiot-dashboard/en/docs/architecture/" class="astro-2z5xp7gb">English</option></select><svg aria-hidden="true" class="icon caret astro-2z5xp7gb astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-lang-select><script type="module">var e=class extends HTMLElement{constructor(){super();let e=this.querySelector(`select`);e&&(e.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=e.currentTarget.value)}),window.addEventListener(`pageshow`,t=>{if(!t.persisted)return;let n=e.querySelector(`option[selected]`)?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}};customElements.define(`starlight-lang-select`,e);</script></div></div></header><nav class="sidebar print:hidden astro-yntsjkba" aria-label="Hauptnavigation"><button popovertarget="starlight__sidebar" class="sl-menu-button sl-flex md:sl-hidden print:hidden astro-r2osgdlg"><svg aria-hidden="true" class="open-menu astro-r2osgdlg astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg><svg aria-hidden="true" class="close-menu astro-r2osgdlg astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg><span class="sr-only astro-r2osgdlg">Menü</span></button><script type="module">var e=class extends HTMLElement{constructor(){super();let e=matchMedia(`(min-width: 50em)`),t=()=>{this.popover=e.matches?null:`auto`};t(),e.addEventListener(`change`,()=>t()),this.addEventListener(`toggle`,({newState:e})=>this.trapFocus(e===`open`))}trapFocus(e){document.querySelectorAll(`.main-frame, .sl-skip-link`).forEach(t=>{t.toggleAttribute(`inert`,e)})}};customElements.define(`sl-sidebar-pane`,e);</script><sl-sidebar-pane popover id="starlight__sidebar" class="sidebar-pane astro-yntsjkba"><div class="sidebar-content sl-flex astro-yntsjkba"><sl-sidebar-state-persist data-hash="0eun7mn" class="astro-ipdry5cl"><script aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				/** @type {HTMLElement | null} */
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class SidebarRestore extends HTMLElement {
+						connectedCallback() {
+							try {
+								const idx = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[idx] === 'boolean') details.open = state.open[idx];
+							} catch {}
+						}
+					}
+				);
+			} catch {}
+		})();
+	</script><ul class="top-level astro-rmhv4bp6"><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/" class="large astro-rmhv4bp6"><span class="astro-rmhv4bp6">Produkt</span></a></li><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/app/" class="large astro-rmhv4bp6"><span class="astro-rmhv4bp6">App</span></a></li><li class="astro-rmhv4bp6"><details open class="astro-rmhv4bp6"><summary class="astro-rmhv4bp6"><span class="group-label astro-rmhv4bp6"><span class="large astro-rmhv4bp6">Dokumentation</span></span><svg aria-hidden="true" class="caret astro-rmhv4bp6 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="0"></sl-sidebar-restore><ul class="astro-rmhv4bp6"><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/docs/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Überblick</span></a></li><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/docs/project/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Projekt</span></a></li><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/docs/architecture/" aria-current="page" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Architektur</span></a></li><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/docs/interfaces/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Schnittstellen</span></a></li><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/docs/setup/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Einrichtung</span></a></li><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/docs/operations/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Betrieb</span></a></li></ul></details></li><li class="astro-rmhv4bp6"><a href="/2526-4ahitm-leoiot-dashboard/slides/" class="large astro-rmhv4bp6"><span class="astro-rmhv4bp6">Präsentation</span></a></li></ul><script aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			delete window._starlightScrollRestore;
+		})();
+	</script></sl-sidebar-state-persist><div class="md:sl-hidden"><div class="mobile-preferences sl-flex astro-p4azlveh"><div class="social-icons astro-p4azlveh"></div><button type="button" class="theme-toggle" aria-label="Dunkles Design" aria-pressed="false" data-theme-toggle><svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button><starlight-lang-select><label style="--sl-select-width: 7em" class="astro-2z5xp7gb"><span class="sr-only astro-2z5xp7gb">Sprache wählen</span><svg aria-hidden="true" class="icon label-icon astro-2z5xp7gb astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path fill-rule="evenodd" d="M8.516 3a.94.94 0 0 0-.941.94v1.15H2.94a.94.94 0 1 0 0 1.882h7.362a7.422 7.422 0 0 1-1.787 3.958 7.42 7.42 0 0 1-1.422-2.425.94.94 0 1 0-1.774.627 9.303 9.303 0 0 0 1.785 3.043 7.422 7.422 0 0 1-4.164 1.278.94.94 0 1 0 0 1.881 9.303 9.303 0 0 0 5.575-1.855 9.303 9.303 0 0 0 4.11 1.74l-.763 1.525a.968.968 0 0 0-.016.034l-1.385 2.77a.94.94 0 1 0 1.683.841l1.133-2.267h5.806l1.134 2.267a.94.94 0 0 0 1.683-.841l-1.385-2.769a.95.95 0 0 0-.018-.036l-3.476-6.951a.94.94 0 0 0-1.682 0l-1.82 3.639a7.423 7.423 0 0 1-3.593-1.256 9.303 9.303 0 0 0 2.27-5.203h1.894a.94.94 0 0 0 0-1.881H9.456V3.94A.94.94 0 0 0 8.516 3Zm6.426 11.794a1.068 1.068 0 0 1-.02.039l-.703 1.407h3.924l-1.962-3.924-1.24 2.478Z" clip-rule="evenodd"/></svg><select autocomplete="off" class="astro-2z5xp7gb"><option value="/2526-4ahitm-leoiot-dashboard/docs/architecture/" class="astro-2z5xp7gb">Deutsch</option><option value="/2526-4ahitm-leoiot-dashboard/en/docs/architecture/" class="astro-2z5xp7gb">English</option></select><svg aria-hidden="true" class="icon caret astro-2z5xp7gb astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-lang-select></div></div></div></sl-sidebar-pane></nav><div class="main-frame astro-yntsjkba"><script type="module">var e=document.getElementById(`starlight__sidebar`),t=e?.querySelector(`sl-sidebar-state-persist`),n=`sl-sidebar-state`,r=()=>{let r=[],i=t?.dataset.hash||``;try{let e=sessionStorage.getItem(n),t=JSON.parse(e||`{}`);Array.isArray(t.open)&&t.hash===i&&(r=t.open)}catch{}return{hash:i,open:r,scroll:e?.scrollTop||0}},i=e=>{try{sessionStorage.setItem(n,JSON.stringify(e))}catch{}},a=()=>i(r()),o=(e,t)=>{let n=r();n.open[t]=e,i(n)};t?.addEventListener(`click`,e=>{if(!(e.target instanceof Element))return;let t=e.target.closest(`summary`)?.closest(`details`);if(!t)return;let n=t.querySelector(`sl-sidebar-restore`),r=parseInt(n?.dataset.index||``);isNaN(r)||o(!t.open,r)}),addEventListener(`visibilitychange`,()=>{document.visibilityState===`hidden`&&a()});</script><div class="lg:sl-flex astro-lrzkfocr"><aside class="right-sidebar-container print:hidden astro-lrzkfocr"><div class="right-sidebar astro-lrzkfocr"><div class="lg:sl-hidden astro-qok35upx"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-66cqc7ze"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-66cqc7ze"><details id="starlight__mobile-toc" class="astro-66cqc7ze"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-66cqc7ze"><span class="toggle sl-flex astro-66cqc7ze">Auf dieser Seite<svg aria-hidden="true" class="caret astro-66cqc7ze astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></span><span class="display-current astro-66cqc7ze"></span></summary><div class="dropdown astro-66cqc7ze"><ul class="isMobile astro-jugkfwgx" style="--depth: 0;"><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#_top" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Überblick</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#pipeline-im-überblick" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Pipeline im Überblick</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#dienste" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Dienste</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#rolle-der-komponenten" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Rolle der Komponenten</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#frontends-und-ihr-status" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Frontends und ihr Status</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#quellen-im-repository" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Quellen im Repository</span></a></li></ul></div></details></nav></mobile-starlight-toc><script type="module" src="/2526-4ahitm-leoiot-dashboard/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.C3fM4Kra.js"></script></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-qok35upx"><div class="sl-container astro-qok35upx"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">Auf dieser Seite</h2><ul class="astro-jugkfwgx" style="--depth: 0;"><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#_top" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Überblick</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#pipeline-im-überblick" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Pipeline im Überblick</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#dienste" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Dienste</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#rolle-der-komponenten" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Rolle der Komponenten</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#frontends-und-ihr-status" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Frontends und ihr Status</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#quellen-im-repository" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Quellen im Repository</span></a></li></ul></nav></starlight-toc><script type="module" src="/2526-4ahitm-leoiot-dashboard/_astro/TableOfContents.astro_astro_type_script_index_0_lang.BpJaGz7G.js"></script></div></div></div></aside><div class="main-pane astro-lrzkfocr"><main data-pagefind-body class="astro-g5ptsecz" lang="de" dir="ltr"><div class="content-panel astro-a7po4psb"><div class="sl-container astro-a7po4psb"><h1 id="_top" class="astro-bebwqqxs">Architektur</h1></div></div><div class="content-panel astro-a7po4psb"><div class="sl-container astro-a7po4psb"><div class="sl-markdown-content"><p>LeoIoT sammelt Raumklimadaten (Temperatur, CO₂) sowie Photovoltaik-Daten (Solax) und zeigt sie in mehreren Oberflächen an. Alle Dienste werden über <code dir="auto">docker-compose.yaml</code> gestartet und laufen als Docker-Container (abgeschottete Programmpakete) im gemeinsamen Netzwerk <code dir="auto">leoiot</code>. Kurz zu den Begriffen: Solax ist der Hersteller des PV-Wechselrichters, ein Kiosk ist eine Vollbild-Anzeige ohne Bedienung.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="pipeline-im-überblick">Pipeline im Überblick</h2><a class="sl-anchor-link" href="#pipeline-im-überblick"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Pipeline im Überblick“</span></a></div>
+<ol>
+<li><strong>Quellen</strong> senden Messwerte per MQTT an Mosquitto, den MQTT-Vermittler (Broker): die echten Sensorboxen (programmiert mit ESPHome), der Simulator <code dir="auto">fake-sensors</code>, der Java-Generator <code dir="auto">quarkus-app</code> und der <code dir="auto">solax-collector</code> (PV-Daten).</li>
+<li><strong>Telegraf</strong> (ein Übertragungswerkzeug) hört bei Mosquitto auf bestimmte Themen (Topics) und speichert die Werte im InfluxDB-Bereich (Bucket) <code dir="auto">server_data</code>.</li>
+<li>Der <code dir="auto">solax-collector</code> schreibt die PV-Kennzahlen zusätzlich direkt per HTTP in InfluxDB (Measurement <code dir="auto">solax_stats</code>).</li>
+<li><strong>Grafana</strong> und die Web-Frontends lesen die Verlaufsdaten aus InfluxDB (mit Flux, der Abfragesprache von InfluxDB).</li>
+<li><strong>Live-Weg:</strong> Die <code dir="auto">mqtt-ws-bridge</code> (eine Brücke zwischen MQTT und dem Browser) empfängt dieselben Messwerte von Mosquitto und schickt sie über einen WebSocket (eine dauerhaft offene Verbindung zum Browser) sofort weiter. Die PV-Live-Daten kommen zusätzlich von einem externen PV-Broker (siehe <code dir="auto">mqtt-ws-bridge</code> unter „Rolle der Komponenten“).</li>
+</ol>
+<p><img alt="Architektur: Datenfluss von den Sensoren bis zu den Dashboards" loading="lazy" decoding="async" width="833" height="869" src="/2526-4ahitm-leoiot-dashboard/_astro/architecture.DbgG1eB4_MoYnc.svg"></p>
+<aside aria-label="Öffentliche Pfade" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1Zm.38-3.92a1 1 0 0 0-.76 0 1 1 0 0 0-.33.21 1.15 1.15 0 0 0-.21.33 1 1 0 0 0 .21 1.09c.097.088.209.16.33.21A1 1 0 0 0 13 8a1.05 1.05 0 0 0-.29-.71 1 1 0 0 0-.33-.21ZM12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16.001A8 8 0 0 1 12 20Z"/></svg>Öffentliche Pfade</p><div class="starlight-aside__content"><p>Ein Reverse-Proxy (Nginx; ein Verteiler, der Anfragen an den richtigen Dienst leitet) macht alle Oberflächen unter einer gemeinsamen Domain erreichbar (Konfiguration: <code dir="auto">deploy/nginx.conf</code>). Die Pfade stehen im Abschnitt <a href="../operations/#nginx-routing">Nginx-Routing</a> der Seite Betrieb.</p></div></aside>
+<div class="sl-heading-wrapper level-h2"><h2 id="dienste">Dienste</h2><a class="sl-anchor-link" href="#dienste"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Dienste“</span></a></div>
+<p>Ports laut <code dir="auto">docker-compose.yaml</code> (nach außen veröffentlichte Ports).</p>
+<table>
+<thead>
+<tr>
+<th>Dienst</th>
+<th>Port</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code dir="auto">mosquitto</code></td>
+<td>1883</td>
+<td>MQTT-Broker (Eclipse Mosquitto), Zugriff nur mit Login (<code dir="auto">allow_anonymous false</code>)</td>
+</tr>
+<tr>
+<td><code dir="auto">influxdb</code></td>
+<td>8086</td>
+<td>Zeitreihendatenbank InfluxDB 2.7, Organisation <code dir="auto">leoiot</code>, Bucket <code dir="auto">server_data</code></td>
+</tr>
+<tr>
+<td><code dir="auto">telegraf</code></td>
+<td>–</td>
+<td>Überträgt MQTT-Nachrichten nach InfluxDB (kein veröffentlichter Port)</td>
+</tr>
+<tr>
+<td><code dir="auto">grafana</code></td>
+<td>3000</td>
+<td>Dashboards, Datenquelle und Dashboard werden aus <code dir="auto">grafana/</code> provisioniert</td>
+</tr>
+<tr>
+<td><code dir="auto">frontend</code></td>
+<td>8080</td>
+<td>3D-Explorer (Vite-Dev-Server)</td>
+</tr>
+<tr>
+<td><code dir="auto">dashboard-v2</code></td>
+<td>8081</td>
+<td>Dashboard v2 (Vite-Dev-Server)</td>
+</tr>
+<tr>
+<td><code dir="auto">kiosk</code></td>
+<td>8082</td>
+<td>Kiosk-Variante (PV-Anzeige)</td>
+</tr>
+<tr>
+<td><code dir="auto">kiosk2</code></td>
+<td>8083</td>
+<td>Kiosk-Variante (PV-Anzeige)</td>
+</tr>
+<tr>
+<td><code dir="auto">kiosk3</code></td>
+<td>8084</td>
+<td>Kiosk-Variante (PV-Anzeige)</td>
+</tr>
+<tr>
+<td><code dir="auto">kiosk4</code></td>
+<td>8085</td>
+<td>Kiosk-Variante (PV-Anzeige)</td>
+</tr>
+<tr>
+<td><code dir="auto">leogreen-kiosk</code></td>
+<td>8087</td>
+<td>LeoGreen-Kiosk (PV-Anzeige mit Live-Daten über die Bridge)</td>
+</tr>
+<tr>
+<td><code dir="auto">mqtt-ws-bridge</code></td>
+<td>8090</td>
+<td>Brücke zwischen MQTT und Browser (WebSocket-Server); gibt Live-Messwerte weiter</td>
+</tr>
+<tr>
+<td><code dir="auto">fake-sensors</code></td>
+<td>–</td>
+<td>Simulator für Raumtemperatur und CO₂</td>
+</tr>
+<tr>
+<td><code dir="auto">quarkus-app</code></td>
+<td>–</td>
+<td>Java-Generator (Quarkus), veröffentlicht per MQTT</td>
+</tr>
+<tr>
+<td><code dir="auto">solax-collector</code></td>
+<td>–</td>
+<td>Holt PV-Daten aus der Solax-Cloud, schreibt nach InfluxDB und MQTT</td>
+</tr>
+</tbody>
+</table>
+<div class="sl-heading-wrapper level-h2"><h2 id="rolle-der-komponenten">Rolle der Komponenten</h2><a class="sl-anchor-link" href="#rolle-der-komponenten"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Rolle der Komponenten“</span></a></div>
+<ul>
+<li><strong>Mosquitto</strong>: der zentrale MQTT-Broker, also die Vermittlungsstelle: Sensoren senden Nachrichten hin, andere Dienste holen sie ab. <code dir="auto">config/mosquitto.conf</code> nimmt Verbindungen auf Port 1883 aus dem ganzen Netz an und verbietet anonyme Verbindungen.</li>
+<li><strong>Telegraf</strong>: zwei MQTT-Consumer in <code dir="auto">telegraf.conf</code>. Der erste liest die Topics <code dir="auto">nili3/#</code>, <code dir="auto">nili3_co2/#</code>, <code dir="auto">homeassistant/#</code>, <code dir="auto">esphome/#</code> als Zahlenwert (<code dir="auto">data_format = "value"</code>, Typ <code dir="auto">float</code>). Der zweite liest <code dir="auto">room-temperature</code> als JSON und legt den Wert unter dem Measurement <code dir="auto">room_temperature</code> mit dem Tag <code dir="auto">room</code> ab. Ausgabe: InfluxDB-Bucket <code dir="auto">server_data</code>.</li>
+<li><strong>InfluxDB</strong>: speichert alle Messwerte. Beim Start wird die Organisation <code dir="auto">leoiot</code> und der Bucket <code dir="auto">server_data</code> angelegt (<code dir="auto">DOCKER_INFLUXDB_INIT_*</code>).</li>
+<li><strong>Grafana</strong>: Datenquelle <code dir="auto">InfluxDB-Flux</code> (Flux, Standard-Bucket <code dir="auto">server_data</code>) und das Dashboard <code dir="auto">grafana/dashboards/main-dashboard.json</code> werden beim Start geladen.</li>
+<li><strong>mqtt-ws-bridge</strong> (<code dir="auto">mqtt-ws-bridge/index.js</code>): verbindet sich mit Mosquitto, hält pro Raum den letzten Temperatur- und CO₂-Wert und schickt Änderungen an Browser, die den jeweiligen Raum abonniert haben. PV-Daten gehen an alle verbundenen Clients. Zusätzlich verbindet sich die Bridge per TLS mit einem externen PV-Broker (Host, Port, Benutzer und Passwort über <code dir="auto">PV_MQTT_*</code>).</li>
+<li><strong>solax-collector</strong> (<code dir="auto">solax-collector/index.js</code>): fragt jede Minute die Solax-Cloud ab, schreibt die Kennzahlen als Measurement <code dir="auto">solax_stats</code> in InfluxDB und veröffentlicht den Rohdatensatz auf dem Topic <code dir="auto">leoenergy/solax_pv/overall_inverter</code> (retained, d. h. der Broker merkt sich den letzten Wert für neue Empfänger). Daneben existiert <code dir="auto">solax-collector/backfill.js</code>, der in <code dir="auto">docker-compose.yaml</code> nicht gestartet wird.</li>
+<li><strong>fake-sensors</strong> (<code dir="auto">fake-sensors/index.js</code>): simuliert 117 Räume (Konfiguration <code dir="auto">roomsConfig</code>) mit Tagesgang und Belegung und veröffentlicht standardmäßig alle 10 Sekunden (<code dir="auto">UPDATE_INTERVAL</code>).</li>
+<li><strong>quarkus-app</strong> (<code dir="auto">backend/sensor-data-generator</code>): Quarkus-Anwendung, deren <code dir="auto">application.properties</code> die MQTT-Kanäle <code dir="auto">sine</code> und <code dir="auto">room-temperature</code> auf Mosquitto konfiguriert.</li>
+<li><strong>Frontends</strong>: siehe nächster Abschnitt.</li>
+</ul>
+<div class="sl-heading-wrapper level-h2"><h2 id="frontends-und-ihr-status">Frontends und ihr Status</h2><a class="sl-anchor-link" href="#frontends-und-ihr-status"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Frontends und ihr Status“</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Frontend</th>
+<th>Verzeichnis</th>
+<th>Datenquellen im Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3D-Explorer</td>
+<td><code dir="auto">frontend/</code> (<code dir="auto">logic.js</code>)</td>
+<td>Three.js-Gebäudemodell; Raumwerte aus InfluxDB (<code dir="auto">room_temperature</code>, <code dir="auto">mqtt_consumer</code>) und live per WebSocket</td>
+</tr>
+<tr>
+<td>Dashboard v2</td>
+<td><code dir="auto">dashboard-v2/</code> (<code dir="auto">dashboard.js</code>)</td>
+<td>InfluxDB über <code dir="auto">/influx</code>, Live-Werte per WebSocket <code dir="auto">/ws</code>, PV-Daten (Measurement <code dir="auto">solax_stats</code> und direkter Abruf der Solax-Cloud über <code dir="auto">/solax/</code>), Chart.js-Diagramme, Sprachumschaltung DE/EN</td>
+</tr>
+<tr>
+<td>LeoGreen-Kiosk</td>
+<td><code dir="auto">leogreenKiosk/</code> (<code dir="auto">kiosk.js</code>)</td>
+<td>PV-Anzeige: Measurement <code dir="auto">solax_stats</code> aus InfluxDB plus Live-PV per WebSocket</td>
+</tr>
+<tr>
+<td>Kiosk-Varianten</td>
+<td><code dir="auto">kiosk/</code>, <code dir="auto">kiosk2/</code>, <code dir="auto">kiosk3/</code>, <code dir="auto">kiosk4/</code></td>
+<td>PV-Anzeige (<code dir="auto">solax_stats</code>); nur <code dir="auto">kiosk/</code> nutzt zusätzlich den WebSocket</td>
+</tr>
+</tbody>
+</table>
+<p>Der 3D-Explorer (<code dir="auto">frontend</code>) und das Dashboard v2 zeigen das Raumklima. Das Dashboard v2 enthält zusätzlich die PV-Ansicht und eine Raumtabelle mit Status. Produktiv gezeigt wird der LeoGreen-Kiosk (er hängt in <code dir="auto">docker-compose.yaml</code> von der Bridge ab); <code dir="auto">kiosk</code> bis <code dir="auto">kiosk4</code> sind weitere Varianten (Kiosk = Vollbild-Anzeige ohne Bedienung).</p>
+<aside aria-label="Betrieb" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1Zm.38-3.92a1 1 0 0 0-.76 0 1 1 0 0 0-.33.21 1.15 1.15 0 0 0-.21.33 1 1 0 0 0 .21 1.09c.097.088.209.16.33.21A1 1 0 0 0 13 8a1.05 1.05 0 0 0-.29-.71 1 1 0 0 0-.33-.21ZM12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16.001A8 8 0 0 1 12 20Z"/></svg>Betrieb</p><div class="starlight-aside__content"><p>Die Frontends laufen als Vite-Dev-Server (<code dir="auto">npm run dev</code>) in <code dir="auto">node:20-alpine</code>-Containern. Deployment und weitere Einschränkungen stehen auf der Seite <a href="../operations/">Betrieb</a>.</p></div></aside>
+<aside aria-label="Sicherheit" class="starlight-aside starlight-aside--caution"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 16a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm10.67 1.47-8.05-14a3 3 0 0 0-5.24 0l-8 14A3 3 0 0 0 3.94 22h16.12a3 3 0 0 0 2.61-4.53Zm-1.73 2a1 1 0 0 1-.88.51H3.94a1 1 0 0 1-.88-.51 1 1 0 0 1 0-1l8-14a1 1 0 0 1 1.78 0l8.05 14a1 1 0 0 1 .05 1.02v-.02ZM12 8a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0V9a1 1 0 0 0-1-1Z"/></svg>Sicherheit</p><div class="starlight-aside__content"><p>Im Repository stehen an mehreren Stellen Zugangsdaten und ein InfluxDB-Token als Standardwerte im Quellcode (zum Beispiel in <code dir="auto">docker-compose.yaml</code>, <code dir="auto">mqtt-ws-bridge/index.js</code>, <code dir="auto">solax-collector/index.js</code> und in den Frontends). Diese Werte werden hier bewusst nicht wiedergegeben; sie sollten aus dem Quellcode entfernt (z. B. in Umgebungsvariablen oder geheime Speicher) und durch neue Werte ersetzt werden. Weitere Hinweise: Seite <a href="../operations/#bekannte-einschr%C3%A4nkungen">Betrieb</a>.</p></div></aside>
+<div class="sl-heading-wrapper level-h2"><h2 id="quellen-im-repository">Quellen im Repository</h2><a class="sl-anchor-link" href="#quellen-im-repository"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Quellen im Repository“</span></a></div>
+<ul>
+<li><code dir="auto">docker-compose.yaml</code></li>
+<li><code dir="auto">telegraf.conf</code></li>
+<li><code dir="auto">config/mosquitto.conf</code></li>
+<li><code dir="auto">mqtt-ws-bridge/index.js</code></li>
+<li><code dir="auto">solax-collector/index.js</code></li>
+<li><code dir="auto">fake-sensors/index.js</code></li>
+<li><code dir="auto">backend/sensor-data-generator/src/main/resources/application.properties</code></li>
+<li><code dir="auto">grafana/provisioning/</code>, <code dir="auto">grafana/dashboards/main-dashboard.json</code></li>
+<li><code dir="auto">deploy/nginx.conf</code></li>
+<li><code dir="auto">frontend/logic.js</code>, <code dir="auto">dashboard-v2/dashboard.js</code>, <code dir="auto">leogreenKiosk/kiosk.js</code>, <code dir="auto">kiosk/kiosk.js</code>, <code dir="auto">kiosk2/kiosk2.js</code>, <code dir="auto">kiosk3/kiosk3.js</code>, <code dir="auto">kiosk4/kiosk4.js</code></li>
+</ul>
+</div><footer class="sl-flex astro-ddtxxk7k"><div class="meta sl-flex astro-ddtxxk7k"></div><div class="pagination-links print:hidden astro-b5raizh3" dir="ltr"><a href="/2526-4ahitm-leoiot-dashboard/docs/project/" rel="prev" class="astro-b5raizh3"><svg aria-hidden="true" class="astro-b5raizh3 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg><span class="astro-b5raizh3">Vorherige Seite<br class="astro-b5raizh3"><span class="link-title astro-b5raizh3">Projekt</span></span></a><a href="/2526-4ahitm-leoiot-dashboard/docs/interfaces/" rel="next" class="astro-b5raizh3"><svg aria-hidden="true" class="astro-b5raizh3 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg><span class="astro-b5raizh3">Nächste Seite<br class="astro-b5raizh3"><span class="link-title astro-b5raizh3">Schnittstellen</span></span></a></div></footer></div></div></main></div></div></div></div></body></html>
