@@ -88,10 +88,6 @@ The configurations live in `sensorbox/` and send via MQTT (broker access through
 - `sensorbox/s3-mini-oled/s3_mini_oled.yaml` (device name `s3_mini_sensorbox`): SCD41 (CO₂, temperature, humidity), TSL2591 (light), LD2410 (presence), display, buzzer, backlight.
 - Further variants: `sensorbox/blinking-leds/blink.yaml`, `sensorbox/original-config/`.
 
-:::caution[Open]
-The exact topic scheme of the ESPHome devices (default topic prefix) is not set explicitly in the YAML files. That `nili3/sensor/nili3_co2/state` comes from the box follows from the topics in the bridge and Grafana and the device name `nili3`. The values of the `co2/threshold/*` thresholds are not defined in the repository.
-:::
-
 ## CO₂ thresholds in the code
 
 | Location | Values |
@@ -100,8 +96,8 @@ The exact topic scheme of the ESPHome devices (default topic prefix) is not set 
 | `frontend/logic.js` (`getCO2Color`, 3D heatmap) | continuous gradient: 400 to 800 ppm dark green to light green, 800 to 1000 ppm yellow to orange, from 1000 ppm orange to red (fully red at 1700 ppm) |
 | `dashboard-v2/dashboard.js` (CO₂ chart) | suggested axis range 400 to 1200 ppm (no traffic light) |
 
-:::caution[Deviation from the specification]
-`docs/functional-specification.md` (FR-07, AC-04) requires: green below 600 ppm, yellow from 600 to 1200 ppm, red above 1200 ppm. The code uses different values (800 and 1000 ppm; a continuous gradient in the 3D view). Which values should apply has to be clarified.
+:::note[Values that apply]
+The values that apply are 800 and 1000 ppm (code and slides). The functional specification (`docs/functional-specification.md`, FR-07, AC-04) states 600 and 1200 ppm and does not apply here.
 :::
 
 ## Sources in the repository

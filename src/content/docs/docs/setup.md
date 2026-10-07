@@ -91,9 +91,7 @@ docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest 
 
 Die verwendeten Benutzer/Passwörter müssen zu den Clients passen: Telegraf, `fake-sensors` und das Backend (`quarkus-app`) melden sich mit Benutzername und Passwort am Broker an (Konfiguration in `telegraf.conf`, `fake-sensors/index.js` bzw. der Backend-`application.properties`). Welche Zugangsdaten das sind, steht dort.
 
-:::caution[Offen]
-Der Befehl oben ist das allgemeine `mosquitto_passwd`-Prinzip; im Repository ist keine Anleitung zum Erzeugen von `config/pwfile` dokumentiert. Ob die Benutzer des Produktivsystems auf diese Weise angelegt wurden, ist nicht belegt.
-:::
+Die Benutzer werden mit `mosquitto_passwd` angelegt (so auch im Produktivsystem).
 
 ## Fake-Sensoren zum Testen
 
@@ -112,8 +110,8 @@ Er veröffentlicht simulierte Temperatur- und CO2-Werte (Intervall standardmäß
 
 Standalone (gegen einen Broker auf `localhost:1883`): `cd fake-sensors && npm install && npm start`; anderer Broker über `MQTT_HOST`.
 
-:::caution[Offen]
-`fake-sensors/README.md` spricht von 7 Räumen; `index.js` konfiguriert deutlich mehr Räume (Konsolenausgabe: "and 109 more"). Das Beispiel-Topic im README nennt Raum 105, die Raumtabelle jedoch nicht. Maßgeblich ist `index.js`.
+:::note
+Das README nennt 7 Räume; `index.js` konfiguriert 117 Räume und ist maßgeblich.
 :::
 
 ## Lokale Entwicklung der Frontends
@@ -134,18 +132,12 @@ npm install
 npm run dev
 ```
 
-Backend lokal (aus `backend/guide-sine-generator.adoc`): Mosquitto starten (`mosquitto -v -p 1883`), mit `mosquitto_sub -h localhost -t sine -v` mitlesen und Quarkus mit `mvn quarkus:dev` starten.
+Backend lokal (aus der veralteten `backend/guide-sine-generator.adoc`, siehe unten): Mosquitto starten (`mosquitto -v -p 1883`), mit `mosquitto_sub -h localhost -t sine -v` mitlesen und Quarkus mit `mvn quarkus:dev` starten.
 
-## Nicht nachvollziehbare Schritte
+## Veraltete Anleitungen und Dateien
 
-:::caution[Offen]
-- `config/pwfile`: Erzeugung nicht dokumentiert (siehe oben).
-- Die README beschreibt die Anmeldedaten von Grafana und MQTT; sie sind in dieser Doku nicht wiedergegeben und können hier nicht geprüft werden.
-- `guide-sine-generator.adoc` beschreibt einen lokalen Mosquitto-Start mit anonymer Veröffentlichung (Überschrift "Anonymous Publishing"), während `config/mosquitto.conf` anonyme Verbindungen verbietet und `application.properties` Zugangsdaten setzt. Die Anleitung ist daher für den Compose-Broker nicht ohne Weiteres gültig. Ihr Abschnitt zu Telegraf/InfluxDB ist laut Datei noch ein TODO.
-- `README.adoc` listet nur einen Teil der Dienste aus `docker-compose.yaml` (z. B. nicht die Kiosk-Dienste, `mqtt-ws-bridge`, `solax-collector`).
-- `api/requests.http` enthält nur `GET http://localhost:8080/api/sensors`; im Compose-Setup gehört Port 8080 dem `frontend`, nicht dem Backend. Ob und wo diese REST-Schnittstelle erreichbar ist, ist nicht belegt.
-- `docker-compose.yaml` baut `quarkus-app` aus `backend/sensor-data-generator` und nutzt `latest`-Tags; die Reproduzierbarkeit über Zeit ist nicht gesichert.
-:::
+- `guide-sine-generator.adoc` ist veraltet: sie beschreibt anonymen Mosquitto-Betrieb, der Compose-Broker verbietet anonyme Verbindungen; ersetzt durch `fake-sensors`.
+- `api/requests.http` ist ein veralteter Demo-Rest: das Backend bietet nur `/hello` und einen WebSocket, kein `/api/sensors`.
 
 ## Quellen im Repository
 

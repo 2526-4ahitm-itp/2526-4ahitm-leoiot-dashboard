@@ -88,10 +88,6 @@ Die Konfigurationen liegen unter `sensorbox/` und senden per MQTT (Broker-Zugang
 - `sensorbox/s3-mini-oled/s3_mini_oled.yaml` (Gerätename `s3_mini_sensorbox`): SCD41 (CO₂, Temperatur, Luftfeuchte), TSL2591 (Licht), LD2410 (Präsenz), Display, Buzzer, Hintergrundbeleuchtung.
 - Weitere Varianten: `sensorbox/blinking-leds/blink.yaml`, `sensorbox/original-config/`.
 
-:::caution[Offen]
-Das exakte Topic-Schema der ESPHome-Geräte (Standard-Topic-Präfix) ist in den YAML-Dateien nicht ausdrücklich gesetzt. Dass `nili3/sensor/nili3_co2/state` von der Box stammt, folgt aus den Topics in Bridge und Grafana sowie dem Gerätenamen `nili3`. Die Werte der Schwellen `co2/threshold/*` sind im Repository nicht festgelegt.
-:::
-
 ## CO₂-Schwellenwerte im Code
 
 | Stelle | Werte |
@@ -100,8 +96,8 @@ Das exakte Topic-Schema der ESPHome-Geräte (Standard-Topic-Präfix) ist in den 
 | `frontend/logic.js` (`getCO2Color`, 3D-Heatmap) | stufenloser Verlauf: 400 bis 800 ppm dunkelgrün zu hellgrün, 800 bis 1000 ppm gelb zu orange, ab 1000 ppm orange zu rot (voll rot bei 1700 ppm) |
 | `dashboard-v2/dashboard.js` (CO₂-Diagramm) | Achsenvorschlag 400 bis 1200 ppm (keine Ampel) |
 
-:::caution[Abweichung von der Spezifikation]
-`docs/functional-specification.md` (FR-07, AC-04) fordert: grün unter 600 ppm, gelb von 600 bis 1200 ppm, rot über 1200 ppm. Der Code verwendet andere Werte (800 und 1000 ppm; in der 3D-Ansicht ein stufenloser Farbverlauf). Welche Werte gelten sollen, ist zu klären.
+:::note[Maßgebliche Werte]
+Maßgeblich sind 800 und 1000 ppm (Code und Slides). Die Funktionale Spezifikation (`docs/functional-specification.md`, FR-07, AC-04) nennt 600 und 1200 ppm und gilt hier nicht.
 :::
 
 ## Quellen im Repository

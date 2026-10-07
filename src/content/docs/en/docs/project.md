@@ -51,9 +51,7 @@ Non-functional: no authentication, operation in the school environment, multiple
 
 From the project proposal (acceptance criteria): dashboard reachable in the school network via browser; PV data (kWh, saved CO₂) updated periodically; room climate data displayed; warning threshold at CO₂ above 1000 ppm visible. The proposal names MQTT, InfluxDB and Grafana as technologies. The client is Professor Thomas Stütz; a documented, maintainable dashboard was planned for the end of June 2026.
 
-:::caution[Open]
-The CO₂ thresholds differ between sources: the slides state 800/1000 ppm, the functional specification and the OpenSpec specification state 600/1200 ppm (according to OpenSpec the code uses 800/1000). The slides take precedence here. The specification also names desktop as the first release; the current state includes a mobile view.
-:::
+The CO₂ thresholds that apply are 800 and 1000 ppm (code and slides).
 
 ## Team
 
@@ -81,10 +79,6 @@ The slides name these next milestones:
 1. Improve the 3D model
 2. Connect more classrooms
 3. Warning on critical values
-
-:::caution[Open]
-The sources give no dates for the milestones.
-:::
 
 ## Sprint reviews
 

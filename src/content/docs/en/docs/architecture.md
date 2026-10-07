@@ -66,12 +66,10 @@ Ports as published in `docker-compose.yaml`.
 
 What can be derived from the code: the 3D explorer (`frontend`) and Dashboard v2 are the room climate interfaces. Dashboard v2 also contains a PV view and a room table with status. The LeoGreen kiosk is the variant that explicitly depends on the bridge in `docker-compose.yaml`.
 
-:::caution[Open]
-The repository does not make clear which of the four kiosk variants (`kiosk` to `kiosk4`) and the LeoGreen kiosk is shown in production and which are outdated. All are listed in `docker-compose.yaml` and `deploy/nginx.conf`. The team has to clarify this.
-:::
+The LeoGreen kiosk is the one shown in production; `kiosk` to `kiosk4` are variants or outdated.
 
-:::caution[Open]
-In the compose setup the frontends run as Vite dev servers (`npm run dev`) in `node:20-alpine` containers; whether a separate production build exists for operation is not visible in the files read.
+:::note[Operation]
+In operation the frontends run as Vite dev servers (`npm run dev`) in `node:20-alpine` containers; there is no separate production build. On every push to `main`, `.github/workflows/deploy.yml` runs `git pull` and `docker compose up -d --build` on the school VM.
 :::
 
 :::caution[Security]

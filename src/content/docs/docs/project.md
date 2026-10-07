@@ -51,9 +51,7 @@ Nichtfunktional: keine Authentifizierung, Betrieb in der Schulumgebung, mehrere 
 
 Aus dem Projektantrag (Messkriterien): Dashboard im Schulnetz per Browser erreichbar; PV-Daten (kWh, eingespartes CO₂) werden periodisch aktualisiert; Raumklimadaten werden angezeigt; Warnschwelle bei CO₂ über 1000 ppm ist sichtbar. Als Technologien nennt der Antrag MQTT, InfluxDB und Grafana. Auftraggeber ist Professor Thomas Stütz; geplant war ein dokumentiertes, wartbares Dashboard bis Ende Juni 2026.
 
-:::caution[Offen]
-Die CO₂-Schwellen unterscheiden sich: Die Slides nennen 800/1000 ppm, die Funktionale Spezifikation und die OpenSpec-Spezifikation 600/1200 ppm (laut OpenSpec verwendet der Code 800/1000). Hier gelten die Slides. Die Spezifikation nennt außerdem Desktop als Erstversion; der aktuelle Stand enthält eine mobile Ansicht.
-:::
+Maßgeblich sind die CO₂-Schwellen 800 und 1000 ppm (Code und Slides).
 
 ## Team
 
@@ -81,10 +79,6 @@ Als nächste Meilensteine nennen die Slides:
 1. 3D-Modell verbessern
 2. Weitere Klassenräume anbinden
 3. Warnung bei kritischen Werten
-
-:::caution[Offen]
-Für die Meilensteine nennen die Quellen keine Termine.
-:::
 
 ## Sprint-Reviews
 

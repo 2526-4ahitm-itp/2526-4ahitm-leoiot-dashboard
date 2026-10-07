@@ -66,12 +66,10 @@ Ports laut `docker-compose.yaml` (nach außen veröffentlichte Ports).
 
 Was sich aus dem Code ableiten lässt: Der 3D-Explorer (`frontend`) und das Dashboard v2 sind die Raumklima-Oberflächen. Das Dashboard v2 enthält zusätzlich eine PV-Ansicht und eine Raumtabelle mit Status. Der LeoGreen-Kiosk ist die Variante, die in `docker-compose.yaml` ausdrücklich von der Bridge abhängt.
 
-:::caution[Offen]
-Aus dem Repository geht nicht eindeutig hervor, welche der vier Kiosk-Varianten (`kiosk` bis `kiosk4`) und der LeoGreen-Kiosk produktiv gezeigt wird und welche veraltet sind. Alle sind in `docker-compose.yaml` und `deploy/nginx.conf` eingetragen. Das müsste das Team klären.
-:::
+Produktiv gezeigt wird der LeoGreen-Kiosk; `kiosk` bis `kiosk4` sind Varianten bzw. veraltet.
 
-:::caution[Offen]
-Die Frontends laufen im Compose-Setup als Vite-Dev-Server (`npm run dev`) in `node:20-alpine`-Containern; ob es einen separaten Produktions-Build für den Betrieb gibt, ist aus den gelesenen Dateien nicht ersichtlich.
+:::note[Betrieb]
+Die Frontends laufen im Betrieb als Vite-Dev-Server (`npm run dev`) in `node:20-alpine`-Containern; einen separaten Produktions-Build gibt es nicht. Bei jedem Push auf `main` startet `.github/workflows/deploy.yml` auf der Schul-VM `git pull` und `docker compose up -d --build`.
 :::
 
 :::caution[Sicherheit]
