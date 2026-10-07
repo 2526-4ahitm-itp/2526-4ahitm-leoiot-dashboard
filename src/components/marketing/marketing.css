@@ -29,7 +29,7 @@ body { overflow-x: clip; }
 @media (prefers-reduced-motion: no-preference) {
   .mk-hi { --y: 12px; animation: mk-rise var(--dur) var(--ease) calc(var(--i, 0) * 60ms) backwards; }
   .mk-js .mk-rv:not(.in) { opacity: 0; }
-  .mk-js .mk-rv.in { --y: 16px; animation: mk-rise var(--dur) var(--ease) var(--d, 0ms) backwards; }
+  .mk-js .mk-rv.in { --rise: 16px; animation: mk-rise var(--dur) var(--ease) var(--d, 0ms) backwards; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mk-hi, .mk-rv, .mk-flow .mk-node { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
