@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Context>
+
+UpdateElementStyle("person", $bgColor="#dcedc8", $fontColor="#1b3a1f", $borderColor="#9ccc65")
+UpdateElementStyle("system", $bgColor="#1b7a2b", $fontColor="#ffffff", $borderColor="#0d4d17")
+UpdateElementStyle("external_system", $bgColor="#e3eaf2", $fontColor="#1f2d3a", $borderColor="#9fb3c8")
+skinparam shadowing false
+skinparam backgroundColor transparent
+UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
+
+LAYOUT_TOP_DOWN()
+HIDE_STEREOTYPE()
+
+Person(management, "Schulleitung & Schulwarte", "Prüfen bei Bedarf Raumtemperatur und Energie, z. B. offene Fenster")
+Person(school, "Lehrkräfte & Schüler:innen", "Sehen PV-Ertrag am Kiosk und CO₂-Werte im Dashboard")
+
+System(leoiot, "LeoIoT", "Visualisiert PV- und Raumklimadaten in Dashboards, Kiosk-Ansichten und einem 3D-Schulmodell")
+
+System_Ext(sensors, "Sensorboxen", "ESP32 mit CO₂-/Temperatursensor in den Klassenräumen")
+System_Ext(solax, "Solax Cloud", "Hersteller-API des PV-Wechselrichters")
+
+Rel(management, leoiot, "Prüfen bei Bedarf", "Browser")
+Rel(school, leoiot, "Sehen an", "Kiosk / Browser")
+Rel(sensors, leoiot, "Senden Messwerte", "MQTT")
+Rel(leoiot, solax, "Fragt PV-Daten ab", "HTTPS / REST")
+@enduml

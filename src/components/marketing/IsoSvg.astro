@@ -1,0 +1,60 @@
+---
+import { buildIso } from './iso';
+interface Props {
+  variant: 'main' | 'mini';
+  label?: string;
+  roomLabels?: Record<string, string>; // Raum -> aria-label
+}
+const { variant, label, roomLabels = {} } = Astro.props;
+const main = variant === 'main';
+const g = buildIso(main ? { s: 62, cx: 320, cy: 70, h: 52, names: true } : { s: 46, cx: 320, cy: 18, h: 34, names: false });
+---
+
+<svg
+  class={`mk-iso ${main ? 'mk-iso-main' : 'mk-iso-mini'}`}
+  viewBox={main ? '0 0 640 400' : '0 0 640 190'}
+  data-floor={main ? '1' : undefined}
+  role={main ? 'group' : undefined}
+  aria-label={main ? label : undefined}
+  aria-hidden={main ? undefined : 'true'}
+  focusable="false"
+>
+  {g.walls.map((p) => <polygon points={p.points} fill={p.fill} />)}
+  {g.windows.map((p) => <polygon points={p.points} fill={p.fill} opacity={p.opacity} />)}
+  {g.rooms.map((r) => <polygon points={r.base.points} fill={r.base.fill} opacity={r.base.opacity} />)}
+  {g.rooms.map((r) => (
+    <g
+      class={`mk-rw${r.n % 2 === 0 ? ' mk-br' : ''}`}
+      data-floor={r.floor}
+      data-room={r.name}
+      data-s={r.name ? r.status : undefined}
+      role={r.name ? 'img' : undefined}
+      aria-label={r.name ? roomLabels[r.name] : undefined}
+      style={`--n:${r.n};${r.n % 2 === 0 ? `animation-delay:${-r.n * 1.3}s` : ''}`}
+    >
+      <polygon class="mk-lit" points={r.lit.points} fill={r.lit.fill} />
+    </g>
+  ))}
+  <polygon points={g.top.points} fill={g.top.fill} />
+</svg>
+
+<style is:global>
+  .mk-iso polygon { stroke: var(--wall-s); stroke-width: 1; stroke-linejoin: round; }
+  .mk-iso { display: block; width: 100%; height: auto; max-height: 430px; }
+  .mk-lit { transition: opacity var(--dur) var(--ease); transition-delay: calc(600ms + var(--n, 0) * 120ms); }
+  .mk-js .mk-iso:not(.go) .mk-lit { opacity: 0; }
+  .mk-rw { transition: transform var(--dur-ui) var(--ease); outline: none; }
+  .mk-iso-main[data-floor='0'] .mk-rw:not([data-floor='0']),
+  .mk-iso-main[data-floor='1'] .mk-rw:not([data-floor='1']),
+  .mk-iso-main[data-floor='2'] .mk-rw:not([data-floor='2']) { display: none; }
+  .mk-iso-main .mk-rw:hover { transform: translateY(-2px); }
+  .mk-iso-main .mk-rw:hover polygon { stroke: var(--ink); stroke-width: 1.6; }
+  .mk-iso-mini .mk-rw { pointer-events: none; }
+  .mk-br { animation: mk-breathe 5s ease-in-out infinite alternate; animation-play-state: paused; }
+  .mk-iso.live .mk-br { animation-play-state: running; }
+  @keyframes mk-breathe { from { opacity: 1; } to { opacity: 0.85; } }
+  @media (prefers-reduced-motion: reduce) {
+    .mk-js .mk-iso .mk-lit { opacity: 1 !important; }
+    .mk-br { animation: none !important; }
+  }
+</style>

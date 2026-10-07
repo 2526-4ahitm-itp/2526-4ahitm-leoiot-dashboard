@@ -1,0 +1,8 @@
+---
+// Override von Starlights ThemeSelect: Starlights Original fällt bei "auto" auf prefers-color-scheme
+// zurück und würde den Standard "hell" überschreiben. Hier: Hell/Dunkel-Umschalter.
+import ThemeToggle from '../ThemeToggle.astro';
+const en = Astro.currentLocale === 'en';
+---
+
+<ThemeToggle label={en ? 'Dark mode' : 'Dunkles Design'} />

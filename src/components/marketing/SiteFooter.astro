@@ -1,0 +1,43 @@
+---
+import './marketing.css';
+interface Props { lang: 'de' | 'en' }
+const { lang } = Astro.props;
+const en = lang === 'en';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const pre = en ? `${base}/en` : base;
+
+const T = en
+  ? { text: 'A school project at HTL Leonding (a technical secondary school in Austria).', lead: 'Project lead: Elias', contact: 'Contact via the school.', nav: 'Footer navigation', home: 'LeoIoT home',
+      links: [['Product', `${pre}/`], ['App', `${pre}/app/`], ['Documentation', `${pre}/docs/`], ['Slides (German only)', `${base}/slides/`]],
+      note: 'Room names, values and charts in the illustrations on this page are examples, not real measurements.' }
+  : { text: 'Ein Schulprojekt der HTL Leonding.', lead: 'Projektleitung: Elias', contact: 'Kontakt über die Schule.', nav: 'Fußnavigation', home: 'LeoIoT Startseite',
+      links: [['Produkt', `${pre}/`], ['App', `${pre}/app/`], ['Dokumentation', `${pre}/docs/`], ['Präsentation', `${base}/slides/`]],
+      note: 'Raumnamen, Werte und Diagramme in den Illustrationen dieser Seite sind Beispiele, keine echten Messdaten.' };
+---
+
+<footer class="mk-footer">
+  <div class="mk-wrap mk-footer-in">
+    <div>
+      <a class="mk-brand" href={`${pre}/`} aria-label={T.home}>
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="1" y="1" width="22" height="22" rx="6" fill="var(--accent)"></rect><circle cx="12" cy="12" r="3" fill="var(--accent-ink)"></circle></svg>LeoIoT
+      </a>
+      <p class="mk-sm">{T.text} <span class="mk-nw">{T.lead}</span>. {T.contact}</p>
+    </div>
+    <nav aria-label={T.nav}>
+      <ul>{T.links.map((l) => <li><a href={l[1]}>{l[0]}</a></li>)}</ul>
+    </nav>
+    <p class="mk-sm mk-footer-note">{T.note}</p>
+  </div>
+</footer>
+
+<style is:global>
+  .mk-footer { padding: 56px 0 48px; color: var(--ink-2); font-size: 15px; }
+  .mk-footer-in { display: flex; flex-wrap: wrap; gap: var(--space-5) var(--space-7); justify-content: space-between; }
+  .mk-footer ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px 22px; flex-wrap: wrap; }
+  .mk-footer ul a { text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--line-2); min-height: var(--tap); display: inline-flex; align-items: center; color: var(--ink-2); }
+  .mk-footer ul a:hover { color: var(--ink); text-decoration-color: currentColor; }
+  .mk-footer .mk-brand { margin-bottom: var(--space-2); }
+  .mk-nw { white-space: nowrap; }
+  .mk-sm { font-size: 13.5px; color: var(--ink-2); max-width: 44ch; margin: 0; text-wrap: balance; }
+  .mk-footer-note { flex-basis: 100%; max-width: none; }
+</style>

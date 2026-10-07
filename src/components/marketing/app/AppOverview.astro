@@ -1,0 +1,232 @@
+---
+import '../marketing.css';
+import Mockups from './Mockups.astro';
+
+interface Props { lang: 'de' | 'en'; }
+const { lang } = Astro.props;
+const en = lang === 'en';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const pre = en ? `${base}/en` : base;
+const docs = `${pre}/docs/`;
+const arch = `${pre}/docs/architecture/`;
+const slides = `${base}/slides/`;
+const project = `${pre}/docs/project/`;
+
+const t = en
+  ? {
+      kicker: 'App',
+      h1: 'The LeoIoT app',
+      lead: 'Room climate of the connected rooms and photovoltaic data of the school in one place: a 3D model of the building, a dashboard, and a kiosk display for screens in the building.',
+      real: 'Currently one sensor box delivers real readings (room 105); the other rooms are simulated.',
+      cta1: 'Technical documentation', cta2: 'See the architecture',
+      illu: 'Illustration, not a screenshot',
+      legendH: 'Traffic-light colours in the dashboard',
+      legendP: 'Status is always shown as a word as well, never by colour alone. The dashboard table rates each room like this:',
+      okT: 'CO₂ up to 800 ppm (parts per million, a measure of CO₂ in the air) and temperature between 19 and 24 °C',
+      midT: 'CO₂ above 800 up to 1000 ppm',
+      alT: 'CO₂ above 1000 ppm, or temperature outside 19 to 24 °C',
+      legendN: 'The 3D model instead colours rooms on a smooth scale (a heatmap): from green (about 400 ppm) through yellow and orange (800 to 1000 ppm) to red (from 1700 ppm).',
+      ok: 'OK', mid: 'Medium', al: 'Alert',
+      moreH: 'Further pages',
+      more1: 'Technical documentation', more1d: 'Architecture, interfaces, setup and operations, with sources.',
+      more2: 'Architecture', more2d: 'How a measurement travels from the sensor to the screen.',
+      more3: 'Slides (German only)', more3d: 'The project slides (in German).',
+      more4: 'Project and team', more4d: 'Starting point, goals, requirements and team.',
+      sections: [
+        { id: 'explorer', kind: 'explorer', h: '3D explorer', p: 'The school building as an interactive 3D model. Click a room to see its values.',
+          items: [
+            'Rotating and zooming the building; switching between basement, ground floor, floor 1, floor 2 and the gym; resetting the view.',
+            'Room selection by click: the room is highlighted and a panel shows its name, temperature and, where data exists, CO₂. Values update live while the room is selected.',
+            'Heatmaps for temperature (°C) and CO₂ (ppm) per floor, with a value label on each room. Available in single-floor views.',
+            'Navigation: room search with suggestions while typing; an animated path leads from the entrance to the room, also across floors and to the gym.',
+          ] },
+        { id: 'dashboard', kind: 'dashboard', h: 'Dashboard: room climate', p: 'Temperature and CO₂ of all rooms, as current values, history and a table.',
+          items: [
+            'Room selection: a single room or all rooms; search by room name or filter by floor (labels as in the app: “All”, “Floor 1”, “Floor 2”, “Floor E”, “Keller”).',
+            'Summary cards for the current temperature and CO₂ and for the 24-hour averages.',
+            'Charts for temperature and CO₂ over time, with a selectable time range: 1 h, 6 h, 24 h, 7 days, or a single day (with previous/next buttons and a date picker).',
+            'Table of all sensors with time of the last update and a status (OK, Medium, Alert). Only a few rooms are shown at first; a click shows more.',
+            'Values update live without reloading the page. The language can be switched between German and English.',
+          ] },
+        { id: 'pv', kind: 'pv', h: 'Photovoltaics', p: 'Energy data of the school PV system, as a separate view of the dashboard.',
+          items: [
+            'Cards: yield today, total yield, battery (currently charging or discharging) and power grid (power is drawn from or sent to the grid).',
+            'Charts that add up solar yield and the building’s power use over time (measured in kWh = kilowatt-hours).',
+            'Daily statistics: stored in battery, taken from battery, bought from grid, fed into grid.',
+            'The same day selection as for the room data, so past days can be viewed. For the current day the view refreshes every 30 seconds.',
+          ] },
+        { id: 'kiosk', kind: 'kiosk', h: 'Kiosk', p: 'A full-screen energy display for screens in the school building (interface in German only).',
+          items: [
+            'Header with HTL logo, clock and time of the last update; light and dark mode switch.',
+            'Two donut charts for today: consumption (from PV, from grid, from battery) and production (self-consumption, to grid, to battery).',
+            'Weekly overview of the last 7 days (produced, consumed, exported) and the power curve of today in kW for production and consumption.',
+            'Live energy flow between solar, consumption, grid and battery, with animated lines. Live values arrive continuously; charts reload every 5 minutes.',
+          ] },
+      ],
+    }
+  : {
+      kicker: 'App',
+      h1: 'Die LeoIoT-App',
+      lead: 'Raumklima der angebundenen Räume und Photovoltaik der Schule an einem Ort: ein 3D-Modell des Gebäudes, ein Dashboard und eine Kiosk-Anzeige für Bildschirme im Schulhaus.',
+      real: 'Aktuell liefert eine Sensorbox echte Messwerte (Raum 105); die übrigen Räume werden simuliert.',
+      cta1: 'Technische Dokumentation', cta2: 'Architektur ansehen',
+      illu: 'Illustration, kein Screenshot',
+      legendH: 'Ampelfarben im Dashboard',
+      legendP: 'Der Status steht immer auch als Wort da, nie nur als Farbe. Die Tabelle im Dashboard bewertet jeden Raum so:',
+      okT: 'CO₂ bis 800 ppm (ppm = Teile pro Million, Maß für CO₂ in der Luft) und Temperatur zwischen 19 und 24 °C',
+      midT: 'CO₂ über 800 bis 1000 ppm',
+      alT: 'CO₂ über 1000 ppm oder Temperatur außerhalb von 19 bis 24 °C',
+      legendN: 'Das 3D-Modell färbt die Räume stattdessen fließend ein (Heatmap): von Grün (ca. 400 ppm) über Gelb und Orange (800 bis 1000 ppm) bis Rot (ab 1700 ppm).',
+      ok: 'OK', mid: 'Mittel', al: 'Alarm',
+      moreH: 'Weiterführende Seiten',
+      more1: 'Technische Dokumentation', more1d: 'Architektur, Schnittstellen, Einrichtung und Betrieb, mit Belegen.',
+      more2: 'Architektur', more2d: 'Wie ein Messwert vom Sensor auf den Bildschirm kommt.',
+      more3: 'Präsentation', more3d: 'Die Projektpräsentation.',
+      more4: 'Projekt und Team', more4d: 'Ausgangslage, Ziele, Anforderungen und Team.',
+      sections: [
+        { id: 'explorer', kind: 'explorer', h: '3D-Explorer', p: 'Das Schulgebäude als interaktives 3D-Modell. Raum anklicken, Werte ansehen.',
+          items: [
+            'Drehen und Zoomen des Gebäudes; Wechsel zwischen Keller, Erdgeschoss, 1. Stock, 2. Stock und Turnsaal; Zurücksetzen der Ansicht.',
+            'Raumauswahl per Klick: Der Raum wird hervorgehoben, ein Feld zeigt Name, Temperatur und, wenn Daten vorliegen, CO₂. Solange der Raum gewählt ist, aktualisieren sich die Werte live.',
+            'Heatmaps für Temperatur (°C) und CO₂ (ppm) je Stockwerk, mit Wertanzeige an jedem Raum. Verfügbar in den Einzel-Stockwerksansichten.',
+            'Navigation: Raumsuche mit Vorschlägen beim Tippen; ein animierter Pfad führt vom Eingang zum Raum, auch über Stockwerke und zum Turnsaal.',
+          ] },
+        { id: 'dashboard', kind: 'dashboard', h: 'Dashboard: Raumklima', p: 'Temperatur und CO₂ aller Räume als aktuelle Werte, Verlauf und Tabelle.',
+          items: [
+            'Raumauswahl: ein einzelner Raum oder alle Räume; Suche nach Raumnamen oder Filter nach Stockwerk (Beschriftungen wie in der App: „Alle“, „Floor 1“, „Floor 2“, „Floor E“, „Keller“).',
+            'Kennzahlen-Karten für aktuelle Temperatur und aktuellen CO₂-Wert sowie für die 24-Stunden-Durchschnitte.',
+            'Verlaufsdiagramme für Temperatur und CO₂ mit wählbarem Zeitraum: 1 h, 6 h, 24 h, 7 Tage oder ein einzelner Tag (mit Vor-/Zurück-Tasten und Datumsauswahl).',
+            'Tabelle aller Sensoren mit Zeit des letzten Updates und Status (OK, Mittel, Alarm). Zuerst werden nur einige Räume angezeigt; ein Klick zeigt weitere.',
+            'Die Werte aktualisieren sich live, ohne die Seite neu zu laden. Die Sprache lässt sich zwischen Deutsch und Englisch umschalten.',
+          ] },
+        { id: 'pv', kind: 'pv', h: 'Photovoltaik', p: 'Energiedaten der PV-Anlage der Schule, als eigene Ansicht im Dashboard.',
+          items: [
+            'Karten: Solarertrag heute, Gesamtertrag, Batterie (wird geladen oder entladen) und Stromnetz (Strom wird bezogen oder ins Netz abgegeben).',
+            'Diagramme, die den Solarertrag und den Stromverbrauch des Gebäudes über die Zeit aufsummieren (kWh = Kilowattstunden).',
+            'Tagesstatistik: in Batterie gespeichert, aus Batterie entnommen, aus Netz bezogen, ins Netz eingespeist.',
+            'Dieselbe Tagesauswahl wie bei den Raumdaten, damit auch vergangene Tage ansehbar sind. Am aktuellen Tag aktualisiert sich die Ansicht alle 30 Sekunden.',
+          ] },
+        { id: 'kiosk', kind: 'kiosk', h: 'Kiosk', p: 'Eine Vollbild-Energieanzeige für Bildschirme im Schulhaus (Oberfläche nur auf Deutsch).',
+          items: [
+            'Kopfzeile mit HTL-Logo, Uhrzeit und Zeit der letzten Aktualisierung; Umschalter für hellen und dunklen Modus.',
+            'Zwei Ringdiagramme für heute: Verbrauch (von PV, vom Netz, von Batterie) und Produktion (Eigenverbrauch, ins Netz, in Batterie).',
+            'Wochenübersicht der letzten 7 Tage (produziert, verbraucht, exportiert) und die Leistungskurve von heute in kW für Produktion und Verbrauch.',
+            'Energiefluss live zwischen Solar, Verbrauch, Netz und Batterie, mit animierten Linien. Live-Werte treffen laufend ein; die Diagramme laden alle 5 Minuten neu.',
+          ] },
+      ],
+    };
+---
+
+<div class="ap-page">
+  <section class="mk-wrap ap-hero" aria-labelledby="ap-h1">
+    <p class="ap-kicker mk-hi" style="--i:0">{t.kicker}</p>
+    <h1 id="ap-h1" class="mk-hi" style="--i:1">{t.h1}</h1>
+    <p class="ap-lead mk-hi" style="--i:2">{t.lead}</p>
+    <p class="ap-note mk-hi" style="--i:2">{t.real}</p>
+    <div class="ap-cta mk-hi" style="--i:3">
+      <a class="mk-btn primary" href={docs}>{t.cta1}</a>
+      <a class="mk-btn" href={arch}>{t.cta2}</a>
+    </div>
+  </section>
+
+  {t.sections.map((s, n) => (
+    <section class={`mk-wrap ap-sec${n % 2 ? ' flip' : ''}`} aria-labelledby={`ap-${s.id}`}>
+      <div class="ap-text mk-rv">
+        <h2 id={`ap-${s.id}`}>{s.h}</h2>
+        <p class="ap-sub">{s.p}</p>
+        <ul>
+          {s.items.map((i) => <li>{i}</li>)}
+        </ul>
+      </div>
+      <div class="ap-vis mk-rv" style="--d:60ms">
+        <Mockups kind={s.kind as 'explorer' | 'dashboard' | 'pv' | 'kiosk'} label={t.illu} lang={lang} />
+      </div>
+    </section>
+  ))}
+
+  <section class="mk-wrap ap-legend mk-rv" aria-labelledby="ap-legend-h">
+    <h2 id="ap-legend-h">{t.legendH}</h2>
+    <p class="ap-sub">{t.legendP}</p>
+    <ul class="ap-rate">
+      <li><span class="mk-chip g">{t.ok}</span><span>{t.okT}</span></li>
+      <li><span class="mk-chip y">{t.mid}</span><span>{t.midT}</span></li>
+      <li><span class="mk-chip r">{t.al}</span><span>{t.alT}</span></li>
+    </ul>
+    <p class="ap-note">{t.legendN}</p>
+  </section>
+
+  <section class="mk-wrap ap-more" aria-labelledby="ap-more-h">
+    <h2 id="ap-more-h">{t.moreH}</h2>
+    <ul class="ap-links">
+      <li><a href={docs}><b>{t.more1}</b><span>{t.more1d}</span></a></li>
+      <li><a href={arch}><b>{t.more2}</b><span>{t.more2d}</span></a></li>
+      <li><a href={slides}><b>{t.more3}</b><span>{t.more3d}</span></a></li>
+      <li><a href={project}><b>{t.more4}</b><span>{t.more4d}</span></a></li>
+    </ul>
+  </section>
+</div>
+
+<style is:global>
+  .ap-page { padding-bottom: var(--space-9); }
+  .ap-page h1, .ap-page h2, .ap-page p, .ap-page ul { margin: 0; }
+  .ap-hero { padding-top: var(--hero-top); text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+  .ap-kicker { color: var(--accent); font-size: var(--fs-eyebrow); font-weight: var(--fw-kicker); }
+  .ap-page h1 { font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); font-weight: var(--fw-h1); max-width: var(--measure-h1); text-wrap: balance; overflow-wrap: anywhere; }
+  .ap-lead { font-size: var(--fs-lead); line-height: var(--lh-lead); color: var(--ink-2); max-width: var(--measure-lead); }
+  .ap-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-2); }
+  .ap-sec { margin-top: var(--section-gap); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; }
+  .ap-sec.flip .ap-text { order: 2; }
+  .ap-text { min-width: 0; display: grid; gap: var(--space-3); align-content: start; }
+  .ap-page h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); font-weight: var(--fw-h2); text-wrap: balance; overflow-wrap: anywhere; }
+  .ap-sub { color: var(--ink-2); font-size: var(--fs-lead); line-height: var(--lh-lead); max-width: var(--measure-section); }
+  .ap-text ul { list-style: none; padding: 0; display: grid; gap: var(--space-3); max-width: var(--measure-section); }
+  .ap-text li { position: relative; padding-left: 22px; font-size: var(--fs-card); line-height: var(--lh-card); color: var(--ink-2); overflow-wrap: anywhere; }
+  .ap-text li::before { content: ''; position: absolute; left: 2px; top: 0.6em; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .ap-vis { min-width: 0; }
+  .ap-legend { margin-top: var(--section-gap); display: grid; gap: var(--space-3); justify-items: start; }
+  .ap-rate { list-style: none; padding: 0; display: grid; gap: var(--space-2); width: 100%; max-width: var(--measure-section); }
+  .ap-rate li { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: var(--bw) solid var(--line); border-radius: var(--r-lg); background: var(--surface); font-size: var(--fs-card); color: var(--ink-2); }
+  .ap-rate .mk-chip { flex: none; min-width: 72px; justify-content: flex-start; }
+  .ap-note { color: var(--ink-3); font-size: var(--fs-small); max-width: var(--measure-section); }
+  .ap-more { margin-top: var(--section-gap); display: grid; gap: var(--space-4); }
+  .ap-links { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .ap-links a { display: grid; gap: 6px; min-height: var(--tap); height: 100%; padding: var(--card-pad); border: var(--bw) solid var(--line); border-radius: var(--r-lg); background: var(--surface); color: var(--ink); text-decoration: none; transition: transform var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease), box-shadow var(--dur-ui) var(--ease); }
+  .ap-links b { font-size: var(--fs-h3); font-weight: var(--fw-h3); letter-spacing: var(--ls-h3); }
+  .ap-links span { color: var(--ink-2); font-size: var(--fs-card); line-height: var(--lh-card); }
+  @media (hover: hover) { .ap-links a:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow); } }
+  @media (max-width: 980px) {
+    .ap-sec { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+    .ap-sec.flip .ap-text { order: 0; }
+    .ap-links { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .ap-hero { padding-top: 56px; }
+    .ap-page { --section-gap: 80px; }
+  }
+  @media (max-width: 420px) {
+    .ap-cta .mk-btn { width: 100%; }
+    .ap-rate li { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+  }
+  @media (prefers-reduced-motion: reduce) { .ap-links a { transition: none; } }
+</style>
+
+<script>
+  const els = Array.from(document.querySelectorAll<HTMLElement>('.ap-page .mk-rv'));
+  const show = (e: HTMLElement) => e.classList.add('in');
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(show);
+  } else {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) {
+            show(en.target as HTMLElement);
+            io.unobserve(en.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -8% 0px' }
+    );
+    els.forEach((e) => io.observe(e));
+  }
+</script>

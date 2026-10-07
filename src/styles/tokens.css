@@ -1,0 +1,259 @@
+/*
+ * Design-Tokens LeoIoT (Quelle: DESIGN.md Abschnitt 2/3/7, Prototyp produktseite-v2.html).
+ * Geteilt von Marketing (BaseLayout) und Doku (Starlight customCss).
+ * Hell ist Standard (auch ohne data-theme). Dunkel: html[data-theme='dark'].
+ * Diese Datei ist ungelayert und überschreibt damit Starlights @layer starlight.base.
+ */
+
+/* ---------- Theme-unabhängige Tokens ---------- */
+:root,
+:root[data-theme='light'],
+:root[data-theme='dark'] {
+  /* Typografie: System-Stack, keine Webfont */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-base: 17px;
+  --lh-base: 1.6;
+  --fs-h1: clamp(34px, 6vw, 64px);
+  --fs-h2: clamp(28px, 4vw, 40px);
+  --fs-h3: 19px;
+  --fs-node-h: 18px;
+  --fs-lead: 19px;
+  --fs-card: 16px;
+  --fs-node: 15.5px;
+  --fs-nav: 15px;
+  --fs-btn: 16px;
+  --fs-toggle: 14px;
+  --fs-eyebrow: 14px;
+  --fs-small: 14px;
+  --fs-meta: 12px;
+  --fs-overline: 11.5px;
+  --fs-brand: 18px;
+  --lh-h1: 1.06;
+  --lh-h2: 1.12;
+  --lh-lead: 1.6;
+  --lh-card: 1.55;
+  --ls-h1: -0.035em;
+  --ls-h2: -0.03em;
+  --ls-h3: -0.015em;
+  --ls-brand: -0.01em;
+  --ls-overline: 0.06em;
+  --fw-regular: 400;
+  --fw-button: 560;
+  --fw-kicker: 600;
+  --fw-h3: 620;
+  --fw-h2: 660;
+  --fw-h1: 680;
+  --fw-brand: 650;
+  --measure-card: 52ch;
+  --measure-lead: 56ch;
+  --measure-section: 62ch;
+  --measure-h1: 15ch;
+
+  /* Abstände (Skala 4/8/12/16/24/32/48/64/96/112) und Container */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 112px;
+  --container: 1160px;
+  --gutter: 24px;
+  --section-gap: 112px;
+  --hero-top: 88px;
+  --card-pad: 24px;
+  --bp-lg: 980px;
+  --bp-md: 720px;
+  --bp-sm: 420px;
+  --tap: 44px;
+
+  /* Radien */
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-btn: 11px;
+  --r-toggle: 9px;
+  --r-link: 8px;
+  --r-frame: 16px;
+  --r-pill: 99px;
+  --r-focus: 6px;
+
+  /* Rahmen */
+  --bw: 1px;
+  --bw-focus: 2px;
+  --focus-offset: 3px;
+
+  /* Bewegung */
+  --dur: 500ms;
+  --dur-ui: 250ms;
+  --dur-press: 120ms;
+  --dur-theme: 200ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Nav und Z-Index */
+  --nav-h: 3.75rem; /* 60px wie Prototyp */
+  --z-nav: 50;
+  --z-skip: 100;
+
+  /* Starlight: Schrift, Layout (nur Namen aus Starlight 0.42.5) */
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+  --sl-nav-height: var(--nav-h);
+  --sl-content-width: 46rem;
+}
+
+/* ---------- Hell (Standard) ---------- */
+:root,
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --bg-soft: #fafafa;
+  --surface: #ffffff;
+  --ink: #111827;
+  --ink-2: #4b5563;
+  --ink-3: #6b7280;
+  --line: #e5e7eb; /* dekorativ, bewusst fein (1,24:1) */
+  --line-2: #d1d5db;
+  /* Rahmen sekundärer Buttons/Umschalter: >= 3:1 (4,83:1 auf --bg) */
+  --line-ui: var(--ink-3);
+  --accent: #0b7a5a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e7f5ef;
+  --g: #2fa66a;
+  /* Ampel-Gelb hell abgedunkelt: #ba8d04 = 3,04:1 auf --bg (#fff), hellster Ton auf der Linie
+     #f2b705 -> schwarz mit >= 3:1 (Skript, WCAG 2.x). Prototyp #f2b705 hatte 1,82:1.
+     Nur zusammen mit Textlabel verwenden (DESIGN.md 7.1). */
+  --y: #ba8d04;
+  --r: #d9432f;
+  --g-bg: #e6f5ec;
+  --y-bg: #fdf5d6;
+  --r-bg: #fbe7e3;
+  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 30px rgba(17, 24, 39, 0.06);
+  --nav-shadow: 0 4px 14px rgba(17, 24, 39, 0.08);
+  --btn-shadow: 0 8px 20px rgba(17, 24, 39, 0.18);
+  --wall-l: #eef0f3;
+  --wall-r: #e1e4e9;
+  --wall-t: #f8f9fb;
+  --wall-s: #c9ced6;
+
+  /* Starlight-Mapping. Starlight invertiert im Hellmodus: white = Text hoch, black = Hintergrund. */
+  --sl-color-white: var(--ink);
+  --sl-color-gray-1: var(--ink);
+  --sl-color-gray-2: var(--ink-2); /* --sl-color-text */
+  --sl-color-gray-3: var(--ink-3);
+  --sl-color-gray-4: var(--ink-3);
+  --sl-color-gray-5: var(--line-2);
+  --sl-color-gray-6: var(--bg-soft);
+  --sl-color-gray-7: var(--bg-soft);
+  --sl-color-black: var(--bg);
+  --sl-color-accent-low: var(--accent-soft);
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: var(--accent);
+  --sl-color-text-accent: var(--accent);
+  --sl-color-text-invert: var(--accent-ink);
+  --sl-color-bg: var(--bg);
+  --sl-color-bg-nav: var(--bg);
+  --sl-color-bg-sidebar: var(--bg-soft);
+  --sl-color-bg-accent: var(--accent);
+  --sl-color-hairline: var(--line);
+  --sl-color-hairline-light: var(--line-2);
+  --sl-color-hairline-shade: var(--line);
+}
+
+/* ---------- Dunkel ---------- */
+:root[data-theme='dark'] {
+  --bg: #0b0f14;
+  --bg-soft: #0f141b;
+  --surface: #131922;
+  --ink: #f3f4f6;
+  --ink-2: #a7b0be;
+  --ink-3: #8b95a5;
+  --line: #232b37;
+  --line-2: #323c4b;
+  --line-ui: var(--ink-3); /* 6,35:1 auf --bg, 5,83:1 auf --surface */
+  --accent: #3ecf9f;
+  --accent-ink: #06261c;
+  --accent-soft: #10241f;
+  --g: #3fbf7d;
+  --y: #f5c431; /* 11,74:1 auf --bg */
+  --r: #ef6a55;
+  --g-bg: #12281e;
+  --y-bg: #2a2410;
+  --r-bg: #2e1814;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 30px rgba(0, 0, 0, 0.35);
+  --nav-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --btn-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  --wall-l: #2a3340;
+  --wall-r: #202833;
+  --wall-t: #364151;
+  --wall-s: #3d4757;
+
+  /* Starlight-Mapping Dunkel (white = Text hoch, black = Hintergrund; gray-6/7 = Flächen) */
+  --sl-color-white: var(--ink);
+  --sl-color-gray-1: var(--ink);
+  --sl-color-gray-2: var(--ink-2);
+  --sl-color-gray-3: var(--ink-3);
+  --sl-color-gray-4: var(--ink-3);
+  --sl-color-gray-5: var(--line-2);
+  --sl-color-gray-6: var(--surface);
+  --sl-color-gray-7: var(--bg-soft);
+  --sl-color-black: var(--bg);
+  --sl-color-accent-low: var(--accent-soft);
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: var(--accent);
+  --sl-color-text-accent: var(--accent);
+  --sl-color-text-invert: var(--accent-ink);
+  --sl-color-bg: var(--bg);
+  --sl-color-bg-nav: var(--bg);
+  --sl-color-bg-sidebar: var(--bg-soft);
+  --sl-color-bg-accent: var(--accent);
+  --sl-color-hairline: var(--line);
+  --sl-color-hairline-light: var(--line-2);
+  --sl-color-hairline-shade: var(--bg);
+}
+
+/* Docs-Tabellen: display:table (kein Scrollcontainer ohne Tastaturfokus). Wörter und Zahlen
+   brechen nie mitten im Wort (break-word reduziert die Mindestbreite nicht), nur sehr lange
+   Tokens (Topic-Pfade) dürfen am Zellenrand umbrechen. */
+.sl-markdown-content table { display: table; width: 100%; }
+.sl-markdown-content :is(th, td) {
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
+  font-variant-numeric: tabular-nums;
+}
+.sl-markdown-content :is(th, td) code { white-space: normal; overflow-wrap: break-word; word-break: normal; }
+/* Kurze Zellen (Ports, Zahlen) nie umbrechen */
+.sl-markdown-content :is(th, td):not(:has(*)):not(:has(:is(a, em, strong))) { min-width: 4.5ch; }
+@media (max-width: 50rem) {
+  /* Schmale Viewports: Tabelle scrollt horizontal (per Skript tastaturfokussierbar, siehe astro.config.mjs) */
+  .sl-markdown-content table { display: block; overflow-x: auto; }
+  .sl-markdown-content :is(th, td) { font-size: 0.85rem; }
+  .sl-markdown-content :is(th, td) code { font-size: 0.8rem; }
+}
+.sl-markdown-content table:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Docs: Hamburger-Button mit Token-Farben und Rahmen statt weißer Fläche */
+starlight-menu-button button,
+starlight-menu-button button:has(~ :popover-open) {
+  background-color: var(--bg-soft);
+  color: var(--ink);
+  border: var(--bw) solid var(--line-ui);
+  box-shadow: none;
+}
+
+/* Architekturdiagramm im Dark Mode: SVG hat weißen Hintergrund; invertieren, Farbtöne zurückdrehen
+   (Grüntöne bleiben grün), Hintergrund = Seitenhintergrund (#fff -> ~#0b0f14 durch Invertierung). */
+html[data-theme='dark'] .sl-markdown-content img[src*='architecture'] {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.95);
+  background: #fff;
+  border-radius: var(--r-md);
+}
+
+/* Druck: Starlight-Header ausblenden, Diagramm begrenzen */
+@media print {
+  header.header, .sidebar, .right-sidebar, starlight-menu-button { display: none !important; }
+  .sl-markdown-content img { max-height: 60vh; width: auto; max-width: 100%; }
+}

@@ -1,88 +1,23 @@
 ---
-import Layout from "../components/Layout.astro";
-import project from "../data/project.json";
-const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/marketing/SiteNav.astro';
+import Hero from '../components/marketing/Hero.astro';
+import Bento from '../components/marketing/Bento.astro';
+import DataFlow from '../components/marketing/DataFlow.astro';
+import SiteFooter from '../components/marketing/SiteFooter.astro';
 ---
-<Layout title="LeoIoT Dashboard" description={project.tagline} pathname="/">
-  <section class="hero">
-    <div class="hero-copy">
-      <div>
-        <p class="eyebrow">HTL Leonding | Live Project Site</p>
-        <h1>{project.title}</h1>
-        <p class="lede">{project.tagline}</p>
-        <p class="hero-note">This root URL is the primary project site. The deck is a secondary route inside the same deployment, not a separate slides-only homepage.</p>
-        <div class="hero-actions">
-          <a class="button" href={`${base}features/`}>Explore Platform</a>
-          <a class="button-secondary" href={`${base}presentation/`}>Open Deck</a>
-          <a class="button-secondary" href={`${base}slides/leoiot.html`}>Open Slides</a>
-          <a class="button-ghost" href={project.repo}>Repository</a>
-        </div>
-      </div>
-      <div class="chip-row">
-        {project.stack.map((item) => <span class="chip">{item}</span>)}
-      </div>
-    </div>
-    <div class="hero-grid">
-      <article class="metric-card">
-        <strong>10</strong>
-        <span>services wired into the end-to-end telemetry stack</span>
-      </article>
-      <article class="metric-card">
-        <strong>8</strong>
-        <span>simulated rooms already covered by the fake sensor package</span>
-      </article>
-      <article class="metric-card">
-        <strong>4</strong>
-        <span>user-facing surfaces: 3D view, dashboard, Grafana, and InfluxDB</span>
-      </article>
-      <article class="metric-card">
-        <strong>1</strong>
-        <span>shared MQTT backbone feeding the monitoring flow</span>
-      </article>
-    </div>
-  </section>
 
-  <section class="section two-up">
-    <article class="panel panel-strong">
-      <p class="eyebrow">Primary URL</p>
-      <h3>Designed for the repository root deployment</h3>
-      <p>The target homepage is `https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/`. Everything important starts here, and all internal routes now stay inside the same Astro site.</p>
-    </article>
-    <article class="panel panel-strong">
-      <p class="eyebrow">Presentation Access</p>
-      <h3>No fragile slide runtime</h3>
-      <p>The presentation is now rendered as an internal deck page without Reveal CDN dependencies, which removes the broken behavior from the previous slides link.</p>
-    </article>
-  </section>
-
-  <section class="section">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Core Value</p>
-        <h2>Operational telemetry with a sharper front door</h2>
-      </div>
-    </div>
-    <div class="cards">
-      {project.highlights.map((item) => (
-        <article class="panel">
-          <p>{item}</p>
-        </article>
-      ))}
-    </div>
-  </section>
-
-  <section class="section two-up">
-    <figure class="image-card">
-      <img src={`${base}project/architektur.png`} alt="Architecture overview" />
-      <figcaption>Existing project architecture from the slide deck.</figcaption>
-    </figure>
-    <article class="panel">
-      <p class="eyebrow">Deployment</p>
-      <h3>School runtime plus public project surface</h3>
-      <p>The repository contains the classroom telemetry stack, a VM deployment workflow, and a public-facing Astro site that now acts as the main project entrypoint.</p>
-      <ul>
-        {project.deployment.map((item) => <li>{item}</li>)}
-      </ul>
-    </article>
-  </section>
-</Layout>
+<BaseLayout
+  path=""
+  title="LeoIoT – Wie gut ist die Luft in unserer Schule?"
+  description="LeoIoT: Ein 3D-Modell der HTL Leonding zeigt live das Raumklima der angebundenen Räume und die Daten der Solaranlage."
+  lang="de"
+>
+  <SiteNav slot="header" lang="de" current="product" />
+  <div class="mk-wrap">
+    <Hero lang="de" />
+    <Bento lang="de" />
+  </div>
+  <DataFlow lang="de" />
+  <SiteFooter slot="footer" lang="de" />
+</BaseLayout>

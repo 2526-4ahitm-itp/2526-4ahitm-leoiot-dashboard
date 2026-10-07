@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteNav from '../../components/marketing/SiteNav.astro';
+import Hero from '../../components/marketing/Hero.astro';
+import Bento from '../../components/marketing/Bento.astro';
+import DataFlow from '../../components/marketing/DataFlow.astro';
+import SiteFooter from '../../components/marketing/SiteFooter.astro';
+---
+
+<BaseLayout
+  path=""
+  title="LeoIoT – How good is the air in our school?"
+  description="LeoIoT: A 3D model of HTL Leonding shows the live room climate of the connected rooms and solar power data."
+  lang="en"
+>
+  <SiteNav slot="header" lang="en" current="product" />
+  <div class="mk-wrap">
+    <Hero lang="en" />
+    <Bento lang="en" />
+  </div>
+  <DataFlow lang="en" />
+  <SiteFooter slot="footer" lang="en" />
+</BaseLayout>

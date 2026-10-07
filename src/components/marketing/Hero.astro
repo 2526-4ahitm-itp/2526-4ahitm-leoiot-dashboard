@@ -1,0 +1,40 @@
+---
+import IsoMockup from './IsoMockup.astro';
+
+interface Props { lang: 'de' | 'en' }
+const { lang } = Astro.props;
+const en = lang === 'en';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const pre = en ? `${base}/en` : base;
+
+const T = en
+  ? { eyebrow: 'School project at HTL Leonding', h1: 'How good is the air in our school?',
+      lead: 'LeoIoT shows temperature and CO₂ of the connected rooms live in a 3D model of the school building – together with data from the school’s photovoltaic (solar power) system.',
+      app: 'View the app', docs: 'Technical documentation', team: 'Project and team' }
+  : { eyebrow: 'Schulprojekt der HTL Leonding', h1: 'Wie gut ist die Luft in unserer Schule?',
+      lead: 'LeoIoT zeigt Temperatur und CO₂ der angebundenen Räume live in einem 3D-Modell des Schulgebäudes – zusammen mit den Daten der Photovoltaikanlage (Solarstrom) der Schule.',
+      app: 'App ansehen', docs: 'Technische Dokumentation', team: 'Projekt und Team' };
+---
+
+<div class="mk-hero">
+  <span class="mk-eyebrow mk-hi" style="--i:0"><i aria-hidden="true"></i>{T.eyebrow}</span>
+  <h1 class="mk-hi" style="--i:1">{T.h1}</h1>
+  <p class="mk-lead mk-hi" style="--i:2">{T.lead}</p>
+  <div class="mk-cta mk-hi" style="--i:3">
+    <a class="mk-btn primary" href={`${pre}/app/`}>{T.app}</a>
+    <a class="mk-btn" href={`${pre}/docs/`}>{T.docs}</a>
+    <a class="mk-btn" href={`${pre}/docs/project/`}>{T.team}</a>
+  </div>
+  <IsoMockup lang={lang} />
+</div>
+
+<style is:global>
+  .mk-hero { padding: var(--hero-top) 0 0; text-align: center; min-width: 0; }
+  .mk-eyebrow { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--fs-eyebrow); color: var(--ink-2); border: var(--bw) solid var(--line-ui); background: var(--surface); padding: 5px var(--space-3); border-radius: var(--r-pill); }
+  .mk-eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .mk-hero h1 { font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); font-weight: var(--fw-h1); margin: 22px auto 0; max-width: var(--measure-h1); text-wrap: balance; overflow-wrap: break-word; }
+  .mk-lead { font-size: var(--fs-lead); line-height: var(--lh-lead); color: var(--ink-2); max-width: var(--measure-lead); margin: 22px auto 0; }
+  .mk-cta { display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+  @media (max-width: 720px) { .mk-hero { padding-top: 56px; } }
+  @media (max-width: 420px) { .mk-cta { flex-direction: column; } .mk-cta .mk-btn { width: 100%; } }
+</style>

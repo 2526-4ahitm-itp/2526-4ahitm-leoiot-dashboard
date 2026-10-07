@@ -1,0 +1,505 @@
+/*
+ * Slides-Theme auf Basis der Design-Tokens (src/styles/tokens.css, DESIGN.md).
+ * reveal.js-Variablen werden auf Tokens gemappt; Hell/Dunkel folgt html[data-theme].
+ */
+html:root {
+    --r-background-color: var(--bg);
+    --r-main-font: var(--font-sans);
+    --r-main-font-size: calc(var(--fs-base) * 1.9);
+    --r-main-color: var(--ink);
+    --r-block-margin: var(--space-4);
+    --r-heading-margin: 0 0 var(--space-5) 0;
+    --r-heading-font: var(--font-sans);
+    --r-heading-color: var(--ink);
+    --r-heading-line-height: var(--lh-h2);
+    --r-heading-letter-spacing: var(--ls-h2);
+    --r-heading-text-transform: none;
+    --r-heading-text-shadow: none;
+    --r-heading-font-weight: var(--fw-h1);
+    --r-heading1-size: calc(var(--fs-h1) * 1.1);
+    --r-heading2-size: calc(var(--fs-h2) * 1.1);
+    --r-heading3-size: calc(var(--fs-h3) * 1.6);
+    --r-link-color: var(--accent);
+    --r-link-color-hover: var(--accent);
+    --r-link-color-dark: var(--accent);
+    --r-selection-background-color: var(--accent-soft);
+    --r-selection-color: var(--ink);
+    --card-bg: var(--surface);
+    --card-line: var(--line-2);
+}
+
+html, body {
+    background: var(--bg);
+    color: var(--ink);
+}
+
+body {
+    font-family: var(--font-sans);
+    transition: background-color var(--dur-theme) ease, color var(--dur-theme) ease;
+}
+
+.reveal {
+    font-size: var(--r-main-font-size);
+    font-family: var(--font-sans);
+    font-weight: var(--fw-regular);
+    color: var(--ink);
+    background-color: var(--bg);
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+    font-weight: var(--fw-h2);
+    color: var(--ink);
+    margin-bottom: 1.2em;
+}
+
+.reveal a {
+    color: var(--accent);
+}
+
+.reveal .slides section {
+    padding: var(--space-4) var(--space-7);
+    box-sizing: border-box;
+}
+
+.reveal .progress {
+    color: var(--accent);
+}
+
+.reveal .slide-number {
+    background: transparent;
+    color: var(--ink-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-small);
+}
+
+.reveal .controls {
+    color: var(--accent);
+}
+
+/* Folienzähler nicht vom Weiter-Pfeil überdecken: mittig unten */
+.reveal .slide-number {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 8px;
+}
+
+.reveal .controls button:focus-visible {
+    outline: var(--bw-focus) solid var(--accent) !important;
+    outline-offset: var(--focus-offset);
+    border-radius: var(--r-focus);
+    opacity: 1;
+}
+
+.reveal :focus-visible,
+.back-link:focus-visible {
+    outline: var(--bw-focus) solid var(--accent);
+    outline-offset: var(--focus-offset);
+    border-radius: var(--r-focus);
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: var(--r-lg);
+    padding: 1.4em 1.8em;
+    margin: 0 auto 1.8em;
+    max-width: 850px;
+    border: var(--bw) solid var(--card-line);
+    line-height: 1.6;
+    font-size: 1.05em;
+}
+
+.card ul {
+    padding-left: 1.4em;
+    margin: 0.6em 0;
+}
+
+.card li {
+    margin-bottom: 0.7em;
+}
+
+.card li strong {
+    color: var(--accent);
+}
+
+.reveal p > img,
+.reveal .imageblock img {
+    display: block;
+    margin: 1.2em auto;
+    max-width: 90%;
+    height: auto;
+    border-radius: var(--r-link);
+    background: transparent;
+    object-fit: contain;
+}
+
+.reveal p > img[width="800"],
+.reveal p > img[width="700"] {
+    max-height: 65vh;
+    width: auto;
+}
+
+.title-slide h1 {
+    font-size: 4.2em;
+    color: var(--accent);
+    margin-bottom: 0.6em;
+}
+
+.subtitle {
+    font-size: 1.6em;
+    color: var(--ink-2);
+    margin-top: -0.4em;
+    font-weight: var(--fw-regular);
+}
+
+.footer {
+    position: absolute;
+    bottom: var(--space-5);
+    width: 100%;
+    text-align: center;
+    font-size: 0.8em;
+    color: var(--ink-3);
+    z-index: 10;
+}
+
+.team-list,
+.center .card {
+    text-align: center;
+}
+
+.team-list li,
+.center .card li {
+    display: block;
+    margin: 0.5em 0;
+}
+
+.transparent-box {
+    background-color: var(--surface);
+    color: var(--ink);
+    border: var(--bw) solid var(--card-line);
+    padding: 1.4em 1.8em;
+    border-radius: var(--r-lg);
+    max-width: 80%;
+    margin: 2em auto;
+}
+
+.title-overlay {
+    background: var(--accent-soft);
+    color: var(--accent) !important;
+    padding: 0.2em 0.6em;
+    border-radius: var(--r-link);
+}
+
+@media (max-width: 1024px) {
+    .reveal {
+        font-size: calc(var(--fs-base) * 1.65);
+    }
+    .card {
+        padding: 1.2em 1.4em;
+        font-size: 1em;
+    }
+    .reveal p > img {
+        max-width: 95%;
+    }
+}
+
+.reveal .slides section .image-container img {
+    display: block;
+    margin: var(--space-7) auto;
+    max-width: 70%;
+    height: auto;
+}
+
+.reveal .slides section .caption {
+    position: absolute;
+    bottom: var(--space-6);
+    left: var(--space-7);
+    font-size: 0.9em;
+    color: var(--ink-2);
+    z-index: 10;
+}
+
+/* C4 diagrams: fit inside slide */
+.reveal .imageblock img[src$=".svg"] {
+    box-shadow: none;
+}
+
+.reveal .slides section.diagram h2 {
+    margin-bottom: 0.3em;
+}
+
+.reveal .slides section.diagram .imageblock img {
+    max-height: 660px;
+    max-width: 100%;
+    width: auto;
+    margin: 0 auto;
+}
+
+/* Card grids: all boxes on a slide get the same height */
+.reveal .slides section.cards table {
+    width: 100%;
+    height: 1px; /* lets cells and cards stretch to full row height */
+    border-collapse: separate;
+    border-spacing: var(--space-5) 0;
+}
+
+.reveal .slides section.cards table td {
+    height: 100%;
+    vertical-align: top;
+    padding: 0;
+    border: none;
+}
+
+.reveal .slides section.cards td > div {
+    height: 100%;
+}
+
+.reveal .slides section.cards .card {
+    box-sizing: border-box;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0.9em 1.2em;
+    text-align: left;
+    font-size: 0.8em;
+    line-height: 1.4;
+    border-top: calc(var(--bw-focus) * 3) solid var(--accent);
+}
+
+.reveal .slides section.cards .card.single {
+    max-width: 1000px;
+    margin: 0 auto;
+    font-size: 0.9em;
+}
+
+/* Full-width highlight above a card grid (aligned with the table's 24px spacing) */
+.reveal .slides section.cards .card.banner {
+    height: auto;
+    margin: 0 var(--space-5) 0.8em;
+    text-align: center;
+    font-size: 0.95em;
+    background: var(--accent-soft);
+}
+
+.reveal .slides section.cards .card.banner p {
+    margin: 0;
+}
+
+.reveal .slides section.cards .card p {
+    margin: 0 0 0.4em;
+}
+
+.reveal .slides section.cards .card ul {
+    display: block;
+    list-style: disc outside;
+    margin: 0.3em 0 0 1.2em;
+    padding: 0;
+}
+
+.reveal .slides section.cards .card li {
+    display: list-item;
+    margin-bottom: 0.4em;
+}
+
+.reveal .slides section.cards .card li::marker {
+    color: var(--accent);
+}
+
+/* Team cards: names first, topic below */
+.reveal .slides section.cards .card.team {
+    font-size: 0.95em;
+}
+
+.reveal .slides section.cards .card.team .names li {
+    font-weight: 700;
+}
+
+.reveal .slides section.cards .card.team .role {
+    font-weight: 400;
+    font-style: italic;
+    color: var(--accent);
+}
+
+.reveal .slides section.cards .card.team .topic p {
+    margin-top: 0.8em;
+    padding-top: 0.5em;
+    border-top: var(--bw) solid var(--line-2);
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.85em;
+}
+
+.reveal .slides section.cards .card.team > .content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.reveal .slides section.cards .card.team .topic {
+    margin-top: auto;
+}
+
+/* Flat look: no shadows anywhere */
+.reveal h1, .reveal h2, .reveal h3, .reveal h4,
+.reveal .title-slide h1 {
+    text-shadow: none !important;
+}
+
+.reveal .card,
+.reveal p > img,
+.reveal .imageblock img {
+    box-shadow: none !important;
+}
+
+/* Flat look: Karten mit feinem Rahmen und Akzent-Oberkante */
+.reveal .slides section.cards .card {
+    border: var(--bw) solid var(--card-line);
+    border-top: calc(var(--bw-focus) * 3) solid var(--accent);
+}
+
+/* Title slide font */
+.reveal .slides section.title h1 {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-h1);
+    text-transform: none;
+    letter-spacing: var(--ls-h1);
+    color: var(--ink);
+}
+
+.reveal .slides section.title p {
+    font-family: var(--font-sans);
+}
+
+/* Wide container diagram: use full slide width */
+.reveal .slides section.diagram.wide .imageblock img {
+    display: block;
+    max-width: 100%;
+    max-height: 660px;
+    width: auto;
+    margin: 0 auto;
+}
+
+/* Milestone grid: equal boxes */
+.reveal .slides section.cards.grid table {
+    border-spacing: var(--space-5) var(--space-5);
+}
+
+.reveal .slides section.cards .card.milestone {
+    display: flex;
+    align-items: center;
+    font-size: 1em;
+    font-weight: var(--fw-kicker);
+    padding: 1.1em 1.4em;
+}
+
+.reveal .slides section.cards.grid tr {
+    height: 180px;
+}
+
+/* Title slide subtitle (date) */
+.reveal .slides section.title h2 {
+    margin-top: 0.4em;
+    font-family: var(--font-sans);
+    font-size: 1.1em;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink-2);
+}
+
+/* Diagramme (SVG, transparent mit dunkler Schrift): im Dunkelmodus invertiert, damit lesbar */
+:root[data-theme='dark'] .reveal .imageblock img[src$=".svg"] {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+/* Seitenleiste oben: Zurück-Link und Theme-Umschalter */
+.back-link {
+    position: fixed;
+    top: var(--space-3);
+    left: var(--space-4);
+    z-index: var(--z-nav);
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    padding: 0 var(--space-3);
+    font: var(--fw-regular) var(--fs-small) var(--font-sans);
+    color: var(--accent);
+    background: var(--bg);
+    border: var(--bw) solid var(--line-ui);
+    border-radius: var(--r-link);
+    text-decoration: none;
+}
+
+.slides-theme-toggle {
+    position: fixed;
+    top: var(--space-3);
+    right: var(--space-4);
+    z-index: var(--z-nav);
+}
+
+html, body { margin: 0; height: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Hochformat-Handy: Hinweis statt winziger Folien */
+.rotate-hint {
+    display: none;
+}
+
+@media (orientation: portrait) and (max-width: 600px) {
+    .rotate-hint {
+        display: block;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 12%;
+        padding: 0 var(--space-4);
+        text-align: center;
+        font: var(--fw-regular) var(--fs-small) var(--font-sans);
+        color: var(--ink-2);
+        z-index: var(--z-nav);
+        pointer-events: none;
+    }
+}
+
+/* Kein Zurück-Link/Umschalter im Druck bzw. PDF-Export */
+@media print {
+    .back-link,
+    .slides-theme-toggle,
+    .rotate-hint {
+        display: none !important;
+    }
+}
+
+html.reveal-print .back-link,
+html.reveal-print .slides-theme-toggle {
+    display: none;
+}
+
+/* Windows-Hochkontrast: Steuerpfeile sichtbar halten */
+@media (forced-colors: active) {
+    .reveal .controls button {
+        forced-color-adjust: none;
+        color: CanvasText;
+    }
+    .reveal .controls .controls-arrow::before,
+    .reveal .controls .controls-arrow::after {
+        background-color: CanvasText;
+    }
+    .reveal .progress span {
+        background-color: Highlight;
+    }
+}
+
+main {
+    width: 100%;
+    height: 100%;
+}

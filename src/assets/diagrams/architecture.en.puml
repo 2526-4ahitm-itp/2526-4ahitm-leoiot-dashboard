@@ -1,0 +1,55 @@
+@startuml
+!include <C4/C4_Container>
+
+UpdateElementStyle("person", $bgColor="#1b5e20", $borderColor="#1b5e20")
+UpdateElementStyle("container", $bgColor="#43a047", $borderColor="#43a047")
+UpdateElementStyle("external_system", $bgColor="#8a9e8c", $borderColor="#8a9e8c")
+UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
+
+LAYOUT_TOP_DOWN()
+HIDE_STEREOTYPE()
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontSize 20
+skinparam rectangle {
+  FontSize 20
+}
+skinparam database {
+  FontSize 20
+}
+skinparam person {
+  FontSize 20
+}
+skinparam arrow {
+  FontSize 18
+}
+!$TECHN_FONT_SIZE = 16
+skinparam ranksep 30
+skinparam nodesep 25
+
+System_Ext(sensors, "Sensor boxes", "ESPHome")
+Container(fake, "fake-sensors", "Simulator")
+Container(quarkus, "quarkus-app", "Java generator")
+System_Ext(solaxcloud, "Solax Cloud", "PV API")
+
+Container(collector, "solax-collector", "Node.js")
+Container(mosquitto, "Mosquitto", "MQTT :1883")
+Container(telegraf, "Telegraf", "")
+ContainerDb(influx, "InfluxDB", ":8086, bucket server_data")
+Container(bridge, "mqtt-ws-bridge", ":8090")
+Container(grafana, "Grafana", ":3000")
+System_Ext(browser, "Browser", "3D-Explorer, Dashboard v2, Kiosk display")
+
+Rel(sensors, mosquitto, "MQTT")
+Rel(fake, mosquitto, "MQTT")
+Rel(quarkus, mosquitto, "MQTT")
+Rel(solaxcloud, collector, "HTTPS API")
+Rel(collector, mosquitto, "MQTT")
+Rel(collector, influx, "HTTP write, solax_stats")
+Rel(mosquitto, telegraf, "Topics subscribed")
+Rel(telegraf, influx, "Writes")
+Rel(mosquitto, bridge, "MQTT")
+Rel(bridge, browser, "WebSocket")
+Rel(influx, grafana, "Flux")
+Rel(influx, browser, "Flux via /influx")
+@enduml

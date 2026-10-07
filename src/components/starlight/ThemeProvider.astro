@@ -1,0 +1,20 @@
+---
+// Override von Starlights ThemeProvider: Standard ist HELL (nicht prefers-color-scheme).
+// Speicherschlüssel 'starlight-theme' bleibt identisch zu Starlight und zum Marketing-Layout.
+---
+
+{/* Inline, damit kein Flackern entsteht. */}
+<script is:inline>
+	window.StarlightThemeProvider = (() => {
+		let stored = null;
+		try {
+			stored = localStorage.getItem('starlight-theme');
+		} catch (e) {}
+		const theme = stored === 'dark' ? 'dark' : 'light';
+		document.documentElement.dataset.theme = theme;
+		return {
+			// Kompatibilität: Starlights ThemeSelect ruft updatePickers(). Unser Umschalter braucht es nicht.
+			updatePickers() {},
+		};
+	})();
+</script>

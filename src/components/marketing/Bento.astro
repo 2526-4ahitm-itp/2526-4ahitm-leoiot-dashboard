@@ -1,0 +1,91 @@
+---
+import IsoSvg from './IsoSvg.astro';
+
+interface Props { lang: 'de' | 'en' }
+const { lang } = Astro.props;
+const en = lang === 'en';
+
+const T = en
+  ? { kicker: 'Features', h2: 'Functional scope', intro: "Four functions: 3D model, room climate dashboard, PV view and kiosk display – to make the school’s room climate and energy understandable.",
+      c1: ['3D model of the school', 'Rotate the building and view it floor by floor. Rooms are colour-coded directly in the model.'],
+      c2: ['Live sensor data', 'Temperature and CO₂ of the connected rooms. A traffic-light colour and a word (OK, Medium, Alert) show how good the air is.'],
+      c3: ['PV system', "Generation, consumption, and battery and grid usage of the school’s solar system, including past days."],
+      c4: ['Kiosk display', 'A full-screen energy display for screens in the school – no interaction needed, readable from a distance.'],
+      room: 'Room', good: 'OK', fair: 'Medium', poor: 'Alert', gen: 'Generation today', use: 'Consumption today' }
+  : { kicker: 'Funktionen', h2: 'Funktionsumfang', intro: 'Vier Funktionen: 3D-Modell, Raumklima-Dashboard, PV-Ansicht und Kiosk-Anzeige – damit Raumklima und Energie der Schule verständlich werden.',
+      c1: ['3D-Modell der Schule', 'Das Gebäude lässt sich drehen und stockwerksweise betrachten. Räume sind direkt im Modell farblich markiert.'],
+      c2: ['Live-Sensordaten', 'Temperatur und CO₂ der angebundenen Räume. Eine Ampelfarbe und ein Wort (OK, Mittel, Alarm) zeigen, wie gut die Luft ist.'],
+      c3: ['PV-Anlage', 'Erzeugung, Verbrauch sowie Batterie- und Netznutzung der Solaranlage der Schule, auch für vergangene Tage.'],
+      c4: ['Kiosk-Anzeige', 'Eine Vollbild-Energieanzeige für Bildschirme im Schulhaus – ohne Bedienung, gut lesbar aus der Distanz.'],
+      room: 'Raum', good: 'OK', fair: 'Mittel', poor: 'Alarm', gen: 'Erzeugung heute', use: 'Verbrauch heute' };
+const bars = [6, 18, 40, 68, 90, 100, 84, 58, 30, 10];
+---
+
+<section id="features" class="mk-section" aria-labelledby="mk-h-feat">
+  <div class="mk-sec-h mk-rv">
+    <div class="mk-kicker">{T.kicker}</div>
+    <h2 id="mk-h-feat">{T.h2}</h2>
+    <p>{T.intro}</p>
+  </div>
+  <div class="mk-bento">
+    <article class="mk-card mk-rv mk-c1">
+      <div><h3>{T.c1[0]}</h3><p>{T.c1[1]}</p></div>
+      <div class="mk-mini"><IsoSvg variant="mini" /></div>
+    </article>
+    <article class="mk-card mk-rv mk-c2" style="--d:60ms">
+      <div><h3>{T.c2[0]}</h3><p>{T.c2[1]}</p></div>
+      <div class="mk-mini">
+        <div class="mk-mini-row"><span>{T.room} A</span><span class="mk-chip g">{T.good}</span></div>
+        <div class="mk-mini-row"><span>{T.room} B</span><span class="mk-chip y">{T.fair}</span></div>
+        <div class="mk-mini-row"><span>{T.room} C</span><span class="mk-chip r">{T.poor}</span></div>
+      </div>
+    </article>
+    <article class="mk-card mk-rv mk-c3">
+      <div><h3>{T.c3[0]}</h3><p>{T.c3[1]}</p></div>
+      <div class="mk-mini">
+        <div class="mk-bars" aria-hidden="true">{bars.map((h) => <i style={`height:${h}%`}></i>)}</div>
+      </div>
+    </article>
+    <article class="mk-card mk-rv mk-c4" style="--d:60ms">
+      <div><h3>{T.c4[0]}</h3><p>{T.c4[1]}</p></div>
+      <div class="mk-mini">
+        <div class="mk-kiosk">
+          <div class="mk-tile"><small>{T.gen}</small><div class="mk-meter" aria-hidden="true"><i style="width:72%"></i></div></div>
+          <div class="mk-tile"><small>{T.use}</small><div class="mk-meter" aria-hidden="true"><i style="width:48%"></i></div></div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<style is:global>
+  .mk-section { padding: var(--section-gap) 0 0; }
+  .mk-sec-h { max-width: 640px; }
+  .mk-kicker { font-size: var(--fs-eyebrow); font-weight: var(--fw-kicker); color: var(--accent); letter-spacing: 0.01em; }
+  .mk-section h2, .mk-band h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); font-weight: var(--fw-h2); margin: 10px 0 0; text-wrap: balance; }
+  .mk-sec-h p { color: var(--ink-2); margin: 14px 0 0; max-width: var(--measure-section); }
+  .mk-bento { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-4); margin-top: 44px; }
+  .mk-card { transition: transform var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease), box-shadow var(--dur-ui) var(--ease), background-color var(--dur-theme) ease, color var(--dur-theme) ease; border: var(--bw) solid var(--line-ui); border-radius: var(--r-lg); background: var(--surface); padding: var(--card-pad); display: flex; flex-direction: column; gap: 18px; overflow: hidden; min-width: 0; }
+  @media (hover: hover) { .mk-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--accent); } }
+  .mk-c1, .mk-c4 { grid-column: span 4; } .mk-c2, .mk-c3 { grid-column: span 2; }
+  .mk-card h3 { margin: 0; font-size: var(--fs-h3); letter-spacing: var(--ls-h3); font-weight: var(--fw-h3); }
+  .mk-card p { margin: 6px 0 0; font-size: var(--fs-card); color: var(--ink-2); line-height: var(--lh-card); max-width: var(--measure-card); }
+  .mk-mini { border: var(--bw) solid var(--line); border-radius: var(--r-md); background: var(--bg-soft); padding: 14px; margin-top: auto; min-width: 0; }
+  .mk-mini svg { display: block; width: 100%; height: auto; }
+  .mk-mini-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: var(--fs-small); padding: 7px 0; border-bottom: var(--bw) solid var(--line); }
+  .mk-mini-row:last-child { border-bottom: 0; }
+  .mk-mini-row span:first-child { color: var(--ink-2); }
+  .mk-bars { display: flex; align-items: flex-end; gap: 5px; height: 70px; }
+  .mk-bars i { flex: 1; background: var(--accent); opacity: 0.85; border-radius: 3px 3px 0 0; }
+  .mk-kiosk { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .mk-tile { background: var(--surface); border: var(--bw) solid var(--line); border-radius: 9px; padding: 10px var(--space-3); }
+  .mk-tile small { display: block; color: var(--ink-2); font-size: var(--fs-meta); }
+  .mk-meter { height: 8px; border-radius: var(--r-pill); background: var(--line); margin-top: 10px; overflow: hidden; }
+  .mk-meter i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+  @media (max-width: 980px) { .mk-c1, .mk-c4 { grid-column: span 6; } .mk-c2, .mk-c3 { grid-column: span 3; } }
+  @media (max-width: 720px) {
+    .mk-section { padding-top: 80px; }
+    .mk-c2, .mk-c3 { grid-column: span 6; }
+    .mk-card { padding: var(--space-4) 20px; }
+  }
+</style>

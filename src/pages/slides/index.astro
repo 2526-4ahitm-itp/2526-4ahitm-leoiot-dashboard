@@ -1,0 +1,92 @@
+---
+import '../../styles/tokens.css';
+import ThemeToggle from '../../components/ThemeToggle.astro';
+import slidesRaw from '../../slides/slides.html?raw';
+
+// Diagramm-SVGs (einmalig aus src/slides/diagrams/*.puml gerendert) per Dateiname auflösen.
+const svgs = import.meta.glob('../../slides/diagrams/*.svg', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>;
+
+let slides = slidesRaw;
+for (const [path, url] of Object.entries(svgs)) {
+  const name = path.split('/').pop()!;
+  slides = slides.replaceAll(`src="${name}"`, `src="${url}"`);
+}
+
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+---
+<!doctype html>
+<html lang="de" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>LeoIoT – Präsentation</title>
+    <noscript>
+      <style>
+        .reveal .slides > section { display: block !important; position: static !important; margin: 2rem auto; max-width: 1000px; padding: 0 1rem; }
+        .slides-theme-toggle, .rotate-hint { display: none; }
+        .noscript-note { display: block !important; }
+      </style>
+    </noscript>
+    <script is:inline>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem('starlight-theme'); } catch (e) {}
+        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="back-link" href={base}>Zur Startseite</a>
+    <div class="slides-theme-toggle"><ThemeToggle label="Hell/Dunkel umschalten" /></div>
+    <noscript>
+      <p class="noscript-note" style="max-width:1000px;margin:5rem auto 0;padding:0 1rem;font-family:sans-serif">
+        Für die Präsentation wird JavaScript benötigt. <a href={base}>Zur Startseite</a>
+      </p>
+    </noscript>
+    <p class="rotate-hint" aria-hidden="true">Für die Präsentation Gerät quer halten.</p>
+    <main>
+      <div class="reveal">
+        <div class="slides">
+          <Fragment set:html={slides} />
+        </div>
+      </div>
+    </main>
+
+    <script>
+      import Reveal from 'reveal.js';
+      import 'reveal.js/reveal.css';
+      import 'reveal.js/theme/white.css';
+      import '../../slides/slides.css';
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      Reveal.initialize({
+        width: 1408,
+        height: 792,
+        slideNumber: 'c/t',
+        transition: reduceMotion ? 'none' : 'slide',
+        backgroundTransition: reduceMotion ? 'none' : 'fade',
+        hash: true,
+        scrollActivationWidth: null,
+        keyboardCondition: (e: KeyboardEvent) =>
+          !(e.target instanceof Element && e.target.closest('.back-link, .slides-theme-toggle')),
+      });
+
+      const labels: Record<string, string> = {
+        left: 'Vorherige Folie',
+        right: 'Nächste Folie',
+        up: 'Folie darüber',
+        down: 'Folie darunter',
+      };
+      Object.entries(labels).forEach(([k, v]) =>
+        document.querySelector('.reveal .navigate-' + k)?.setAttribute('aria-label', v),
+      );
+    </script>
+  </body>
+</html>
