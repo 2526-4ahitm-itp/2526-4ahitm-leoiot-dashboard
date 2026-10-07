@@ -5,6 +5,7 @@ UpdateElementStyle("person", $bgColor="#dcedc8", $fontColor="#1b3a1f", $borderCo
 UpdateElementStyle("system", $bgColor="#1b7a2b", $fontColor="#ffffff", $borderColor="#0d4d17")
 UpdateElementStyle("external_system", $bgColor="#e3eaf2", $fontColor="#1f2d3a", $borderColor="#9fb3c8")
 skinparam shadowing false
+skinparam backgroundColor transparent
 UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
 
 LAYOUT_TOP_DOWN()

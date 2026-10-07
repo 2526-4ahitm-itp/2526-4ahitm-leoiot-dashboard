@@ -5,7 +5,7 @@ sidebar:
   order: 30
 ---
 
-This page describes how to start the whole system locally. Docker Compose starts all services with one command.
+This page describes how to start the whole system locally. Docker Compose (a tool for starting several containers together) starts all services with one command.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ This page describes how to start the whole system locally. Docker Compose starts
 ## Start
 
 ```bash
-# in the repository root
+# in the repository root (main folder of the project)
 docker compose up -d
 ```
 
@@ -31,13 +31,13 @@ Compose starts these services (all on the `leoiot` network):
 | `influxdb` | `influxdb:2.7` | Time-series database (setup mode on first start) |
 | `telegraf` | `telegraf:latest` | Reads MQTT topics and writes to InfluxDB (`telegraf.conf`) |
 | `grafana` | `grafana/grafana:latest` | Dashboards (provisioning from `grafana/`) |
-| `quarkus-app` | Build from `backend/sensor-data-generator` | Sensor data generator (publishes e.g. `sine`, `room-temperature`) |
+| `quarkus-app` | Build from `backend/sensor-data-generator` | Sensor data generator (publishes e.g. `sine`, `room-temperature`) |
 | `frontend` | `node:20-alpine`, `./frontend` | 3D explorer (Vite dev server) |
 | `dashboard-v2` | `node:20-alpine`, `./dashboard-v2` | Dashboard (room climate and PV, Vite dev server) |
 | `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, one directory each | Kiosk displays (Vite dev server) |
 | `leogreen-kiosk` | `node:20-alpine`, `./leogreenKiosk` | LeoGreen kiosk |
 | `mqtt-ws-bridge` | `node:20-alpine`, `./mqtt-ws-bridge` | Bridge: passes MQTT readings on to the browser via WebSocket |
-| `solax-collector` | `node:20-alpine`, `./solax-collector` | Writes Solax data to InfluxDB |
+| `solax-collector` | `node:20-alpine`, `./solax-collector` | Fetches Solax data, writes it to InfluxDB and publishes it via MQTT |
 | `fake-sensors` | `node:20-alpine`, `./fake-sensors` | Simulated sensors for testing |
 
 ## Ports
@@ -61,7 +61,7 @@ Compose starts these services (all on the `leoiot` network):
 |---|---|---|
 | `config/mosquitto.conf` | in the repository | Listener 1883, `allow_anonymous false`, `password_file /mosquitto/config/pwfile` |
 | `config/pwfile` | **not** in the repository (`.gitignore`) | Broker password file |
-| `telegraf.conf` | in the repository | MQTT credentials (user/password) and InfluxDB token; values intentionally not listed here |
+| `telegraf.conf` | in the repository | MQTT credentials (user/password) and InfluxDB token; the values are not given here for security reasons |
 | `MQTT_HOST` | Compose environment of `quarkus-app`, `fake-sensors`, `mqtt-ws-bridge` | Broker hostname (`mosquitto` on the Compose network) |
 | `MQTT_PORT`, `UPDATE_INTERVAL` | optional, `fake-sensors` | Broker port (default 1883), publish interval in ms (default 10000) |
 | `WS_PORT` | `mqtt-ws-bridge` | WebSocket bridge port (8090 in Compose) |
@@ -69,8 +69,8 @@ Compose starts these services (all on the `leoiot` network):
 | `INFLUX_URL`, `INFLUX_TOKEN`, `INFLUX_ORG`, `INFLUX_BUCKET` | `solax-collector` | InfluxDB access |
 | `DOCKER_INFLUXDB_INIT_*` | `influxdb` | Initial setup (mode, user, password, organisation, bucket, admin token) |
 
-:::danger[Secrets in the repository]
-`docker-compose.yaml`, `backup/*.sh`, `telegraf.conf` and the backend configuration contain credentials and tokens in plain text. This documentation deliberately does not reproduce them. For any public operation they should be moved out and rotated.
+:::caution[Credentials]
+For credentials and tokens in the repository, see [Operations](../operations/), section “Known limitations”.
 :::
 
 ## Missing `config/pwfile`
@@ -89,7 +89,7 @@ docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest 
   mosquitto_passwd /mosquitto/config/pwfile <OTHER_USER>
 ```
 
-The users/passwords must match the clients: Telegraf, `fake-sensors` and the backend (`quarkus-app`) log in to the broker with a user name and password (configured in `telegraf.conf`, `fake-sensors/index.js` and the backend `application.properties`). Those files show which credentials are used.
+The users/passwords must match the clients: Telegraf, `fake-sensors` and the backend (`quarkus-app`) log in to the broker with a user name and password (configured in `telegraf.conf`, `fake-sensors/index.js` and the backend `application.properties`).
 
 ## Fake sensors for testing
 
@@ -99,26 +99,30 @@ The `fake-sensors` service starts automatically with `docker compose up -d`. On 
 docker compose up -d fake-sensors
 ```
 
-It publishes simulated temperature and CO₂ values for 117 rooms (`roomsConfig` in `fake-sensors/index.js`; default interval 10 s, `UPDATE_INTERVAL`):
+It publishes simulated temperature and CO₂ values for 117 rooms (`roomsConfig` in `fake-sensors/index.js`; default interval 10 s, `UPDATE_INTERVAL`):
 
 | Value | Topic | Format |
 |---|---|---|
-| Temperature | `room-temperature` | JSON, e.g. `{"room": "105", "temperature": 21.5}` |
+| Temperature | `room-temperature` | JSON, e.g. `{"room": "105", "temperature": 21.5}` |
 | CO₂ | `nili3/sensor/{room_id}_co2/state` | plain number in ppm |
 
 Standalone (against a broker on `localhost:1883`): `cd fake-sensors && npm install && npm start`; another broker via `MQTT_HOST`.
 
 ## Local frontend development
 
-All frontends use Vite. Scripts according to `package.json`:
+All seven frontends use Vite (development server and build tool for web interfaces). Scripts according to `package.json`:
 
 | Project | `npm run dev` | Port |
 |---|---|---|
 | `frontend` | `vite` | Vite default; `--port 8080` in Compose |
 | `dashboard-v2` | `vite --port 8081` | 8081 |
+| `kiosk` | `vite --port 8082` | 8082 |
+| `kiosk2` | `vite --port 8083` | 8083 |
+| `kiosk3` | `vite --port 8084` | 8084 |
+| `kiosk4` | `vite --port 8085` | 8085 |
 | `leogreenKiosk` | `vite --port 8087` | 8087 |
 
-All three also provide `npm run build` (`vite build`) and `npm run preview`. In Compose the dev servers run with `--host 0.0.0.0`. `frontend` depends on `three`; the other two only have Vite as a dependency.
+All seven also provide `npm run build` (`vite build`) and `npm run preview`; Compose does not use the build, its dev servers run with `--host 0.0.0.0`. `frontend` depends on `three`; the others only have Vite as a dependency.
 
 ```bash
 cd dashboard-v2
@@ -126,17 +130,11 @@ npm install
 npm run dev
 ```
 
-## Outdated files in the repository
-
-- `guide-sine-generator.adoc` is outdated: it describes anonymous Mosquitto operation, while the Compose broker forbids anonymous connections; replaced by `fake-sensors`.
-- `api/requests.http` is an outdated demo file: the backend only offers `/hello` and a WebSocket, no `/api/sensors`.
-
 ## Sources in the repository
 
 - `docker-compose.yaml`
 - `config/mosquitto.conf`, `.gitignore`
 - `telegraf.conf`
-- `fake-sensors/README.md`, `fake-sensors/index.js`
-- `backend/guide-sine-generator.adoc`, `backend/sensor-data-generator/src/main/resources/application.properties`
+- `fake-sensors/index.js`
+- `backend/sensor-data-generator/src/main/resources/application.properties`
 - `frontend/package.json`, `dashboard-v2/package.json`, `leogreenKiosk/package.json`
-- `api/requests.http`, `README.adoc`

@@ -12,18 +12,20 @@ const en = lang === 'en';
 const pre = en ? `${base}/en` : base;
 
 const t = en
-  ? { home: 'LeoIoT home', main: 'Main navigation', menu: 'Menu', theme: 'Dark mode', langLabel: 'Switch language to German', other: 'DE', cur: 'EN',
+  ? { home: 'LeoIoT home', main: 'Main navigation', menu: 'Menu', theme: 'Dark mode', langLabel: 'DE / EN: switch language to German', other: 'DE', cur: 'EN', deOnly: 'German only',
       product: 'Product', app: 'App', docs: 'Documentation', slides: 'Slides' }
-  : { home: 'LeoIoT Startseite', main: 'Hauptnavigation', menu: 'Menü', theme: 'Dunkelmodus', langLabel: 'Sprache wechseln zu Englisch', other: 'EN', cur: 'DE',
+  : { home: 'LeoIoT Startseite', main: 'Hauptnavigation', menu: 'Menü', theme: 'Dunkelmodus', langLabel: 'DE / EN: Sprache wechseln zu Englisch', other: 'EN', cur: 'DE', deOnly: '',
       product: 'Produkt', app: 'App', docs: 'Dokumentation', slides: 'Präsentation' };
 
 const links = [
   { id: 'product', label: t.product, href: `${pre}/` },
   { id: 'app', label: t.app, href: `${pre}/app/` },
   { id: 'docs', label: t.docs, href: `${pre}/docs/` },
-  { id: 'slides', label: t.slides, href: `${base}/slides/` },
+  { id: 'slides', label: t.slides, href: `${base}/slides/`, note: t.deOnly },
 ];
-const otherHref = en ? `${base}/` : `${base}/en/`;
+// Sprachumschalter: äquivalente Seite der anderen Sprache (Folien gibt es nur auf Deutsch).
+const sub = current === 'app' ? 'app/' : current === 'docs' ? 'docs/' : '';
+const otherHref = en ? `${base}/${sub}` : `${base}/en/${sub}`;
 ---
 
 <script is:inline>document.documentElement.classList.add('mk-js');</script>
@@ -34,17 +36,17 @@ const otherHref = en ? `${base}/` : `${base}/en/`;
       LeoIoT
     </a>
     <nav class="mk-links" aria-label={t.main}>
-      {links.map((l) => <a href={l.href} aria-current={l.id === current ? 'page' : undefined}>{l.label}</a>)}
+      {links.map((l) => <a href={l.href} aria-current={l.id === current ? 'page' : undefined}>{l.label}{l.note && <span class="mk-vh"> ({l.note})</span>}</a>)}
     </nav>
     <div class="mk-tools">
-      <a class="mk-lang" href={otherHref} hreflang={t.other.toLowerCase()} lang={t.other.toLowerCase()} aria-label={t.langLabel}><b>{t.cur}</b><span aria-hidden="true"> / {t.other}</span></a>
+      <a class="mk-lang" href={otherHref} hreflang={t.other.toLowerCase()} aria-label={t.langLabel}><b>{t.cur}</b><span aria-hidden="true"> / {t.other}</span></a>
       <ThemeToggle label={t.theme} />
       <details class="mk-menu" data-mk-menu>
         <summary aria-label={t.menu}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
         </summary>
         <nav class="mk-menu-panel" aria-label={t.main}>
-          {links.map((l) => <a href={l.href} aria-current={l.id === current ? 'page' : undefined}>{l.label}</a>)}
+          {links.map((l) => <a href={l.href} aria-current={l.id === current ? 'page' : undefined}>{l.label}{l.note && <span class="mk-note">&nbsp;({l.note})</span>}</a>)}
         </nav>
       </details>
     </div>
@@ -71,6 +73,8 @@ const otherHref = en ? `${base}/` : `${base}/en/`;
   .mk-menu summary:hover { background: var(--bg-soft); }
   .mk-menu-panel { position: absolute; right: 0; top: calc(var(--tap) + var(--space-2)); min-width: 200px; display: flex; flex-direction: column; padding: var(--space-2); background: var(--surface); border: var(--bw) solid var(--line-ui); border-radius: var(--r-lg); box-shadow: var(--shadow); }
   .mk-menu-panel a { display: flex; align-items: center; min-height: 48px; padding: 0 var(--space-4); color: var(--ink); text-decoration: none; border-radius: var(--r-link); font-size: var(--fs-btn); }
+  .mk-menu-panel .mk-note { color: var(--ink-2); font-size: var(--fs-small); }
+  .mk-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .mk-menu-panel a:hover { background: var(--bg-soft); }
   .mk-menu-panel a[aria-current] { font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
   @media (max-width: 720px) {
@@ -102,6 +106,11 @@ const otherHref = en ? `${base}/` : `${base}/en/`;
     document.addEventListener('click', (e) => {
       if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
     });
+    menu.addEventListener('focusout', (e) => {
+      const next = e.relatedTarget as Node | null;
+      if (menu.open && next && !menu.contains(next)) menu.open = false;
+    });
+    menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => { menu.open = false; }));
   }
 
   // Einmalige Einblendung beim Scrollen (kein Scroll-Jacking). Ohne JS bleibt alles sichtbar.

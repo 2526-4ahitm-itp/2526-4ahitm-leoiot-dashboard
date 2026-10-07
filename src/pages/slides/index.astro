@@ -16,7 +16,8 @@ for (const [path, url] of Object.entries(svgs)) {
   slides = slides.replaceAll(`src="${name}"`, `src="${url}"`);
 }
 
-const base = import.meta.env.BASE_URL;
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 ---
 <!doctype html>
 <html lang="de" data-theme="light">
@@ -25,6 +26,13 @@ const base = import.meta.env.BASE_URL;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <title>LeoIoT – Präsentation</title>
+    <noscript>
+      <style>
+        .reveal .slides > section { display: block !important; position: static !important; margin: 2rem auto; max-width: 1000px; padding: 0 1rem; }
+        .slides-theme-toggle, .rotate-hint { display: none; }
+        .noscript-note { display: block !important; }
+      </style>
+    </noscript>
     <script is:inline>
       (function () {
         var t = null;
@@ -34,13 +42,21 @@ const base = import.meta.env.BASE_URL;
     </script>
   </head>
   <body>
-    <a class="back-link" href={base}>Zurück zur Seite</a>
+    <a class="back-link" href={base}>Zur Startseite</a>
     <div class="slides-theme-toggle"><ThemeToggle label="Hell/Dunkel umschalten" /></div>
-    <div class="reveal">
-      <div class="slides">
-        <Fragment set:html={slides} />
+    <noscript>
+      <p class="noscript-note" style="max-width:1000px;margin:5rem auto 0;padding:0 1rem;font-family:sans-serif">
+        Für die Präsentation wird JavaScript benötigt. <a href={base}>Zur Startseite</a>
+      </p>
+    </noscript>
+    <p class="rotate-hint" aria-hidden="true">Für die Präsentation Gerät quer halten.</p>
+    <main>
+      <div class="reveal">
+        <div class="slides">
+          <Fragment set:html={slides} />
+        </div>
       </div>
-    </div>
+    </main>
 
     <script>
       import Reveal from 'reveal.js';
@@ -57,7 +73,20 @@ const base = import.meta.env.BASE_URL;
         transition: reduceMotion ? 'none' : 'slide',
         backgroundTransition: reduceMotion ? 'none' : 'fade',
         hash: true,
+        scrollActivationWidth: null,
+        keyboardCondition: (e: KeyboardEvent) =>
+          !(e.target instanceof Element && e.target.closest('.back-link, .slides-theme-toggle')),
       });
+
+      const labels: Record<string, string> = {
+        left: 'Vorherige Folie',
+        right: 'Nächste Folie',
+        up: 'Folie darüber',
+        down: 'Folie darunter',
+      };
+      Object.entries(labels).forEach(([k, v]) =>
+        document.querySelector('.reveal .navigate-' + k)?.setAttribute('aria-label', v),
+      );
     </script>
   </body>
 </html>

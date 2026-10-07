@@ -3,7 +3,10 @@ title: Betrieb
 description: Deployment per GitHub Actions, Nginx-Routing, Backup und Restore der InfluxDB sowie bekannte Einschränkungen.
 sidebar:
   order: 40
+next: false
 ---
+
+Diese Seite beschreibt, wie das System auf die Schul-VM gelangt, wie Anfragen verteilt und wie Daten gesichert werden.
 
 ## Deployment
 
@@ -12,15 +15,15 @@ Ein Workflow ist eine automatische Abfolge von Schritten bei GitHub (GitHub Acti
 | Workflow | Datei | Runner | Aktion |
 |---|---|---|---|
 | Continuous Deployment | `deploy.yml` | `self-hosted` (Schul-VM) | wechselt in das Projektverzeichnis auf der VM, führt `git pull` aus und startet `docker compose up -d --build` |
-| Pages | `docs.yaml` | `ubuntu-latest` | `npm ci`, `npm run build` (Astro), baut zusätzlich die reveal.js-Folien aus `asciidocs/slides` (Asciidoctor in Docker) und veröffentlicht den Ordner `dist` auf den Branch `gh-pages` (JamesIves/github-pages-deploy-action, `clean: true`); auch manuell startbar (`workflow_dispatch`) |
+| Pages | `docs.yaml` | `ubuntu-latest` | `npm ci`, `npm run build` (Astro, baut auch die reveal.js-Folien aus `src/slides`; Node 22) und veröffentlicht den Ordner `dist` auf den Branch `gh-pages` (JamesIves/github-pages-deploy-action, `clean: true`); auch manuell startbar (`workflow_dispatch`) |
 
-Der Pages-Workflow hat die Berechtigung `contents: write` und eine `concurrency`-Gruppe `pages` mit `cancel-in-progress`.
+Der Pages-Workflow darf in den Branch `gh-pages` schreiben; ein neuer Lauf bricht einen noch laufenden ab.
 
-Manuell wird die VM laut `README.adoc` mit `git pull` und `docker compose up -d --build` im Projektverzeichnis aktualisiert.
+Manuell wird die VM (Vorgehen laut `README.adoc`) mit `git pull` und `docker compose up -d --build` im Projektverzeichnis aktualisiert.
 
 ## Nginx-Routing
 
-`deploy/nginx.conf` definiert einen Server für den Schul-Hostnamen: Anfragen auf Port 80 (unverschlüsselt) werden automatisch auf HTTPS (verschlüsselt, Port 443) umgeleitet. Die Verschlüsselung (TLS) wird in Nginx abgewickelt; die Zertifikate stammen von Let's Encrypt (`/etc/letsencrypt`). Nginx ist hier der Reverse-Proxy: Er nimmt alle Anfragen an und reicht sie an die Dienste weiter, die auf `127.0.0.1` laufen.
+`deploy/nginx.conf` definiert einen Server für den Schul-Hostnamen: Anfragen auf Port 80 (unverschlüsselt) werden automatisch auf HTTPS (verschlüsselt, Port 443) umgeleitet. Die Verschlüsselung (TLS) wird in Nginx abgewickelt; die Zertifikate stammen von Let’s Encrypt (`/etc/letsencrypt`). Nginx ist hier der Reverse-Proxy: Er nimmt alle Anfragen an und reicht sie an die Dienste weiter, die auf `127.0.0.1` laufen.
 
 | Pfad | Ziel |
 |---|---|
@@ -42,11 +45,11 @@ Die Datenbank InfluxDB wird mit dem Kommandozeilen-Werkzeug `influx backup` gesi
 ### Backup (`backup/backup.sh`)
 
 1. Zielverzeichnis `$HOME/influxdb-backups` anlegen.
-2. `docker exec influxdb influx backup` nach `/backups/<JJJJ-MM-TT>` im Container (Authentifizierung per Token, im Skript hinterlegt).
-3. `docker cp` des Backups nach `$HOME/influxdb-backups/<JJJJ-MM-TT>`.
-4. Bereinigung: Es werden die neuesten `KEEP_WEEKS=8` Verzeichnisse behalten (Sortierung nach Änderungszeit), ältere werden gelöscht.
+2. Backup mit `docker exec influxdb influx backup` nach `/backups/<JJJJ-MM-TT>` im Container erstellen (Authentifizierung per Token, im Skript hinterlegt).
+3. Backup mit `docker cp` nach `$HOME/influxdb-backups/<JJJJ-MM-TT>` kopieren.
+4. Alte Backups bereinigen: die neuesten 8 Verzeichnisse (`KEEP_WEEKS=8`, Sortierung nach Änderungszeit) behalten, ältere löschen.
 
-Zeitplan laut `README.adoc`: wöchentlich per Cron, sonntags 02:00, Ausgabe in eine Logdatei im Home-Verzeichnis. Der Cron-Eintrag muss einmalig manuell auf der VM angelegt werden; im Repository ist er nicht automatisiert.
+Zeitplan laut `README.adoc`: wöchentlich per Cron, sonntags 02:00, Ausgabe in eine Logdatei im Home-Verzeichnis. Der Cron-Eintrag (zeitgesteuerter Job unter Linux) muss einmalig manuell auf der VM angelegt werden; im Repository ist er nicht automatisiert.
 
 ### Restore (`backup/restore.sh`)
 
@@ -62,16 +65,17 @@ Ohne Argument listet das Skript die vorhandenen Backups. Mit Datum prüft es, ob
 
 ## Bekannte Einschränkungen
 
-- Die Compose-Dienste für Frontends starten Vite-Dev-Server (`npm run dev`) und führen bei jedem Start `npm install` aus; es gibt keinen Produktions-Build im Compose-Betrieb.
+- Die Compose-Dienste für Frontends starten Vite-Dev-Server (`npm run dev`) und führen bei jedem Start `npm install` aus; im Compose-Betrieb gibt es keinen Produktions-Build.
 - Zugangsdaten und Tokens stehen im Klartext in `docker-compose.yaml`, `backup/*.sh` und weiteren Dateien (nicht hier wiedergegeben).
-- Der Backup-Cron-Job ist nicht versioniert; sein Status auf der VM ist nicht dokumentiert.
+- Der wöchentliche Backup-Job (Cron) ist nur auf der VM eingerichtet und nicht im Repository abgelegt.
 - Backups liegen nur auf derselben VM; ein externes Ziel ist nicht konfiguriert.
 - Der Deploy-Workflow nutzt einen festen Pfad auf der VM und einen self-hosted Runner; er ist ohne diese VM nicht reproduzierbar.
-- Die Nginx-Konfiguration liegt in `deploy/`, wird aber nicht automatisch auf die VM übertragen (dort `/etc/nginx/sites-available/leoiot`); Grafana ist direkt auf Port 3000 und über Nginx unter `/grafana/` erreichbar.
+- Die Nginx-Konfiguration liegt in `deploy/`, wird aber nicht automatisch auf die VM übertragen (dort `/etc/nginx/sites-available/leoiot`).
+- Grafana ist zusätzlich direkt auf Port 3000 erreichbar, nicht nur über Nginx unter `/grafana/`.
 
 ## Quellen im Repository
 
-- `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`
+- `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
 - `deploy/nginx.conf`
 - `backup/backup.sh`, `backup/restore.sh`
 - `docker-compose.yaml`

@@ -2,12 +2,12 @@
 title: Projekt
 description: Ausgangslage, Ziele, Lösung, Anforderungen, Team, Meilensteine und Sprint-Reviews von LeoIoT.
 sidebar:
-  order: 50
+  order: 5
 ---
 
 ## Ausgangslage und Problem
 
-Die HTL Leonding will eine nachhaltige Schule werden. Die PV-Anlage (Solaranlage) erzeugt Strom für die Schule. Die Daten liegen aber nur im Hersteller-Portal (Solax Cloud). Schüler:innen und Lehrkräfte sehen sie nicht. In den Klassen sind bis zu 30 Personen pro Raum; bei geschlossenen Fenstern steigt der CO₂-Gehalt stark an, was zu Müdigkeit und Konzentrationsschwäche führt. Niemand sieht, wann gelüftet werden muss.
+Die HTL Leonding will eine nachhaltige Schule werden. Die PV-Anlage (Solaranlage) erzeugt Strom für die Schule. Die Daten liegen aber nur im Herstellerportal (Solax Cloud; Solax ist der Hersteller des Wechselrichters). Schüler:innen und Lehrkräfte sehen sie nicht. In den Klassen sind bis zu 30 Personen pro Raum; bei geschlossenen Fenstern steigt der CO₂-Gehalt stark an, was zu Müdigkeit und Konzentrationsschwäche führt. Niemand sieht, wann gelüftet werden muss.
 
 Das Problem im Einzelnen:
 
@@ -28,10 +28,12 @@ Nicht Teil des Projekts: automatisches Öffnen/Schließen von Fenstern oder Tür
 ## Lösung
 
 - **PV-Dashboard:** Erzeugung, Netzbezug, Batterie-Ladung und -Entladung; Tagesansicht mit Datumswahl; Kiosk-Anzeige (Vollbild-Anzeige ohne Bedienung) für Bildschirme im Schulhaus.
-- **Sensor-Dashboard:** CO₂ und Temperatur pro Raum; CO₂-Ampel (ppm = Teile CO₂ pro Million Teile Luft; grün unter 800 ppm, gelb 800–1000 ppm, rot über 1000 ppm); Zeit der letzten Messung je Sensor.
+- **Sensor-Dashboard:** CO₂ und Temperatur pro Raum; CO₂-Ampel (ppm = Teile CO₂ pro Million Teile Luft; grün unter 800 ppm, gelb 800 bis 1000 ppm, rot über 1000 ppm; die Schwellen stammen aus der Präsentation, die Warnschwelle von 1000 ppm auch aus dem Projektantrag; es sind Richtwerte des Projekts); Zeit der letzten Messung je Sensor.
 - **3D-Modell:** Raum anklicken zeigt die aktuellen Werte; Live-Updates per WebSocket; Navigation zu Räumen und zum Turnsaal.
 
 Alles läuft im Browser, ohne Login, auf Deutsch und Englisch. Gehostet wird auf der Schul-VM, die Software wird automatisch über GitHub Actions veröffentlicht (Deployment).
+
+Hinweis zu den Daten: Stand heute liefert eine echte Sensorbox Messwerte (Raum 105); die übrigen Räume werden von einem Simulator (`fake-sensors`) mit Testwerten versorgt.
 
 ## Anforderungen
 
@@ -42,14 +44,14 @@ Aus der funktionalen Spezifikation (Muss-Anforderungen; FR-01 bedeutet Anforderu
 - PV-/Energiedaten anzeigen: Erzeugung, Netzbezug, Batterie-Ausgang und -Eingang (FR-03).
 - Live-Updates per WebSocket (FR-05).
 - Sensorübersicht mit allen Sensoren (FR-06).
-- Warnsymbol, wenn ein Sensor 5 Minuten lang keine Daten geliefert hat (FR-08).
+- Warnsymbol, wenn ein Sensor 5 Minuten lang keine Daten geliefert hat (FR-08).
 - Meldung „No data for room“ bei ungültigem Raum (FR-14).
 
-Sollte/Könnte: konfigurierbares Aktualisierungsintervall mit 10 Sekunden als Standard (FR-09), Historie für wählbare Tage und Zeiträume (FR-10), gut sichtbare Navigation (FR-11), Status „aktiv/inaktiv“ (FR-12), zusätzliche Warnungen etwa bei Raumtemperatur unter 10 °C (FR-13).
+Sollte/Könnte: konfigurierbares Aktualisierungsintervall mit 10 Sekunden als Standard (FR-09), Historie für wählbare Tage und Zeiträume (FR-10), gut sichtbare Navigation (FR-11), Status „aktiv/inaktiv“ (FR-12), zusätzliche Warnungen etwa bei Raumtemperatur unter 10 °C (FR-13).
 
 Nichtfunktional: keine Authentifizierung, Betrieb in der Schulumgebung, mehrere moderne Browser, lokale Zeitzone der Schule, Ausfall eines Sensors darf die anderen nicht beeinträchtigen.
 
-Aus dem Projektantrag (Messkriterien): Dashboard im Schulnetz per Browser erreichbar; PV-Daten (kWh, eingespartes CO₂) werden periodisch aktualisiert; Raumklimadaten werden angezeigt; Warnschwelle bei CO₂ über 1000 ppm ist sichtbar. Als Technologien nennt der Antrag MQTT, InfluxDB und Grafana. Auftraggeber ist Professor Thomas Stütz; geplant war ein dokumentiertes, wartbares Dashboard bis Ende Juni 2026.
+Aus dem Projektantrag (Messkriterien; der Antrag nennt die Klasse als 4AHITM, Schuljahr 2025/26): Dashboard im Schulnetz per Browser erreichbar; PV-Daten (kWh, eingespartes CO₂) werden periodisch aktualisiert; Raumklimadaten werden angezeigt; Warnschwelle bei CO₂ über 1000 ppm ist sichtbar. Als Technologien nennt der Antrag MQTT, InfluxDB und Grafana. Auftraggeber ist Professor Thomas Stütz; geplant war ein dokumentiertes, wartbares Dashboard bis Ende Juni 2026.
 
 ## Team
 
@@ -61,7 +63,7 @@ Aus dem Projektantrag (Messkriterien): Dashboard im Schulnetz per Browser erreic
 
 ## Aktueller Stand
 
-Stand der Präsentation vom 5. Oktober 2026:
+Stand der Präsentation ([zur Präsentation, nur Deutsch](../../slides/)) vom 5. Oktober 2026:
 
 - PV-Dashboard mit Tagesansicht und Kiosk-Anzeigen
 - Raumklima mit CO₂-Ampel
@@ -80,18 +82,18 @@ Als nächste Meilensteine nennt die Präsentation:
 
 ## Sprint-Reviews
 
-Dokumentiert ist bisher das Review vom 28. April 2026. Kritik und Wünsche:
+Stand: 28. April 2026. Dokumentiert ist das Review vom 28. April 2026; spätere Reviews liegen nicht vor. Kritik und Wünsche:
 
 - **Sensor-Dashboard:** Skala, Achsenbeschriftung, Uhrzeitachse für einen Tag (00:00–23:59), Kiosk-System, Tage mit Pfeilen links/rechts überspringen.
 - **PV-Dashboard:** Skala, Batteriestand, Einheiten (kWh, kW), Beschriftung „Lifetime Total“, aktuelle Solarleistung, Aufschlüsselung von Erzeugung, Verbrauch und Batterie, Sprachumschalter Deutsch/Englisch.
-- **3D-Modell:** Navigation mit Punkten (z. B. vor Türen, bei Treppen und Abzweigungen), kürzester Weg mit dem Dijkstra-Algorithmus (Verfahren für den kürzesten Weg), Navigation zum Turnsaal.
+- **3D-Modell:** Navigation mit Punkten (z. B. vor Türen, bei Treppen und Abzweigungen), kürzester Weg mit dem Dijkstra-Algorithmus (Verfahren für den kürzesten Weg), Navigation zum Turnsaal.
 - **Sonstiges:** User Stories vollständig und einheitlich formulieren (Akzeptanzkriterien, Tasks).
 
-To-do bis zum nächsten Review: Kiosk-Modus, PV-Anzeigen, Navigation korrigieren, Skalen und Einheiten, Pfeile zum Überspringen von Tagen, DB-Backup.
+To-do aus dem Review vom 28. April 2026 (Stand: 28. April 2026): Kiosk-Modus, PV-Anzeigen, Navigation korrigieren, Skalen und Einheiten, Pfeile zum Überspringen von Tagen, DB-Backup.
 
 ## Quellen im Repository
 
-- `asciidocs/slides/leoiot.adoc`
+- `src/slides/slides.html` (Präsentation), `asciidocs/slides/leoiot.adoc` (ältere Fassung)
 - `asciidocs/docs/Projektantrag.adoc`
 - `docs/functional-specification.md`
 - `openspec/specs/dashboard-sensors/spec.md`, `openspec/specs/dashboard-pv/spec.md`

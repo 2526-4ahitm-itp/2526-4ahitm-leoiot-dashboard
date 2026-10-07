@@ -30,14 +30,14 @@ const floors = [{ f: 2, l: T.f2 }, { f: 1, l: T.f1 }, { f: 0, l: T.f0 }];
     </div>
     <div class="mk-app">
       <div class="mk-side">
-        <h4>{T.floor}</h4>
+        <p class="mk-cap">{T.floor}</p>
         {floors.map((x) => <button type="button" aria-pressed={x.f === 1 ? 'true' : 'false'} data-f={x.f}><span>{x.l}</span></button>)}
       </div>
       <div class="mk-canvas">
         <IsoSvg variant="main" label={T.svg} roomLabels={roomLabels} />
       </div>
       <div class="mk-panel">
-        <h4>{T.rooms}</h4>
+        <p class="mk-cap">{T.rooms}</p>
         {rooms.map((r) => (
           <div class="mk-room" data-room={r.id}>
             <div class="mk-top"><b>{T.room} {r.id}</b><span class={`mk-chip ${r.cls}`}>{r.st}</span></div>
@@ -58,8 +58,8 @@ const floors = [{ f: 2, l: T.f2 }, { f: 1, l: T.f1 }, { f: 0, l: T.f0 }];
   .mk-url { flex: 1; max-width: 340px; margin: 0 auto; font-size: 12.5px; color: var(--ink-2); text-align: center; background: var(--bg); border: var(--bw) solid var(--line); border-radius: 7px; padding: 3px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mk-app { display: grid; grid-template-columns: 150px minmax(0, 1fr) 290px; min-height: 430px; }
   .mk-side { border-right: var(--bw) solid var(--line); padding: var(--space-4) var(--space-3); font-size: var(--fs-small); background: var(--bg-soft); }
-  .mk-side h4, .mk-panel h4 { margin: 0 0 var(--space-2) 6px; font-size: var(--fs-overline); font-weight: 600; letter-spacing: var(--ls-overline); text-transform: uppercase; color: var(--ink-2); }
-  .mk-panel h4 { margin: 0; }
+  .mk-side .mk-cap, .mk-panel .mk-cap { margin: 0 0 var(--space-2) 6px; font-size: var(--fs-overline); font-weight: 600; letter-spacing: var(--ls-overline); text-transform: uppercase; color: var(--ink-2); }
+  .mk-panel .mk-cap { margin: 0; }
   /* Stockwerk-Schalter braucht JS */
   .mk-side { display: none; }
   .mk-js .mk-side { display: block; }
@@ -111,8 +111,6 @@ const floors = [{ f: 2, l: T.f2 }, { f: 1, l: T.f1 }, { f: 0, l: T.f0 }];
     };
     iso.addEventListener('mouseover', (e) => hl(e, true));
     iso.addEventListener('mouseout', (e) => hl(e, false));
-    iso.addEventListener('focusin', (e) => hl(e, true));
-    iso.addEventListener('focusout', (e) => hl(e, false));
 
     // Räume werden einmalig ampelfarbig, danach dezentes Atmen solange sichtbar
     let vis = false, revealed = false, done = false;

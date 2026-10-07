@@ -6,15 +6,15 @@ const { lang } = Astro.props;
 const en = lang === 'en';
 
 const T = en
-  ? { kicker: 'Features', h2: 'Functional scope', intro: "Four functions: 3D model, room climate dashboard, PV view and kiosk display – to make the school's room climate and energy understandable.",
+  ? { kicker: 'Features', h2: 'Functional scope', intro: "Four functions: 3D model, room climate dashboard, PV view and kiosk display – to make the school’s room climate and energy understandable.",
       c1: ['3D model of the school', 'Rotate the building and view it floor by floor. Rooms are colour-coded directly in the model.'],
-      c2: ['Live sensor data', 'Temperature and CO₂ per room. A traffic-light colour and a word (OK, Medium, Alert) show how good the air is.'],
-      c3: ['PV system', "Generation, consumption, and battery and grid usage of the school's solar system, including past days."],
+      c2: ['Live sensor data', 'Temperature and CO₂ of the connected rooms. A traffic-light colour and a word (OK, Medium, Alert) show how good the air is.'],
+      c3: ['PV system', "Generation, consumption, and battery and grid usage of the school’s solar system, including past days."],
       c4: ['Kiosk display', 'A full-screen energy display for screens in the school – no interaction needed, readable from a distance.'],
       room: 'Room', good: 'OK', fair: 'Medium', poor: 'Alert', gen: 'Generation today', use: 'Consumption today' }
   : { kicker: 'Funktionen', h2: 'Funktionsumfang', intro: 'Vier Funktionen: 3D-Modell, Raumklima-Dashboard, PV-Ansicht und Kiosk-Anzeige – damit Raumklima und Energie der Schule verständlich werden.',
       c1: ['3D-Modell der Schule', 'Das Gebäude lässt sich drehen und stockwerksweise betrachten. Räume sind direkt im Modell farblich markiert.'],
-      c2: ['Live-Sensordaten', 'Temperatur und CO₂ je Raum. Eine Ampelfarbe und ein Wort (OK, Mittel, Alarm) zeigen, wie gut die Luft ist.'],
+      c2: ['Live-Sensordaten', 'Temperatur und CO₂ der angebundenen Räume. Eine Ampelfarbe und ein Wort (OK, Mittel, Alarm) zeigen, wie gut die Luft ist.'],
       c3: ['PV-Anlage', 'Erzeugung, Verbrauch sowie Batterie- und Netznutzung der Solaranlage der Schule, auch für vergangene Tage.'],
       c4: ['Kiosk-Anzeige', 'Eine Vollbild-Energieanzeige für Bildschirme im Schulhaus – ohne Bedienung, gut lesbar aus der Distanz.'],
       room: 'Raum', good: 'OK', fair: 'Mittel', poor: 'Alarm', gen: 'Erzeugung heute', use: 'Verbrauch heute' };

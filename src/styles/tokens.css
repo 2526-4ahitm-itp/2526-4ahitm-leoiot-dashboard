@@ -214,7 +214,46 @@
   --sl-color-hairline-shade: var(--bg);
 }
 
-/* Docs-Tabellen: Zellen umbrechen statt horizontal zu scrollen (Tastaturzugang, 360 px) */
+/* Docs-Tabellen: display:table (kein Scrollcontainer ohne Tastaturfokus). Wörter und Zahlen
+   brechen nie mitten im Wort (break-word reduziert die Mindestbreite nicht), nur sehr lange
+   Tokens (Topic-Pfade) dürfen am Zellenrand umbrechen. */
 .sl-markdown-content table { display: table; width: 100%; }
-.sl-markdown-content :is(th, td) { overflow-wrap: anywhere; }
-.sl-markdown-content :is(th, td) code { overflow-wrap: anywhere; white-space: normal; }
+.sl-markdown-content :is(th, td) {
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
+  font-variant-numeric: tabular-nums;
+}
+.sl-markdown-content :is(th, td) code { white-space: normal; overflow-wrap: break-word; word-break: normal; }
+/* Kurze Zellen (Ports, Zahlen) nie umbrechen */
+.sl-markdown-content :is(th, td):not(:has(*)):not(:has(:is(a, em, strong))) { min-width: 4.5ch; }
+@media (max-width: 50rem) {
+  /* Schmale Viewports: Tabelle scrollt horizontal (per Skript tastaturfokussierbar, siehe astro.config.mjs) */
+  .sl-markdown-content table { display: block; overflow-x: auto; }
+  .sl-markdown-content :is(th, td) { font-size: 0.85rem; }
+  .sl-markdown-content :is(th, td) code { font-size: 0.8rem; }
+}
+.sl-markdown-content table:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Docs: Hamburger-Button mit Token-Farben und Rahmen statt weißer Fläche */
+starlight-menu-button button,
+starlight-menu-button button:has(~ :popover-open) {
+  background-color: var(--bg-soft);
+  color: var(--ink);
+  border: var(--bw) solid var(--line-ui);
+  box-shadow: none;
+}
+
+/* Architekturdiagramm im Dark Mode: SVG hat weißen Hintergrund; invertieren, Farbtöne zurückdrehen
+   (Grüntöne bleiben grün), Hintergrund = Seitenhintergrund (#fff -> ~#0b0f14 durch Invertierung). */
+html[data-theme='dark'] .sl-markdown-content img[src*='architecture'] {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.95);
+  background: #fff;
+  border-radius: var(--r-md);
+}
+
+/* Druck: Starlight-Header ausblenden, Diagramm begrenzen */
+@media print {
+  header.header, .sidebar, .right-sidebar, starlight-menu-button { display: none !important; }
+  .sl-markdown-content img { max-height: 60vh; width: auto; max-width: 100%; }
+}

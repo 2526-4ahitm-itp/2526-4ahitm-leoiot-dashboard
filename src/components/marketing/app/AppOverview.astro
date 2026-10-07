@@ -10,12 +10,14 @@ const pre = en ? `${base}/en` : base;
 const docs = `${pre}/docs/`;
 const arch = `${pre}/docs/architecture/`;
 const slides = `${base}/slides/`;
+const project = `${pre}/docs/project/`;
 
 const t = en
   ? {
       kicker: 'App',
       h1: 'The LeoIoT app',
-      lead: 'Room climate and photovoltaic data of the school in one place: a 3D model of the building, a dashboard, and a kiosk display for screens in the building.',
+      lead: 'Room climate of the connected rooms and photovoltaic data of the school in one place: a 3D model of the building, a dashboard, and a kiosk display for screens in the building.',
+      real: 'Currently one sensor box delivers real readings (room 105); the other rooms are simulated.',
       cta1: 'Technical documentation', cta2: 'See the architecture',
       illu: 'Illustration, not a screenshot',
       legendH: 'Traffic-light colours in the dashboard',
@@ -28,35 +30,36 @@ const t = en
       moreH: 'Further pages',
       more1: 'Technical documentation', more1d: 'Architecture, interfaces, setup and operations, with sources.',
       more2: 'Architecture', more2d: 'How a measurement travels from the sensor to the screen.',
-      more3: 'Presentation', more3d: 'The project slides.',
+      more3: 'Slides (German only)', more3d: 'The project slides (in German).',
+      more4: 'Project and team', more4d: 'Starting point, goals, requirements and team.',
       sections: [
         { id: 'explorer', kind: 'explorer', h: '3D explorer', p: 'The school building as an interactive 3D model. Click a room to see its values.',
           items: [
-            'Rotate and zoom the building; switch between basement, ground floor, floor 1, floor 2 and the gym, or reset the view.',
-            'Click a room: it is highlighted and a panel shows its name, temperature and, where data exists, CO₂. Values update live while the room is selected.',
+            'Rotating and zooming the building; switching between basement, ground floor, floor 1, floor 2 and the gym; resetting the view.',
+            'Room selection by click: the room is highlighted and a panel shows its name, temperature and, where data exists, CO₂. Values update live while the room is selected.',
             'Heatmaps for temperature (°C) and CO₂ (ppm) per floor, with a value label on each room. Available in single-floor views.',
-            'Navigation: search a room (suggestions while typing) and an animated path leads from the entrance to it, also across floors and to the gym.',
+            'Navigation: room search with suggestions while typing; an animated path leads from the entrance to the room, also across floors and to the gym.',
           ] },
         { id: 'dashboard', kind: 'dashboard', h: 'Dashboard: room climate', p: 'Temperature and CO₂ of all rooms, as current values, history and a table.',
           items: [
-            'Pick a single room or look at all rooms; search by room name or filter by floor (all, “Floor 1”, “Floor 2”, “Floor E”, basement).',
+            'Room selection: a single room or all rooms; search by room name or filter by floor (labels as in the app: “All”, “Floor 1”, “Floor 2”, “Floor E”, “Keller”).',
             'Summary cards for the current temperature and CO₂ and for the 24-hour averages.',
-            'Charts for temperature and CO₂ over time. Time range 1 h, 6 h, 24 h or 7 days, or one chosen day with previous and next day buttons and a date picker.',
-            'Table of all sensors with time of the last update and a status (OK, Medium, Alert). Shows only a few rooms at first; click to show more.',
+            'Charts for temperature and CO₂ over time, with a selectable time range: 1 h, 6 h, 24 h, 7 days, or a single day (with previous/next buttons and a date picker).',
+            'Table of all sensors with time of the last update and a status (OK, Medium, Alert). Only a few rooms are shown at first; a click shows more.',
             'Values update live without reloading the page. The language can be switched between German and English.',
           ] },
         { id: 'pv', kind: 'pv', h: 'Photovoltaics', p: 'Energy data of the school PV system, as a separate view of the dashboard.',
           items: [
             'Cards: yield today, total yield, battery (currently charging or discharging) and power grid (power is drawn from or sent to the grid).',
-            'Charts that add up solar yield and the building’s power use over time (in kWh = kilowatt hours).',
+            'Charts that add up solar yield and the building’s power use over time (measured in kWh = kilowatt-hours).',
             'Daily statistics: stored in battery, taken from battery, bought from grid, fed into grid.',
             'The same day selection as for the room data, so past days can be viewed. For the current day the view refreshes every 30 seconds.',
           ] },
-        { id: 'kiosk', kind: 'kiosk', h: 'Kiosk', p: 'A fullscreen energy display for screens in the school building (interface in German only).',
+        { id: 'kiosk', kind: 'kiosk', h: 'Kiosk', p: 'A full-screen energy display for screens in the school building (interface in German only).',
           items: [
             'Header with HTL logo, clock and time of the last update; light and dark mode switch.',
             'Two donut charts for today: consumption (from PV, from grid, from battery) and production (self-consumption, to grid, to battery).',
-            'Weekly overview of the last 7 days (produced, consumed, exported) and today\'s power curve in kW for production and consumption.',
+            'Weekly overview of the last 7 days (produced, consumed, exported) and the power curve of today in kW for production and consumption.',
             'Live energy flow between solar, consumption, grid and battery, with animated lines. Live values arrive continuously; charts reload every 5 minutes.',
           ] },
       ],
@@ -64,7 +67,8 @@ const t = en
   : {
       kicker: 'App',
       h1: 'Die LeoIoT-App',
-      lead: 'Raumklima und Photovoltaik der Schule an einem Ort: ein 3D-Modell des Gebäudes, ein Dashboard und eine Kiosk-Anzeige für Bildschirme im Schulhaus.',
+      lead: 'Raumklima der angebundenen Räume und Photovoltaik der Schule an einem Ort: ein 3D-Modell des Gebäudes, ein Dashboard und eine Kiosk-Anzeige für Bildschirme im Schulhaus.',
+      real: 'Aktuell liefert eine Sensorbox echte Messwerte (Raum 105); die übrigen Räume werden simuliert.',
       cta1: 'Technische Dokumentation', cta2: 'Architektur ansehen',
       illu: 'Illustration, kein Screenshot',
       legendH: 'Ampelfarben im Dashboard',
@@ -78,20 +82,21 @@ const t = en
       more1: 'Technische Dokumentation', more1d: 'Architektur, Schnittstellen, Einrichtung und Betrieb, mit Belegen.',
       more2: 'Architektur', more2d: 'Wie ein Messwert vom Sensor auf den Bildschirm kommt.',
       more3: 'Präsentation', more3d: 'Die Projektpräsentation.',
+      more4: 'Projekt und Team', more4d: 'Ausgangslage, Ziele, Anforderungen und Team.',
       sections: [
         { id: 'explorer', kind: 'explorer', h: '3D-Explorer', p: 'Das Schulgebäude als interaktives 3D-Modell. Raum anklicken, Werte ansehen.',
           items: [
-            'Gebäude drehen und zoomen; zwischen Keller, Erdgeschoss, 1. Stock, 2. Stock und Turnsaal wechseln oder die Ansicht zurücksetzen.',
-            'Raum anklicken: Der Raum wird hervorgehoben, ein Feld zeigt Name, Temperatur und, wenn Daten vorliegen, CO₂. Solange der Raum gewählt ist, aktualisieren sich die Werte live.',
+            'Drehen und Zoomen des Gebäudes; Wechsel zwischen Keller, Erdgeschoss, 1. Stock, 2. Stock und Turnsaal; Zurücksetzen der Ansicht.',
+            'Raumauswahl per Klick: Der Raum wird hervorgehoben, ein Feld zeigt Name, Temperatur und, wenn Daten vorliegen, CO₂. Solange der Raum gewählt ist, aktualisieren sich die Werte live.',
             'Heatmaps für Temperatur (°C) und CO₂ (ppm) je Stockwerk, mit Wertanzeige an jedem Raum. Verfügbar in den Einzel-Stockwerksansichten.',
-            'Navigation: Raum suchen (Vorschläge beim Tippen), ein animierter Pfad führt vom Eingang dorthin, auch über Stockwerke und zum Turnsaal.',
+            'Navigation: Raumsuche mit Vorschlägen beim Tippen; ein animierter Pfad führt vom Eingang zum Raum, auch über Stockwerke und zum Turnsaal.',
           ] },
         { id: 'dashboard', kind: 'dashboard', h: 'Dashboard: Raumklima', p: 'Temperatur und CO₂ aller Räume als aktuelle Werte, Verlauf und Tabelle.',
           items: [
-            'Einen Raum wählen oder alle Räume ansehen; nach Raumnamen suchen oder nach Stockwerk filtern („Alle“, „Floor 1“, „Floor 2“, „Floor E“, „Keller“).',
+            'Raumauswahl: ein einzelner Raum oder alle Räume; Suche nach Raumnamen oder Filter nach Stockwerk (Beschriftungen wie in der App: „Alle“, „Floor 1“, „Floor 2“, „Floor E“, „Keller“).',
             'Kennzahlen-Karten für aktuelle Temperatur und aktuellen CO₂-Wert sowie für die 24-Stunden-Durchschnitte.',
-            'Verlaufsdiagramme für Temperatur und CO₂. Zeitraum 1 h, 6 h, 24 h oder 7 Tage, oder ein gewählter Tag mit Vor- und Zurück-Tasten und Datumsauswahl.',
-            'Tabelle aller Sensoren mit Zeit des letzten Updates und Status (OK, Mittel, Alarm). Zuerst werden nur einige Räume angezeigt; per Klick erscheinen weitere.',
+            'Verlaufsdiagramme für Temperatur und CO₂ mit wählbarem Zeitraum: 1 h, 6 h, 24 h, 7 Tage oder ein einzelner Tag (mit Vor-/Zurück-Tasten und Datumsauswahl).',
+            'Tabelle aller Sensoren mit Zeit des letzten Updates und Status (OK, Mittel, Alarm). Zuerst werden nur einige Räume angezeigt; ein Klick zeigt weitere.',
             'Die Werte aktualisieren sich live, ohne die Seite neu zu laden. Die Sprache lässt sich zwischen Deutsch und Englisch umschalten.',
           ] },
         { id: 'pv', kind: 'pv', h: 'Photovoltaik', p: 'Energiedaten der PV-Anlage der Schule, als eigene Ansicht im Dashboard.',
@@ -117,6 +122,7 @@ const t = en
     <p class="ap-kicker mk-hi" style="--i:0">{t.kicker}</p>
     <h1 id="ap-h1" class="mk-hi" style="--i:1">{t.h1}</h1>
     <p class="ap-lead mk-hi" style="--i:2">{t.lead}</p>
+    <p class="ap-note mk-hi" style="--i:2">{t.real}</p>
     <div class="ap-cta mk-hi" style="--i:3">
       <a class="mk-btn primary" href={docs}>{t.cta1}</a>
       <a class="mk-btn" href={arch}>{t.cta2}</a>
@@ -133,7 +139,7 @@ const t = en
         </ul>
       </div>
       <div class="ap-vis mk-rv" style="--d:60ms">
-        <Mockups kind={s.kind as 'explorer' | 'dashboard' | 'pv' | 'kiosk'} label={t.illu} />
+        <Mockups kind={s.kind as 'explorer' | 'dashboard' | 'pv' | 'kiosk'} label={t.illu} lang={lang} />
       </div>
     </section>
   ))}
@@ -155,6 +161,7 @@ const t = en
       <li><a href={docs}><b>{t.more1}</b><span>{t.more1d}</span></a></li>
       <li><a href={arch}><b>{t.more2}</b><span>{t.more2d}</span></a></li>
       <li><a href={slides}><b>{t.more3}</b><span>{t.more3d}</span></a></li>
+      <li><a href={project}><b>{t.more4}</b><span>{t.more4d}</span></a></li>
     </ul>
   </section>
 </div>
@@ -182,7 +189,7 @@ const t = en
   .ap-rate .mk-chip { flex: none; min-width: 72px; justify-content: flex-start; }
   .ap-note { color: var(--ink-3); font-size: var(--fs-small); max-width: var(--measure-section); }
   .ap-more { margin-top: var(--section-gap); display: grid; gap: var(--space-4); }
-  .ap-links { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
+  .ap-links { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
   .ap-links a { display: grid; gap: 6px; min-height: var(--tap); height: 100%; padding: var(--card-pad); border: var(--bw) solid var(--line); border-radius: var(--r-lg); background: var(--surface); color: var(--ink); text-decoration: none; transition: transform var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease), box-shadow var(--dur-ui) var(--ease); }
   .ap-links b { font-size: var(--fs-h3); font-weight: var(--fw-h3); letter-spacing: var(--ls-h3); }
   .ap-links span { color: var(--ink-2); font-size: var(--fs-card); line-height: var(--lh-card); }

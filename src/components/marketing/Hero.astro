@@ -9,11 +9,11 @@ const pre = en ? `${base}/en` : base;
 
 const T = en
   ? { eyebrow: 'School project at HTL Leonding', h1: 'How good is the air in our school?',
-      lead: 'LeoIoT shows temperature and CO₂ of the rooms live in a 3D model of the school building – together with data from the school’s photovoltaic (solar power) system.',
-      app: 'View the app', docs: 'Technical documentation' }
+      lead: 'LeoIoT shows temperature and CO₂ of the connected rooms live in a 3D model of the school building – together with data from the school’s photovoltaic (solar power) system.',
+      app: 'View the app', docs: 'Technical documentation', team: 'Project and team' }
   : { eyebrow: 'Schulprojekt der HTL Leonding', h1: 'Wie gut ist die Luft in unserer Schule?',
-      lead: 'LeoIoT zeigt Temperatur und CO₂ der Räume live in einem 3D-Modell des Schulgebäudes – zusammen mit den Daten der Photovoltaikanlage (Solarstrom) der Schule.',
-      app: 'App ansehen', docs: 'Technische Dokumentation' };
+      lead: 'LeoIoT zeigt Temperatur und CO₂ der angebundenen Räume live in einem 3D-Modell des Schulgebäudes – zusammen mit den Daten der Photovoltaikanlage (Solarstrom) der Schule.',
+      app: 'App ansehen', docs: 'Technische Dokumentation', team: 'Projekt und Team' };
 ---
 
 <div class="mk-hero">
@@ -23,6 +23,7 @@ const T = en
   <div class="mk-cta mk-hi" style="--i:3">
     <a class="mk-btn primary" href={`${pre}/app/`}>{T.app}</a>
     <a class="mk-btn" href={`${pre}/docs/`}>{T.docs}</a>
+    <a class="mk-btn" href={`${pre}/docs/project/`}>{T.team}</a>
   </div>
   <IsoMockup lang={lang} />
 </div>

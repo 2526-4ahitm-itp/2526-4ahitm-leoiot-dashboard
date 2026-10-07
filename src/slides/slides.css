@@ -78,6 +78,21 @@ body {
     color: var(--accent);
 }
 
+/* Folienzähler nicht vom Weiter-Pfeil überdecken: mittig unten */
+.reveal .slide-number {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 8px;
+}
+
+.reveal .controls button:focus-visible {
+    outline: var(--bw-focus) solid var(--accent) !important;
+    outline-offset: var(--focus-offset);
+    border-radius: var(--r-focus);
+    opacity: 1;
+}
+
 .reveal :focus-visible,
 .back-link:focus-visible {
     outline: var(--bw-focus) solid var(--accent);
@@ -116,7 +131,7 @@ body {
     max-width: 90%;
     height: auto;
     border-radius: var(--r-link);
-    background: var(--surface);
+    background: transparent;
     object-fit: contain;
 }
 
@@ -362,8 +377,8 @@ body {
 .reveal .slides section.diagram.wide .imageblock img {
     display: block;
     max-width: 100%;
-    max-height: none;
-    width: 100%;
+    max-height: 660px;
+    width: auto;
     margin: 0 auto;
 }
 
@@ -432,4 +447,59 @@ html, body { margin: 0; height: 100%; }
         animation: none !important;
         transition: none !important;
     }
+}
+
+/* Hochformat-Handy: Hinweis statt winziger Folien */
+.rotate-hint {
+    display: none;
+}
+
+@media (orientation: portrait) and (max-width: 600px) {
+    .rotate-hint {
+        display: block;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 12%;
+        padding: 0 var(--space-4);
+        text-align: center;
+        font: var(--fw-regular) var(--fs-small) var(--font-sans);
+        color: var(--ink-2);
+        z-index: var(--z-nav);
+        pointer-events: none;
+    }
+}
+
+/* Kein Zurück-Link/Umschalter im Druck bzw. PDF-Export */
+@media print {
+    .back-link,
+    .slides-theme-toggle,
+    .rotate-hint {
+        display: none !important;
+    }
+}
+
+html.reveal-print .back-link,
+html.reveal-print .slides-theme-toggle {
+    display: none;
+}
+
+/* Windows-Hochkontrast: Steuerpfeile sichtbar halten */
+@media (forced-colors: active) {
+    .reveal .controls button {
+        forced-color-adjust: none;
+        color: CanvasText;
+    }
+    .reveal .controls .controls-arrow::before,
+    .reveal .controls .controls-arrow::after {
+        background-color: CanvasText;
+    }
+    .reveal .progress span {
+        background-color: Highlight;
+    }
+}
+
+main {
+    width: 100%;
+    height: 100%;
 }

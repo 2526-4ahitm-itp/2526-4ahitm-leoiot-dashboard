@@ -3,8 +3,10 @@
 interface Props {
   kind: 'explorer' | 'dashboard' | 'pv' | 'kiosk';
   label: string;
+  lang?: 'de' | 'en';
 }
-const { kind, label } = Astro.props;
+const { kind, label, lang = 'de' } = Astro.props;
+const chips = lang === 'en' ? ['OK', 'Medium', 'Alert'] : ['OK', 'Mittel', 'Alarm'];
 ---
 
 <figure class="ap-fig" aria-hidden="true">
@@ -42,9 +44,9 @@ const { kind, label } = Astro.props;
             <path d="M0 68H240" stroke="var(--line)"></path>
           </svg>
           <div class="ap-rows">
-            <div><span class="ap-ln w30"></span><em class="mk-chip g">OK</em></div>
-            <div><span class="ap-ln w40"></span><em class="mk-chip y">Mittel</em></div>
-            <div><span class="ap-ln w20"></span><em class="mk-chip r">Alarm</em></div>
+            <div><span class="ap-ln w30"></span><em class="mk-chip g">{chips[0]}</em></div>
+            <div><span class="ap-ln w40"></span><em class="mk-chip y">{chips[1]}</em></div>
+            <div><span class="ap-ln w20"></span><em class="mk-chip r">{chips[2]}</em></div>
           </div>
         </div>
       )}

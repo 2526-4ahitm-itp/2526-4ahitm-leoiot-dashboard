@@ -8,24 +8,25 @@ UpdateBoundaryStyle($elementName="system", $fontColor="#1b5e20", $borderColor="#
 UpdateBoundaryStyle($fontColor="#2e7d32", $borderColor="#81c784")
 UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
 
-LAYOUT_LEFT_RIGHT()
+LAYOUT_TOP_DOWN()
 HIDE_STEREOTYPE()
+skinparam backgroundColor transparent
 skinparam shadowing false
 skinparam rectangle {
-  FontSize 20
+  FontSize 22
 }
 skinparam database {
-  FontSize 20
+  FontSize 22
 }
 skinparam person {
-  FontSize 20
+  FontSize 22
 }
 skinparam arrow {
-  FontSize 16
+  FontSize 20
 }
-!$TECHN_FONT_SIZE = 15
-skinparam ranksep 20
-skinparam nodesep 45
+!$TECHN_FONT_SIZE = 19
+skinparam ranksep 30
+skinparam nodesep 25
 
 System_Ext(solax, "Solax Cloud", "PV-API")
 System_Ext(sensors, "Sensorboxen", "ESP32 / ESPHome")
@@ -54,22 +55,22 @@ System_Boundary(leoiot, "LeoIoT (Schul-VM, Docker)") {
 
 Person(user, "Benutzer:in", "Schulleitung, Lehrkräfte,\nSchüler:innen")
 
-Rel(solax, collector, "HTTPS")
-Rel(sensors, broker, "MQTT")
-Rel(collector, broker, "")
-Rel(broker, telegraf, "")
-Rel(broker, bridge, "")
-Rel(telegraf, influx, "")
+Rel_R(solax, collector, "HTTPS")
+Rel_L(sensors, broker, "MQTT")
+Rel_R(collector, broker, "")
+Rel_D(broker, telegraf, "")
+Rel_D(broker, bridge, "")
+Rel_D(telegraf, influx, "")
 
-Rel(bridge, model3d, "Live")
-Rel(bridge, dashboard, "Live")
-Rel(influx, dashboard, "")
-Rel(influx, kiosk, "")
-Rel(influx, grafana, "")
+Rel_D(bridge, model3d, "Live")
+Rel_D(bridge, dashboard, "Live")
+Rel_D(influx, dashboard, "")
+Rel_D(influx, kiosk, "")
+Rel_D(influx, grafana, "")
 
 Rel_Back(model3d, nginx, "")
 Rel_Back(dashboard, nginx, "")
 Rel_Back(kiosk, nginx, "")
 Rel_Back(grafana, nginx, "")
-Rel_Back(nginx, user, "HTTPS")
+Rel_L(user, nginx, "HTTPS")
 @enduml

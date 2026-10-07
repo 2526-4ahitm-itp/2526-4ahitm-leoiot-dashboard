@@ -13,7 +13,8 @@ body { overflow-x: clip; }
 .mk-btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 @media (hover: hover) {
   .mk-btn:hover { border-color: var(--ink); transform: translateY(-1px); }
-  .mk-btn.primary:hover { border-color: var(--accent); filter: brightness(1.08); }
+  .mk-btn.primary:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 88%, var(--ink)); }
+  .mk-btn:not(.primary):hover { background: var(--bg-soft); }
   .mk-btn:hover::after { opacity: 1; }
 }
 .mk-btn:active { transform: translateY(0); transition-duration: var(--dur-press); }
