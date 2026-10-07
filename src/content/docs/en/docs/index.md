@@ -5,7 +5,7 @@ sidebar:
   order: 0
 ---
 
-LeoIoT is a 4AHITM school project at HTL Leonding. It visualizes data from the PV system (Solax Cloud) and CO₂ and temperature values from classrooms in a PV dashboard, a sensor dashboard and a 3D school model. The data comes from sensor boxes (ESP32) via MQTT and from the Solax Cloud API; it is stored in InfluxDB. The system runs on the school VM in Docker.
+LeoIoT is a 5AHITM school project at HTL Leonding. It visualizes data from the PV system (Solax Cloud) and CO₂ and temperature values from classrooms in a PV dashboard, a sensor dashboard and a 3D school model. The data comes from sensor boxes (ESP32) via MQTT and from the Solax Cloud API; it is stored in InfluxDB. The system runs on the school VM in Docker.
 
 The documentation is organised as follows:
 
