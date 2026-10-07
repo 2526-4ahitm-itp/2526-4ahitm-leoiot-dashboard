@@ -15,21 +15,7 @@ LeoIoT sammelt Raumklima-Daten (Temperatur, CO₂) sowie Photovoltaik-Daten (Sol
 4. **Grafana** und die Web-Frontends lesen die Verlaufsdaten aus InfluxDB (Flux-Abfragen).
 5. **Live-Weg:** Die `mqtt-ws-bridge` abonniert dieselben Messwerte bei Mosquitto und leitet sie über einen WebSocket an die Browser weiter. Die PV-Live-Daten kommen zusätzlich von einem externen Broker (siehe unten).
 
-```text
- Sensorboxen (ESPHome) --\
- fake-sensors -----------+--> Mosquitto (MQTT, :1883) --+--> Telegraf --> InfluxDB (:8086)
- quarkus-app ------------/            |                  |                  |   ^
-                                      |                  |                  |   |
- Solax Cloud --> solax-collector -----+--(MQTT)           |                  |   +-- solax-collector
-                       |                                 |                  |       (HTTP-Write, solax_stats)
-                       +-----------------------------------------------------+
-                                      |                                     |
-                                      v                                     v
-                              mqtt-ws-bridge (:8090)               Grafana (:3000)
-                                      |  WebSocket                 Frontends (Flux-Abfragen
-                                      v                             ueber Pfad /influx)
-                        Browser: 3D-Explorer, Dashboard v2, Kiosk
-```
+![Architektur: Datenfluss von den Sensoren bis zu den Dashboards](../../../assets/diagrams/architecture.svg)
 
 :::note
 Der Reverse-Proxy `deploy/nginx.conf` veröffentlicht die Dienste unter einer gemeinsamen Domain: `/grafana/`, `/influx/`, `/ws` (WebSocket zur Bridge), `/dashboard/`, `/kiosk/`, `/kiosk2/` bis `/kiosk4/`, `/leogreen/`, `/solax/` (Proxy zur Solax-Cloud-API) und `/` (3D-Explorer, Port 8080).
