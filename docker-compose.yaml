@@ -1,3 +1,5 @@
+name: 2526-4ahitm-leoiot-dashboard
+
 services:
   mosquitto:
     image: eclipse-mosquitto:latest
