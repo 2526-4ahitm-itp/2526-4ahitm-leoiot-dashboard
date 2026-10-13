@@ -5,20 +5,55 @@ New PV data collection, PV dashboard and kiosk displays.
 | | |
 |---|---|
 | **Owning team** | PV-Dashboard — Daniel Lettner, Stefan Schachner |
-| **Status** | Not started |
+| **Status** | Main kiosk built; collector and dashboard still in legacy |
 | **Spec group** | `openspec/specs/pv/` |
+
+## Layout
+
+- `compose.yaml`: the Compose project `leoiot-pv`
+- `.env.example`: template for the local `.env`
+- `kiosk/`: the main kiosk
+
+Each application is its own folder with its own `package.json` and `Dockerfile`; there is no shared workspace. The kiosk is Vite + TypeScript + Vitest, served by an nginx image. Later applications (`collector/`, a second kiosk) follow the same pattern.
 
 ## Dependency rule
 
 This sub-project may depend only on the interfaces specified in the `platform` spec group (`openspec/specs/platform/`). It must not import, copy or mount anything from `legacy/` or from a sibling sub-project. Legacy logic is re-specified and re-implemented, never referenced.
 
-## Replaces from `legacy/`
+## Tests and running
 
-- `legacy/solax-collector/`
-- `legacy/kiosk/`, `legacy/kiosk2/`, `legacy/kiosk3/`, `legacy/kiosk4/`
-- `legacy/leogreenKiosk/`
-- the PV views of `legacy/dashboard-v2/`
+Tests and build:
 
-## Tech stack and scaffolding
+```
+cd leoiot-pv/kiosk && npm ci && npm test && npm run build
+```
 
-The tech stack and the project scaffolding are decided in this sub-project's own first OpenSpec change (`pv-…`). Nothing is set up here yet.
+Container:
+
+1. `cd leoiot-pv`
+2. Copy `.env.example` to `.env` and enter the read token.
+3. `docker compose up -d --build`
+4. Open `http://localhost:8088/kiosk/`.
+
+The previous stack (`legacy/docker-compose.yaml`) must be running, because InfluxDB and the WebSocket bridge still live there.
+
+## Variables
+
+- `KIOSK_INFLUX_TOKEN` (required): read token for the bucket `server_data`.
+- `KIOSK_PORT` (optional, default `8088`): host port, bound to `127.0.0.1`.
+- `PLATFORM_NETWORK` (optional, default `2526-4ahitm-leoiot-dashboard_leoiot`): network of the previous stack.
+
+## What is live
+
+The kiosk is built for `/kiosk/`. The switch on the host is a manual step and has not happened yet.
+
+## Still in the previous system
+
+- The collector for the PV data (`legacy/solax-collector/`).
+- The PV views of `/dashboard/` (`legacy/dashboard-v2/`).
+
+Rebuilding the PV views of the dashboard needs its own spec and its own `pv-…` change. This is open and must not be forgotten. An issue link will be added later.
+
+## Planned
+
+After the migration is finished, a second, more eye-catching kiosk at its own address. It should take over the content that only the removed kiosks of the previous system showed: weather, avoided CO₂, total yield over the lifetime, and the battery charge of the day.

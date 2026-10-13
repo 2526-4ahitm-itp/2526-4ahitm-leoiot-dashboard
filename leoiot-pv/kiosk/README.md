@@ -30,9 +30,9 @@ Ohne `KIOSK_MOCK` reicht der Server `/kiosk/api/query` an die InfluxDB (`http://
 
 ## Starten im Container
 
-Im Wurzelordner des Repositorys `.env.example` nach `.env` kopieren, den Lese-Token eintragen und `docker compose up -d --build kiosk-kiosk` ausführen. Das Image baut den Kiosk und liefert ihn mit nginx auf Port 8088 aus (`Dockerfile`, `nginx/kiosk.conf.template`). Der nginx reicht `POST /kiosk/api/query` an die InfluxDB weiter und setzt dabei den Token aus `KIOSK_INFLUX_TOKEN`; `/kiosk/ws` reicht er an die Bridge weiter. Der Browser bekommt den Token nie zu sehen.
+Im Ordner `leoiot-pv/` `.env.example` nach `.env` kopieren, den Lese-Token eintragen und `docker compose up -d --build kiosk` ausführen. Das Image baut den Kiosk und liefert ihn mit nginx auf Port 8088 aus (`Dockerfile`, `nginx/kiosk.conf.template`). Der nginx reicht `POST /kiosk/api/query` an die InfluxDB weiter und setzt dabei den Token aus `KIOSK_INFLUX_TOKEN`; `/kiosk/ws` reicht er an die Bridge weiter. Der Browser bekommt den Token nie zu sehen.
 
-Der Kiosk versucht den Live-Kanal zuerst unter `/kiosk/ws` und danach unter `/ws`, weil der nginx der VM unter `/kiosk/` keine WebSockets weiterreicht.
+Der Kiosk versucht den Live-Kanal zuerst unter `/kiosk/ws` und danach unter `/ws`, falls der vorgelagerte nginx des Hosts unter `/kiosk/` keine WebSockets weiterreicht.
 
 ## Tests und Build
 
