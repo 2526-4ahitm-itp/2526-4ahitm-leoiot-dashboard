@@ -23,7 +23,7 @@ export function parseTokens(css: string): Tokens {
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const kiosk = parseTokens(readFileSync(resolve(dir, '../src/styles/tokens.css'), 'utf8'));
-const doku = parseTokens(readFileSync(resolve(dir, '../../src/styles/tokens.css'), 'utf8'));
+const doku = parseTokens(readFileSync(resolve(dir, '../../../src/styles/tokens.css'), 'utf8'));
 const groups = ['base', 'light', 'dark'] as const;
 
 describe('Kiosk-Tokens', () => {
