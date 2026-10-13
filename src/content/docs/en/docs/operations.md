@@ -1,6 +1,6 @@
 ---
 title: Operations
-description: Deployment via GitHub Actions, Nginx routing, InfluxDB backup and restore, and known limitations.
+description: Deployment (state of the workflows and the manual route), Nginx routing, InfluxDB backup and restore, and known limitations.
 sidebar:
   order: 40
 next: false
@@ -10,16 +10,18 @@ This page describes how the system gets onto the school VM, how requests are dis
 
 ## Deployment
 
-A workflow is an automatic sequence of steps on GitHub (GitHub Actions). A runner is the computer that executes it; “self-hosted” means on the school VM instead of at GitHub. On every push to `main`, two workflows in `.github/workflows/` run:
+A workflow is an automatic sequence of steps on GitHub (GitHub Actions). A runner is the computer that executes it; “self-hosted” means on the school VM instead of at GitHub. `.github/workflows/` contains two workflows that are meant to start on every push to `main`. Currently only one of them runs:
 
 | Workflow | File | Runner | Action |
 |---|---|---|---|
-| Continuous Deployment | `deploy.yml` | `self-hosted` (school VM) | changes into the project directory on the VM, runs `git pull` and `docker compose up -d --build` |
+| Continuous Deployment | `deploy.yml` | `self-hosted` (school VM) | is meant to change into the project directory on the VM, run `git pull` and `docker compose up -d --build`; **currently does not run** (see below) |
 | Pages | `docs.yaml` | `ubuntu-latest` | `npm ci`, `npm run build` (Astro, also builds the reveal.js slides from `src/slides`; Node 22) and publishes the `dist` folder to the `gh-pages` branch (JamesIves/github-pages-deploy-action, `clean: true`); can also be started manually (`workflow_dispatch`) |
 
 The Pages workflow may write to the `gh-pages` branch; a new run cancels a run that is still in progress.
 
-To update the VM manually, run `git pull` and `docker compose up -d --build` in the `legacy/` folder of the project directory (procedure as described in `legacy/README.adoc`).
+`deploy.yml` currently does not run, for two reasons: no self-hosted runner is registered on GitHub, so the runs are cancelled. In addition, the workflow calls `docker compose up -d --build` in the root folder of the checkout, but the Compose file is located under `legacy/`. Therefore only the documentation site is published automatically (`docs.yaml`). Changes to the application are brought onto the VM by hand; this is currently the only way.
+
+To update the old stack manually, run `git pull` and `docker compose up -d --build` in the `legacy/` folder of the project directory (procedure as described in `legacy/README.adoc`). The main kiosk is a separate Compose project (`leoiot-pv`); it is started or updated with `docker compose up -d --build` in the `leoiot-pv/` folder (setup: [Setup](../setup/#main-kiosk) page).
 
 ## Nginx routing
 
@@ -29,14 +31,15 @@ To update the VM manually, run `git pull` and `docker compose up -d --build` in 
 |---|---|
 | `/` | `127.0.0.1:8080` (`frontend`, 3D explorer) |
 | `/dashboard/` | `127.0.0.1:8081/` (`dashboard-v2`, prefix stripped) |
-| `/kiosk/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` | ports 8082, 8083, 8084, 8085 |
-| `/leogreen/` | `127.0.0.1:8087` (`leogreen-kiosk`) |
+| `/kiosk/` | `127.0.0.1:8088` (main kiosk from `leoiot-pv/`) |
+| `/kiosk/ws` | `127.0.0.1:8088` (WebSocket to the bridge, via the main kiosk's own nginx) |
+| `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (also without `/`) | 302 redirect to `/kiosk/`, the query is kept |
 | `/grafana/` | `127.0.0.1:3000` (with `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, prefix stripped) |
 | `/ws` | `127.0.0.1:8090` (WebSocket upgrade, `mqtt-ws-bridge`) |
 | `/solax/` | external Solax cloud API (`openapi-eu.solaxcloud.com`), header `Access-Control-Allow-Origin: *` is set |
 
-Paths without a trailing slash (`/kiosk`, `/kiosk2`, `/kiosk3`, `/kiosk4`, `/leogreen`, `/dashboard`) are redirected with a 301 to the variant with `/`. Grafana is configured to match with `GF_SERVER_ROOT_URL` and `GF_SERVER_SERVE_FROM_SUB_PATH=true`.
+Only the paths `/kiosk` and `/dashboard` without a trailing slash are redirected with a 301 to the variant with `/`. Grafana is configured to match with `GF_SERVER_ROOT_URL` and `GF_SERVER_SERVE_FROM_SUB_PATH=true`.
 
 ## Backup and restore
 
@@ -65,11 +68,12 @@ According to the InfluxDB documentation, `--full` replaces the entire data set i
 
 ## Known limitations
 
-- The Compose frontend services start Vite dev servers (`npm run dev`) and run `npm install` on every start; Compose operation has no production build.
+- The Compose frontend services of the old stack (`legacy/`) start Vite dev servers (`npm run dev`) and run `npm install` on every start; there is no production build there. The main kiosk, in contrast, runs as a built image with nginx.
+- The five superseded kiosk containers (ports 8082 to 8085 and 8087) are temporarily still running, are no longer reachable via the addresses and will be removed.
 - Credentials and tokens are stored in plain text in `legacy/docker-compose.yaml`, `legacy/backup/*.sh` and other files (not reproduced here).
 - The weekly backup job (cron) is set up only on the VM and is not stored in the repository.
 - Backups are stored only on the same VM; no external target is configured.
-- The deploy workflow uses a fixed path on the VM and a self-hosted runner; it cannot be reproduced without that VM.
+- The deploy workflow (`deploy.yml`) currently does not run: no self-hosted runner is registered, and it calls Compose in the root folder instead of `legacy/`. It also uses a fixed path on the VM.
 - The Nginx configuration lives in `legacy/deploy/` but is not copied to the VM automatically (there: `/etc/nginx/sites-available/leoiot`).
 - Grafana is additionally reachable directly on port 3000, not only via Nginx under `/grafana/`.
 
@@ -77,6 +81,7 @@ According to the InfluxDB documentation, `--full` replaces the entire data set i
 
 - `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
 - `legacy/deploy/nginx.conf`
+- `leoiot-pv/compose.yaml`
 - `legacy/backup/backup.sh`, `legacy/backup/restore.sh`
 - `legacy/docker-compose.yaml`
 - `legacy/README.adoc`

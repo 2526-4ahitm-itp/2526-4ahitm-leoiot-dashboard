@@ -1,6 +1,6 @@
 ---
 title: Betrieb
-description: Deployment per GitHub Actions, Nginx-Routing, Backup und Restore der InfluxDB sowie bekannte Einschränkungen.
+description: Deployment (Stand der Workflows und manueller Weg), Nginx-Routing, Backup und Restore der InfluxDB sowie bekannte Einschränkungen.
 sidebar:
   order: 40
 next: false
@@ -10,16 +10,18 @@ Diese Seite beschreibt, wie das System auf die Schul-VM gelangt, wie Anfragen ve
 
 ## Deployment
 
-Ein Workflow ist eine automatische Abfolge von Schritten bei GitHub (GitHub Actions). Ein Runner ist der Rechner, auf dem sie laufen; „self-hosted“ heißt: auf der Schul-VM statt bei GitHub. Bei jedem Push auf `main` laufen zwei Workflows in `.github/workflows/`:
+Ein Workflow ist eine automatische Abfolge von Schritten bei GitHub (GitHub Actions). Ein Runner ist der Rechner, auf dem sie laufen; „self-hosted“ heißt: auf der Schul-VM statt bei GitHub. In `.github/workflows/` liegen zwei Workflows, die bei jedem Push auf `main` starten sollen. Davon läuft derzeit nur einer:
 
 | Workflow | Datei | Runner | Aktion |
 |---|---|---|---|
-| Continuous Deployment | `deploy.yml` | `self-hosted` (Schul-VM) | wechselt in das Projektverzeichnis auf der VM, führt `git pull` aus und startet `docker compose up -d --build` |
+| Continuous Deployment | `deploy.yml` | `self-hosted` (Schul-VM) | soll in das Projektverzeichnis auf der VM wechseln, `git pull` ausführen und `docker compose up -d --build` starten; **läuft derzeit nicht** (siehe unten) |
 | Pages | `docs.yaml` | `ubuntu-latest` | `npm ci`, `npm run build` (Astro, baut auch die reveal.js-Folien aus `src/slides`; Node 22) und veröffentlicht den Ordner `dist` auf den Branch `gh-pages` (JamesIves/github-pages-deploy-action, `clean: true`); auch manuell startbar (`workflow_dispatch`) |
 
 Der Pages-Workflow darf in den Branch `gh-pages` schreiben; ein neuer Lauf bricht einen noch laufenden ab.
 
-Manuell wird die VM (Vorgehen laut `legacy/README.adoc`) mit `git pull` und `docker compose up -d --build` im Ordner `legacy/` des Projektverzeichnisses aktualisiert.
+`deploy.yml` läuft derzeit nicht, aus zwei Gründen: Auf GitHub ist kein self-hosted Runner registriert, die Läufe werden daher abgebrochen. Außerdem ruft der Workflow `docker compose up -d --build` im Wurzelordner des Checkouts auf, die Compose-Datei liegt aber unter `legacy/`. Automatisch veröffentlicht wird deshalb nur die Doku-Seite (`docs.yaml`). Änderungen an der Anwendung kommen von Hand auf die VM; das ist derzeit der einzige Weg.
+
+Manuell wird der alte Stack (Vorgehen laut `legacy/README.adoc`) mit `git pull` und `docker compose up -d --build` im Ordner `legacy/` des Projektverzeichnisses aktualisiert. Der Hauptkiosk ist ein eigenes Compose-Projekt (`leoiot-pv`) und wird im Ordner `leoiot-pv/` mit `docker compose up -d --build` gestartet bzw. aktualisiert (Einrichtung: Seite [Einrichtung](../setup/#hauptkiosk)).
 
 ## Nginx-Routing
 
@@ -29,14 +31,15 @@ Manuell wird die VM (Vorgehen laut `legacy/README.adoc`) mit `git pull` und `doc
 |---|---|
 | `/` | `127.0.0.1:8080` (`frontend`, 3D-Explorer) |
 | `/dashboard/` | `127.0.0.1:8081/` (`dashboard-v2`, Präfix wird entfernt) |
-| `/kiosk/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` | Ports 8082, 8083, 8084, 8085 |
-| `/leogreen/` | `127.0.0.1:8087` (`leogreen-kiosk`) |
+| `/kiosk/` | `127.0.0.1:8088` (Hauptkiosk aus `leoiot-pv/`) |
+| `/kiosk/ws` | `127.0.0.1:8088` (WebSocket zur Bridge, über den nginx des Hauptkiosks) |
+| `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (auch ohne `/`) | 302-Umleitung auf `/kiosk/`, die Query bleibt erhalten |
 | `/grafana/` | `127.0.0.1:3000` (mit `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, Präfix wird entfernt) |
 | `/ws` | `127.0.0.1:8090` (WebSocket-Upgrade, `mqtt-ws-bridge`) |
 | `/solax/` | externe Solax-Cloud-API (`openapi-eu.solaxcloud.com`), Header `Access-Control-Allow-Origin: *` wird gesetzt |
 
-Pfade ohne Schrägstrich am Ende (`/kiosk`, `/kiosk2`, `/kiosk3`, `/kiosk4`, `/leogreen`, `/dashboard`) werden per 301 auf die Variante mit `/` umgeleitet. Grafana ist passend dazu mit `GF_SERVER_ROOT_URL` und `GF_SERVER_SERVE_FROM_SUB_PATH=true` konfiguriert.
+Nur die Pfade `/kiosk` und `/dashboard` ohne Schrägstrich am Ende werden per 301 auf die Variante mit `/` umgeleitet. Grafana ist passend dazu mit `GF_SERVER_ROOT_URL` und `GF_SERVER_SERVE_FROM_SUB_PATH=true` konfiguriert.
 
 ## Backup und Restore
 
@@ -65,11 +68,12 @@ Ohne Argument listet das Skript die vorhandenen Backups. Mit Datum prüft es, ob
 
 ## Bekannte Einschränkungen
 
-- Die Compose-Dienste für Frontends starten Vite-Dev-Server (`npm run dev`) und führen bei jedem Start `npm install` aus; im Compose-Betrieb gibt es keinen Produktions-Build.
+- Die Compose-Dienste für Frontends im alten Stack (`legacy/`) starten Vite-Dev-Server (`npm run dev`) und führen bei jedem Start `npm install` aus; dort gibt es keinen Produktions-Build. Der Hauptkiosk läuft dagegen als gebautes Image mit nginx.
+- Die fünf abgelösten Kiosk-Container (Ports 8082 bis 8085 und 8087) laufen vorübergehend noch, sind über die Adressen nicht mehr erreichbar und werden entfernt.
 - Zugangsdaten und Tokens stehen im Klartext in `legacy/docker-compose.yaml`, `legacy/backup/*.sh` und weiteren Dateien (nicht hier wiedergegeben).
 - Der wöchentliche Backup-Job (Cron) ist nur auf der VM eingerichtet und nicht im Repository abgelegt.
 - Backups liegen nur auf derselben VM; ein externes Ziel ist nicht konfiguriert.
-- Der Deploy-Workflow nutzt einen festen Pfad auf der VM und einen self-hosted Runner; er ist ohne diese VM nicht reproduzierbar.
+- Der Deploy-Workflow (`deploy.yml`) läuft derzeit nicht: Es ist kein self-hosted Runner registriert, und er ruft Compose im Wurzelordner statt in `legacy/` auf. Er nutzt zudem einen festen Pfad auf der VM.
 - Die Nginx-Konfiguration liegt in `legacy/deploy/`, wird aber nicht automatisch auf die VM übertragen (dort `/etc/nginx/sites-available/leoiot`).
 - Grafana ist zusätzlich direkt auf Port 3000 erreichbar, nicht nur über Nginx unter `/grafana/`.
 
@@ -77,6 +81,7 @@ Ohne Argument listet das Skript die vorhandenen Backups. Mit Datum prüft es, ob
 
 - `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
 - `legacy/deploy/nginx.conf`
+- `leoiot-pv/compose.yaml`
 - `legacy/backup/backup.sh`, `legacy/backup/restore.sh`
 - `legacy/docker-compose.yaml`
 - `legacy/README.adoc`

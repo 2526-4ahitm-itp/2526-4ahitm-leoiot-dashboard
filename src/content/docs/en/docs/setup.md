@@ -1,11 +1,11 @@
 ---
 title: Setup
-description: Prerequisites, starting with Docker Compose, ports, required files and local development of the LeoIoT services.
+description: Prerequisites, starting the old stack in legacy/ and the main kiosk in leoiot-pv/ with Docker Compose, ports, required files and local development.
 sidebar:
   order: 30
 ---
 
-This page describes how to start the whole system locally. Docker Compose (a tool for starting several containers together) starts all services with one command.
+This page describes how to start the old stack in `legacy/` and, in addition, the main kiosk in `leoiot-pv/` locally. Docker Compose (a tool for starting several containers together) starts the services of a stack with one command.
 
 ## Prerequisites
 
@@ -34,8 +34,8 @@ Compose starts these services (all on the `leoiot` network):
 | `quarkus-app` | Build from `legacy/backend/sensor-data-generator` | Sensor data generator (publishes e.g. `sine`, `room-temperature`) |
 | `frontend` | `node:20-alpine`, `./frontend` | 3D explorer (Vite dev server) |
 | `dashboard-v2` | `node:20-alpine`, `./dashboard-v2` | Dashboard (room climate and PV, Vite dev server) |
-| `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, one directory each | Kiosk displays (Vite dev server) |
-| `leogreen-kiosk` | `node:20-alpine`, `./leogreenKiosk` | LeoGreen kiosk |
+| `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, one directory each | superseded: former kiosk displays (Vite dev server) |
+| `leogreen-kiosk` | `node:20-alpine`, `./leogreenKiosk` | superseded: former LeoGreen kiosk |
 | `mqtt-ws-bridge` | `node:20-alpine`, `./mqtt-ws-bridge` | Bridge: passes MQTT readings on to the browser via WebSocket |
 | `solax-collector` | `node:20-alpine`, `./solax-collector` | Fetches Solax data, writes it to InfluxDB and publishes it via MQTT |
 | `fake-sensors` | `node:20-alpine`, `./fake-sensors` | Simulated sensors for testing |
@@ -49,11 +49,35 @@ Compose starts these services (all on the `leoiot` network):
 | 3000 | Grafana |
 | 8080 | `frontend` (3D explorer) |
 | 8081 | `dashboard-v2` |
-| 8082 / 8083 / 8084 / 8085 | `kiosk` / `kiosk2` / `kiosk3` / `kiosk4` |
-| 8087 | `leogreen-kiosk` |
+| 8082 / 8083 / 8084 / 8085 | `kiosk` / `kiosk2` / `kiosk3` / `kiosk4` (superseded) |
+| 8087 | `leogreen-kiosk` (superseded) |
+| 8088 | Main kiosk (`leoiot-pv/`, on `127.0.0.1` only) |
 | 8090 | `mqtt-ws-bridge` (WebSocket) |
 
 `quarkus-app`, `telegraf`, `fake-sensors` and `solax-collector` publish no ports.
+
+## Main kiosk
+
+The main kiosk lives in `leoiot-pv/kiosk/` and runs as its own Compose project `leoiot-pv` (`leoiot-pv/compose.yaml`). It attaches to the network of the old stack (`2526-4ahitm-leoiot-dashboard_leoiot`); the old stack therefore has to be running.
+
+```bash
+# in the leoiot-pv/ folder of the repository
+cp .env.example .env
+# enter the read-only InfluxDB token in .env (KIOSK_INFLUX_TOKEN)
+docker compose up -d --build
+```
+
+Afterwards the kiosk is reachable at `http://localhost:8088/kiosk/`. The read token stays in the kiosk's nginx; the browser does not receive it.
+
+For development (Node 20 or newer):
+
+```bash
+cd leoiot-pv/kiosk
+npm ci
+npm run dev
+```
+
+The tests run with `npm test`. How to start the kiosk with sample data and no data source (mock mode, `KIOSK_MOCK`) is described in `leoiot-pv/kiosk/README.md`.
 
 ## Required files and variables
 
@@ -80,11 +104,11 @@ Mosquitto only accepts logged-in users. This needs a password file (`legacy/conf
 The file is created with the Mosquitto tool `mosquitto_passwd`. Principle (placeholders, no real values):
 
 ```bash
-# create the file, add the first user (asks for a password)
+# in legacy/: create the file, add the first user (asks for a password)
 docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest \
   mosquitto_passwd -c /mosquitto/config/pwfile <USER>
 
-# add another user (without -c, otherwise the file is overwritten)
+# in legacy/: add another user (without -c, otherwise the file is overwritten)
 docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest \
   mosquitto_passwd /mosquitto/config/pwfile <OTHER_USER>
 ```
@@ -93,7 +117,7 @@ The users/passwords must match the clients: Telegraf, `fake-sensors` and the bac
 
 ## Fake sensors for testing
 
-The `fake-sensors` service starts automatically with `docker compose up -d`. On its own:
+The `fake-sensors` service starts automatically with `docker compose up -d`. On its own (in the `legacy/` folder):
 
 ```bash
 docker compose up -d fake-sensors
@@ -106,26 +130,26 @@ It publishes simulated temperature and CO₂ values for 117 rooms (`roomsConfig`
 | Temperature | `room-temperature` | JSON, e.g. `{"room": "105", "temperature": 21.5}` |
 | CO₂ | `nili3/sensor/{room_id}_co2/state` | plain number in ppm |
 
-Standalone (against a broker on `localhost:1883`): `cd fake-sensors && npm install && npm start`; another broker via `MQTT_HOST`.
+Standalone (against a broker on `localhost:1883`): `cd legacy/fake-sensors && npm install && npm start`; another broker via `MQTT_HOST`.
 
 ## Local frontend development
 
-All seven frontends use Vite (development server and build tool for web interfaces). Scripts according to `package.json`:
+All seven frontends in the `legacy/` folder use Vite (development server and build tool for web interfaces). Scripts according to `package.json`; the main kiosk is described in the section [Main kiosk](#main-kiosk):
 
 | Project | `npm run dev` | Port |
 |---|---|---|
-| `frontend` | `vite` | Vite default; `--port 8080` in Compose |
-| `dashboard-v2` | `vite --port 8081` | 8081 |
-| `kiosk` | `vite --port 8082` | 8082 |
-| `kiosk2` | `vite --port 8083` | 8083 |
-| `kiosk3` | `vite --port 8084` | 8084 |
-| `kiosk4` | `vite --port 8085` | 8085 |
-| `leogreenKiosk` | `vite --port 8087` | 8087 |
+| `legacy/frontend` | `vite` | Vite default; `--port 8080` in Compose |
+| `legacy/dashboard-v2` | `vite --port 8081` | 8081 |
+| `legacy/kiosk` (superseded) | `vite --port 8082` | 8082 |
+| `legacy/kiosk2` (superseded) | `vite --port 8083` | 8083 |
+| `legacy/kiosk3` (superseded) | `vite --port 8084` | 8084 |
+| `legacy/kiosk4` (superseded) | `vite --port 8085` | 8085 |
+| `legacy/leogreenKiosk` (superseded) | `vite --port 8087` | 8087 |
 
 All seven also provide `npm run build` (`vite build`) and `npm run preview`; Compose does not use the build, its dev servers run with `--host 0.0.0.0`. `frontend` depends on `three`; the others only have Vite as a dependency.
 
 ```bash
-cd dashboard-v2
+cd legacy/dashboard-v2
 npm install
 npm run dev
 ```
@@ -138,3 +162,4 @@ npm run dev
 - `legacy/fake-sensors/index.js`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/frontend/package.json`, `legacy/dashboard-v2/package.json`, `legacy/leogreenKiosk/package.json`
+- `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`, `leoiot-pv/kiosk/package.json`, `leoiot-pv/kiosk/README.md`

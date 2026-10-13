@@ -1,6 +1,6 @@
 # LeoIoT
 
-LeoIoT shows live room climate (CO₂ and temperature), photovoltaic data and a 3D building model for the HTL Leonding. The system is being rebuilt from OpenSpec specs; the previous implementation keeps running in `legacy/` until every route is served by a new one.
+LeoIoT shows live room climate (CO₂ and temperature), photovoltaic data and a 3D building model for the HTL Leonding. The system is being rebuilt from OpenSpec specs; the previous implementation keeps running in `legacy/` until every route is served by a new one. `/kiosk/` is already served by `leoiot-pv/`, and the former kiosk addresses (`/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/`) redirect there.
 
 ## Repository layout
 
@@ -12,7 +12,7 @@ LeoIoT shows live room climate (CO₂ and temperature), photovoltaic data and a 
 | [`leoiot-pv/`](leoiot-pv/) | New PV data collection, dashboard and kiosks | PV-Dashboard: Daniel Lettner, Stefan Schachner |
 | [`leoiot-3d/`](leoiot-3d/) | New building model and navigation | 3D-Modell: Paul Kreinecker, Jonas Leitner |
 
-The four `leoiot-*` folders are new and contain only a README so far. A sub-project may depend only on the interfaces specified by the platform; it must not use files from `legacy/` or from another sub-project.
+The four `leoiot-*` folders are new. Three of them contain only a README so far; `leoiot-pv/` already contains the main kiosk. A sub-project may depend only on the interfaces specified by the platform; it must not use files from `legacy/` or from another sub-project.
 
 ## Documentation site
 

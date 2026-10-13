@@ -1,11 +1,11 @@
 ---
 title: Einrichtung
-description: Voraussetzungen, Start mit Docker Compose, Ports, benötigte Dateien und lokale Entwicklung der LeoIoT-Dienste.
+description: Voraussetzungen, Start des alten Stacks in legacy/ und des Hauptkiosks in leoiot-pv/ mit Docker Compose, Ports, benötigte Dateien und lokale Entwicklung.
 sidebar:
   order: 30
 ---
 
-Diese Seite beschreibt, wie das Gesamtsystem lokal gestartet wird. Docker Compose (Werkzeug zum gemeinsamen Starten mehrerer Container) startet alle Dienste mit einem Befehl.
+Diese Seite beschreibt, wie der alte Stack in `legacy/` und zusätzlich der Hauptkiosk in `leoiot-pv/` lokal gestartet werden. Docker Compose (Werkzeug zum gemeinsamen Starten mehrerer Container) startet die Dienste eines Stacks mit einem Befehl.
 
 ## Voraussetzungen
 
@@ -34,8 +34,8 @@ Compose startet folgende Dienste (alle im Netzwerk `leoiot`):
 | `quarkus-app` | Build aus `legacy/backend/sensor-data-generator` | Sensordaten-Generator (publiziert u. a. `sine`, `room-temperature`) |
 | `frontend` | `node:20-alpine`, `./frontend` | 3D-Explorer (Vite-Dev-Server) |
 | `dashboard-v2` | `node:20-alpine`, `./dashboard-v2` | Dashboard (Raumklima und PV, Vite-Dev-Server) |
-| `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, jeweils eigenes Verzeichnis | Kiosk-Anzeigen (Vite-Dev-Server) |
-| `leogreen-kiosk` | `node:20-alpine`, `./leogreenKiosk` | LeoGreen-Kiosk |
+| `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, jeweils eigenes Verzeichnis | abgelöst: frühere Kiosk-Anzeigen (Vite-Dev-Server) |
+| `leogreen-kiosk` | `node:20-alpine`, `./leogreenKiosk` | abgelöst: früherer LeoGreen-Kiosk |
 | `mqtt-ws-bridge` | `node:20-alpine`, `./mqtt-ws-bridge` | Bridge: gibt MQTT-Messwerte per WebSocket an den Browser weiter |
 | `solax-collector` | `node:20-alpine`, `./solax-collector` | holt Solax-Daten, schreibt sie nach InfluxDB und veröffentlicht sie per MQTT |
 | `fake-sensors` | `node:20-alpine`, `./fake-sensors` | simulierte Sensoren zum Testen |
@@ -49,11 +49,35 @@ Compose startet folgende Dienste (alle im Netzwerk `leoiot`):
 | 3000 | Grafana |
 | 8080 | `frontend` (3D-Explorer) |
 | 8081 | `dashboard-v2` |
-| 8082 / 8083 / 8084 / 8085 | `kiosk` / `kiosk2` / `kiosk3` / `kiosk4` |
-| 8087 | `leogreen-kiosk` |
+| 8082 / 8083 / 8084 / 8085 | `kiosk` / `kiosk2` / `kiosk3` / `kiosk4` (abgelöst) |
+| 8087 | `leogreen-kiosk` (abgelöst) |
+| 8088 | Hauptkiosk (`leoiot-pv/`, nur auf `127.0.0.1`) |
 | 8090 | `mqtt-ws-bridge` (WebSocket) |
 
 `quarkus-app`, `telegraf`, `fake-sensors` und `solax-collector` veröffentlichen keine Ports.
+
+## Hauptkiosk
+
+Der Hauptkiosk liegt in `leoiot-pv/kiosk/` und läuft als eigenes Compose-Projekt `leoiot-pv` (`leoiot-pv/compose.yaml`). Er hängt am Netz des alten Stacks (`2526-4ahitm-leoiot-dashboard_leoiot`); der alte Stack muss deshalb laufen.
+
+```bash
+# im Ordner leoiot-pv/ des Repositorys
+cp .env.example .env
+# in .env den reinen Lese-Token für InfluxDB eintragen (KIOSK_INFLUX_TOKEN)
+docker compose up -d --build
+```
+
+Danach ist der Kiosk unter `http://localhost:8088/kiosk/` erreichbar. Der Lese-Token bleibt im nginx des Kiosks; der Browser bekommt ihn nicht.
+
+Für die Entwicklung (Node 20 oder neuer):
+
+```bash
+cd leoiot-pv/kiosk
+npm ci
+npm run dev
+```
+
+Die Tests laufen mit `npm test`. Wie der Kiosk ohne Datenquelle mit Beispieldaten (Mock-Modus, `KIOSK_MOCK`) gestartet wird, steht in `leoiot-pv/kiosk/README.md`.
 
 ## Benötigte Dateien und Variablen
 
@@ -80,11 +104,11 @@ Mosquitto lässt nur angemeldete Benutzer zu. Dafür braucht es eine Passwortdat
 Die Datei wird mit dem Mosquitto-Werkzeug `mosquitto_passwd` erzeugt. Prinzip (Platzhalter, keine realen Werte):
 
 ```bash
-# Datei anlegen, ersten Benutzer eintragen (Passwortabfrage)
+# im Ordner legacy/: Datei anlegen, ersten Benutzer eintragen (Passwortabfrage)
 docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest \
   mosquitto_passwd -c /mosquitto/config/pwfile <BENUTZER>
 
-# weiteren Benutzer ergänzen (ohne -c, sonst wird die Datei überschrieben)
+# im Ordner legacy/: weiteren Benutzer ergänzen (ohne -c, sonst wird die Datei überschrieben)
 docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest \
   mosquitto_passwd /mosquitto/config/pwfile <WEITERER_BENUTZER>
 ```
@@ -93,7 +117,7 @@ Die verwendeten Benutzer/Passwörter müssen zu den Clients passen: Telegraf, `f
 
 ## Fake-Sensoren zum Testen
 
-Der Dienst `fake-sensors` startet mit `docker compose up -d` automatisch. Einzeln:
+Der Dienst `fake-sensors` startet mit `docker compose up -d` automatisch. Einzeln (im Ordner `legacy/`):
 
 ```bash
 docker compose up -d fake-sensors
@@ -106,26 +130,26 @@ Er veröffentlicht simulierte Temperatur- und CO₂-Werte für 117 Räume (Konfi
 | Temperatur | `room-temperature` | JSON, z. B. `{"room": "105", "temperature": 21.5}` |
 | CO₂ | `nili3/sensor/{room_id}_co2/state` | einfache Zahl in ppm |
 
-Standalone (gegen einen Broker auf `localhost:1883`): `cd fake-sensors && npm install && npm start`; anderer Broker über `MQTT_HOST`.
+Standalone (gegen einen Broker auf `localhost:1883`): `cd legacy/fake-sensors && npm install && npm start`; anderer Broker über `MQTT_HOST`.
 
 ## Lokale Entwicklung der Frontends
 
-Alle sieben Frontends nutzen Vite (Entwicklungsserver und Build-Werkzeug für Web-Oberflächen). Skripte laut `package.json`:
+Alle sieben Frontends im Ordner `legacy/` nutzen Vite (Entwicklungsserver und Build-Werkzeug für Web-Oberflächen). Skripte laut `package.json`; der Hauptkiosk steht im Abschnitt [Hauptkiosk](#hauptkiosk):
 
 | Projekt | `npm run dev` | Port |
 |---|---|---|
-| `frontend` | `vite` | Standard von Vite; in Compose per `--port 8080` |
-| `dashboard-v2` | `vite --port 8081` | 8081 |
-| `kiosk` | `vite --port 8082` | 8082 |
-| `kiosk2` | `vite --port 8083` | 8083 |
-| `kiosk3` | `vite --port 8084` | 8084 |
-| `kiosk4` | `vite --port 8085` | 8085 |
-| `leogreenKiosk` | `vite --port 8087` | 8087 |
+| `legacy/frontend` | `vite` | Standard von Vite; in Compose per `--port 8080` |
+| `legacy/dashboard-v2` | `vite --port 8081` | 8081 |
+| `legacy/kiosk` (abgelöst) | `vite --port 8082` | 8082 |
+| `legacy/kiosk2` (abgelöst) | `vite --port 8083` | 8083 |
+| `legacy/kiosk3` (abgelöst) | `vite --port 8084` | 8084 |
+| `legacy/kiosk4` (abgelöst) | `vite --port 8085` | 8085 |
+| `legacy/leogreenKiosk` (abgelöst) | `vite --port 8087` | 8087 |
 
 Alle sieben kennen außerdem `npm run build` (`vite build`) und `npm run preview`; im Compose-Betrieb wird der Build nicht verwendet, dort laufen die Dev-Server mit `--host 0.0.0.0`. `frontend` hängt von `three` ab, die übrigen haben nur Vite als Abhängigkeit.
 
 ```bash
-cd dashboard-v2
+cd legacy/dashboard-v2
 npm install
 npm run dev
 ```
@@ -138,3 +162,4 @@ npm run dev
 - `legacy/fake-sensors/index.js`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/frontend/package.json`, `legacy/dashboard-v2/package.json`, `legacy/leogreenKiosk/package.json`
+- `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`, `leoiot-pv/kiosk/package.json`, `leoiot-pv/kiosk/README.md`

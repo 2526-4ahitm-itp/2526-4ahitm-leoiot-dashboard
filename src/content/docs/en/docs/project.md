@@ -31,9 +31,9 @@ Out of scope: automatically opening/closing windows or doors and other building 
 - **Sensor dashboard:** CO₂ and temperature per room; CO₂ traffic light (ppm = parts of CO₂ per million parts of air; green below 800 ppm, yellow 800 to 1000 ppm, red above 1000 ppm; the thresholds come from the slides, the 1000 ppm warning threshold also from the project proposal; they are project guideline values); time of the last measurement per sensor.
 - **3D model:** clicking a room shows the current values; live updates via WebSocket; navigation to rooms and the gym.
 
-Everything runs in the browser, without login, in German and English. It is hosted on the school VM and published automatically via GitHub Actions (deployment).
+Everything runs in the browser, without login, in German and English. It is hosted on the school VM. The application is brought there by hand; only the documentation site is published automatically (GitHub Actions).
 
-Note on the data: as of today, one real sensor box delivers measurements (room 105); all other rooms are fed with test values by a simulator (`fake-sensors`).
+Note on the data: as of today, one real sensor box delivers measurements (room 153); all other rooms are fed with test values by a simulator (`fake-sensors`).
 
 ## Requirements
 
@@ -51,7 +51,7 @@ Should/could: configurable update interval with 10 seconds as default (FR-09), 
 
 Non-functional: no authentication, operation in the school environment, multiple modern browsers, the school’s local time zone, failure of one sensor must not affect the others.
 
-From the project proposal (acceptance criteria; the proposal gives the class as 4AHITM, school year 2025/26): dashboard reachable in the school network via browser; PV data (kWh, saved CO₂) updated periodically; room climate data displayed; warning threshold at CO₂ above 1000 ppm visible. The proposal names MQTT, InfluxDB and Grafana as technologies. The client is Professor Thomas Stütz; a documented, maintainable dashboard was planned for the end of June 2026.
+From the project proposal (acceptance criteria; the project proposal dates from school year 2025/26, when the class was still called 4AHITM; it is now 5AHITM): dashboard reachable in the school network via browser; PV data (kWh, saved CO₂) updated periodically; room climate data displayed; warning threshold at CO₂ above 1000 ppm visible. The proposal names MQTT, InfluxDB and Grafana as technologies. The client is Professor Thomas Stütz; a documented, maintainable dashboard was planned for the end of June 2026.
 
 ## Team
 
@@ -71,6 +71,8 @@ State of the slides ([to the slides, German only](../../../slides/)) dated 5 Oct
 - Mobile view, German/English
 - Deployment on the school VM with HTTPS
 - Continuous deployment and database backups
+
+Two points differ from this state today: the application is brought onto the school VM by hand (the automatic deployment `deploy.yml` currently does not run, only the documentation site is published automatically; the database backups remain in place), and there is one main kiosk at `/kiosk/` from `leoiot-pv/` instead of several kiosk displays. The former kiosk addresses (`/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/`) redirect there.
 
 ## Milestones
 

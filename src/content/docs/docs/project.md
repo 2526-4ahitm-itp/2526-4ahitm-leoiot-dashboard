@@ -31,9 +31,9 @@ Nicht Teil des Projekts: automatisches Öffnen/Schließen von Fenstern oder Tür
 - **Sensor-Dashboard:** CO₂ und Temperatur pro Raum; CO₂-Ampel (ppm = Teile CO₂ pro Million Teile Luft; grün unter 800 ppm, gelb 800 bis 1000 ppm, rot über 1000 ppm; die Schwellen stammen aus der Präsentation, die Warnschwelle von 1000 ppm auch aus dem Projektantrag; es sind Richtwerte des Projekts); Zeit der letzten Messung je Sensor.
 - **3D-Modell:** Raum anklicken zeigt die aktuellen Werte; Live-Updates per WebSocket; Navigation zu Räumen und zum Turnsaal.
 
-Alles läuft im Browser, ohne Login, auf Deutsch und Englisch. Gehostet wird auf der Schul-VM, die Software wird automatisch über GitHub Actions veröffentlicht (Deployment).
+Alles läuft im Browser, ohne Login, auf Deutsch und Englisch. Gehostet wird auf der Schul-VM. Die Anwendung wird von Hand dorthin gebracht; automatisch veröffentlicht wird nur die Doku-Seite (GitHub Actions).
 
-Hinweis zu den Daten: Stand heute liefert eine echte Sensorbox Messwerte (Raum 105); die übrigen Räume werden von einem Simulator (`fake-sensors`) mit Testwerten versorgt.
+Hinweis zu den Daten: Stand heute liefert eine echte Sensorbox Messwerte (Raum 153); die übrigen Räume werden von einem Simulator (`fake-sensors`) mit Testwerten versorgt.
 
 ## Anforderungen
 
@@ -51,7 +51,7 @@ Sollte/Könnte: konfigurierbares Aktualisierungsintervall mit 10 Sekunden als S
 
 Nichtfunktional: keine Authentifizierung, Betrieb in der Schulumgebung, mehrere moderne Browser, lokale Zeitzone der Schule, Ausfall eines Sensors darf die anderen nicht beeinträchtigen.
 
-Aus dem Projektantrag (Messkriterien; der Antrag nennt die Klasse als 4AHITM, Schuljahr 2025/26): Dashboard im Schulnetz per Browser erreichbar; PV-Daten (kWh, eingespartes CO₂) werden periodisch aktualisiert; Raumklimadaten werden angezeigt; Warnschwelle bei CO₂ über 1000 ppm ist sichtbar. Als Technologien nennt der Antrag MQTT, InfluxDB und Grafana. Auftraggeber ist Professor Thomas Stütz; geplant war ein dokumentiertes, wartbares Dashboard bis Ende Juni 2026.
+Aus dem Projektantrag (Messkriterien; der Projektantrag stammt aus dem Schuljahr 2025/26, als die Klasse noch 4AHITM hieß; heute ist es die 5AHITM): Dashboard im Schulnetz per Browser erreichbar; PV-Daten (kWh, eingespartes CO₂) werden periodisch aktualisiert; Raumklimadaten werden angezeigt; Warnschwelle bei CO₂ über 1000 ppm ist sichtbar. Als Technologien nennt der Antrag MQTT, InfluxDB und Grafana. Auftraggeber ist Professor Thomas Stütz; geplant war ein dokumentiertes, wartbares Dashboard bis Ende Juni 2026.
 
 ## Team
 
@@ -71,6 +71,8 @@ Stand der Präsentation ([zur Präsentation, nur Deutsch](../../slides/)) vom 5.
 - Mobile Ansicht, Deutsch/Englisch
 - Deployment auf der Schul-VM mit HTTPS
 - Continuous Deployment und Datenbank-Backups
+
+Zwei Punkte weichen heute von diesem Stand ab: Die Anwendung kommt von Hand auf die Schul-VM (das automatische Deployment `deploy.yml` läuft derzeit nicht, nur die Doku-Seite wird automatisch veröffentlicht; die Datenbank-Backups bleiben bestehen), und es gibt einen Hauptkiosk unter `/kiosk/` aus `leoiot-pv/` statt mehrerer Kiosk-Anzeigen. Die früheren Kiosk-Adressen (`/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/`) leiten dorthin um.
 
 ## Meilensteine
 

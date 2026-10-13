@@ -5,7 +5,7 @@ sidebar:
   order: 10
 ---
 
-LeoIoT sammelt Raumklimadaten (Temperatur, CO₂) sowie Photovoltaik-Daten (Solax) und zeigt sie in mehreren Oberflächen an. Alle Dienste werden über `legacy/docker-compose.yaml` gestartet und laufen als Docker-Container (abgeschottete Programmpakete) im gemeinsamen Netzwerk `leoiot`. Kurz zu den Begriffen: Solax ist der Hersteller des PV-Wechselrichters, ein Kiosk ist eine Vollbild-Anzeige ohne Bedienung.
+LeoIoT sammelt Raumklimadaten (Temperatur, CO₂) sowie Photovoltaik-Daten (Solax) und zeigt sie in mehreren Oberflächen an. Die Dienste des alten Stacks werden über `legacy/docker-compose.yaml` gestartet und laufen als Docker-Container (abgeschottete Programmpakete) im gemeinsamen Netzwerk `leoiot`. Der Hauptkiosk ist ein eigenes Compose-Projekt namens `leoiot-pv` (`leoiot-pv/compose.yaml`), das am Netz des alten Stacks hängt. Kurz zu den Begriffen: Solax ist der Hersteller des PV-Wechselrichters, ein Kiosk ist eine Vollbild-Anzeige ohne Bedienung.
 
 ## Pipeline im Überblick
 
@@ -17,13 +17,15 @@ LeoIoT sammelt Raumklimadaten (Temperatur, CO₂) sowie Photovoltaik-Daten (Sola
 
 ![Architektur: Datenfluss von den Sensoren bis zu den Dashboards](../../../assets/diagrams/architecture.svg)
 
+Das Diagramm zeigt den Hauptkiosk aus `leoiot-pv/` noch nicht.
+
 :::note[Öffentliche Pfade]
 Ein Reverse-Proxy (Nginx; ein Verteiler, der Anfragen an den richtigen Dienst leitet) macht alle Oberflächen unter einer gemeinsamen Domain erreichbar (Konfiguration: `legacy/deploy/nginx.conf`). Die Pfade stehen im Abschnitt [Nginx-Routing](../operations/#nginx-routing) der Seite Betrieb.
 :::
 
 ## Dienste
 
-Ports laut `legacy/docker-compose.yaml` (nach außen veröffentlichte Ports).
+Ports laut `legacy/docker-compose.yaml` (nach außen veröffentlichte Ports) und, für den Hauptkiosk, laut `leoiot-pv/compose.yaml`.
 
 | Dienst | Port | Zweck |
 |---|---|---|
@@ -33,11 +35,12 @@ Ports laut `legacy/docker-compose.yaml` (nach außen veröffentlichte Ports).
 | `grafana` | 3000 | Dashboards, Datenquelle und Dashboard werden aus `legacy/grafana/` provisioniert |
 | `frontend` | 8080 | 3D-Explorer (Vite-Dev-Server) |
 | `dashboard-v2` | 8081 | Dashboard v2 (Vite-Dev-Server) |
-| `kiosk` | 8082 | Kiosk-Variante (PV-Anzeige) |
-| `kiosk2` | 8083 | Kiosk-Variante (PV-Anzeige) |
-| `kiosk3` | 8084 | Kiosk-Variante (PV-Anzeige) |
-| `kiosk4` | 8085 | Kiosk-Variante (PV-Anzeige) |
-| `leogreen-kiosk` | 8087 | LeoGreen-Kiosk (PV-Anzeige mit Live-Daten über die Bridge) |
+| `kiosk` | 8082 | abgelöst: frühere Kiosk-Variante (PV-Anzeige); Container läuft vorübergehend noch |
+| `kiosk2` | 8083 | abgelöst: frühere Kiosk-Variante (PV-Anzeige); Container läuft vorübergehend noch |
+| `kiosk3` | 8084 | abgelöst: frühere Kiosk-Variante (PV-Anzeige); Container läuft vorübergehend noch |
+| `kiosk4` | 8085 | abgelöst: frühere Kiosk-Variante (PV-Anzeige); Container läuft vorübergehend noch |
+| `leogreen-kiosk` | 8087 | abgelöst: früherer LeoGreen-Kiosk; Container läuft vorübergehend noch |
+| `kiosk` (Projekt `leoiot-pv`) | 8088 | Hauptkiosk (PV-Anzeige) unter `/kiosk/`, nginx-Image, hört nur auf `127.0.0.1` |
 | `mqtt-ws-bridge` | 8090 | Brücke zwischen MQTT und Browser (WebSocket-Server); gibt Live-Messwerte weiter |
 | `fake-sensors` | – | Simulator für Raumtemperatur und CO₂ |
 | `quarkus-app` | – | Java-Generator (Quarkus), veröffentlicht per MQTT |
@@ -61,13 +64,14 @@ Ports laut `legacy/docker-compose.yaml` (nach außen veröffentlichte Ports).
 |---|---|---|
 | 3D-Explorer | `legacy/frontend/` (`logic.js`) | Three.js-Gebäudemodell; Raumwerte aus InfluxDB (`room_temperature`, `mqtt_consumer`) und live per WebSocket |
 | Dashboard v2 | `legacy/dashboard-v2/` (`dashboard.js`) | InfluxDB über `/influx`, Live-Werte per WebSocket `/ws`, PV-Daten (Measurement `solax_stats` und direkter Abruf der Solax-Cloud über `/solax/`), Chart.js-Diagramme, Sprachumschaltung DE/EN |
-| LeoGreen-Kiosk | `legacy/leogreenKiosk/` (`kiosk.js`) | PV-Anzeige: Measurement `solax_stats` aus InfluxDB plus Live-PV per WebSocket |
-| Kiosk-Varianten | `legacy/kiosk/`, `legacy/kiosk2/`, `legacy/kiosk3/`, `legacy/kiosk4/` | PV-Anzeige (`solax_stats`); nur `legacy/kiosk/` nutzt zusätzlich den WebSocket |
+| Hauptkiosk | `leoiot-pv/kiosk/` (Vite, TypeScript, Vitest) | PV-Anzeige unter `/kiosk/`: Abfragen per `POST /kiosk/api/query` an InfluxDB (der nginx des Kiosks setzt einen reinen Lese-Token, der Browser bekommt keinen) und Live-Werte per WebSocket `/kiosk/ws`, danach `/ws` |
+| LeoGreen-Kiosk (abgelöst) | `legacy/leogreenKiosk/` (`kiosk.js`) | PV-Anzeige: Measurement `solax_stats` aus InfluxDB plus Live-PV per WebSocket |
+| Kiosk-Varianten (abgelöst) | `legacy/kiosk/`, `legacy/kiosk2/`, `legacy/kiosk3/`, `legacy/kiosk4/` | PV-Anzeige (`solax_stats`); nur `legacy/kiosk/` nutzt zusätzlich den WebSocket |
 
-Der 3D-Explorer (`frontend`) und das Dashboard v2 zeigen das Raumklima. Das Dashboard v2 enthält zusätzlich die PV-Ansicht und eine Raumtabelle mit Status. Produktiv gezeigt wird der LeoGreen-Kiosk (er hängt in `legacy/docker-compose.yaml` von der Bridge ab); `kiosk` bis `kiosk4` sind weitere Varianten (Kiosk = Vollbild-Anzeige ohne Bedienung).
+Der 3D-Explorer (`frontend`) und das Dashboard v2 zeigen das Raumklima. Das Dashboard v2 enthält zusätzlich die PV-Ansicht und eine Raumtabelle mit Status. Produktiv gezeigt wird der Hauptkiosk aus `leoiot-pv/kiosk/` unter `/kiosk/`; er hängt am Netz des alten Stacks, der deshalb laufen muss. Die früheren Adressen `/leogreen/`, `/kiosk2/`, `/kiosk3/` und `/kiosk4/` leiten dorthin um. Die fünf früheren Kiosks (`kiosk` bis `kiosk4` und `leogreenKiosk`) sind abgelöst (Kiosk = Vollbild-Anzeige ohne Bedienung).
 
 :::note[Betrieb]
-Die Frontends laufen als Vite-Dev-Server (`npm run dev`) in `node:20-alpine`-Containern. Deployment und weitere Einschränkungen stehen auf der Seite [Betrieb](../operations/).
+Die Frontends des alten Stacks laufen als Vite-Dev-Server (`npm run dev`) in `node:20-alpine`-Containern; der Hauptkiosk läuft als gebautes Image. Deployment und weitere Einschränkungen stehen auf der Seite [Betrieb](../operations/).
 :::
 
 :::caution[Sicherheit]
@@ -85,4 +89,5 @@ Im Repository stehen an mehreren Stellen Zugangsdaten und ein InfluxDB-Token als
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/grafana/provisioning/`, `legacy/grafana/dashboards/main-dashboard.json`
 - `legacy/deploy/nginx.conf`
+- `leoiot-pv/kiosk/`, `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`
 - `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`, `legacy/leogreenKiosk/kiosk.js`, `legacy/kiosk/kiosk.js`, `legacy/kiosk2/kiosk2.js`, `legacy/kiosk3/kiosk3.js`, `legacy/kiosk4/kiosk4.js`

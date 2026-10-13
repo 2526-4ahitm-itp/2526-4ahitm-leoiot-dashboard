@@ -37,7 +37,7 @@ Die Solax-Daten werden zusätzlich vom `solax-collector` direkt per HTTP in Infl
 
 Ein WebSocket ist eine Dauerverbindung zwischen Browser und Bridge; so erhält der Browser neue Werte sofort, ohne nachzufragen. Ein Snapshot ist der zuletzt bekannte Stand, den der Client beim Abonnieren sofort erhält.
 
-- Server: `mqtt-ws-bridge`, Port 8090 (Variable `WS_PORT`). Direkt erreichbar unter `ws://<Host>:8090`; hinter dem Reverse-Proxy (Nginx, der alle Dienste unter einer Adresse bündelt) unter dem Pfad `/ws` (`legacy/deploy/nginx.conf`). Dashboard v2 und LeoGreen-Kiosk wählen lokal (`localhost`, `127.0.0.1`) `:8090` und sonst `/ws` (`wss:` bei HTTPS); der 3D-Explorer und `legacy/kiosk/` verbinden immer über `/ws` und brauchen dafür den Nginx-Proxy oder einen Vite-Proxy (Vite ist der Entwicklungsserver der Frontends).
+- Server: `mqtt-ws-bridge`, Port 8090 (Variable `WS_PORT`). Direkt erreichbar unter `ws://<Host>:8090`; hinter dem Reverse-Proxy (Nginx, der alle Dienste unter einer Adresse bündelt) unter dem Pfad `/ws` (`legacy/deploy/nginx.conf`). Der Hauptkiosk (`leoiot-pv/kiosk/`) verbindet zuerst über `/kiosk/ws` (sein eigener nginx reicht den WebSocket an die Bridge weiter) und danach über `/ws`. Dashboard v2 wählt lokal (`localhost`, `127.0.0.1`) `:8090` und sonst `/ws` (`wss:` bei HTTPS); der 3D-Explorer verbindet immer über `/ws` und braucht dafür den Nginx-Proxy oder einen Vite-Proxy (Vite ist der Entwicklungsserver der Frontends). Die abgelösten Kiosks verbanden so: der LeoGreen-Kiosk wie Dashboard v2, `legacy/kiosk/` immer über `/ws`.
 - Nachrichten sind JSON-Objekte.
 
 Vom Client an den Server:
@@ -63,7 +63,9 @@ Vom Server an den Client:
 
 - Organisation `leoiot`, Bucket `server_data` (`legacy/docker-compose.yaml`).
 - Measurements, die im Code verwendet werden: `mqtt_consumer` (Tag `topic`, Feld `value`), `room_temperature` (Tag `room`, Feld `temperature`), `solax_stats` (siehe oben).
-- Die Frontends fragen InfluxDB über den Pfad `/influx` ab (`/api/v2/query`). Flux ist die Abfragesprache von InfluxDB.
+- Die Frontends des alten Stacks fragen InfluxDB über den Pfad `/influx` ab (`/api/v2/query`). Flux ist die Abfragesprache von InfluxDB.
+- Der Hauptkiosk fragt über `POST /kiosk/api/query` ab. Sein nginx leitet die Anfrage an InfluxDB weiter und setzt dabei einen reinen Lese-Token aus der Umgebungsvariable `KIOSK_INFLUX_TOKEN`; der Token bleibt auf dem Server, der Browser bekommt ihn nie.
+- Für `server_data` gibt es neben dem Admin-Token einen reinen Lese-Token und einen reinen Schreib-Token (für das PV-Team). Die Werte stehen nicht in der Dokumentation.
 
 Das folgende Beispiel holt den CO₂-Verlauf eines Sensors der letzten 24 Stunden als 10-Minuten-Mittelwerte (Token als Platzhalter):
 
@@ -115,6 +117,7 @@ Im Code und in der Präsentation gelten 800 und 1000 ppm. Die funktionale Spezi
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/grafana/provisioning/`, `legacy/grafana/dashboards/main-dashboard.json`
 - `legacy/deploy/nginx.conf`
+- `leoiot-pv/kiosk/`
 - `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`, `legacy/leogreenKiosk/kiosk.js`
 - `legacy/sensorbox/nili-ldr/nili-ldr.yaml`, `legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml`
 - `docs/functional-specification.md`
