@@ -1,0 +1,5 @@
+.chartbox { flex: 1; min-height: 0; position: relative; }
+.chartbox canvas, .chartbox svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* Direkte Beschriftung im Diagramm */
+.direct { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 0.5vw; font-size: var(--k-label); font-weight: 600; color: var(--ink); line-height: 1.2; pointer-events: none; }
+.direct i { display: inline-block; width: 1.5vw; height: max(3px, 0.28vh); border-radius: 99px; }

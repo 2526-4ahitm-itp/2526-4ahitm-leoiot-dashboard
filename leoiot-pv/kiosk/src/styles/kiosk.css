@@ -1,0 +1,87 @@
+/* Statische Hülle des Kiosk: Seite, Header, Raster, Feldköpfe. */
+*, *::before, *::after {
+  box-sizing: border-box;
+  transition: background-color var(--dur-theme) linear, color var(--dur-theme) linear,
+    border-color var(--dur-theme) linear, fill var(--dur-theme) linear, stroke var(--dur-theme) linear;
+}
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  width: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+::selection { background: var(--accent-soft); color: var(--ink); }
+[hidden] { display: none !important; }
+
+.page { height: 100%; display: flex; flex-direction: column; padding: 0.6vh 1.6vw 1.8vh; }
+
+/* Header */
+.top {
+  height: 8vh; flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  border-bottom: var(--bw) solid var(--line-2);
+}
+.logo { height: 5.5vh; width: auto; display: block; justify-self: start; }
+/* Nur bei Mausbewegung (data-active) oder Tastaturfokus sichtbar; opacity statt display, damit Tab-Reihenfolge und Layout bleiben */
+.theme {
+  opacity: 0; pointer-events: none;
+  transition: background-color var(--dur-theme) linear, color var(--dur-theme) linear,
+    border-color var(--dur-theme) linear, fill var(--dur-theme) linear, stroke var(--dur-theme) linear,
+    opacity 150ms linear;
+  display: flex; gap: 0.35vh; height: 5vh; padding: 0.35vh; justify-self: center;
+  border: var(--bw) solid var(--line-ui); border-radius: var(--r-toggle);
+}
+:root[data-active] .theme { opacity: 1; pointer-events: auto; }
+/* focus-visible statt focus-within: nach einem Mausklick soll der Schalter nicht stehen bleiben */
+.theme:has(:focus-visible) { opacity: 1; pointer-events: auto; }
+.theme button {
+  display: grid; place-items: center; width: 4.6vh; padding: 0;
+  background: none; border: 0; border-radius: calc(var(--r-toggle) - 3px);
+  color: var(--ink-3); cursor: default;
+}
+.theme button svg { width: 2.7vh; height: 2.7vh; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.theme button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+
+.time { justify-self: end; text-align: right; line-height: 1.15; }
+.clock { font-size: var(--k-clock); font-weight: 600; color: var(--ink); }
+.updated { font-size: var(--k-min); color: var(--ink-2); display: flex; justify-content: flex-end; align-items: center; gap: 0.4vw; }
+.stale {
+  display: inline-flex; align-items: center; gap: 0.4vw; background: var(--y-bg); color: var(--ink);
+  border: var(--bw) solid var(--y); border-radius: 4px; padding: 0.15vh 0.6vw; font-weight: 600; margin-right: 0.4vw;
+}
+.stale svg { width: 1.9vh; height: 1.9vh; flex: none; }
+
+/* Raster mit Haarlinien */
+.grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.field { min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 2.6vh 1.8vw; }
+#fieldToday { padding-left: 0; border-right: var(--bw) solid var(--line-2); border-bottom: var(--bw) solid var(--line-2); }
+#fieldWeek { padding-right: 0; border-bottom: var(--bw) solid var(--line-2); }
+#fieldPower { padding-left: 0; padding-bottom: 0.6vh; border-right: var(--bw) solid var(--line-2); }
+#fieldFlow { padding-right: 0; padding-bottom: 0.6vh; }
+
+/* Feldkopf */
+.head { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.9vw; row-gap: 0.4vh; margin-bottom: 1.4vh; flex: none; }
+.head h2 { margin: 0; font-size: calc(var(--k-title) * 1.2); font-weight: 680; letter-spacing: -0.02em; color: var(--ink); line-height: 1.15; }
+.head .lab { font-size: var(--k-title); font-weight: 400; color: var(--ink-2); }
+.body { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
+.content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* Hinweis statt Diagramm */
+.state { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 1vh; }
+.state b { font-size: var(--k-title); font-weight: 680; color: var(--ink); }
+.state.loading b { font-weight: 400; color: var(--ink-2); }
+.state span { font-size: var(--k-label); color: var(--ink-2); max-width: 34ch; line-height: 1.35; }
+/* Eine Meldung für die ganze Fläche, wenn alle vier Felder denselben Zustand ohne Daten haben */
+.page-state { grid-column: 1 / -1; grid-row: 1 / -1; }
+/* Steht allein auf dem Bildschirm, deshalb eine Stufe größer als der Hinweis in einem Feld */
+.page-state b { font-size: calc(var(--k-title) * 1.2); }
+.page-state span { font-size: var(--k-body); max-width: 40ch; }
+.grid[data-page-state] .field { display: none; }
+/* Nur sichtbar, solange das Feld Daten zeigt */
+.field:not([data-state='ok']) .when-ok { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}

@@ -1,0 +1,93 @@
+/*
+ * Kiosk-Tokens: Teilmenge von ../src/styles/tokens.css (Doku-Seite).
+ * Namen und Werte sind identisch; neu sind nur --k-* (TV-Schriftskala) und --c-* (Datenfarben).
+ * Der Test tests/tokens.test.ts vergleicht die gemeinsamen Werte.
+ * Theme über <html data-theme="light|dark">, hell ist Standard.
+ */
+
+/* Theme-unabhängig */
+:root,
+:root[data-theme='light'],
+:root[data-theme='dark'] {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-toggle: 9px;
+  --r-pill: 99px;
+  --r-focus: 6px;
+  --bw: 1px;
+  --dur: 500ms;
+  --dur-ui: 250ms;
+  --dur-theme: 200ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* TV-Schriftskala: hängt an der Bildschirmhöhe (1vh = 10,8 px bei 1080 Zeilen).
+     Kein Text unter 18 px bei 1920 x 1080. */
+  --k-min: max(18px, 1.67vh);
+  --k-label: max(20px, 1.85vh);
+  --k-body: max(22px, 2.04vh);
+  --k-title: max(26px, 2.41vh);
+  --k-value: max(34px, 3.15vh);
+  --k-hero: max(54px, 5vh);
+  --k-clock: max(34px, 3.15vh);
+}
+
+/* Hell (Standard) */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-soft: #fafafa;
+  --surface: #ffffff;
+  --ink: #111827;
+  --ink-2: #4b5563;
+  --ink-3: #6b7280;
+  --line: #e5e7eb;
+  --line-2: #d1d5db;
+  --line-ui: var(--ink-3);
+  --accent: #0b7a5a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e7f5ef;
+  --g: #2fa66a;
+  --y: #ba8d04;
+  --r: #d9432f;
+  --g-bg: #e6f5ec;
+  --y-bg: #fdf5d6;
+  --r-bg: #fbe7e3;
+  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 30px rgba(17, 24, 39, 0.06);
+
+  /* Datenfarben: eine Farbe je Größe, in allen Feldern gleich */
+  --c-pv: #1baf7a;
+  --c-verbrauch: #2a78d6;
+  --c-netz: #eb6834;
+  --c-batterie: #4a3aa7;
+}
+
+/* Dunkel */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --bg-soft: #0f141b;
+  --surface: #131922;
+  --ink: #f3f4f6;
+  --ink-2: #a7b0be;
+  --ink-3: #8b95a5;
+  --line: #232b37;
+  --line-2: #323c4b;
+  --line-ui: var(--ink-3);
+  --accent: #3ecf9f;
+  --accent-ink: #06261c;
+  --accent-soft: #10241f;
+  --g: #3fbf7d;
+  --y: #f5c431;
+  --r: #ef6a55;
+  --g-bg: #12281e;
+  --y-bg: #2a2410;
+  --r-bg: #2e1814;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 30px rgba(0, 0, 0, 0.35);
+
+  --c-pv: #199e70;
+  --c-verbrauch: #3987e5;
+  --c-netz: #d95926;
+  --c-batterie: #9085e9;
+}

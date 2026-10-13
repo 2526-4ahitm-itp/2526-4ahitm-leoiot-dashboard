@@ -1,0 +1,7 @@
+,result,table,_start,_stop,_time,_value,_field,_measurement,plant_id
+,_result,0,2026-10-06T22:00:00Z,2026-10-06T22:04:45Z,2026-10-06T22:04:30Z,118.8,daily_charged,solax_stats,test
+,_result,1,2026-10-06T22:00:00Z,2026-10-06T22:04:45Z,2026-10-06T22:04:30Z,150.3,daily_discharged,solax_stats,test
+,_result,2,2026-10-06T22:00:00Z,2026-10-06T22:04:45Z,2026-10-06T22:04:30Z,15.4,daily_exported,solax_stats,test
+,_result,3,2026-10-06T22:00:00Z,2026-10-06T22:04:45Z,2026-10-06T22:04:30Z,240,daily_imported,solax_stats,test
+,_result,4,2026-10-06T22:00:00Z,2026-10-06T22:04:45Z,2026-10-06T22:04:30Z,820.6,daily_yield,solax_stats,test
+

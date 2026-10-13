@@ -1,0 +1,12 @@
+.chartbox { flex: 1; min-height: 0; position: relative; }
+.chartbox canvas, .chartbox svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* Quelle im Feldkopf */
+.dot { display: inline-block; width: 1vh; height: 1vh; min-width: 10px; min-height: 10px; border-radius: 50%; background: var(--accent); margin-right: 0.5vw; vertical-align: 0.1em; }
+/* Energiefluss (Größen in Einheiten des viewBox) */
+.t-name, .t-word { fill: var(--ink-2); font-size: 22px; }
+.t-val { fill: var(--ink); font-size: 38px; font-weight: 680; }
+.ico { fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.fl { fill: none; stroke-width: 3; stroke-linecap: butt; }
+.fl.on { stroke-dasharray: 10 8; animation: flow-dash 1.4s linear infinite; }
+@keyframes flow-dash { to { stroke-dashoffset: -18; } }
+@media (prefers-reduced-motion: reduce) { .fl.on { animation: none; } }

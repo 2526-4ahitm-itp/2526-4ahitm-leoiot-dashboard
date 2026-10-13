@@ -1,0 +1,18 @@
+/* Feld "Heute": zwei Donuts nebeneinander */
+.content.donuts { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
+.dn { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 0 1.4vw; }
+.dn:first-child { padding-left: 0; border-right: var(--bw) solid var(--line); }
+.dn:last-child { padding-right: 0; }
+.dn h3 { margin: 0; font-size: var(--k-body); font-weight: 600; color: var(--ink); line-height: 1.2; }
+.dbox { flex: 1; min-height: 0; position: relative; container-type: size; margin: 0.6vh 0 0.8vh; }
+.dbox canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ctr { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+/* Zahl und Einheit richten sich nach dem Ring (Container-Einheiten); die erste Angabe ist der Rückfall für Browser ohne cq-Einheiten */
+.ctr b { font-size: var(--k-hero); font-size: min(var(--k-hero), 24cqmin); font-weight: 680; line-height: 1; color: var(--ink); letter-spacing: -0.02em; }
+.ctr small { font-size: var(--k-label); font-size: min(var(--k-label), 9cqmin); color: var(--ink-2); line-height: 1.3; margin-top: 0.3vh; }
+.dn ul { list-style: none; margin: 0; padding: 0; flex: none; }
+.dn li { display: flex; align-items: center; gap: 0.6vw; padding: 0.3vh 0; font-size: var(--k-label); line-height: 1.25; }
+.dn li + li { border-top: var(--bw) solid var(--line); }
+.dn li i { width: 1.1vh; height: 1.1vh; min-width: 11px; min-height: 11px; border-radius: 50%; flex: none; }
+.dn li .n { color: var(--ink-2); }
+.dn li .v { margin-left: auto; color: var(--ink); font-weight: 600; font-size: var(--k-body); }

@@ -1,0 +1,3 @@
+#!/bin/sh
+# Wird vom Startskript des nginx-Image eingelesen, bevor die Vorlage gefüllt wird.
+export KIOSK_INFLUX_TOKEN="${KIOSK_INFLUX_TOKEN:-}"
