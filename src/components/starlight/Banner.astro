@@ -1,0 +1,66 @@
+---
+// Override von Starlights Banner: seitenweiter Hinweis, dass die Dokumentation die bisherige
+// Implementierung (legacy/) beschreibt. Text je nach Sprache; Farben aus src/styles/tokens.css.
+// Die 404-Seite zeigt ihn nicht.
+const en = Astro.currentLocale === 'en';
+const show = Astro.locals.starlightRoute.entry.id !== '404';
+const label = en ? 'Notice' : 'Hinweis';
+---
+
+{
+  show && (
+    <div class="legacy-notice" role="note" data-pagefind-ignore>
+      <strong class="legacy-notice__label">{label}</strong>
+      {en ? (
+        <p>
+          This documentation describes the previous implementation (in the repository under <code>legacy/</code>). LeoIoT is being rebuilt; these pages will be updated as the new implementation lands.
+        </p>
+      ) : (
+        <p>
+          Diese Dokumentation beschreibt die bisherige Implementierung (im Repository unter <code>legacy/</code>). LeoIoT wird derzeit neu aufgebaut; die Seiten werden mit der neuen Umsetzung aktualisiert.
+        </p>
+      )}
+    </div>
+  )
+}
+
+<style>
+  .legacy-notice {
+    display: flex;
+    gap: var(--space-3);
+    align-items: baseline;
+    margin: 0;
+    padding: var(--space-3) var(--sl-content-pad-x, var(--space-4));
+    background: var(--accent-soft);
+    color: var(--ink);
+    border-bottom: var(--bw) solid var(--line-ui);
+    border-left: 4px solid var(--accent);
+    font-size: var(--fs-small);
+    line-height: 1.5;
+  }
+  .legacy-notice__label {
+    flex: none;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-overline);
+    font-size: var(--fs-overline);
+    font-weight: var(--fw-kicker);
+  }
+  .legacy-notice p {
+    margin: 0;
+  }
+  .legacy-notice code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+  }
+  @media (max-width: 30rem) {
+    .legacy-notice {
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+  }
+  @media print {
+    .legacy-notice {
+      border-color: currentColor;
+    }
+  }
+</style>

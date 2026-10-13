@@ -30,6 +30,7 @@ export default defineConfig({
       components: {
         ThemeProvider: "./src/components/starlight/ThemeProvider.astro",
         ThemeSelect: "./src/components/starlight/ThemeSelect.astro",
+        Banner: "./src/components/starlight/Banner.astro",
       },
     }),
   ],

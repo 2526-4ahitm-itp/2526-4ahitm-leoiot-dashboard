@@ -96,6 +96,6 @@ To do from the review of 28 April 2026 (as of 28 April 2026): kiosk mode, PV dis
 - `src/slides/slides.html` (slides), `asciidocs/slides/leoiot.adoc` (earlier version)
 - `asciidocs/docs/Projektantrag.adoc`
 - `docs/functional-specification.md`
-- `openspec/specs/dashboard-sensors/spec.md`, `openspec/specs/dashboard-pv/spec.md`
+- `legacy/as-built-specs/dashboard-sensors/spec.md`, `legacy/as-built-specs/dashboard-pv/spec.md`
 - `asciidocs/docs/sprint-reviews/review-28-04-2026.md`
-- `CHANGELOG.md`
+- `legacy/CHANGELOG.md`
