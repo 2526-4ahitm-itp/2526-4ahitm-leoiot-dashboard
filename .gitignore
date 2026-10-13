@@ -36,10 +36,10 @@ Temporary Items
 dist/
 docs/slides/revealjs
 .idea/
-sensorbox/nili-ldr/secrets.yaml
-sensorbox/s3-mini-oled/secrets.yaml
+legacy/sensorbox/nili-ldr/secrets.yaml
+legacy/sensorbox/s3-mini-oled/secrets.yaml
 
-sensorbox/nili-ldr/.esphome/
+legacy/sensorbox/nili-ldr/.esphome/
 
 # Node
 node_modules/
@@ -49,4 +49,4 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-config/pwfile
+legacy/config/pwfile
