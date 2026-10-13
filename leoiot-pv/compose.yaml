@@ -1,0 +1,28 @@
+name: leoiot-pv
+
+services:
+  kiosk:
+    build: ./kiosk
+    restart: unless-stopped
+    ports:
+      # Local only; the host nginx forwards /kiosk/ to this port.
+      - "127.0.0.1:${KIOSK_PORT:-8088}:8088"
+    environment:
+      # Read-only InfluxDB token, injected by nginx; the browser never sees it.
+      KIOSK_INFLUX_TOKEN: ${KIOSK_INFLUX_TOKEN:?KIOSK_INFLUX_TOKEN is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8088/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - platform
+
+networks:
+  # InfluxDB and the MQTT WebSocket bridge still run in the previous stack,
+  # so its network is joined as an external one. Their interfaces are
+  # specified in platform/data-contract.
+  platform:
+    external: true
+    name: ${PLATFORM_NETWORK:-2526-4ahitm-leoiot-dashboard_leoiot}
