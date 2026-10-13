@@ -1,13 +1,32 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Project context. Shown to AI when creating artifacts.
+context: |
+  Project: LeoIoT, live room climate (CO2, temperature), PV data and a 3D building model for HTL Leonding.
+  The system is being rebuilt from specs by several teams and their coding agents in parallel.
+
+  Repository layout:
+  - legacy/            the previous implementation (running system), FROZEN
+  - leoiot-platform/   broker, database, reverse proxy, deployment, CI, shared data contract
+  - leoiot-sensors/    sensor ingestion and room-climate views
+  - leoiot-pv/         PV data collection, dashboard and kiosks
+  - leoiot-3d/         3D building model and navigation
+  - repository root    documentation site (Astro: src/, public/, asciidocs/), openspec/, docs/, agent and CI configuration
+  There is one openspec/ at the root. Do not create openspec/ folders inside sub-projects or legacy/.
+
+  Spec grouping rules (details: openspec/specs/README.md):
+  1. Path = group/capability: openspec/specs/<group>/<capability>/spec.md with group one of platform, sensors, pv, 3d (the sub-project that implements it).
+  2. One home per capability. If two sub-projects rely on a behaviour, it belongs in platform; never duplicate it.
+  3. platform owns everything shared: broker, database, proxy, deployment, CI, repository rules and the data contract (topics, payloads, measurements, fields, retention). Other specs refer to the contract and never restate topic names or field lists.
+  4. Contract first: a sub-project may not rely on an interface that is not in the platform spec yet. Propose and merge the interface change first.
+  5. Changes are named after their group: platform-..., sensors-..., pv-..., 3d-... (e.g. pv-daily-yield-kiosk, sensors-stale-warning, platform-data-contract). A change normally touches specs of one group only; a change that needs another group's spec, or the contract, is a platform-... change or is split.
+  6. Legacy has no specs here: legacy/as-built-specs/ is reference material, not part of the spec tree, with no change process.
+
+  Dependency rule: a sub-project depends only on interfaces specified in the platform spec group. It must not import, copy or mount anything from legacy/ or from a sibling sub-project. Legacy logic is re-specified and re-implemented, never referenced.
+
+  Legacy freeze: legacy/ only receives changes that keep the running system working or remove parts a new implementation has replaced. No new features; specify them for the matching new sub-project instead.
+
+  Source for new specs: docs/functional-specification.md.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
