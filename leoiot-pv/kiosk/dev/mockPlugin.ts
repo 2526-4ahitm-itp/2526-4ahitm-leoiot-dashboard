@@ -1,4 +1,4 @@
-// Mock-Modus: bedient /leogreen/api/query und /leogreen/ws aus Beispieldaten.
+// Mock-Modus: bedient /kiosk/api/query und /kiosk/ws aus Beispieldaten.
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import type { Plugin } from 'vite';
@@ -6,14 +6,14 @@ import { WebSocketServer } from 'ws';
 import { dayRange, viennaDayStart, weekKeys } from '../src/core/time';
 import { mockCountersMessage, mockPowerMessage, mockTodayCsv, mockWeekCsv } from './mockData';
 
-const QUERY_PATH = '/leogreen/api/query';
-const WS_PATH = '/leogreen/ws';
+const QUERY_PATH = '/kiosk/api/query';
+const WS_PATH = '/kiosk/ws';
 
 function pathOf(url: string | undefined): string {
   return (url ?? '').split('?')[0];
 }
 
-/** Bedient /leogreen/api/query und /leogreen/ws aus Beispieldaten. Nur für dev und preview. */
+/** Bedient /kiosk/api/query und /kiosk/ws aus Beispieldaten. Nur für dev und preview. */
 export function kioskMock(mode: string, live: boolean): Plugin {
   const wss = new WebSocketServer({ noServer: true });
 

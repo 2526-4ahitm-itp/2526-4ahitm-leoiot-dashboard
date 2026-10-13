@@ -10,13 +10,13 @@ export default defineConfig(({ mode }) => {
 
   // Weiterleitung an lokale InfluxDB und Bridge (nur ohne Mock)
   const proxy = {
-    '/leogreen/api/query': {
+    '/kiosk/api/query': {
       target: env.KIOSK_INFLUX_URL || 'http://localhost:8086',
       changeOrigin: true,
       rewrite: () => '/api/v2/query?org=leoiot',
       ...(env.KIOSK_INFLUX_TOKEN ? { headers: { Authorization: 'Token ' + env.KIOSK_INFLUX_TOKEN } } : {}),
     },
-    '/leogreen/ws': {
+    '/kiosk/ws': {
       target: env.KIOSK_WS_URL || 'ws://localhost:8090',
       ws: true,
       changeOrigin: true,
@@ -25,10 +25,10 @@ export default defineConfig(({ mode }) => {
   };
 
   return {
-    base: '/leogreen/',
+    base: '/kiosk/',
     plugins: useMock ? [kioskMock(mock, env.KIOSK_MOCK_LIVE !== '0')] : [],
-    server: { port: 8087, strictPort: true, allowedHosts: true, ...(useMock ? {} : { proxy }) },
-    preview: { port: 8087, ...(useMock ? {} : { proxy }) },
+    server: { port: 8088, strictPort: true, allowedHosts: true, ...(useMock ? {} : { proxy }) },
+    preview: { port: 8088, ...(useMock ? {} : { proxy }) },
     build: { outDir: 'dist', target: 'es2022' },
     test: { environment: 'node', include: ['tests/**/*.test.ts'] },
   };

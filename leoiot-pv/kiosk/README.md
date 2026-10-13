@@ -1,6 +1,6 @@
 # LeoIoT Hauptkiosk
 
-Vollbild-Anzeige der Energiedaten der Schule unter `/leogreen/`. Sie ist für einen großen Bildschirm gedacht.
+Vollbild-Anzeige der Energiedaten der Schule unter `/kiosk/`. Sie ist für einen großen Bildschirm gedacht.
 
 ## Voraussetzungen
 
@@ -12,7 +12,7 @@ Node 20 oder neuer, dann `npm install`.
 KIOSK_MOCK=1 npm run dev
 ```
 
-Danach `http://localhost:8087/leogreen/` öffnen. Varianten:
+Danach `http://localhost:8088/kiosk/` öffnen. Varianten:
 
 | Aufruf | Wirkung |
 | --- | --- |
@@ -26,13 +26,13 @@ Beispieldaten gibt es nur im Entwicklungs-Server. Der gebaute Kiosk enthält sie
 
 ## Starten gegen einen lokalen Stack
 
-Ohne `KIOSK_MOCK` reicht der Server `/leogreen/api/query` an die InfluxDB (`http://localhost:8086`) und `/leogreen/ws` an die Bridge (`ws://localhost:8090`) weiter. Den Token liest er aus der Datei `.env.local` (nicht versioniert). Sie enthält eine Zeile `KIOSK_INFLUX_TOKEN=` und dahinter den eigenen Lese-Token. Optional lassen sich die Ziele mit `KIOSK_INFLUX_URL` und `KIOSK_WS_URL` ändern.
+Ohne `KIOSK_MOCK` reicht der Server `/kiosk/api/query` an die InfluxDB (`http://localhost:8086`) und `/kiosk/ws` an die Bridge (`ws://localhost:8090`) weiter. Den Token liest er aus der Datei `.env.local` (nicht versioniert). Sie enthält eine Zeile `KIOSK_INFLUX_TOKEN=` und dahinter den eigenen Lese-Token. Optional lassen sich die Ziele mit `KIOSK_INFLUX_URL` und `KIOSK_WS_URL` ändern.
 
 ## Starten im Container
 
-Im Wurzelordner des Repositorys `.env.example` nach `.env` kopieren, den Lese-Token eintragen und `docker compose up -d --build leogreen-kiosk` ausführen. Das Image baut den Kiosk und liefert ihn mit nginx auf Port 8087 aus (`Dockerfile`, `nginx/kiosk.conf.template`). Der nginx reicht `POST /leogreen/api/query` an die InfluxDB weiter und setzt dabei den Token aus `KIOSK_INFLUX_TOKEN`; `/leogreen/ws` reicht er an die Bridge weiter. Der Browser bekommt den Token nie zu sehen.
+Im Wurzelordner des Repositorys `.env.example` nach `.env` kopieren, den Lese-Token eintragen und `docker compose up -d --build kiosk-kiosk` ausführen. Das Image baut den Kiosk und liefert ihn mit nginx auf Port 8088 aus (`Dockerfile`, `nginx/kiosk.conf.template`). Der nginx reicht `POST /kiosk/api/query` an die InfluxDB weiter und setzt dabei den Token aus `KIOSK_INFLUX_TOKEN`; `/kiosk/ws` reicht er an die Bridge weiter. Der Browser bekommt den Token nie zu sehen.
 
-Der Kiosk versucht den Live-Kanal zuerst unter `/leogreen/ws` und danach unter `/ws`, weil der nginx der VM unter `/leogreen/` keine WebSockets weiterreicht.
+Der Kiosk versucht den Live-Kanal zuerst unter `/kiosk/ws` und danach unter `/ws`, weil der nginx der VM unter `/kiosk/` keine WebSockets weiterreicht.
 
 ## Tests und Build
 

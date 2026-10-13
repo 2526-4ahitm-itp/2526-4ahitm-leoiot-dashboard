@@ -224,26 +224,26 @@ describe('createLiveClient', () => {
   });
 
   it('wechselt die Adresse, wenn keine Verbindung zustande kommt', () => {
-    const c = make(['ws://x/leogreen/ws', 'ws://x/ws']);
+    const c = make(['ws://x/kiosk/ws', 'ws://x/ws']);
     c.start();
     last().onclose?.();
     vi.advanceTimersByTime(RECONNECT_MIN_MS);
-    expect(urls).toEqual(['ws://x/leogreen/ws', 'ws://x/ws']);
+    expect(urls).toEqual(['ws://x/kiosk/ws', 'ws://x/ws']);
     last().onclose?.();
     vi.advanceTimersByTime(RECONNECT_MIN_MS * 2);
-    expect(urls).toEqual(['ws://x/leogreen/ws', 'ws://x/ws', 'ws://x/leogreen/ws']);
+    expect(urls).toEqual(['ws://x/kiosk/ws', 'ws://x/ws', 'ws://x/kiosk/ws']);
     c.stop();
   });
 
   it('bleibt bei einer Adresse, die schon verbunden war', () => {
-    const c = make(['ws://x/leogreen/ws', 'ws://x/ws']);
+    const c = make(['ws://x/kiosk/ws', 'ws://x/ws']);
     c.start();
     last().onclose?.();
     vi.advanceTimersByTime(RECONNECT_MIN_MS);
     last().onopen?.();
     last().onclose?.();
     vi.advanceTimersByTime(RECONNECT_MAX_MS);
-    expect(urls).toEqual(['ws://x/leogreen/ws', 'ws://x/ws', 'ws://x/ws']);
+    expect(urls).toEqual(['ws://x/kiosk/ws', 'ws://x/ws', 'ws://x/ws']);
     c.stop();
   });
 

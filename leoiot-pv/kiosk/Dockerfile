@@ -14,7 +14,7 @@ RUN rm /etc/nginx/conf.d/default.conf
 # Leerer Standardwert für den Token, damit die Vorlage auch ohne ihn gültig bleibt
 COPY nginx/05-kiosk-env.envsh /docker-entrypoint.d/05-kiosk-env.envsh
 COPY nginx/kiosk.conf.template /etc/nginx/templates/kiosk.conf.template
-COPY --from=build /app/dist /usr/share/nginx/html/leogreen
-EXPOSE 8087
+COPY --from=build /app/dist /usr/share/nginx/html/kiosk
+EXPOSE 8088
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O /dev/null http://127.0.0.1:8087/healthz || exit 1
+  CMD wget -q -O /dev/null http://127.0.0.1:8088/healthz || exit 1

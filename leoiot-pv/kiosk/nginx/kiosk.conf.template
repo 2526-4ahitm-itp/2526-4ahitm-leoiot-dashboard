@@ -2,7 +2,7 @@
 # Beim Start setzt das nginx-Image ${KIOSK_INFLUX_TOKEN} aus der Umgebung ein.
 
 server {
-    listen 8087;
+    listen 8088;
     server_name _;
     server_tokens off;
     absolute_redirect off;
@@ -19,12 +19,12 @@ server {
         return 200 "ok\n";
     }
 
-    location = /leogreen {
-        return 301 /leogreen/;
+    location = /kiosk {
+        return 301 /kiosk/;
     }
 
     # Flux-Abfrage: nur POST, festes Ziel, Token kommt aus der Umgebung
-    location = /leogreen/api/query {
+    location = /kiosk/api/query {
         if ($request_method != POST) {
             return 405;
         }
@@ -41,7 +41,7 @@ server {
     }
 
     # Live-Kanal der Bridge
-    location = /leogreen/ws {
+    location = /kiosk/ws {
         set $bridge http://mqtt-ws-bridge:8090;
         proxy_pass $bridge/ws;
         proxy_http_version 1.1;
@@ -54,13 +54,13 @@ server {
     }
 
     # Dateien mit Hash im Namen dürfen lange im Cache bleiben
-    location /leogreen/assets/ {
+    location /kiosk/assets/ {
         add_header Cache-Control "public, max-age=31536000, immutable";
         try_files $uri =404;
     }
 
     # Die Seite selbst wird immer neu geholt, damit ein Deploy ankommt
-    location /leogreen/ {
+    location /kiosk/ {
         index index.html;
         add_header Cache-Control "no-cache";
         try_files $uri $uri/ =404;
