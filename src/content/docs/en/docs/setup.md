@@ -11,13 +11,13 @@ This page describes how to start the whole system locally. Docker Compose (a too
 
 - Docker with the Compose plugin (start via `docker compose`).
 - The Node services (JavaScript programs) run in containers (`node:20-alpine`) and install their libraries themselves at start (`npm install`). Node therefore does not have to be installed on your own computer.
-- The `quarkus-app` service is built from `backend/sensor-data-generator` using its Dockerfile (`src/main/docker/Dockerfile`).
-- The `mosquitto` service needs the file `config/pwfile` (see below).
+- The `quarkus-app` service is built from `legacy/backend/sensor-data-generator` using its Dockerfile (`src/main/docker/Dockerfile`).
+- The `mosquitto` service needs the file `legacy/config/pwfile` (see below).
 
 ## Start
 
 ```bash
-# in the repository root (main folder of the project)
+# in the legacy/ folder of the repository
 docker compose up -d
 ```
 
@@ -29,9 +29,9 @@ Compose starts these services (all on the `leoiot` network):
 |---|---|---|
 | `mosquitto` | `eclipse-mosquitto:latest` | MQTT broker (message relay) |
 | `influxdb` | `influxdb:2.7` | Time-series database (setup mode on first start) |
-| `telegraf` | `telegraf:latest` | Reads MQTT topics and writes to InfluxDB (`telegraf.conf`) |
-| `grafana` | `grafana/grafana:latest` | Dashboards (provisioning from `grafana/`) |
-| `quarkus-app` | Build from `backend/sensor-data-generator` | Sensor data generator (publishes e.g. `sine`, `room-temperature`) |
+| `telegraf` | `telegraf:latest` | Reads MQTT topics and writes to InfluxDB (`legacy/telegraf.conf`) |
+| `grafana` | `grafana/grafana:latest` | Dashboards (provisioning from `legacy/grafana/`) |
+| `quarkus-app` | Build from `legacy/backend/sensor-data-generator` | Sensor data generator (publishes e.g. `sine`, `room-temperature`) |
 | `frontend` | `node:20-alpine`, `./frontend` | 3D explorer (Vite dev server) |
 | `dashboard-v2` | `node:20-alpine`, `./dashboard-v2` | Dashboard (room climate and PV, Vite dev server) |
 | `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, one directory each | Kiosk displays (Vite dev server) |
@@ -59,9 +59,9 @@ Compose starts these services (all on the `leoiot` network):
 
 | Name | Where | Meaning |
 |---|---|---|
-| `config/mosquitto.conf` | in the repository | Listener 1883, `allow_anonymous false`, `password_file /mosquitto/config/pwfile` |
-| `config/pwfile` | **not** in the repository (`.gitignore`) | Broker password file |
-| `telegraf.conf` | in the repository | MQTT credentials (user/password) and InfluxDB token; the values are not given here for security reasons |
+| `legacy/config/mosquitto.conf` | in the repository | Listener 1883, `allow_anonymous false`, `password_file /mosquitto/config/pwfile` |
+| `legacy/config/pwfile` | **not** in the repository (`.gitignore`) | Broker password file |
+| `legacy/telegraf.conf` | in the repository | MQTT credentials (user/password) and InfluxDB token; the values are not given here for security reasons |
 | `MQTT_HOST` | Compose environment of `quarkus-app`, `fake-sensors`, `mqtt-ws-bridge` | Broker hostname (`mosquitto` on the Compose network) |
 | `MQTT_PORT`, `UPDATE_INTERVAL` | optional, `fake-sensors` | Broker port (default 1883), publish interval in ms (default 10000) |
 | `WS_PORT` | `mqtt-ws-bridge` | WebSocket bridge port (8090 in Compose) |
@@ -73,9 +73,9 @@ Compose starts these services (all on the `leoiot` network):
 For credentials and tokens in the repository, see [Operations](../operations/), section “Known limitations”.
 :::
 
-## Missing `config/pwfile`
+## Missing `legacy/config/pwfile`
 
-Mosquitto only accepts logged-in users. This needs a password file (`config/pwfile`, `/mosquitto/config/pwfile` in the container). For security it is listed in `.gitignore` and is therefore missing after a fresh clone (download of the project); only `config/mosquitto.conf` is in the repository. The `config/` directory is attached as a volume (a folder shared with the container).
+Mosquitto only accepts logged-in users. This needs a password file (`legacy/config/pwfile`, `/mosquitto/config/pwfile` in the container). For security it is listed in `.gitignore` and is therefore missing after a fresh clone (download of the project); only `legacy/config/mosquitto.conf` is in the repository. The `legacy/config/` directory is attached as a volume (a folder shared with the container).
 
 The file is created with the Mosquitto tool `mosquitto_passwd`. Principle (placeholders, no real values):
 
@@ -89,7 +89,7 @@ docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest 
   mosquitto_passwd /mosquitto/config/pwfile <OTHER_USER>
 ```
 
-The users/passwords must match the clients: Telegraf, `fake-sensors` and the backend (`quarkus-app`) log in to the broker with a user name and password (configured in `telegraf.conf`, `fake-sensors/index.js` and the backend `application.properties`).
+The users/passwords must match the clients: Telegraf, `fake-sensors` and the backend (`quarkus-app`) log in to the broker with a user name and password (configured in `legacy/telegraf.conf`, `legacy/fake-sensors/index.js` and the backend `application.properties`).
 
 ## Fake sensors for testing
 
@@ -99,7 +99,7 @@ The `fake-sensors` service starts automatically with `docker compose up -d`. On 
 docker compose up -d fake-sensors
 ```
 
-It publishes simulated temperature and CO₂ values for 117 rooms (`roomsConfig` in `fake-sensors/index.js`; default interval 10 s, `UPDATE_INTERVAL`):
+It publishes simulated temperature and CO₂ values for 117 rooms (`roomsConfig` in `legacy/fake-sensors/index.js`; default interval 10 s, `UPDATE_INTERVAL`):
 
 | Value | Topic | Format |
 |---|---|---|
@@ -132,9 +132,9 @@ npm run dev
 
 ## Sources in the repository
 
-- `docker-compose.yaml`
-- `config/mosquitto.conf`, `.gitignore`
-- `telegraf.conf`
-- `fake-sensors/index.js`
-- `backend/sensor-data-generator/src/main/resources/application.properties`
-- `frontend/package.json`, `dashboard-v2/package.json`, `leogreenKiosk/package.json`
+- `legacy/docker-compose.yaml`
+- `legacy/config/mosquitto.conf`, `.gitignore`
+- `legacy/telegraf.conf`
+- `legacy/fake-sensors/index.js`
+- `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
+- `legacy/frontend/package.json`, `legacy/dashboard-v2/package.json`, `legacy/leogreenKiosk/package.json`

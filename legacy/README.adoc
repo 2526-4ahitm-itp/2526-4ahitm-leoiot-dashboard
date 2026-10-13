@@ -28,6 +28,9 @@ IoT sensor monitoring dashboard for building management. Tracks temperature and 
 
 [source,bash]
 ----
+# Run from the legacy/ folder of the repository
+cd legacy
+
 # Start all services
 docker compose up
 
@@ -114,7 +117,7 @@ ssh solmqadmin@vm23.htl-leonding.ac.at
 When changes are pushed to GitHub, update the VM with these commands:
 [source,bash]
 ----
-cd 2526-4ahitm-leoiot-dashboard
+cd 2526-4ahitm-leoiot-dashboard/legacy
 git pull
 docker compose up -d --build
 ----
@@ -142,8 +145,8 @@ InfluxDB data is backed up weekly via a shell script using the built-in `influx 
 
 === Scripts
 
-* `backup/backup.sh` — creates timestamped backup, prunes old ones
-* `backup/restore.sh` — restores a specific backup by date
+* `legacy/backup/backup.sh` — creates timestamped backup, prunes old ones
+* `legacy/backup/restore.sh` — restores a specific backup by date
 
 === First-Time Setup (cron)
 
@@ -159,7 +162,7 @@ Add this line:
 [source]
 ----
 # Weekly InfluxDB backup (every Sunday 02:00) - leoiot dashboard
-0 2 * * 0 /home/solmqadmin/2526-4ahitm-leoiot-dashboard/backup/backup.sh >> /home/solmqadmin/influxdb-backup.log 2>&1
+0 2 * * 0 /home/solmqadmin/2526-4ahitm-leoiot-dashboard/legacy/backup/backup.sh >> /home/solmqadmin/influxdb-backup.log 2>&1
 ----
 
 === Restore
@@ -167,7 +170,7 @@ Add this line:
 [source,bash]
 ----
 cd 2526-4ahitm-leoiot-dashboard
-bash backup/restore.sh 2026-05-07
+bash legacy/backup/restore.sh 2026-05-07
 ----
 
 *Built with* MQTT, InfluxDB, Grafana, Quarkus, Three.js, Chart.js

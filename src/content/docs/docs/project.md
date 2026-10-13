@@ -96,6 +96,6 @@ To-do aus dem Review vom 28. April 2026 (Stand: 28. April 2026): Kiosk-Modus, PV
 - `src/slides/slides.html` (Präsentation), `asciidocs/slides/leoiot.adoc` (ältere Fassung)
 - `asciidocs/docs/Projektantrag.adoc`
 - `docs/functional-specification.md`
-- `openspec/specs/dashboard-sensors/spec.md`, `openspec/specs/dashboard-pv/spec.md`
+- `legacy/as-built-specs/dashboard-sensors/spec.md`, `legacy/as-built-specs/dashboard-pv/spec.md`
 - `asciidocs/docs/sprint-reviews/review-28-04-2026.md`
-- `CHANGELOG.md`
+- `legacy/CHANGELOG.md`

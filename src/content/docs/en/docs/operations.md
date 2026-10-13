@@ -19,11 +19,11 @@ A workflow is an automatic sequence of steps on GitHub (GitHub Actions). A runne
 
 The Pages workflow may write to the `gh-pages` branch; a new run cancels a run that is still in progress.
 
-To update the VM manually, run `git pull` and `docker compose up -d --build` in the project directory (procedure as described in `README.adoc`).
+To update the VM manually, run `git pull` and `docker compose up -d --build` in the `legacy/` folder of the project directory (procedure as described in `legacy/README.adoc`).
 
 ## Nginx routing
 
-`deploy/nginx.conf` defines one server for the school hostname: requests on port 80 (unencrypted) are automatically redirected to HTTPS (encrypted, port 443). Nginx handles the encryption (TLS); the certificates come from Let’s Encrypt (`/etc/letsencrypt`). Nginx acts as the reverse proxy here: it receives all requests and passes them on to the services running on `127.0.0.1`.
+`legacy/deploy/nginx.conf` defines one server for the school hostname: requests on port 80 (unencrypted) are automatically redirected to HTTPS (encrypted, port 443). Nginx handles the encryption (TLS); the certificates come from Let’s Encrypt (`/etc/letsencrypt`). Nginx acts as the reverse proxy here: it receives all requests and passes them on to the services running on `127.0.0.1`.
 
 | Path | Target |
 |---|---|
@@ -42,19 +42,19 @@ Paths without a trailing slash (`/kiosk`, `/kiosk2`, `/kiosk3`, `/kiosk4`, `/leo
 
 The InfluxDB database is backed up with the command-line tool `influx backup` (a backup is a safety copy). Backups are stored in the container volume `influxdb_backups` (`/backups`) and additionally on the host.
 
-### Backup (`backup/backup.sh`)
+### Backup (`legacy/backup/backup.sh`)
 
 1. Create the target directory `$HOME/influxdb-backups`.
 2. Create the backup with `docker exec influxdb influx backup` into `/backups/<YYYY-MM-DD>` in the container (authenticated with a token stored in the script).
 3. Copy the backup with `docker cp` to `$HOME/influxdb-backups/<YYYY-MM-DD>`.
 4. Clean up old backups: keep the newest 8 directories (`KEEP_WEEKS=8`, sorted by modification time), delete older ones.
 
-Schedule according to `README.adoc`: weekly via cron, Sundays at 02:00, output to a log file in the home directory. The cron entry (a scheduled job on Linux) must be created once by hand on the VM; it is not automated in the repository.
+Schedule according to `legacy/README.adoc`: weekly via cron, Sundays at 02:00, output to a log file in the home directory. The cron entry (a scheduled job on Linux) must be created once by hand on the VM; it is not automated in the repository.
 
-### Restore (`backup/restore.sh`)
+### Restore (`legacy/backup/restore.sh`)
 
 ```bash
-bash backup/restore.sh <YYYY-MM-DD>
+bash legacy/backup/restore.sh <YYYY-MM-DD>
 ```
 
 Without an argument the script lists the available backups. With a date it checks that the directory exists, copies it to `/backups/restore-<date>` in the container and runs `influx restore --full`.
@@ -66,17 +66,17 @@ According to the InfluxDB documentation, `--full` replaces the entire data set i
 ## Known limitations
 
 - The Compose frontend services start Vite dev servers (`npm run dev`) and run `npm install` on every start; Compose operation has no production build.
-- Credentials and tokens are stored in plain text in `docker-compose.yaml`, `backup/*.sh` and other files (not reproduced here).
+- Credentials and tokens are stored in plain text in `legacy/docker-compose.yaml`, `legacy/backup/*.sh` and other files (not reproduced here).
 - The weekly backup job (cron) is set up only on the VM and is not stored in the repository.
 - Backups are stored only on the same VM; no external target is configured.
 - The deploy workflow uses a fixed path on the VM and a self-hosted runner; it cannot be reproduced without that VM.
-- The Nginx configuration lives in `deploy/` but is not copied to the VM automatically (there: `/etc/nginx/sites-available/leoiot`).
+- The Nginx configuration lives in `legacy/deploy/` but is not copied to the VM automatically (there: `/etc/nginx/sites-available/leoiot`).
 - Grafana is additionally reachable directly on port 3000, not only via Nginx under `/grafana/`.
 
 ## Sources in the repository
 
 - `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
-- `deploy/nginx.conf`
-- `backup/backup.sh`, `backup/restore.sh`
-- `docker-compose.yaml`
-- `README.adoc`
+- `legacy/deploy/nginx.conf`
+- `legacy/backup/backup.sh`, `legacy/backup/restore.sh`
+- `legacy/docker-compose.yaml`
+- `legacy/README.adoc`
