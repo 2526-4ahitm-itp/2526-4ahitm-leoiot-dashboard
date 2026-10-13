@@ -26,9 +26,9 @@ body { overflow-x: clip; }
 .mk-chip.r { background: var(--r-bg); } .mk-chip.r::before { background: var(--r); }
 
 /* Bewegung */
-@keyframes mk-rise { from { opacity: 0; transform: translateY(var(--y, 16px)); } }
+@keyframes mk-rise { from { opacity: 0; transform: translateY(var(--rise, 16px)); } }
 @media (prefers-reduced-motion: no-preference) {
-  .mk-hi { --y: 12px; animation: mk-rise var(--dur) var(--ease) calc(var(--i, 0) * 60ms) backwards; }
+  .mk-hi { --rise: 12px; animation: mk-rise var(--dur) var(--ease) calc(var(--i, 0) * 60ms) backwards; }
   .mk-js .mk-rv:not(.in) { opacity: 0; }
   .mk-js .mk-rv.in { --rise: 16px; animation: mk-rise var(--dur) var(--ease) var(--d, 0ms) backwards; }
 }
