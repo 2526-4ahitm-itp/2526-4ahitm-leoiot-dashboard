@@ -6,7 +6,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. Everyth
 
 - [x] 1.1 For each branch with commits not on `main` (`Sensor`, `feat/sensor-data`, `openspec`, `pv_dashboard`, `feat/nili-subscribe`, `docs/archtecture`) get the owner's decision to merge now or abandon; verify with `git rev-list --count origin/main..origin/<branch>` that every branch to be kept shows 0 after merging
 - [ ] 1.2 Announce a freeze on `main` for the duration of the move and ask everyone to push or stash local work; verify all five team members acknowledged
-- [ ] 1.3 **(human, vm23)** Record the output of `docker compose ls`, `docker volume ls` and `crontab -l` in the pull request for 1.4; verify the project name and the three volume names (`…_influxdb_data`, `…_mosquitto_data`, `…_influxdb_backups`) are written down
+- [x] 1.3 **(human, vm23)** Record the output of `docker compose ls`, `docker volume ls` and `crontab -l` in the pull request for 1.4; verify the project name and the three volume names (`…_influxdb_data`, `…_mosquitto_data`, `…_influxdb_backups`) are written down
 - [x] 1.4 Add a top-level `name:` with the recorded project name to `docker-compose.yaml` in its own pull request; verify `docker compose config --volumes` and `docker compose config | grep '^name:'` show the recorded names locally
 - [x] 1.5 **(human, vm23)** Pull the pin and run `docker compose up -d`; verify no container was recreated (`docker compose ps` start times unchanged), `docker volume ls` shows no new volumes, and the dashboard still shows historical data
 
