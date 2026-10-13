@@ -8,7 +8,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. Everyth
 - [ ] 1.2 Announce a freeze on `main` for the duration of the move and ask everyone to push or stash local work; verify all five team members acknowledged
 - [ ] 1.3 **(human, vm23)** Record the output of `docker compose ls`, `docker volume ls` and `crontab -l` in the pull request for 1.4; verify the project name and the three volume names (`…_influxdb_data`, `…_mosquitto_data`, `…_influxdb_backups`) are written down
 - [x] 1.4 Add a top-level `name:` with the recorded project name to `docker-compose.yaml` in its own pull request; verify `docker compose config --volumes` and `docker compose config | grep '^name:'` show the recorded names locally
-- [ ] 1.5 **(human, vm23)** Pull the pin and run `docker compose up -d`; verify no container was recreated (`docker compose ps` start times unchanged), `docker volume ls` shows no new volumes, and the dashboard still shows historical data
+- [x] 1.5 **(human, vm23)** Pull the pin and run `docker compose up -d`; verify no container was recreated (`docker compose ps` start times unchanged), `docker volume ls` shows no new volumes, and the dashboard still shows historical data
 
 ## 2. Move the running system into `legacy/`
 
