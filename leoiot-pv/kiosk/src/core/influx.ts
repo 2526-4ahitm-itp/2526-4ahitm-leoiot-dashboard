@@ -127,12 +127,34 @@ export function parseWeek(csv: string): Record<string, PartialCounters> {
 
 const KEYS: (keyof Counters)[] = ['yield', 'exported', 'imported', 'charged', 'discharged'];
 
+const sumOf = (c: Counters): number => KEYS.reduce((acc, k) => acc + c[k], 0);
+
+// Zähler-Reset des Tages: Rückgang, der in den ersten 30 Minuten liegt oder die Zählersumme mehr als halbiert.
+// Kurze Rücksprünge einzelner Zähler im Tagesverlauf sind kein Reset.
+function isDayReset(prev: CounterRow, next: CounterRow, dayStart: Date): boolean {
+  if (powerBetween(prev.counters, next.counters, 1) !== null) return false;
+  return next.t < dayStart.getTime() + 30 * MINUTE_MS || sumOf(next.counters) < sumOf(prev.counters) / 2;
+}
+
+/** Liest jeden Zähler als sein bisheriges Tagesmaximum; liefert neue Zeilen, die Eingabe bleibt unverändert. */
+export function monotoneRows(rows: CounterRow[]): CounterRow[] {
+  const max = {} as Counters;
+  return rows.map((row, i) => {
+    const counters = {} as Counters;
+    for (const k of KEYS) {
+      max[k] = i === 0 ? row.counters[k] : Math.max(max[k], row.counters[k]);
+      counters[k] = max[k];
+    }
+    return { t: row.t, counters };
+  });
+}
+
 /** Entfernt Stände am Tagesanfang, die noch zum Vortag gehören. */
 export function validRows(rows: CounterRow[], dayStart: Date, yesterday: Counters | null): CounterRow[] {
   let from = 0;
   // 1. Letzter Zähler-Reset in der Reihe: alles davor verwerfen
   for (let i = rows.length - 1; i >= 1; i--) {
-    if (powerBetween(rows[i - 1].counters, rows[i].counters, 1) === null) {
+    if (isDayReset(rows[i - 1], rows[i], dayStart)) {
       from = i;
       break;
     }
@@ -162,8 +184,9 @@ export interface PowerPoint {
 }
 
 /** Leistungskurve aus den Differenzen aufeinanderfolgender Zählerstände. */
-export function powerSeries(rows: CounterRow[], dayStart: Date): PowerPoint[] {
-  if (rows.length === 0) return [];
+export function powerSeries(rawRows: CounterRow[], dayStart: Date): PowerPoint[] {
+  if (rawRows.length === 0) return [];
+  const rows = monotoneRows(rawRows); // Rücksprünge einzelner Zähler ergeben keine Lücke und keine Spitze
   const zero: Counters = { yield: 0, exported: 0, imported: 0, charged: 0, discharged: 0 };
   const stands: CounterRow[] =
     rows[0].t - dayStart.getTime() <= 15 * MINUTE_MS ? [{ t: dayStart.getTime(), counters: zero }, ...rows] : rows;
@@ -183,8 +206,9 @@ export function powerSeries(rows: CounterRow[], dayStart: Date): PowerPoint[] {
 }
 
 /** Mittlere Leistung der letzten rund zehn Minuten; null, wenn dafür Stände fehlen. */
-export function averagePower(rows: CounterRow[]): { power: Power; t: number } | null {
-  if (rows.length === 0) return null;
+export function averagePower(rawRows: CounterRow[]): { power: Power; t: number } | null {
+  if (rawRows.length === 0) return null;
+  const rows = monotoneRows(rawRows);
   const last = rows[rows.length - 1];
   let ref: CounterRow | null = null;
   for (let i = rows.length - 1; i >= 0; i--) {

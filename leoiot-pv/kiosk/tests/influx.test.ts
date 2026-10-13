@@ -5,6 +5,7 @@ import {
   parseCsv,
   parseToday,
   parseWeek,
+  monotoneRows,
   powerSeries,
   todayQuery,
   validRows,
@@ -229,5 +230,95 @@ describe('Abfragen', () => {
     const q = weekQuery(start, end);
     expect(q).toContain('timezone.location(name: "Europe/Vienna")');
     expect(q).toContain('aggregateWindow(every: 1d, fn: last, createEmpty: false, timeSrc: "_start")');
+  });
+});
+
+// Echte Messwerte vom 13. Oktober 2026 (5-Minuten-Stände wie todayQuery sie liefert, Zähler springen kurz zurück)
+const REAL_DAY_START = new Date('2026-10-12T22:00:00Z');
+const real = (iso: string, yieldV: number, exported: number, imported: number, charged: number, discharged: number): CounterRow => ({
+  t: Date.parse(iso),
+  counters: { yield: yieldV, exported, imported, charged, discharged },
+});
+const REAL_ROWS: CounterRow[] = [
+  real('2026-10-12T22:09:24.129Z', 0, 0, 2, 0, 0),
+  real('2026-10-12T22:14:23.836Z', 0, 0, 5, 0, 0),
+  real('2026-10-12T22:19:23.973Z', 0, 0, 7, 0, 0),
+  real('2026-10-13T02:34:29.682Z', 0, 0, 134, 0, 0.2),
+  real('2026-10-13T02:39:29.937Z', 0, 0, 134, 0, 0.2),
+  real('2026-10-13T02:44:29.945Z', 0, 0, 134, 0, 0.2),
+  real('2026-10-13T02:49:30.101Z', 0, 0, 131, 0, 0.2),
+  real('2026-10-13T02:54:30.187Z', 0, 0, 142, 0, 0.2),
+  real('2026-10-13T02:59:36.755Z', 0, 0, 151, 0, 0.2),
+  real('2026-10-13T03:04:30.789Z', 0, 0, 151, 0, 0.2),
+  real('2026-10-13T03:09:30.545Z', 0, 0, 161, 0, 0.2),
+  real('2026-10-13T03:14:30.538Z', 0, 0, 161, 0, 0.2),
+  real('2026-10-13T03:19:30.888Z', 0, 0, 157, 0, 0.2),
+  real('2026-10-13T03:24:31.382Z', 0, 0, 159, 0, 0.2),
+  real('2026-10-13T03:29:31.002Z', 0, 0, 153, 0, 0.2),
+  real('2026-10-13T03:34:30.959Z', 0, 0, 161, 0, 0.2),
+  real('2026-10-13T03:39:31.107Z', 0, 0, 171, 0, 0.2),
+  real('2026-10-13T03:44:31.339Z', 0, 0, 171, 0, 0.2),
+];
+// Minutenstände um den Rücksprung 134 -> 128 -> 134 (02:43 bis 02:49 UTC)
+const REAL_MINUTES: CounterRow[] = [
+  real('2026-10-13T02:43:30.522Z', 0, 0, 134, 0, 0.2),
+  real('2026-10-13T02:44:29.945Z', 0, 0, 134, 0, 0.2),
+  real('2026-10-13T02:45:29.98Z', 0, 0, 128, 0, 0.2),
+  real('2026-10-13T02:46:30.633Z', 0, 0, 130, 0, 0.2),
+  real('2026-10-13T02:47:30.16Z', 0, 0, 124, 0, 0.1),
+  real('2026-10-13T02:48:30.026Z', 0, 0, 134, 0, 0.2),
+  real('2026-10-13T02:49:30.101Z', 0, 0, 131, 0, 0.2),
+];
+
+describe('Rücksprünge einzelner Zähler (echte Messwerte)', () => {
+  it('validRows verwirft nur die Stände vor dem Tagesanfang', () => {
+    const valid = validRows(REAL_ROWS, REAL_DAY_START, null);
+    expect(valid).toHaveLength(REAL_ROWS.length);
+    expect(valid[0].t).toBe(REAL_ROWS[0].t);
+  });
+
+  it('Reset in den ersten 30 Minuten gilt weiter als Tagesanfang', () => {
+    const rows = [real('2026-10-12T22:05:00Z', 0, 0, 240, 0, 0), real('2026-10-12T22:10:00Z', 0, 0, 1, 0, 0)];
+    expect(validRows(rows, REAL_DAY_START, null)).toEqual([rows[1]]);
+  });
+
+  it('Rückgang mitten am Tag mit mehr als halbierter Zählersumme gilt als Reset', () => {
+    const rows = [
+      real('2026-10-13T08:00:00Z', 10, 1, 100, 5, 4),
+      real('2026-10-13T08:05:00Z', 10.1, 1, 101, 5, 4),
+      real('2026-10-13T08:10:00Z', 1, 0, 2, 0, 0),
+      real('2026-10-13T08:15:00Z', 1.1, 0, 2.1, 0, 0),
+    ];
+    expect(validRows(rows, REAL_DAY_START, null)).toEqual(rows.slice(2));
+  });
+
+  it('Leistungskurve hat keinen Lückenpunkt und keine Spitze durch die Rückkehr auf 134', () => {
+    const series = powerSeries(REAL_MINUTES, REAL_DAY_START);
+    expect(series.every((p) => p.production !== null && p.consumption !== null)).toBe(true);
+    const total = series.reduce((acc, p) => acc + (p.consumption ?? 0) * (1 / 60), 0);
+    expect(total).toBeLessThan(0.5); // höchstens die 0,1 kWh Entladung, nicht 10 kWh
+  });
+
+  it('Leistungskurve über die 5-Minuten-Stände hat keine Lücke im Rücksprungbereich', () => {
+    const valid = validRows(REAL_ROWS, REAL_DAY_START, null);
+    const series = powerSeries(valid, REAL_DAY_START).filter((p) => p.t > Date.parse('2026-10-13T02:35:00Z'));
+    expect(series.every((p) => p.consumption !== null)).toBe(true);
+  });
+
+  it('monotoneRows verändert die Eingabe nicht und liefert das laufende Maximum', () => {
+    const copy = structuredClone(REAL_MINUTES);
+    const out = monotoneRows(REAL_MINUTES);
+    expect(REAL_MINUTES).toEqual(copy);
+    expect(out).not.toBe(REAL_MINUTES);
+    expect(out[2].counters).not.toBe(REAL_MINUTES[2].counters);
+    expect(out.map((r) => r.counters.imported)).toEqual([134, 134, 134, 134, 134, 134, 134]);
+    expect(out[4].counters.discharged).toBe(0.2);
+  });
+
+  it('Tageswerte bleiben der Rohwert des letzten Stands', () => {
+    const valid = validRows(REAL_ROWS, REAL_DAY_START, null);
+    expect(valid[valid.length - 1].counters.imported).toBe(171);
+    const low = [...REAL_ROWS.slice(0, 7)];
+    expect(validRows(low, REAL_DAY_START, null)[6].counters.imported).toBe(131);
   });
 });
