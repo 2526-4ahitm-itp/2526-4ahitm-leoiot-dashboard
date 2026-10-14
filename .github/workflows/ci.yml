@@ -1,0 +1,199 @@
+name: CI
+
+# Verification of pull requests and of main (design D7 of the change
+# platform-cicd-pipeline). Components are found by .github/ci/affected.sh; a pull
+# request runs the checks of the components it touches, a push to main runs all.
+# The workflow itself is never path-filtered, so the required check "ci-ok"
+# always reports.
+
+on:
+  pull_request:
+    branches: [main, release]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  # One group per pull request, so a newer commit cancels the older run.
+  # A push to main gets a group of its own and is never cancelled.
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-24.04
+    outputs:
+      docs: ${{ steps.affected.outputs.docs }}
+      ci_scripts: ${{ steps.affected.outputs.ci_scripts }}
+      node: ${{ steps.affected.outputs.node }}
+      maven: ${{ steps.affected.outputs.maven }}
+      compose: ${{ steps.affected.outputs.compose }}
+      image: ${{ steps.affected.outputs.image }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the base commit of the pull request is needed for the diff
+      - name: Find the affected components
+        id: affected
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          out="$(mktemp)"
+          if [ "$EVENT_NAME" = pull_request ]; then
+            .github/ci/affected.sh --json "$BASE_SHA" HEAD > "$out"
+          else
+            .github/ci/affected.sh --json --all > "$out"
+          fi
+          cat "$out"
+          cat "$out" >> "$GITHUB_OUTPUT"
+
+  docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  node:
+    name: node (${{ matrix.dir }})
+    needs: changes
+    if: needs.changes.outputs.node != '[]'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.changes.outputs.node) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          # the legacy containers run node:20-alpine, everything else Node 22
+          node-version: ${{ startsWith(matrix.dir, 'legacy/') && '20' || '22' }}
+      - name: Install
+        # No lockfile (legacy/kiosk, legacy/kiosk4, legacy/leogreenKiosk): install
+        # without writing one.
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-package-lock
+          fi
+      - name: Test
+        run: npm test --if-present
+      - name: Build, or check the syntax of the entry file
+        run: |
+          if node -e 'process.exit(require("./package.json").scripts?.build ? 0 : 1)'; then
+            npm run build
+          else
+            node --check "$(node -p 'require("./package.json").main || "index.js"')"
+          fi
+
+  maven:
+    name: maven (${{ matrix.dir }})
+    needs: changes
+    if: needs.changes.outputs.maven != '[]'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.changes.outputs.maven) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          cache-dependency-path: ${{ matrix.dir }}/pom.xml
+      - run: ./mvnw -B verify
+
+  compose:
+    name: compose (${{ matrix.file }})
+    needs: changes
+    if: needs.changes.outputs.compose != '[]'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        file: ${{ fromJSON(needs.changes.outputs.compose) }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate the Compose file
+        env:
+          COMPOSE_FILE_PATH: ${{ matrix.file }}
+        run: |
+          args=(-f "$COMPOSE_FILE_PATH")
+          example="$(dirname "$COMPOSE_FILE_PATH")/.env.example"
+          if [ -f "$example" ]; then
+            # The values of the unit's .env.example stand in for its host-local
+            # .env. A required variable (${VAR:?...}) rejects an empty value, so
+            # empty assignments get a placeholder.
+            sed -E 's/^([A-Za-z_][A-Za-z0-9_]*)=$/\1=ci-placeholder/' "$example" > "$RUNNER_TEMP/compose.env"
+            args+=(--env-file "$RUNNER_TEMP/compose.env")
+          fi
+          docker compose "${args[@]}" config -q
+
+  images:
+    name: images (${{ matrix.dir }})
+    needs: changes
+    if: needs.changes.outputs.image != '[]'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.changes.outputs.image) }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the image (not pushed)
+        env:
+          IMAGE_DIR: ${{ matrix.dir }}
+        run: docker build "$IMAGE_DIR"
+
+  ci-scripts:
+    needs: changes
+    if: needs.changes.outputs.ci_scripts == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: .github/ci/affected.test.sh
+
+  ci-ok:
+    # The one status the rulesets require. It reports even when every other job
+    # was skipped, and it is red when `changes` failed: then it is not known
+    # which checks were due, and all the others are skipped.
+    needs: [changes, docs, node, maven, compose, images, ci-scripts]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check the results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<< "$NEEDS"
+          if [ "$(jq -r '.changes.result' <<< "$NEEDS")" != success ]; then
+            echo "::error::The affected components could not be determined (job changes)."
+            exit 1
+          fi
+          failed="$(jq -r 'to_entries[] | select(.value.result != "success" and .value.result != "skipped") | .key' <<< "$NEEDS")"
+          if [ -n "$failed" ]; then
+            echo "::error::Not green: $failed"
+            exit 1
+          fi
