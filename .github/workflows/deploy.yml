@@ -1,16 +1,115 @@
-name: Continuous Deployment
+name: Deploy to vm23
+
+# Deploys a commit of the release branch to vm23 (design D1 to D5 and D8 of the
+# change platform-cicd-pipeline). The logic is in .github/ci/deploy.sh. There is
+# deliberately no pull-request trigger: the self-hosted runner only ever runs
+# code that went through the release branch.
+#
+# Manual runs ("Run workflow", branch: release):
+#   ref    the commit, branch or tag to deploy (default: release); it must be on
+#          release, which makes this the rollback
+#   scope  affected (default): what changed since the last good deployment
+#          all: every unit, every legacy service
+#          <unit name>: that deploy unit only, e.g. legacy or leoiot-pv
 
 on:
   push:
-    branches: [ main ]
+    branches: [release]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit, branch or tag to deploy; must be on release"
+        required: false
+        default: release
+        type: string
+      scope:
+        description: "affected, all, or a deploy unit name (legacy, leoiot-pv, ...)"
+        required: false
+        default: affected
+        type: string
+
+permissions:
+  contents: read
+
+# One deployment at a time; a running one is never cancelled.
+concurrency:
+  group: deploy-vm23
+  cancel-in-progress: false
+
+env:
+  # The one checkout on vm23 that the stack runs from, and the file outside it
+  # that records the last successfully deployed commit.
+  DEPLOY_REPO_DIR: /home/solmqadmin/2526-4ahitm-leoiot-dashboard
+  DEPLOY_MARKER_FILE: /home/solmqadmin/.leoiot-deployed-sha
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    name: deploy
+    runs-on: [self-hosted, vm23]
+    environment:
+      name: production
+      url: https://vm23.htl-leonding.ac.at
+    timeout-minutes: 20
+    env:
+      # Inputs reach the script as environment variables, never as part of a
+      # command line.
+      DEPLOY_REF: ${{ github.event_name == 'push' && github.sha || inputs.ref }}
+      DEPLOY_SCOPE: ${{ inputs.scope || 'affected' }}
     steps:
-      - name: Deploy to Local Folder
+      # The job works in the existing checkout, not in the runner workspace, and
+      # the checkout may still be on a commit that has no deploy script. So the
+      # script is taken from the commit that triggered this run.
+      - name: Fetch the deploy script of this commit
         run: |
-          cd /home/solmqadmin/2526-4ahitm-leoiot-dashboard
-          git pull
-          docker compose up -d --build
-          
+          git -C "$DEPLOY_REPO_DIR" fetch --prune origin
+          git -C "$DEPLOY_REPO_DIR" show "$GITHUB_SHA:.github/ci/deploy.sh" > "$RUNNER_TEMP/deploy.sh"
+          chmod +x "$RUNNER_TEMP/deploy.sh"
+
+      - name: Check out the commit and update the deploy units
+        id: rollout
+        run: '"$RUNNER_TEMP/deploy.sh" rollout'
+
+      - name: Smoke test
+        run: '"$RUNNER_TEMP/deploy.sh" smoke'
+
+      # Last step on purpose: the marker only advances after the smoke test
+      # passed, so a failed deployment is made up for by the next one.
+      - name: Record the deployed commit
+        env:
+          DEPLOY_SHA: ${{ steps.rollout.outputs.sha }}
+        run: '"$RUNNER_TEMP/deploy.sh" record'
+
+  # timeout-minutes does not count queue time. Without a runner the deploy job
+  # would sit queued for 24 hours; this job turns that into a failure after
+  # 10 minutes.
+  watchdog:
+    name: runner watchdog
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Wait for the deploy job to start
+        run: |
+          deadline=$((SECONDS + 600))
+          while :; do
+            status="$(gh api "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs" \
+              --jq '[.jobs[] | select(.name == "deploy") | .status][0] // "queued"')"
+            echo "deploy job: $status"
+            if [ "$status" != queued ]; then
+              exit 0 # the runner picked it up
+            fi
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              break
+            fi
+            sleep 15
+          done
+          msg="vm23 runner did not pick up the job - check the runner service on vm23"
+          printf '## Deployment did not start\n\n%s\n' "$msg" >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::$msg"
+          sleep 5 # let the log line out before the run is cancelled
+          gh api -X POST "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/cancel" > /dev/null
+          exit 1
