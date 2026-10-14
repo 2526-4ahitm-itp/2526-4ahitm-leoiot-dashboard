@@ -7,11 +7,11 @@ See `proposal.md` for motivation. Facts that shape the approach:
 - **What runs today.** One Compose stack at the repository root (`docker-compose.yaml`), most services bind-mounting their source directory with relative paths (`./frontend`, `./config`, `./telegraf.conf`, `./grafana/…`). On vm23 it lives in `/home/solmqadmin/2526-4ahitm-leoiot-dashboard`. nginx on the host is configured by hand from `deploy/nginx.conf`.
 - **Compose project name.** The compose file does not set one, so Compose derives it from the directory it runs in, and prefixes named volumes with it (`<project>_influxdb_data`, `<project>_mosquitto_data`, `<project>_influxdb_backups`). The actual name on vm23 has not been checked; from the directory it should be `2526-4ahitm-leoiot-dashboard`.
 - **Host references into the repo.** The README documents a weekly cron job calling `/home/solmqadmin/2526-4ahitm-leoiot-dashboard/backup/backup.sh`. Whether it is installed was not checked.
-- **Deployment is manual right now.** The self-hosted runner is gone (see `fix-cicd-pipeline`), so nothing changes on vm23 until someone pulls there.
+- **Deployment is manual right now.** The self-hosted runner is gone (see `platform-cicd-pipeline`), so nothing changes on vm23 until someone pulls there.
 - **Docs site.** Root `package.json`, `astro.config.mjs`, `src/`, `public/` build the site; `.github/workflows/docs.yaml` publishes it on every push to `main`. `asciidocs/` (project application, minutes, system spec, slides source) is linked from the site's pages.
 - **Ignored credential files.** `.gitignore` names `config/pwfile`, `sensorbox/nili-ldr/secrets.yaml`, `sensorbox/s3-mini-oled/secrets.yaml` and `sensorbox/nili-ldr/.esphome/` by path.
 - **Open work.** No open pull requests. Six remote branches have commits not on `main`; `origin/openspec` (4 commits) was last touched on 2026-10-06, the others between January and April.
-- **Existing specs.** `openspec/specs/` holds two skeleton as-built specs and a conversion tracker for the legacy dashboard. `fix-cicd-pipeline` is the only open change.
+- **Existing specs.** `openspec/specs/` holds two skeleton as-built specs and a conversion tracker for the legacy dashboard. `platform-cicd-pipeline` is the only open change.
 
 ## Goals / Non-Goals
 
@@ -93,7 +93,7 @@ openspec/
 │   ├── platform/          leoiot-platform  — and everything shared
 │   │   ├── repository-layout/
 │   │   ├── data-contract/           (first change of the rewrite)
-│   │   └── ci-verification/ …       (from fix-cicd-pipeline)
+│   │   └── ci-verification/ …       (from platform-cicd-pipeline)
 │   ├── sensors/           leoiot-sensors
 │   ├── pv/                leoiot-pv
 │   └── 3d/                leoiot-3d
@@ -148,9 +148,9 @@ For each of the six branches the owner chooses: merge now, or abandon (the branc
 
 *Why before:* after a repository-wide rename every one of them conflicts on every file it touched, and resolving that by hand is where work gets lost.
 
-### D10. Order relative to `fix-cicd-pipeline`
+### D10. Order relative to `platform-cicd-pipeline`
 
-This change lands first. Afterwards `fix-cicd-pipeline` is updated, not rewritten: Compose and nginx paths gain the `legacy/` prefix, the path mapping (its D11) becomes "one folder, one sub-project" plus the legacy services, and its three capabilities move under `platform/`. Its branch rules and agent instructions do not depend on the layout and could be applied before this change if the team wants protection on `main` during the restructure.
+This change lands first. Afterwards `platform-cicd-pipeline` is updated, not rewritten: Compose and nginx paths gain the `legacy/` prefix, the path mapping (its D11) becomes "one folder, one sub-project" plus the legacy services, and its three capabilities move under `platform/`. Its branch rules and agent instructions do not depend on the layout and could be applied before this change if the team wants protection on `main` during the restructure.
 
 ## Risks / Trade-offs
 
@@ -169,7 +169,7 @@ This change lands first. Afterwards `fix-cicd-pipeline` is updated, not rewritte
 2. Read the Compose project and volume names on vm23; land and deploy the `name:` pin; confirm nothing was recreated and data is intact.
 3. Land the move pull request (pure rename commit, then fix-ups, new folders, spec regrouping, docs notice). Confirm the Pages build and site.
 4. Host follow-up on vm23 the same day: pull, start from `legacy/`, confirm volumes and data, fix the cron line, clean leftovers.
-5. Lift the freeze. Next: `platform-data-contract`, then the sub-project changes; `fix-cicd-pipeline` updated to the new layout.
+5. Lift the freeze. Next: `platform-data-contract`, then the sub-project changes; `platform-cicd-pipeline` updated to the new layout.
 
 **Rollback.** Revert the move pull request; on vm23 check out the previous commit and start from the root again. Because the project name is pinned, the volumes are the same in both layouts, so rolling back loses no data.
 

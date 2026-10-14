@@ -18,7 +18,7 @@ The current code base grew without specs or structure and is not a base the team
 - Keep legacy deployable from its new location with its existing data: pin the Compose project name before the move, so the stack keeps its data volumes, and update the host-side paths that point into the repository (backup cron job).
 - Update `.gitignore` entries that name moved paths, so ignored credential files stay ignored.
 
-Out of scope: writing any of the new implementations, choosing their tech stacks, the data contract itself (first change of the rewrite), the cut-over from legacy to new on vm23, and the CI/CD rework (`fix-cicd-pipeline`, which follows this change and will be adjusted to the new layout).
+Out of scope: writing any of the new implementations, choosing their tech stacks, the data contract itself (first change of the rewrite), the cut-over from legacy to new on vm23, and the CI/CD rework (`platform-cicd-pipeline`, which follows this change and will be adjusted to the new layout).
 
 ## Capabilities
 
@@ -37,4 +37,4 @@ None through spec deltas. `dashboard-pv` and `dashboard-sensors` are skeleton as
 - **Unmerged branches**: six remote branches carry commits that are not on `main` (`Sensor`, `feat/sensor-data`, `openspec`, `pv_dashboard`, `feat/nili-subscribe`, `docs/archtecture`). After the move they no longer merge cleanly; each needs a merge-or-abandon decision first.
 - **GitHub Pages**: unaffected in mechanics (the site stays at the root); gains an "outdated" notice.
 - **Agents and tooling**: `.claude/`, `.gemini/`, `.opencode/`, `.qwen/` and `.github/` stay at the root. `openspec/config.yaml` gains project context.
-- **`fix-cicd-pipeline`**: stays as proposed, but its path mapping and Compose paths must be updated to the new layout before it is applied, and its three capabilities move under the `platform/` group.
+- **`platform-cicd-pipeline`**: stays as proposed, but its path mapping and Compose paths must be updated to the new layout before it is applied, and its three capabilities move under the `platform/` group.

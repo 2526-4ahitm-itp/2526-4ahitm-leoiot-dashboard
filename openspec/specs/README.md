@@ -10,7 +10,7 @@ openspec/
 │   ├── platform/          leoiot-platform  — and everything shared
 │   │   ├── repository-layout/
 │   │   ├── data-contract/           (first change of the rewrite)
-│   │   └── ci-verification/ …       (from fix-cicd-pipeline)
+│   │   └── ci-verification/ …       (from platform-cicd-pipeline)
 │   ├── sensors/           leoiot-sensors
 │   ├── pv/                leoiot-pv
 │   └── 3d/                leoiot-3d

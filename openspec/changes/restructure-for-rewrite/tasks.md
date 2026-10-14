@@ -53,6 +53,6 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. Everyth
 
 ## Workflow follow-up
 
-- Update `fix-cicd-pipeline` to the new layout (Compose and nginx paths under `legacy/`, path mapping per folder, capabilities under `platform/`) before applying it.
+- Update `platform-cicd-pipeline` to the new layout (Compose and nginx paths under `legacy/`, path mapping per folder, capabilities under `platform/`) before applying it.
 - Start `platform-data-contract` as the first change of the rewrite, once the platform owner is named.
 - Archive this change after 7.5.
