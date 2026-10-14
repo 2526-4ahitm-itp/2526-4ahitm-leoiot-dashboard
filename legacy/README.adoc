@@ -80,7 +80,7 @@ docker compose down
 | Service | Port | Environment
 | Mosquitto | 1883 | -
 | InfluxDB | 8086 | Auto-configured
-| Grafana | 3000 | Admin / leogreen
+| Grafana | 3000 | Admin login: ask a maintainer
 | Frontend | 8080 | -
 | Dashboard-v2 | 8081 | -
 |===
@@ -111,7 +111,7 @@ To manage the VM or restart services, connect via SSH:
 ssh solmqadmin@vm23.htl-leonding.ac.at
 ----
 * **User:** `solmqadmin`
-* **Password:** `L4Sun@leo24.vm`
+* **Password:** ask a maintainer
 
 === Updating the Deployment
 When changes are pushed to GitHub, update the VM with these commands:
