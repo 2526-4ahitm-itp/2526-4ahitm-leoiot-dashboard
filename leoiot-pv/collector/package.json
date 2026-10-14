@@ -1,0 +1,22 @@
+{
+  "name": "leoiot-pv-collector",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Holt die PV-Tageswerte aus der SolaX-Cloud und liefert sie an InfluxDB und den Broker",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mqtt": "^5.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}
