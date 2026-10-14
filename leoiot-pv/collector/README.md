@@ -24,7 +24,7 @@ Alle Einstellungen kommen aus der Umgebung. Fehlt eine Pflichtvariable, beendet 
 | `COLLECTOR_INTERVAL_MS` | nein | `60000` |
 | `COLLECTOR_HEALTH_FILE` | nein | `/tmp/collector-last-delivery` |
 
-Mit den Standardwerten schreibt der Dienst in den Testbucket und veröffentlicht nichts. Für den Betrieb müssen Bucket und Veröffentlichen ausdrücklich gesetzt werden.
+Das Programm selbst schreibt ohne weitere Angaben in den Testbucket und veröffentlicht nichts. Der Compose-Dienst in `leoiot-pv/compose.yaml` setzt dagegen den Betrieb: Bucket `server_data`, Veröffentlichen an. Für einen Test in `leoiot-pv/.env` `COLLECTOR_INFLUX_BUCKET=pv_shadow` und `COLLECTOR_PUBLISH=0` setzen.
 
 ## Tests
 
