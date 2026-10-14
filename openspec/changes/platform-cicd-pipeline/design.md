@@ -227,7 +227,7 @@ legacy/grafana/                            grafana
 *Discovery rules.* Everything except the legacy service map is found by looking at the tree:
 
 - A CI *component* is every directory that contains a `package.json` (excluding `node_modules` and the repository root, which is the docs component) or a `pom.xml`. A changed file belongs to its nearest ancestor component.
-- Each Compose file is a *compose component*; its folder is a deploy unit (D4).
+- Each Compose file is a *compose component*; its folder is a deploy unit (D4). CI validates it with `--env-file` built from the unit's `.env.example`, where every empty value is replaced by a placeholder, so `${VAR:?…}` guards in the Compose file stay in force for real hosts.
 - Each `leoiot-*` directory that contains a `Dockerfile` gets an *image build check* for that directory.
 
 *What a path triggers.*
@@ -239,9 +239,10 @@ legacy/grafana/                            grafana
 | a Compose file | Compose check; for `legacy` also `ci-scripts` | the unit is updated; for `legacy`, plain `up` handles a changed service definition |
 | `src/`, `public/`, `asciidocs/`, `astro.config.*`, root `package.json` and lockfile, `docs/` | docs | nothing |
 | `openspec/`, root `*.md`, `LICENSE*`, `.gitignore` | no checks (only `ci-ok` reports) | nothing |
+| a file in a `leoiot-*` folder that has no component, `Dockerfile` or Compose file yet (for example `leoiot-sensors/README.md`) | no checks | nothing |
 | `.github/` and any other path | everything | nothing forced |
 
-The last row keeps the old rule that an unknown path makes CI over-run rather than under-run. Manual `scope` input values are `affected` (default), `all`, or a unit name (`legacy`, `leoiot-pv`, later others). The old "sub-project" column and the per-team scope names are gone: a team is not a unit of deployment, a Compose project is.
+The `leoiot-*` row keeps early sub-project work (READMEs, notes) from running all of CI. The last row keeps the old rule that an unknown path makes CI over-run rather than under-run. Manual `scope` input values are `affected` (default), `all`, or a unit name (`legacy`, `leoiot-pv`, later others). The old "sub-project" column and the per-team scope names are gone: a team is not a unit of deployment, a Compose project is.
 
 *Completeness test.* `affected.test.sh` fails when a Compose service of `legacy/docker-compose.yaml` is missing from `legacy-services.map`, when a map line names a service that does not exist in that file, or when a directory `legacy/*` that contains a `package.json` has no map line. New units need no map and no test entry.
 
