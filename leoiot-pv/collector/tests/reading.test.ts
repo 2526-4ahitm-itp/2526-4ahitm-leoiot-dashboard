@@ -65,3 +65,29 @@ describe('Broker-Nachricht', () => {
     expect(PV_TOPIC).toBe('leoenergy/solax_pv/overall_inverter');
   });
 });
+
+describe('Live-Nachricht wie beim bisherigen Collector', () => {
+  // Am 2026-10-13 über /ws aufgezeichnete Tagessummen-Nachricht des bisherigen Collectors
+  // (ohne das von der Bridge ergänzte _ts; plantId durch einen Testwert ersetzt).
+  const recorded = {
+    plantLocalTime: '2026-10-13 20:15:00',
+    plantId: 'test-plant',
+    dailyYield: 353.7,
+    totalYield: 121801.2,
+    dailyCharged: 0,
+    totalCharged: 30960.2,
+    dailyDischarged: 0.8,
+    totalDischarged: 28497.71,
+    dailyImported: 791,
+    totalImported: 183871,
+    dailyExported: 0,
+    totalExported: 1176,
+    dailyEarnings: 74.19,
+    totalEarnings: 4545.73,
+  };
+
+  it('veröffentlicht für dieselbe Cloud-Antwort jedes Feld mit demselben Wert', () => {
+    expect(checkResult(recorded).ok).toBe(true);
+    expect(JSON.parse(toMessage(recorded))).toEqual(recorded);
+  });
+});
