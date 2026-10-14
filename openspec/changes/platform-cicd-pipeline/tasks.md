@@ -22,14 +22,14 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 - [x] 3.2 Run `./mvnw -B verify` in `legacy/backend/sensor-data-generator` with Java 21; verify the unit test classes (`GreetingResourceTest`, `SinusServiceTest`) run and pass, and that no test needs Docker (`GreetingResourceIT` is skipped by the project's default `skipITs=true`; if a test does need Docker, restrict the CI command to `test` and note it in the workflow)
 - [ ] 3.3 Run `docker compose -f <file> config -q` for `legacy/docker-compose.yaml` and for `leoiot-pv/compose.yaml` with an env file derived from `leoiot-pv/.env.example` (empty values replaced by a placeholder, as `ci.yml` does), and `docker build` for `leoiot-pv/kiosk` and `leoiot-pv/collector`; verify each exits 0
 - [x] 3.4 Create `.github/workflows/ci.yml` per design D7 (`changes` job using `.github/ci/affected.sh`, jobs `docs`, dynamic `node` matrix, `maven`, `compose`, `images`, `ci-scripts`, gate job `ci-ok` that accepts `skipped` only when `changes` succeeded; `ubuntu-24.04`; `permissions: contents: read`; `pull_request` and `push: main` triggers only; per-PR concurrency with cancel); verify with `actionlint` or `gh workflow view` that it parses
-- [ ] 3.5 Open the pull request; because it touches `.github/` it must run every job; verify all jobs and `ci-ok` are green
+- [x] 3.5 Open the pull request; because it touches `.github/` it must run every job; verify all jobs and `ci-ok` are green
 - [ ] 3.6 Prove scoping: open a throwaway pull request that changes one file under `leoiot-pv/kiosk` only; verify only the `leoiot-pv/kiosk` checks (Node and image build) run, the other jobs are skipped, and `ci-ok` is green and reported
 - [ ] 3.7 Prove the gate: on the throwaway branch break the `leoiot-pv/kiosk` build and desync its lockfile; verify the leg fails and `ci-ok` is red; then make `affected.sh` exit non-zero and verify `ci-ok` is red although the other jobs are skipped; close the pull request
-- [ ] 3.8 After merge, verify the `push` run on `main` runs every job and reports `ci-ok` green
+- [x] 3.8 After merge, verify the `push` run on `main` runs every job and reports `ci-ok` green
 
 ## 4. Pages workflow hardening
 
-- [ ] 4.1 In `.github/workflows/docs.yaml` set `runs-on: ubuntu-24.04` and move `actions/checkout` and `actions/setup-node` to their current major versions (look them up, do not guess); verify the next Pages run on `main` succeeds without the Node deprecation annotation and the site returns 200 at https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/
+- [x] 4.1 In `.github/workflows/docs.yaml` set `runs-on: ubuntu-24.04` and move `actions/checkout` and `actions/setup-node` to their current major versions (look them up, do not guess); verify the next Pages run on `main` succeeds without the Node deprecation annotation and the site returns 200 at https://2526-4ahitm-itp.github.io/2526-4ahitm-leoiot-dashboard/
 
 ## 5. Runner and deploy workflow
 
