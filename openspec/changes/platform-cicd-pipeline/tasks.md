@@ -64,9 +64,9 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 
 ## 8. Team and agent workflow
 
-- [ ] 8.1 Write `AGENTS.md` per design D10: branch per task from fresh `main`, worktree per concurrent agent, branch naming, pull request into `main`, never push to `main`/`release`, never approve or merge a promotion, never change rulesets/runner/deploy target unprompted; the layout (which folder belongs to which team, `legacy/` frozen, each sub-project's code stays in its own folder), spec grouping with a pointer to `openspec/specs/README.md`, contract first (shared interfaces go into `openspec/specs/platform/` through a platform change before code relies on them); that shared files such as Compose files and `.github/` need extra care; how to run each CI step and `.github/ci/affected.sh` locally; verify every command in it runs as written
-- [ ] 8.2 Add `CLAUDE.md` that imports `@AGENTS.md`; verify a fresh Claude Code session in the repo lists the branch rules when asked how to ship a change
-- [ ] 8.3 Link `AGENTS.md` from the README and from the docs site's contributing page if one exists; verify the links resolve in the built site
+- [x] 8.1 Write `AGENTS.md` per design D10: branch per task from fresh `main`, worktree per concurrent agent, branch naming, pull request into `main`, never push to `main`/`release`, never approve or merge a promotion, never change rulesets/runner/deploy target unprompted; the layout (which folder belongs to which team, `legacy/` frozen, each sub-project's code stays in its own folder), spec grouping with a pointer to `openspec/specs/README.md`, contract first (shared interfaces go into `openspec/specs/platform/` through a platform change before code relies on them); that shared files such as Compose files and `.github/` need extra care; how to run each CI step and `.github/ci/affected.sh` locally; verify every command in it runs as written
+- [x] 8.2 Add `CLAUDE.md` that imports `@AGENTS.md`; verify a fresh Claude Code session in the repo lists the branch rules when asked how to ship a change
+- [x] 8.3 Link `AGENTS.md` from the README and from the docs site's contributing page if one exists; verify the links resolve in the built site
 - [ ] 8.4 Land 8.1–8.3 through a pull request from a worktree, as the first change made under the new rules; verify it needed green `ci-ok` to merge
 
 ## 9. End-to-end check

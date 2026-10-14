@@ -32,3 +32,7 @@ This takes effect once the runner is installed on the VM and the `release` branc
 ## Specs
 
 Specifications live in `openspec/`, grouped by sub-project (`platform`, `sensors`, `pv`, `3d`). The grouping rules are in [`openspec/specs/README.md`](openspec/specs/README.md). The functional specification the new specs are derived from is [`docs/functional-specification.md`](docs/functional-specification.md).
+
+## Contributing
+
+Branch, pull request, release, layout and spec rules for people and coding agents are in [`AGENTS.md`](AGENTS.md) (Claude Code loads it through [`CLAUDE.md`](CLAUDE.md)). In short: every task gets its own branch from `main` and a pull request with a green `ci-ok`; nobody pushes to `main` or `release` directly; shipping is a pull request from `main` to `release`.
