@@ -23,6 +23,12 @@ npm ci
 npm run build
 ```
 
+## Deployment
+
+The application runs on <https://vm23.htl-leonding.ac.at>. A merge into `main` does not deploy. A pull request from `main` into the `release` branch, approved by a second person, does: the push to `release` starts the deploy workflow (`.github/workflows/deploy.yml`) on the runner on the school VM, which checks out exactly that commit, updates only the changed deploy units and legacy services, smoke-tests the public routes and then records the commit. A manual run of the workflow (inputs `ref` and `scope`) deploys an earlier commit of `release` or a single unit. The full description, including rollback and what to do when the checkout on the VM stops on a rewritten file (`git checkout -- <file>`), is on the Operations page of the documentation site: [`src/content/docs/en/docs/operations.md`](src/content/docs/en/docs/operations.md) (German: [`operations.md`](src/content/docs/docs/operations.md)).
+
+This takes effect once the runner is installed on the VM and the `release` branch exists; until then the VM is updated by hand.
+
 ## Specs
 
 Specifications live in `openspec/`, grouped by sub-project (`platform`, `sensors`, `pv`, `3d`). The grouping rules are in [`openspec/specs/README.md`](openspec/specs/README.md). The functional specification the new specs are derived from is [`docs/functional-specification.md`](docs/functional-specification.md).
