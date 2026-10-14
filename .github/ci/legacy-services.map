@@ -1,0 +1,28 @@
+# Which legacy Compose service reads which path of the repository.
+#
+# One line per path: "<prefix> <service>". The prefix is relative to the
+# repository root; a prefix ending in "/" matches everything below that
+# directory, any other prefix matches exactly that file. A service without
+# files in the repository (an image only) has the prefix "-".
+#
+# Used by .github/ci/affected.sh to decide which legacy service the deployment
+# recreates. Legacy is frozen, so this list is not expected to grow.
+# .github/ci/affected.test.sh fails when it is out of step with
+# legacy/docker-compose.yaml.
+#
+# prefix                                   legacy Compose service
+legacy/frontend/                           frontend
+legacy/dashboard-v2/                       dashboard-v2
+legacy/kiosk/                              kiosk
+legacy/kiosk2/                             kiosk2
+legacy/kiosk3/                             kiosk3
+legacy/kiosk4/                             kiosk4
+legacy/leogreenKiosk/                      leogreen-kiosk
+legacy/solax-collector/                    solax-collector
+legacy/mqtt-ws-bridge/                     mqtt-ws-bridge
+legacy/fake-sensors/                       fake-sensors
+legacy/backend/sensor-data-generator/      quarkus-app
+legacy/telegraf.conf                       telegraf
+legacy/config/                             mosquitto
+legacy/grafana/                            grafana
+-                                          influxdb
