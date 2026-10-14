@@ -15,7 +15,11 @@ docker compose up -d
 
 All relative paths in `docker-compose.yaml` (`./frontend`, `./config`, `./telegraf.conf`, `./grafana/...`) resolve inside this folder.
 
-> The Compose project name is derived from the directory name. Run from `legacy/` it is `legacy`, which would create new, empty data volumes on a host that ran the stack from the repository root before. On the production host the project name has to be pinned first; see the `restructure-for-rewrite` OpenSpec change.
+The Compose project name is pinned to `2526-4ahitm-leoiot-dashboard` in `docker-compose.yaml`, so the stack keeps the data volumes it used when it ran from the repository root. Do not remove the `name:` line.
+
+> **`config/pwfile` is not in Git.** Mosquitto needs this password file at runtime, and it is ignored on purpose. On a new checkout, or after moving the stack, copy it into `legacy/config/` before `docker compose up -d`; without it `mosquitto` exits with code 13 and `telegraf` and `fake-sensors` stop with it.
+
+> The web apps run `npm install` into their bind-mounted folders on every start, so untracked `package-lock.json` files (owned by root) can appear here. They are harmless; delete them with `rm -f` if they get in the way.
 
 ## What replaces what
 

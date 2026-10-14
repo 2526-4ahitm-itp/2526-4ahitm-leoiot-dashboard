@@ -41,14 +41,14 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. Everyth
 
 - [x] 6.1 Add a site-wide notice in German and English per design D8 saying the documentation describes the previous implementation and is being updated; verify it appears on a docs page in both locales in `npm run dev`
 - [x] 6.2 Update the links in `src/content/docs/docs/project.md`, `interfaces.md` and their `en/` counterparts that point at moved repository paths; verify the built site has no link to a path that no longer exists
-- [ ] 6.3 After merge, verify the Pages workflow run succeeds and the published site shows the notice
+- [x] 6.3 After merge, verify the Pages workflow run succeeds and the published site shows the notice
 
 ## 7. Host follow-up on vm23
 
-- [ ] 7.1 **(human, vm23)** Pull the merged move, then run `docker compose up -d` from `legacy/`; verify `docker compose ls` shows the pinned project name, `docker volume ls` shows no new volumes, and all public routes answer
-- [ ] 7.2 **(human, vm23)** Verify data continuity: the dashboard shows data from before the move and new sensor readings keep arriving
-- [ ] 7.3 **(human, vm23)** Edit the backup cron line to `…/legacy/backup/backup.sh` (or install it if 1.3 showed none) and run the script once by hand; verify a new dated folder appears in `~/influxdb-backups/`
-- [ ] 7.4 **(human, vm23)** Remove the leftover untracked top-level app directories once the stack runs from `legacy/`; verify `git status --short` in the checkout is empty
+- [x] 7.1 **(human, vm23)** Pull the merged move, then run `docker compose up -d` from `legacy/`; verify `docker compose ls` shows the pinned project name, `docker volume ls` shows no new volumes, and all public routes answer
+- [x] 7.2 **(human, vm23)** Verify data continuity: the dashboard shows data from before the move and new sensor readings keep arriving
+- [x] 7.3 **(human, vm23)** Edit the backup cron line to `…/legacy/backup/backup.sh` (or install it if 1.3 showed none) and run the script once by hand; verify a new dated folder appears in `~/influxdb-backups/`
+- [x] 7.4 **(human, vm23)** Remove the leftover untracked top-level app directories once the stack runs from `legacy/`; verify `git status --short` in the checkout is empty
 - [ ] 7.5 Lift the freeze and tell the team where things are now; verify each team has opened its sub-project README
 
 ## Workflow follow-up
