@@ -114,13 +114,9 @@ ssh solmqadmin@vm23.htl-leonding.ac.at
 * **Password:** ask a maintainer
 
 === Updating the Deployment
-When changes are pushed to GitHub, update the VM with these commands:
-[source,bash]
-----
-cd 2526-4ahitm-leoiot-dashboard/legacy
-git pull
-docker compose up -d --build
-----
+Changes reach the VM through the release workflow, no longer through `git pull` on the VM: a change goes live when a pull request from `main` into the `release` branch is merged. The deploy workflow then puts exactly that commit on the VM and updates only the changed services.
+How it works, how to start a manual run or a rollback, and what to do when the checkout stops on a modified file: see the section "Deployment" in the link:../README.md[root README] and the "Operations" page of the documentation site (`src/content/docs/en/docs/operations.md`).
+This takes effect once the runner on the VM is installed and the `release` branch exists; until then, follow the section "Updating by hand" on that page.
 
 === Infrastructure Note
 The project uses a **System-level Nginx** as a reverse proxy.

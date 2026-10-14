@@ -1,6 +1,6 @@
 ---
 title: Operations
-description: Deployment (state of the workflows and the manual route), Nginx routing, InfluxDB backup and restore, and known limitations.
+description: Deployment (release via the release branch, selective updates, rollback, runner), Nginx routing, InfluxDB backup and restore, and known limitations.
 sidebar:
   order: 40
 next: false
@@ -10,18 +10,79 @@ This page describes how the system gets onto the school VM, how requests are dis
 
 ## Deployment
 
-A workflow is an automatic sequence of steps on GitHub (GitHub Actions). A runner is the computer that executes it; “self-hosted” means on the school VM instead of at GitHub. `.github/workflows/` contains two workflows that are meant to start on every push to `main`. Currently only one of them runs:
+A workflow is an automatic sequence of steps on GitHub (GitHub Actions). A runner is the computer that executes it; “self-hosted” means on the school VM instead of at GitHub. `.github/workflows/` contains three workflows:
 
-| Workflow | File | Runner | Action |
-|---|---|---|---|
-| Continuous Deployment | `deploy.yml` | `self-hosted` (school VM) | is meant to change into the project directory on the VM, run `git pull` and `docker compose up -d --build`; **currently does not run** (see below) |
-| Pages | `docs.yaml` | `ubuntu-latest` | `npm ci`, `npm run build` (Astro, also builds the reveal.js slides from `src/slides`; Node 22) and publishes the `dist` folder to the `gh-pages` branch (JamesIves/github-pages-deploy-action, `clean: true`); can also be started manually (`workflow_dispatch`) |
+| Workflow | File | Runner | Trigger | Action |
+|---|---|---|---|---|
+| CI | `ci.yml` | `ubuntu-24.04` (GitHub) | pull request into `main` or `release`, push to `main` | checks the affected components (tests, build, Compose files, images); aggregate status `ci-ok` |
+| Deploy to vm23 | `deploy.yml` | `self-hosted`, label `vm23` (school VM) | push to the `release` branch, manual start | brings the released state onto the VM (see below) |
+| Pages | `docs.yaml` | `ubuntu-24.04` | push to `main`, manual start (`workflow_dispatch`) | `npm ci`, `npm run build` (Astro, also builds the reveal.js slides from `src/slides`; Node 22) and publishes the `dist` folder to the `gh-pages` branch (JamesIves/github-pages-deploy-action, `clean: true`) |
 
 The Pages workflow may write to the `gh-pages` branch; a new run cancels a run that is still in progress.
 
-`deploy.yml` currently does not run, for two reasons: no self-hosted runner is registered on GitHub, so the runs are cancelled. In addition, the workflow calls `docker compose up -d --build` in the root folder of the checkout, but the Compose file is located under `legacy/`. Therefore only the documentation site is published automatically (`docs.yaml`). Changes to the application are brought onto the VM by hand; this is currently the only way.
+:::caution[Status]
+The automatic deployment takes effect only once the runner is installed on the VM, the GitHub environment `production` exists and the `release` branch exists. Until then `deploy.yml` does not run, and changes to the application are brought onto the VM by hand (section “Updating by hand”).
+:::
 
-To update the old stack manually, run `git pull` and `docker compose up -d --build` in the `legacy/` folder of the project directory (procedure as described in `legacy/README.adoc`). The main kiosk is a separate Compose project (`leoiot-pv`); it is started or updated with `docker compose up -d --build` in the `leoiot-pv/` folder (setup: [Setup](../setup/#main-kiosk) page).
+### How a release works
+
+1. Changes arrive by pull request into `main`. A merge into `main` does **not** start a deployment.
+2. Releasing means a pull request from `main` into `release`, approved by a second person and merged with a merge commit. Everything merged into `main` goes live in one step, so unfinished work stays on its own branch.
+3. The push to `release` starts `deploy.yml`. The runner on the VM puts the checkout `/home/solmqadmin/2526-4ahitm-leoiot-dashboard` on exactly that commit (`git checkout --detach`, without `--force`), updates the affected units and then checks the public addresses.
+4. Only one deployment runs at a time; a second push waits until the first is finished.
+
+### Deploy units and their order
+
+A deploy unit is a top-level folder with a Compose file: `legacy` and every `leoiot-*` folder with a `compose.yaml` (today `legacy` and `leoiot-pv`). Each unit is its own Compose project and is started from its own folder. The order is `leoiot-platform`, then `legacy`, then the other `leoiot-*` units alphabetically. A new unit is picked up without any change to the workflow as soon as it has a `compose.yaml`. If a unit fails, the following ones are not touched.
+
+For each affected unit the deployment runs `docker compose config -q` (fails early when the VM's `.env` is missing or incomplete) and then `docker compose up -d --build --remove-orphans`.
+
+### What gets updated
+
+What counts is what changed since the **last successful deployment**. Its commit is stored in the file `/home/solmqadmin/.leoiot-deployed-sha` outside the checkout; when the file is missing, everything is updated. `.github/ci/affected.sh` works out the affected units and services (the same script as in CI; the mapping of the legacy services is in `.github/ci/legacy-services.map`); the deployment itself is `.github/ci/deploy.sh`.
+
+- **`legacy`: per service.** The Node services bind-mount their folder, so a Compose `up` alone does not restart them. Exactly the services with changed files are therefore recreated with `--force-recreate` (`npm install` runs again, and the service is unreachable for a few minutes). `quarkus-app` is additionally rebuilt by `--build`.
+- **New units (`leoiot-pv`): per image.** The images are rebuilt, and only services whose image or definition changed are recreated.
+- **Units without changes** are not touched: a legacy-only release does not build PV images, and a PV-only release does not restart a legacy container.
+- **Nginx** is not managed by the deployment. If `legacy/deploy/nginx.conf` (or later an `nginx*.conf` in `leoiot-platform/`) changes, or there is no earlier deployment, the run prints a warning: the file has to be applied on the VM by hand (`/etc/nginx/sites-available/leoiot` is a copy).
+
+### Configuration on the VM
+
+The `.env` files of the units (for example `leoiot-pv/.env`) exist only on the VM, are not in the repository and are neither created, read nor changed by the deployment. The deployment never passes `--profile`. Optional services behind a Compose profile run only if the VM's `.env` switches the profile on via `COMPOSE_PROFILES`. This matters most for the PV `collector`: the SolaX cloud allows one session per account, so it must never run next to the `solax-collector` from `legacy/`.
+
+### Check after the deployment
+
+Afterwards the deployment requests every route in `.github/ci/smoke-routes` through `https://vm23.htl-leonding.ac.at` (redirects are followed, the final status must be 2xx), every 10 seconds for up to 5 minutes. If a route does not answer, the run fails and names it. Only after the check passed is the commit written to the marker file; after a failure the next deployment therefore also makes up what the failed one was meant to update. New sub-projects add their routes to `.github/ci/smoke-routes`. The check only shows that services answer, not that they show the right thing.
+
+### Manual run, rollback and `scope`
+
+Under Actions → “Deploy to vm23” → “Run workflow” (choose the `release` branch: the `production` environment only allows runs from `release`) there are two inputs:
+
+| Input | Values | Effect |
+|---|---|---|
+| `ref` | commit, branch or tag; default `release` | This commit is deployed. It must be on `release`, otherwise the run stops before anything on the VM changes. |
+| `scope` | `affected` (default), `all` or a unit name (`legacy`, `leoiot-pv`, …) | `affected`: only what changed since the last deployment. `all`: all units, all legacy services and all services of the new units are recreated. Unit name: the same for that unit alone, whatever files changed. |
+
+**Rollback:** set `ref` to an earlier commit of `release`. The run puts the VM on that commit and updates what differs between the current and that state; to be safe, also set `scope` to `all`. Alternatively merge a revert into `main` and release it as usual. Commits from before the CI layout (without `.github/ci/affected.sh`) cannot be deployed with this workflow.
+
+### When the checkout stops
+
+The deployment never overwrites anything that was changed locally on the VM. If a container rewrites a file that is tracked in the repository (typically `legacy/solax-collector/package-lock.json`, because `npm install` runs in the bind-mounted folder) and a release changes that file, the checkout stops. The error message names the file and the command; on the VM:
+
+```bash
+cd /home/solmqadmin/2526-4ahitm-leoiot-dashboard
+git checkout -- <file>
+```
+
+Then run the deployment again (Actions → “Re-run” or a manual run).
+
+### Runner
+
+The runner runs on the VM as user `solmqadmin`, is registered as a repository runner with the labels `self-hosted` and `vm23` and installed as a systemd service, so it starts by itself after a reboot. It only executes runs of `release`: no workflow with a pull-request trigger uses this runner, and the `production` environment only allows the `release` branch. If it is offline, the run fails after about 10 minutes with the message “vm23 runner did not pick up the job” (a watchdog job on a GitHub runner) instead of waiting 24 hours. In that case check `sudo ./svc.sh status` in the runner folder on the VM.
+
+### Updating by hand
+
+As long as the runner and the `release` branch are missing, the manual route remains: update the old stack with `docker compose up -d --build` in the `legacy/` folder of the project directory, then recreate changed Node services by hand (`docker compose up -d --force-recreate --no-deps <service>`). The main kiosk is a separate Compose project (`leoiot-pv`); it is started or updated with `docker compose up -d --build` in the `leoiot-pv/` folder (setup: [Setup](../setup/#main-kiosk) page).
 
 ## Nginx routing
 
@@ -73,13 +134,14 @@ According to the InfluxDB documentation, `--full` replaces the entire data set i
 - Credentials and tokens are stored in plain text in `legacy/docker-compose.yaml`, `legacy/backup/*.sh` and other files (not reproduced here).
 - The weekly backup job (cron) is set up only on the VM and is not stored in the repository.
 - Backups are stored only on the same VM; no external target is configured.
-- The deploy workflow (`deploy.yml`) currently does not run: no self-hosted runner is registered, and it calls Compose in the root folder instead of `legacy/`. It also uses a fixed path on the VM.
+- The deploy workflow (`deploy.yml`) takes effect only once the runner is installed on the VM, the `production` environment exists and the `release` branch exists; until then updates are made by hand. It uses a fixed path on the VM (`/home/solmqadmin/2526-4ahitm-leoiot-dashboard`).
 - The Nginx configuration lives in `legacy/deploy/` but is not copied to the VM automatically (there: `/etc/nginx/sites-available/leoiot`).
 - Grafana is additionally reachable directly on port 3000, not only via Nginx under `/grafana/`.
 
 ## Sources in the repository
 
-- `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
+- `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
+- `.github/ci/deploy.sh`, `.github/ci/affected.sh`, `.github/ci/legacy-services.map`, `.github/ci/smoke-routes`
 - `legacy/deploy/nginx.conf`
 - `leoiot-pv/compose.yaml`
 - `legacy/backup/backup.sh`, `legacy/backup/restore.sh`
