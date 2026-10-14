@@ -20,18 +20,23 @@ services:
       - platform
 
   collector:
+    # Starts only on request: docker compose --profile collector up -d
+    # The SolaX cloud keeps one session per account, so this service must never
+    # run while another collector uses the same account.
+    profiles: ["collector"]
     build: ./collector
     restart: unless-stopped
     environment:
-      # SolaX login, plant, write token and broker login come from leoiot-pv/.env.
-      COLLECTOR_SOLAX_CLIENT_ID: ${COLLECTOR_SOLAX_CLIENT_ID:?COLLECTOR_SOLAX_CLIENT_ID is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
-      COLLECTOR_SOLAX_CLIENT_SECRET: ${COLLECTOR_SOLAX_CLIENT_SECRET:?COLLECTOR_SOLAX_CLIENT_SECRET is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
-      COLLECTOR_SOLAX_USERNAME: ${COLLECTOR_SOLAX_USERNAME:?COLLECTOR_SOLAX_USERNAME is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
-      COLLECTOR_SOLAX_PASSWORD: ${COLLECTOR_SOLAX_PASSWORD:?COLLECTOR_SOLAX_PASSWORD is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
-      COLLECTOR_SOLAX_PLANT_ID: ${COLLECTOR_SOLAX_PLANT_ID:?COLLECTOR_SOLAX_PLANT_ID is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
-      COLLECTOR_INFLUX_TOKEN: ${COLLECTOR_INFLUX_TOKEN:?COLLECTOR_INFLUX_TOKEN is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
-      COLLECTOR_MQTT_USER: ${COLLECTOR_MQTT_USER:?COLLECTOR_MQTT_USER is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
-      COLLECTOR_MQTT_PASSWORD: ${COLLECTOR_MQTT_PASSWORD:?COLLECTOR_MQTT_PASSWORD is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      # SolaX login, plant, write token and broker login come from leoiot-pv/.env;
+      # the collector itself exits and names a variable that is missing.
+      COLLECTOR_SOLAX_CLIENT_ID: ${COLLECTOR_SOLAX_CLIENT_ID:-}
+      COLLECTOR_SOLAX_CLIENT_SECRET: ${COLLECTOR_SOLAX_CLIENT_SECRET:-}
+      COLLECTOR_SOLAX_USERNAME: ${COLLECTOR_SOLAX_USERNAME:-}
+      COLLECTOR_SOLAX_PASSWORD: ${COLLECTOR_SOLAX_PASSWORD:-}
+      COLLECTOR_SOLAX_PLANT_ID: ${COLLECTOR_SOLAX_PLANT_ID:-}
+      COLLECTOR_INFLUX_TOKEN: ${COLLECTOR_INFLUX_TOKEN:-}
+      COLLECTOR_MQTT_USER: ${COLLECTOR_MQTT_USER:-}
+      COLLECTOR_MQTT_PASSWORD: ${COLLECTOR_MQTT_PASSWORD:-}
       # Defaults for the comparison run: test bucket, no publishing.
       COLLECTOR_INFLUX_BUCKET: ${COLLECTOR_INFLUX_BUCKET:-pv_shadow}
       COLLECTOR_PUBLISH: ${COLLECTOR_PUBLISH:-0}

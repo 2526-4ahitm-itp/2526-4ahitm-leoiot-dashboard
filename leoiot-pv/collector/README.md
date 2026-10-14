@@ -38,7 +38,11 @@ Die Tests laufen gegen lokale Fake-Server für Cloud und Datenbank, einen Fake-M
 
 ## Container
 
-Im Ordner `leoiot-pv/` `.env.example` nach `.env` kopieren, ausfüllen und `docker compose up -d --build collector` ausführen. Das Image ist mehrstufig, läuft als Benutzer `node` und startet das übersetzte Programm.
+Im Ordner `leoiot-pv/` `.env.example` nach `.env` kopieren, ausfüllen und `docker compose --profile collector up -d --build collector` ausführen. Der Dienst hängt an einem eigenen Profil und startet deshalb nicht mit, wenn nur `docker compose up -d` für den Kiosk ausgeführt wird. Das Image ist mehrstufig, läuft als Benutzer `node` und startet das übersetzte Programm.
+
+## Nur ein Collector pro SolaX-Konto
+
+Die SolaX-Cloud hält pro Konto nur eine gültige Sitzung. Melden sich zwei Collectors mit demselben Konto an, machen sie sich gegenseitig die Sitzung ungültig (Fehlercode 10402 im Log) und verlieren abwechselnd Minuten. Den Dienst deshalb nie gegen die echte Cloud starten, solange ein anderer Collector mit demselben Konto läuft. Zum Ausprobieren `COLLECTOR_SOLAX_BASE_URL` auf einen lokalen Ersatz zeigen lassen; die Tests tun das ohnehin.
 
 ## Gesundheit
 

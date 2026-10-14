@@ -5,7 +5,7 @@ New PV data collection, PV dashboard and kiosk displays.
 | | |
 |---|---|
 | **Owning team** | PV-Dashboard — Daniel Lettner, Stefan Schachner |
-| **Status** | Main kiosk built; collector and dashboard still in legacy |
+| **Status** | Main kiosk live; collector built, not yet switched; dashboard still in legacy |
 | **Spec group** | `openspec/specs/pv/` |
 
 ## Layout
@@ -13,6 +13,7 @@ New PV data collection, PV dashboard and kiosk displays.
 - `compose.yaml`: the Compose project `leoiot-pv`
 - `.env.example`: template for the local `.env`
 - `kiosk/`: the main kiosk
+- `collector/`: the PV collector for the SolaX cloud (Node, TypeScript, Vitest)
 
 Each application is its own folder with its own `package.json` and `Dockerfile`; there is no shared workspace. The kiosk is Vite + TypeScript + Vitest, served by an nginx image. Later applications (`collector/`, a second kiosk) follow the same pattern.
 
@@ -42,6 +43,7 @@ The previous stack (`legacy/docker-compose.yaml`) must be running, because Influ
 - `KIOSK_INFLUX_TOKEN` (required): read token for the bucket `server_data`.
 - `KIOSK_PORT` (optional, default `8088`): host port, bound to `127.0.0.1`.
 - `PLATFORM_NETWORK` (optional, default `2526-4ahitm-leoiot-dashboard_leoiot`): network of the previous stack.
+- `COLLECTOR_*`: settings of the collector, only needed with the profile `collector`; see `collector/README.md`.
 
 ## What is live
 
@@ -49,7 +51,7 @@ The kiosk is built for `/kiosk/`. The switch on the host is a manual step and ha
 
 ## Still in the previous system
 
-- The collector for the PV data (`legacy/solax-collector/`).
+- The collector that is in production (`legacy/solax-collector/`). The new one in `collector/` replaces it at a planned switch; until then it runs only on request (Compose profile `collector`). The SolaX cloud keeps one session per account, so the two must never run at the same time.
 - The PV views of `/dashboard/` (`legacy/dashboard-v2/`).
 
 Rebuilding the PV views of the dashboard needs its own spec and its own `pv-…` change. This is open and must not be forgotten. An issue link will be added later.
