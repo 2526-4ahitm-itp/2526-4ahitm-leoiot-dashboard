@@ -27,8 +27,12 @@ The Compose project name is pinned to `2526-4ahitm-leoiot-dashboard` in `docker-
 |---|---|---|
 | `docker-compose.yaml`, `config/`, `telegraf.conf`, `grafana/`, `deploy/nginx.conf`, `backup/`, `mqtt-ws-bridge/` | [`leoiot-platform/`](../leoiot-platform/) | to be assigned |
 | `sensorbox/`, `fake-sensors/`, `backend/sensor-data-generator/`, sensor views of `dashboard-v2/` | [`leoiot-sensors/`](../leoiot-sensors/) | Sensoren |
-| `solax-collector/`, `kiosk*/`, `leogreenKiosk/`, PV views of `dashboard-v2/` | [`leoiot-pv/`](../leoiot-pv/) | PV-Dashboard |
+| `kiosk*/`, `leogreenKiosk/`, PV views of `dashboard-v2/` | [`leoiot-pv/`](../leoiot-pv/) | PV-Dashboard |
 | `frontend/` | [`leoiot-3d/`](../leoiot-3d/) | 3D-Modell |
+
+## Removed parts
+
+- `solax-collector/` (Compose service `solax-collector`): replaced by `leoiot-pv/collector`, which runs in production on vm23 since 2026-10-14. The SolaX cloud keeps one session per account, so the old collector must not run again. The code is in the Git history before this removal.
 
 ## More documentation
 
