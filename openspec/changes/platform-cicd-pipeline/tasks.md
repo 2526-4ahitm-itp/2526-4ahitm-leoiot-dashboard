@@ -33,7 +33,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 
 ## 5. Runner and deploy workflow
 
-- [ ] 5.1 **(human, vm23)** Remove any old runner directory/service, install the current Actions runner as `solmqadmin`, register it on the repository with labels `self-hosted,vm23`, and install it as a systemd service (`./svc.sh install && ./svc.sh start`); verify `gh api repos/2526-4ahitm-itp/2526-4ahitm-leoiot-dashboard/actions/runners` lists it as `online`
+- [x] 5.1 **(human, vm23)** Remove any old runner directory/service, install the current Actions runner as `solmqadmin`, register it on the repository with labels `self-hosted,vm23`, and install it as a systemd service (`./svc.sh install && ./svc.sh start`); verify `gh api repos/2526-4ahitm-itp/2526-4ahitm-leoiot-dashboard/actions/runners` lists it as `online`
 - [ ] 5.2 **(human, vm23)** Reboot vm23 (or restart the service if a reboot is not possible now); verify the runner is `online` again without logging in, and that both Compose projects (`2526-4ahitm-leoiot-dashboard` and `leoiot-pv`) came back
 - [ ] 5.3 **(repo admin)** Create the `production` environment with URL `https://vm23.htl-leonding.ac.at` and a deployment branch policy that allows only `release`; verify with `gh api repos/.../environments/production/deployment-branch-policies`
 - [ ] 5.4 **(repo admin)** Set Actions → fork pull request workflows to "Require approval for all outside collaborators"; verify in the settings API/page
