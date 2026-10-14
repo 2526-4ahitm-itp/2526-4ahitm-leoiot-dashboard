@@ -19,6 +19,32 @@ services:
     networks:
       - platform
 
+  collector:
+    build: ./collector
+    restart: unless-stopped
+    environment:
+      # SolaX login, plant, write token and broker login come from leoiot-pv/.env.
+      COLLECTOR_SOLAX_CLIENT_ID: ${COLLECTOR_SOLAX_CLIENT_ID:?COLLECTOR_SOLAX_CLIENT_ID is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      COLLECTOR_SOLAX_CLIENT_SECRET: ${COLLECTOR_SOLAX_CLIENT_SECRET:?COLLECTOR_SOLAX_CLIENT_SECRET is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      COLLECTOR_SOLAX_USERNAME: ${COLLECTOR_SOLAX_USERNAME:?COLLECTOR_SOLAX_USERNAME is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      COLLECTOR_SOLAX_PASSWORD: ${COLLECTOR_SOLAX_PASSWORD:?COLLECTOR_SOLAX_PASSWORD is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      COLLECTOR_SOLAX_PLANT_ID: ${COLLECTOR_SOLAX_PLANT_ID:?COLLECTOR_SOLAX_PLANT_ID is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      COLLECTOR_INFLUX_TOKEN: ${COLLECTOR_INFLUX_TOKEN:?COLLECTOR_INFLUX_TOKEN is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      COLLECTOR_MQTT_USER: ${COLLECTOR_MQTT_USER:?COLLECTOR_MQTT_USER is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      COLLECTOR_MQTT_PASSWORD: ${COLLECTOR_MQTT_PASSWORD:?COLLECTOR_MQTT_PASSWORD is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+      # Defaults for the comparison run: test bucket, no publishing.
+      COLLECTOR_INFLUX_BUCKET: ${COLLECTOR_INFLUX_BUCKET:-pv_shadow}
+      COLLECTOR_PUBLISH: ${COLLECTOR_PUBLISH:-0}
+    healthcheck:
+      # Unhealthy when the last delivered reading is older than five minutes.
+      test: ["CMD", "node", "healthcheck.mjs"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      retries: 2
+    networks:
+      - platform
+
 networks:
   # InfluxDB and the MQTT WebSocket bridge still run in the previous stack,
   # so its network is joined as an external one. Their interfaces are
