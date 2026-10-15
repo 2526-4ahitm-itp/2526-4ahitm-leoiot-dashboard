@@ -21,6 +21,9 @@
 #   DEPLOY_SHA          record: the commit that rollout deployed
 #   DEPLOY_RELEASE_REF  rollout: ref a commit must be on (default origin/release)
 #   SMOKE_BASE_URL      smoke: default https://vm23.htl-leonding.ac.at
+#   SMOKE_CONNECT_TO    smoke: address to connect to instead of the URL's host
+#                       (default 127.0.0.1: vm23 cannot reach its own public
+#                       IP); empty uses DNS
 #   SMOKE_INTERVAL      smoke: seconds between rounds (default 10)
 #   SMOKE_TIMEOUT       smoke: seconds before giving up (default 300)
 #
@@ -234,6 +237,10 @@ smoke() {
   need DEPLOY_REPO_DIR
   local base=${SMOKE_BASE_URL:-https://vm23.htl-leonding.ac.at}
   local interval=${SMOKE_INTERVAL:-10} timeout=${SMOKE_TIMEOUT:-300}
+  # Keeps the host name (TLS, nginx server_name) but opens the connection to
+  # this address; the empty string turns it off.
+  local addr=${SMOKE_CONNECT_TO-127.0.0.1} connect=()
+  [[ -z $addr ]] || connect=(--connect-to "::$addr:")
   local file=$DEPLOY_REPO_DIR/.github/ci/smoke-routes
   [[ -f $file ]] || err "$file does not exist"
 
@@ -247,7 +254,7 @@ smoke() {
 
   if ((dry)); then
     for line in "${routes[@]}"; do
-      echo "+ curl -sSL --max-redirs 10 --max-time 15 -o /dev/null -w '%{http_code}' $base$line"
+      echo "+ curl -sSL --max-redirs 10 --max-time 15 ${connect[*]:+${connect[*]} }-o /dev/null -w '%{http_code}' $base$line"
     done
     return 0
   fi
@@ -257,7 +264,7 @@ smoke() {
   while :; do
     still=()
     for r in "${pending[@]}"; do
-      code=$(curl -sS -L --max-redirs 10 --max-time 15 -o /dev/null -w '%{http_code}' "$base$r" 2>/dev/null) || true
+      code=$(curl -sS -L --max-redirs 10 --max-time 15 "${connect[@]}" -o /dev/null -w '%{http_code}' "$base$r" 2>/dev/null) || true
       if [[ $code =~ ^2[0-9][0-9]$ ]]; then
         echo "ok    $r ($code)"
       else

@@ -52,7 +52,7 @@ The `.env` files of the units (for example `leoiot-pv/.env`) exist only on the V
 
 ### Check after the deployment
 
-Afterwards the deployment requests every route in `.github/ci/smoke-routes` through `https://vm23.htl-leonding.ac.at` (redirects are followed, the final status must be 2xx), every 10 seconds for up to 5 minutes. If a route does not answer, the run fails and names it. Only after the check passed is the commit written to the marker file; after a failure the next deployment therefore also makes up what the failed one was meant to update. New sub-projects add their routes to `.github/ci/smoke-routes`. The check only shows that services answer, not that they show the right thing.
+Afterwards the deployment requests every route in `.github/ci/smoke-routes` through `https://vm23.htl-leonding.ac.at` (redirects are followed, the final status must be 2xx), every 10 seconds for up to 5 minutes. The runner uses the public hostname but connects to `127.0.0.1` on vm23, because vm23 cannot reach its own public address; the requests still go through nginx and its TLS certificate, and `SMOKE_CONNECT_TO` overrides the address (empty uses DNS). If a route does not answer, the run fails and names it. Only after the check passed is the commit written to the marker file; after a failure the next deployment therefore also makes up what the failed one was meant to update. New sub-projects add their routes to `.github/ci/smoke-routes`. The check only shows that services answer, not that they show the right thing.
 
 ### Manual run, rollback and `scope`
 

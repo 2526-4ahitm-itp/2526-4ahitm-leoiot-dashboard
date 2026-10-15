@@ -113,7 +113,7 @@ The system SHALL run at most one deployment at a time and SHALL NOT cancel a dep
 - **THEN** the second deployment waits for the first to finish and then runs
 
 ### Requirement: Deployment is verified after rollout
-After updating the units the system SHALL request the public routes listed in the repository's smoke-route file, following redirects, and SHALL mark the deployment failed when a route does not end in a successful response within the wait period. A sub-project SHALL add its routes by adding lines to that file.
+After updating the units the system SHALL request the routes listed in the repository's smoke-route file under the public hostname, through the host's reverse proxy, following redirects, and SHALL mark the deployment failed when a route does not end in a successful response within the wait period. A sub-project SHALL add its routes by adding lines to that file.
 
 #### Scenario: Stack comes up
 - **WHEN** all listed routes answer successfully within the wait period
