@@ -52,7 +52,7 @@ Die `.env`-Dateien der Einheiten (zum Beispiel `leoiot-pv/.env`) liegen nur auf 
 
 ### Prüfung nach dem Deployment
 
-Danach ruft das Deployment jede Adresse aus `.github/ci/smoke-routes` über `https://vm23.htl-leonding.ac.at` ab (Weiterleitungen werden verfolgt, am Ende muss ein 2xx-Status stehen), alle 10 Sekunden bis zu 5 Minuten lang. Antwortet eine Adresse nicht, schlägt der Lauf fehl und nennt sie. Erst nach bestandener Prüfung wird der Commit in die Marker-Datei geschrieben; nach einem Fehlschlag holt das nächste Deployment also alles nach, was das fehlgeschlagene aktualisieren sollte. Neue Teilprojekte tragen ihre Adressen in `.github/ci/smoke-routes` ein. Die Prüfung zeigt nur, dass Dienste antworten, nicht dass sie das Richtige anzeigen.
+Danach ruft das Deployment jede Adresse aus `.github/ci/smoke-routes` über `https://vm23.htl-leonding.ac.at` ab (Weiterleitungen werden verfolgt, am Ende muss ein 2xx-Status stehen), alle 10 Sekunden bis zu 5 Minuten lang. Der Runner verwendet den öffentlichen Hostnamen, verbindet sich aber mit `127.0.0.1` auf vm23, weil vm23 seine eigene öffentliche Adresse nicht erreichen kann; die Anfragen laufen weiterhin über nginx und dessen TLS-Zertifikat, und `SMOKE_CONNECT_TO` ersetzt die Adresse (leer nutzt DNS). Antwortet eine Adresse nicht, schlägt der Lauf fehl und nennt sie. Erst nach bestandener Prüfung wird der Commit in die Marker-Datei geschrieben; nach einem Fehlschlag holt das nächste Deployment also alles nach, was das fehlgeschlagene aktualisieren sollte. Neue Teilprojekte tragen ihre Adressen in `.github/ci/smoke-routes` ein. Die Prüfung zeigt nur, dass Dienste antworten, nicht dass sie das Richtige anzeigen.
 
 ### Manueller Lauf, Rollback und `scope`
 
