@@ -63,7 +63,7 @@ Under Actions → “Deploy to vm23” → “Run workflow” (choose the `relea
 | `ref` | commit, branch or tag; default `release` | This commit is deployed. It must be on `release`, otherwise the run stops before anything on the VM changes. |
 | `scope` | `affected` (default), `all` or a unit name (`legacy`, `leoiot-pv`, …) | `affected`: only what changed since the last deployment. `all`: all units, all legacy services and all services of the new units are recreated. Unit name: the same for that unit alone, whatever files changed. |
 
-**Rollback:** set `ref` to an earlier commit of `release`. The run puts the VM on that commit and updates what differs between the current and that state; to be safe, also set `scope` to `all`. Alternatively merge a revert into `main` and release it as usual. Commits from before the CI layout (without `.github/ci/affected.sh`) cannot be deployed with this workflow.
+**Rollback:** set `ref` to an earlier commit of `release`. The run puts the VM on that commit and updates what differs between the current and that state; to be safe, also set `scope` to `all`. Alternatively merge a revert into `main` and release it as usual. Commits from before the CI layout (without `.github/ci/affected.sh`) cannot be deployed with this workflow. A rollback only works to commits from `4db0bb9` on: a run uses the `deploy.sh` of the commit it deploys, and before that commit the smoke test connected to vm23's public address, which vm23 cannot reach from itself; such a run rolls out but then fails at the smoke test and does not write the marker.
 
 ### When the checkout stops
 
