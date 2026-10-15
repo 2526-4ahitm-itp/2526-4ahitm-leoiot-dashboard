@@ -18,7 +18,6 @@ legacy/kiosk2/                             kiosk2
 legacy/kiosk3/                             kiosk3
 legacy/kiosk4/                             kiosk4
 legacy/leogreenKiosk/                      leogreen-kiosk
-legacy/solax-collector/                    solax-collector
 legacy/mqtt-ws-bridge/                     mqtt-ws-bridge
 legacy/fake-sensors/                       fake-sensors
 legacy/backend/sensor-data-generator/      quarkus-app

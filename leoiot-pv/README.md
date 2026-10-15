@@ -5,7 +5,7 @@ New PV data collection, PV dashboard and kiosk displays.
 | | |
 |---|---|
 | **Owning team** | PV-Dashboard — Daniel Lettner, Stefan Schachner |
-| **Status** | Main kiosk live; collector built, not yet switched; dashboard still in legacy |
+| **Status** | Main kiosk and collector live on vm23; dashboard still in legacy |
 | **Spec group** | `openspec/specs/pv/` |
 
 ## Layout
@@ -51,7 +51,6 @@ The kiosk is built for `/kiosk/`. The switch on the host is a manual step and ha
 
 ## Still in the previous system
 
-- The collector that is in production (`legacy/solax-collector/`). The new one in `collector/` replaces it at a planned switch; until then it runs only on request (Compose profile `collector`). The SolaX cloud keeps one session per account, so the two must never run at the same time.
 - The PV views of `/dashboard/` (`legacy/dashboard-v2/`).
 
 Rebuilding the PV views of the dashboard needs its own spec and its own `pv-…` change. This is open and must not be forgotten. An issue link will be added later.
