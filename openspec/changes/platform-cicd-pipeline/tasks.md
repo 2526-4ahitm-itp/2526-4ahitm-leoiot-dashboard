@@ -23,8 +23,6 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 - [ ] 3.3 Run `docker compose -f <file> config -q` for `legacy/docker-compose.yaml` and for `leoiot-pv/compose.yaml` with an env file derived from `leoiot-pv/.env.example` (empty values replaced by a placeholder, as `ci.yml` does), and `docker build` for `leoiot-pv/kiosk` and `leoiot-pv/collector`; verify each exits 0
 - [x] 3.4 Create `.github/workflows/ci.yml` per design D7 (`changes` job using `.github/ci/affected.sh`, jobs `docs`, dynamic `node` matrix, `maven`, `compose`, `images`, `ci-scripts`, gate job `ci-ok` that accepts `skipped` only when `changes` succeeded; `ubuntu-24.04`; `permissions: contents: read`; `pull_request` and `push: main` triggers only; per-PR concurrency with cancel); verify with `actionlint` or `gh workflow view` that it parses
 - [x] 3.5 Open the pull request; because it touches `.github/` it must run every job; verify all jobs and `ci-ok` are green
-- [ ] 3.6 Prove scoping: open a throwaway pull request that changes one file under `leoiot-pv/kiosk` only; verify only the `leoiot-pv/kiosk` checks (Node and image build) run, the other jobs are skipped, and `ci-ok` is green and reported
-- [ ] 3.7 Prove the gate: on the throwaway branch break the `leoiot-pv/kiosk` build and desync its lockfile; verify the leg fails and `ci-ok` is red; then make `affected.sh` exit non-zero and verify `ci-ok` is red although the other jobs are skipped; close the pull request
 - [x] 3.8 After merge, verify the `push` run on `main` runs every job and reports `ci-ok` green
 
 ## 4. Pages workflow hardening
@@ -46,14 +44,8 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 
 ## 6. First release and deploy behaviour
 
-- [ ] 6.1 Merge the deploy workflow to `main`; verify no deployment run starts (none should, `release` does not exist yet)
-- [ ] 6.2 **(attended, with a maintainer watching vm23)** Create `release` from `main` and push it; verify the deploy run is picked up by the `vm23` runner, updates both units (`legacy` first, with every service recreated because there is no marker yet), passes the smoke test, writes the marker, that `git rev-parse HEAD` on vm23 equals the `release` head, and that `leoiot-pv` runs `collector` and `kiosk` from the deploy checkout
-- [ ] 6.3 Prove selective restart in legacy: release a change that touches only `legacy/frontend`; verify with `docker inspect -f '{{.State.StartedAt}}'` that `frontend` restarted and `kiosk`, `mqtt-ws-bridge`, `influxdb` and the `leoiot-pv` containers kept their previous start time
-- [ ] 6.4 Prove unit scoping for a new unit: release a change that touches only `leoiot-pv/kiosk`; verify the PV `kiosk` container was recreated from a new image (image ID changed) and every legacy container kept its previous start time
-- [ ] 6.5 Prove Node services update: release a visible log-line change in `legacy/fake-sensors`; verify `docker compose logs fake-sensors` (run in `legacy/`) shows the new line after the deployment
-- [ ] 6.6 Prove recovery: make one deployment fail (stop a container's route so the smoke test fails), then deploy a later release; verify the marker was not advanced by the failed run and the later run updates the units and services of both releases
-- [ ] 6.7 Exercise rollback and scope: start a manual run with the previous `release` commit and verify vm23 moves to it and the smoke test passes; redeploy the head; then run with `scope: leoiot-pv` on the same commit and verify only the `leoiot-pv` services were recreated and every legacy container kept its start time
-- [ ] 6.8 Verify refusal: start a manual run naming a commit that is only on a feature branch; verify the run fails at the ancestor check and vm23's `HEAD` and the marker are unchanged
+- [x] 6.1 Merge the deploy workflow to `main`; verify no deployment run starts (none should, `release` does not exist yet)
+- [x] 6.2 **(attended, with a maintainer watching vm23)** Create `release` from `main` and push it; verify the deploy run is picked up by the `vm23` runner, updates both units (`legacy` first, with every service recreated because there is no marker yet), passes the smoke test, writes the marker, that `git rev-parse HEAD` on vm23 equals the `release` head, and that `leoiot-pv` runs `collector` and `kiosk` from the deploy checkout — done 2026-10-15: release run 38720182635 deployed 4db0bb9, smoke test green, marker written, vm23 HEAD = marker = 4db0bb9; the first run (38699696670) failed only at the smoke test, fixed by 5.10; the manual run 38720297483 with scope leoiot-pv moved collector and kiosk onto the deploy checkout
 
 ## 7. Branch rules
 
@@ -76,6 +68,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 
 ## Workflow follow-up
 
+- Deferred on 2026-10-15 because they are not needed for the team to start: the separate proofs 3.6/3.7 (throwaway pull request for path scoping and for the ci-ok gate) and 6.3–6.8 (selective legacy restart, unit scoping for leoiot-pv, Node service update, recovery after a failed deploy, rollback and scope, refusal of a commit not on release). Normal use exercises them; prove one when it misbehaves. Partial evidence: the failed run 38699696670 did not write the marker and the next release updated everything; run 38720297483 (scope leoiot-pv) recreated only the two leoiot-pv containers.
 - Open a separate change for the credentials committed to the repository (InfluxDB admin token, MQTT password, hard-coded tokens in the JS sources) and the `latest` image tags.
 - Ask an org admin whether an old org-level runner for vm23 still exists and remove it.
 - Consider contract checks for the MQTT topics and InfluxDB fields the sub-projects share; path-scoped CI cannot see breakage across them.
