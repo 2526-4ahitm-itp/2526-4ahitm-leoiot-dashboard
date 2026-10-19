@@ -54,7 +54,7 @@ The previous stack (`legacy/docker-compose.yaml`) must be running, because Influ
 
 - The PV views of `/dashboard/` (`legacy/dashboard-v2/`).
 
-Rebuilding the PV views of the dashboard needs its own spec and its own `pv-…` change. This is open and must not be forgotten. An issue link will be added later.
+Rebuilding the PV views of the dashboard needs its own spec and its own `pv-…` change. This is open and must not be forgotten. Tracked in [#64](https://github.com/2526-4ahitm-itp/2526-4ahitm-leoiot-dashboard/issues/64).
 
 ## Planned
 

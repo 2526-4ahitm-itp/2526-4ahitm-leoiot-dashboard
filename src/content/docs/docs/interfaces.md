@@ -18,7 +18,7 @@ Ein Topic ist der „Briefkasten“-Name einer MQTT-Nachricht, die Payload ihr I
 | `room-temperature` | JSON `{"room": "<Raum>", "temperature": <Zahl>}` | `fake-sensors` (QoS 1), Kanal `room-temperature-out` im `quarkus-app` | `legacy/fake-sensors/index.js`, `application.properties` |
 | `nili3/sensor/<raum-kleingeschrieben>_co2/state` | Zahl als Text in ppm (parts per million, Teile pro Million), z. B. `612.4` | `fake-sensors` (QoS 1) | `legacy/fake-sensors/index.js` |
 | `nili3/sensor/nili3_co2/state`, `nili3/sensor/nili3_temperature/state` | Zahl als Text | echte Sensorbox `nili3` (ESPHome); Bridge und Grafana werten diese Topics aus | `legacy/mqtt-ws-bridge/index.js`, `legacy/grafana/dashboards/main-dashboard.json` |
-| `leoenergy/solax_pv/overall_inverter` | JSON-Rohdatensatz der Solax-Cloud (Solax: Hersteller des Wechselrichters der PV-Anlage) (`realtime_data`-Ergebnis), retained (der Broker merkt sich den letzten Wert für neue Empfänger) | `solax-collector` (und externer PV-Broker) | `legacy/solax-collector/index.js` |
+| `leoenergy/solax_pv/overall_inverter` | JSON-Rohdatensatz der Solax-Cloud (Solax: Hersteller des Wechselrichters der PV-Anlage) (`realtime_data`-Ergebnis), retained (der Broker merkt sich den letzten Wert für neue Empfänger) | Collector aus `leoiot-pv/collector/` (und externer PV-Broker) | `leoiot-pv/collector/src/main.ts` |
 | `sine` | Zahl als Text (Sinuskurve, jede Sekunde), Testkanal des Quarkus-Generators (Quarkus ist ein Java-Framework) | `quarkus-app` | `application.properties` |
 | `co2/threshold/high`, `co2/threshold/middle` | Zahl (CO₂-Schwelle in ppm) | wird von der Sensorbox abonniert | `legacy/sensorbox/nili-ldr/nili-ldr.yaml` |
 
@@ -30,7 +30,7 @@ Telegraf (`legacy/telegraf.conf`) ist das Programm, das MQTT-Nachrichten in die 
 - `room-temperature` als JSON mit Tag `room`, umbenannt in das Measurement `room_temperature` (Feld `temperature`, wie in `legacy/frontend/logic.js` abgefragt).
 
 :::note
-Die Solax-Daten werden zusätzlich vom `solax-collector` direkt per HTTP in InfluxDB geschrieben (Measurement `solax_stats`, Tag `plant_id`, Felder `daily_yield`, `total_yield`, `consumption`, `daily_charged`, `daily_discharged`, `daily_imported`, `daily_exported`). Der Solax-Datensatz auf MQTT geht nicht über Telegraf.
+Die Solax-Daten werden zusätzlich vom Collector aus `leoiot-pv/collector/` direkt per HTTP in InfluxDB geschrieben (Measurement `solax_stats`, Tag `plant_id`, Felder `daily_yield`, `total_yield`, `consumption`, `daily_charged`, `daily_discharged`, `daily_imported`, `daily_exported`). Der Solax-Datensatz auf MQTT geht nicht über Telegraf.
 :::
 
 ## WebSocket der Bridge
@@ -113,11 +113,11 @@ Im Code und in der Präsentation gelten 800 und 1000 ppm. Die funktionale Spezi
 - `legacy/docker-compose.yaml`, `legacy/telegraf.conf`, `legacy/config/mosquitto.conf`
 - `legacy/mqtt-ws-bridge/index.js`
 - `legacy/fake-sensors/index.js`
-- `legacy/solax-collector/index.js`
+- `leoiot-pv/collector/src/main.ts`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/grafana/provisioning/`, `legacy/grafana/dashboards/main-dashboard.json`
 - `legacy/deploy/nginx.conf`
 - `leoiot-pv/kiosk/`
-- `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`, `legacy/leogreenKiosk/kiosk.js`
+- `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`
 - `legacy/sensorbox/nili-ldr/nili-ldr.yaml`, `legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml`
 - `docs/functional-specification.md`
