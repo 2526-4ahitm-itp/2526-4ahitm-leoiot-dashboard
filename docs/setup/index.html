@@ -110,24 +110,9 @@
 <td>Dashboard (Raumklima und PV, Vite-Dev-Server)</td>
 </tr>
 <tr>
-<td><code dir="auto">kiosk</code>, <code dir="auto">kiosk2</code>, <code dir="auto">kiosk3</code>, <code dir="auto">kiosk4</code></td>
-<td><code dir="auto">node:20-alpine</code>, jeweils eigenes Verzeichnis</td>
-<td>abgelöst: frühere Kiosk-Anzeigen (Vite-Dev-Server)</td>
-</tr>
-<tr>
-<td><code dir="auto">leogreen-kiosk</code></td>
-<td><code dir="auto">node:20-alpine</code>, <code dir="auto">./leogreenKiosk</code></td>
-<td>abgelöst: früherer LeoGreen-Kiosk</td>
-</tr>
-<tr>
 <td><code dir="auto">mqtt-ws-bridge</code></td>
 <td><code dir="auto">node:20-alpine</code>, <code dir="auto">./mqtt-ws-bridge</code></td>
 <td>Bridge: gibt MQTT-Messwerte per WebSocket an den Browser weiter</td>
-</tr>
-<tr>
-<td><code dir="auto">solax-collector</code></td>
-<td><code dir="auto">node:20-alpine</code>, <code dir="auto">./solax-collector</code></td>
-<td>holt Solax-Daten, schreibt sie nach InfluxDB und veröffentlicht sie per MQTT</td>
 </tr>
 <tr>
 <td><code dir="auto">fake-sensors</code></td>
@@ -166,14 +151,6 @@
 <td><code dir="auto">dashboard-v2</code></td>
 </tr>
 <tr>
-<td>8082 / 8083 / 8084 / 8085</td>
-<td><code dir="auto">kiosk</code> / <code dir="auto">kiosk2</code> / <code dir="auto">kiosk3</code> / <code dir="auto">kiosk4</code> (abgelöst)</td>
-</tr>
-<tr>
-<td>8087</td>
-<td><code dir="auto">leogreen-kiosk</code> (abgelöst)</td>
-</tr>
-<tr>
 <td>8088</td>
 <td>Hauptkiosk (<code dir="auto">leoiot-pv/</code>, nur auf <code dir="auto">127.0.0.1</code>)</td>
 </tr>
@@ -183,7 +160,7 @@
 </tr>
 </tbody>
 </table>
-<p><code dir="auto">quarkus-app</code>, <code dir="auto">telegraf</code>, <code dir="auto">fake-sensors</code> und <code dir="auto">solax-collector</code> veröffentlichen keine Ports.</p>
+<p><code dir="auto">quarkus-app</code>, <code dir="auto">telegraf</code> und <code dir="auto">fake-sensors</code> veröffentlichen keine Ports.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="hauptkiosk">Hauptkiosk</h2><a class="sl-anchor-link" href="#hauptkiosk"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Hauptkiosk“</span></a></div>
 <p>Der Hauptkiosk liegt in <code dir="auto">leoiot-pv/kiosk/</code> und läuft als eigenes Compose-Projekt <code dir="auto">leoiot-pv</code> (<code dir="auto">leoiot-pv/compose.yaml</code>). Er hängt am Netz des alten Stacks (<code dir="auto">2526-4ahitm-leoiot-dashboard_leoiot</code>); der alte Stack muss deshalb laufen.</p>
 <div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal-Fenster</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#919F9F;--1:#5F636F"># im Ordner leoiot-pv/ des Repositorys</span></div></div><div class="ec-line"><div class="code"><span style="--0:#82AAFF;--1:#3B61B0">cp</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#3B61B0">.env.example</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#3B61B0">.env</span></div></div><div class="ec-line"><div class="code"><span style="--0:#919F9F;--1:#5F636F"># in .env den reinen Lese-Token für InfluxDB eintragen (KIOSK_INFLUX_TOKEN)</span></div></div><div class="ec-line"><div class="code"><span style="--0:#82AAFF;--1:#3B61B0">docker</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#3B61B0">compose</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#3B61B0">up</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#82AAFF;--1:#3B61B0">-d</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#82AAFF;--1:#3B61B0">--build</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="In Zwischenablage kopieren" data-copied="Kopiert!" data-code="cp .env.example .envdocker compose up -d --build"><div></div></button></div></figure></div>
@@ -237,9 +214,9 @@
 <td>Zugang zu einem externen MQTT-Broker (Photovoltaik)</td>
 </tr>
 <tr>
-<td><code dir="auto">INFLUX_URL</code>, <code dir="auto">INFLUX_TOKEN</code>, <code dir="auto">INFLUX_ORG</code>, <code dir="auto">INFLUX_BUCKET</code></td>
-<td><code dir="auto">solax-collector</code></td>
-<td>InfluxDB-Zugang</td>
+<td><code dir="auto">COLLECTOR_SOLAX_CLIENT_ID</code>, <code dir="auto">COLLECTOR_SOLAX_CLIENT_SECRET</code>, <code dir="auto">COLLECTOR_SOLAX_USERNAME</code>, <code dir="auto">COLLECTOR_SOLAX_PASSWORD</code>, <code dir="auto">COLLECTOR_SOLAX_PLANT_ID</code>, <code dir="auto">COLLECTOR_INFLUX_TOKEN</code>, <code dir="auto">COLLECTOR_MQTT_USER</code>, <code dir="auto">COLLECTOR_MQTT_PASSWORD</code></td>
+<td><code dir="auto">leoiot-pv/.env</code>, Dienst <code dir="auto">collector</code> (nur mit Profil <code dir="auto">collector</code>)</td>
+<td>Pflicht: Solax-Zugang, InfluxDB-Schreibtoken, MQTT-Zugang; optional unter anderem <code dir="auto">COLLECTOR_INFLUX_BUCKET</code>, <code dir="auto">COLLECTOR_PUBLISH</code>; Details in <code dir="auto">leoiot-pv/collector/README.md</code></td>
 </tr>
 <tr>
 <td><code dir="auto">DOCKER_INFLUXDB_INIT_*</code></td>
@@ -282,7 +259,7 @@
 </table>
 <p>Standalone (gegen einen Broker auf <code dir="auto">localhost:1883</code>): <code dir="auto">cd legacy/fake-sensors &amp;&amp; npm install &amp;&amp; npm start</code>; anderer Broker über <code dir="auto">MQTT_HOST</code>.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="lokale-entwicklung-der-frontends">Lokale Entwicklung der Frontends</h2><a class="sl-anchor-link" href="#lokale-entwicklung-der-frontends"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Lokale Entwicklung der Frontends“</span></a></div>
-<p>Alle sieben Frontends im Ordner <code dir="auto">legacy/</code> nutzen Vite (Entwicklungsserver und Build-Werkzeug für Web-Oberflächen). Skripte laut <code dir="auto">package.json</code>; der Hauptkiosk steht im Abschnitt <a href="#hauptkiosk">Hauptkiosk</a>:</p>
+<p>Beide Frontends im Ordner <code dir="auto">legacy/</code> nutzen Vite (Entwicklungsserver und Build-Werkzeug für Web-Oberflächen). Skripte laut <code dir="auto">package.json</code>; der Hauptkiosk steht im Abschnitt <a href="#hauptkiosk">Hauptkiosk</a>:</p>
 <table>
 <thead>
 <tr>
@@ -302,34 +279,9 @@
 <td><code dir="auto">vite --port 8081</code></td>
 <td>8081</td>
 </tr>
-<tr>
-<td><code dir="auto">legacy/kiosk</code> (abgelöst)</td>
-<td><code dir="auto">vite --port 8082</code></td>
-<td>8082</td>
-</tr>
-<tr>
-<td><code dir="auto">legacy/kiosk2</code> (abgelöst)</td>
-<td><code dir="auto">vite --port 8083</code></td>
-<td>8083</td>
-</tr>
-<tr>
-<td><code dir="auto">legacy/kiosk3</code> (abgelöst)</td>
-<td><code dir="auto">vite --port 8084</code></td>
-<td>8084</td>
-</tr>
-<tr>
-<td><code dir="auto">legacy/kiosk4</code> (abgelöst)</td>
-<td><code dir="auto">vite --port 8085</code></td>
-<td>8085</td>
-</tr>
-<tr>
-<td><code dir="auto">legacy/leogreenKiosk</code> (abgelöst)</td>
-<td><code dir="auto">vite --port 8087</code></td>
-<td>8087</td>
-</tr>
 </tbody>
 </table>
-<p>Alle sieben kennen außerdem <code dir="auto">npm run build</code> (<code dir="auto">vite build</code>) und <code dir="auto">npm run preview</code>; im Compose-Betrieb wird der Build nicht verwendet, dort laufen die Dev-Server mit <code dir="auto">--host 0.0.0.0</code>. <code dir="auto">frontend</code> hängt von <code dir="auto">three</code> ab, die übrigen haben nur Vite als Abhängigkeit.</p>
+<p>Beide kennen außerdem <code dir="auto">npm run build</code> (<code dir="auto">vite build</code>) und <code dir="auto">npm run preview</code>; im Compose-Betrieb wird der Build nicht verwendet, dort laufen die Dev-Server mit <code dir="auto">--host 0.0.0.0</code>. <code dir="auto">frontend</code> hängt von <code dir="auto">three</code> ab, <code dir="auto">dashboard-v2</code> hat nur Vite als Abhängigkeit.</p>
 <div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal-Fenster</span></figcaption><pre data-language="bash"><code><div class="ec-line"><div class="code"><span style="--0:#C5E478;--1:#3B61B0">cd</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#3B61B0">legacy/dashboard-v2</span></div></div><div class="ec-line"><div class="code"><span style="--0:#82AAFF;--1:#3B61B0">npm</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#3B61B0">install</span></div></div><div class="ec-line"><div class="code"><span style="--0:#82AAFF;--1:#3B61B0">npm</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#3B61B0">run</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#3B61B0">dev</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="In Zwischenablage kopieren" data-copied="Kopiert!" data-code="cd legacy/dashboard-v2npm installnpm run dev"><div></div></button></div></figure></div>
 <div class="sl-heading-wrapper level-h2"><h2 id="quellen-im-repository">Quellen im Repository</h2><a class="sl-anchor-link" href="#quellen-im-repository"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Quellen im Repository“</span></a></div>
 <ul>
@@ -338,7 +290,7 @@
 <li><code dir="auto">legacy/telegraf.conf</code></li>
 <li><code dir="auto">legacy/fake-sensors/index.js</code></li>
 <li><code dir="auto">legacy/backend/sensor-data-generator/src/main/resources/application.properties</code></li>
-<li><code dir="auto">legacy/frontend/package.json</code>, <code dir="auto">legacy/dashboard-v2/package.json</code>, <code dir="auto">legacy/leogreenKiosk/package.json</code></li>
+<li><code dir="auto">legacy/frontend/package.json</code>, <code dir="auto">legacy/dashboard-v2/package.json</code></li>
 <li><code dir="auto">leoiot-pv/compose.yaml</code>, <code dir="auto">leoiot-pv/.env.example</code>, <code dir="auto">leoiot-pv/kiosk/package.json</code>, <code dir="auto">leoiot-pv/kiosk/README.md</code></li>
 </ul>
 </div><footer class="sl-flex astro-ddtxxk7k"><div class="meta sl-flex astro-ddtxxk7k"></div><div class="pagination-links print:hidden astro-b5raizh3" dir="ltr"><a href="/2526-4ahitm-leoiot-dashboard/docs/interfaces/" rel="prev" class="astro-b5raizh3"><svg aria-hidden="true" class="astro-b5raizh3 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg><span class="astro-b5raizh3">Vorherige Seite<br class="astro-b5raizh3"><span class="link-title astro-b5raizh3">Schnittstellen</span></span></a><a href="/2526-4ahitm-leoiot-dashboard/docs/operations/" rel="next" class="astro-b5raizh3"><svg aria-hidden="true" class="astro-b5raizh3 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg><span class="astro-b5raizh3">Nächste Seite<br class="astro-b5raizh3"><span class="link-title astro-b5raizh3">Betrieb</span></span></a></div></footer></div></div></main></div></div></div></div></body></html>
