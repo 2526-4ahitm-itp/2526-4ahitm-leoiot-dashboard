@@ -1,5 +1,5 @@
 // Energiefluss: Beschriftung, Richtung und Ruhezustand je Knoten. Rein, ohne DOM.
-import type { Source } from '../core/energy';
+import type { Source } from '@leoiot-pv/shared/energy';
 import { formatKw } from '../core/format';
 import type { KioskView } from '../data/view';
 

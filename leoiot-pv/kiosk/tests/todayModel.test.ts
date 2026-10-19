@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { consumption, consumptionShares, productionShares, type Counters } from '../src/core/energy';
+import { consumption, consumptionShares, productionShares, type Counters } from '@leoiot-pv/shared/energy';
 import { MISSING, NBSP } from '../src/core/format';
 import { donutModel } from '../src/panels/todayModel';
 

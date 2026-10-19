@@ -1,5 +1,5 @@
 // Zustand des Kiosks: Abrufe, Wiederholungen, Tageswechsel und Live-Daten.
-import { completeCounters, type PartialCounters, type Power } from '../core/energy';
+import { completeCounters, type PartialCounters, type Power } from '@leoiot-pv/shared/energy';
 import { parseToday, parseWeek, todayQuery, validRows, weekQuery, type CounterRow } from '../core/influx';
 import { SLOT_MS, addDays, dayRange, weekRange } from '@leoiot-pv/shared/time';
 import type { LiveMessage } from './live';

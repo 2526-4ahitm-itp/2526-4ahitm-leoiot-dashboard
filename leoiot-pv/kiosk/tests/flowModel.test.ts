@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { flowModel } from '../src/panels/flowModel';
 import { buildView } from '../src/data/view';
 import type { KioskState } from '../src/data/store';
-import type { Power } from '../src/core/energy';
+import type { Power } from '@leoiot-pv/shared/energy';
 import { NBSP } from '../src/core/format';
 
 const live = (power: Power) => flowModel({ power, source: 'live' })!;

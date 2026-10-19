@@ -8,7 +8,7 @@ import {
   type DayValues,
   type Power,
   type Share,
-} from '../core/energy';
+} from '@leoiot-pv/shared/energy';
 import { averagePower, powerSeries, type PowerPoint } from '../core/influx';
 import { weekRangeLabel } from '@leoiot-pv/shared/time';
 import type { KioskState } from './store';

@@ -1,5 +1,5 @@
 // Beispieldaten für den Mock-Modus (reine Funktionen, keine Vite-Importe).
-import type { Counters } from '../src/core/energy';
+import type { Counters } from '@leoiot-pv/shared/energy';
 
 const HOUR_MS = 3_600_000;
 const SLOT_MS = 5 * 60_000;

@@ -1,5 +1,5 @@
 // Live-Kanal (WebSocket): Nachrichten lesen und Verbindung mit Wiederverbindung halten.
-import { completeCounters, type Counters, type Power } from '../core/energy';
+import { completeCounters, type Counters, type Power } from '@leoiot-pv/shared/energy';
 
 export type LiveMessage =
   | { kind: 'power'; power: Power; t: number }
