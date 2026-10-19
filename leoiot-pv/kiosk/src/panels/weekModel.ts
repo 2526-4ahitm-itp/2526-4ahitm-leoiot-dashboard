@@ -1,7 +1,7 @@
 // Wochenübersicht: Aufbereitung der Chart-Daten, rein und ohne DOM.
 import type { DayValues, Source } from '../core/energy';
 import { formatTick } from '../core/format';
-import { dayLabel } from '../core/time';
+import { dayLabel } from '@leoiot-pv/shared/time';
 
 export interface WeekSeries {
   label: 'Produktion' | 'Verbrauch' | 'Ins Netz';

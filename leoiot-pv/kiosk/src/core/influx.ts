@@ -1,6 +1,6 @@
 // Abfragen an die InfluxDB und Auswertung der CSV-Antworten (reine Funktionen).
 import { completeCounters, powerBetween, type Counters, type PartialCounters, type Power } from './energy';
-import { SLOT_MS, viennaDateKey } from './time';
+import { SLOT_MS, viennaDateKey } from '@leoiot-pv/shared/time';
 
 export const BUCKET = 'server_data';
 

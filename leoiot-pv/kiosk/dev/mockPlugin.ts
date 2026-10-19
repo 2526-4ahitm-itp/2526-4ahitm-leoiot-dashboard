@@ -3,7 +3,7 @@ import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import type { Plugin } from 'vite';
 import { WebSocketServer } from 'ws';
-import { dayRange, viennaDayStart, weekKeys } from '../src/core/time';
+import { dayRange, viennaDayStart, weekKeys } from '@leoiot-pv/shared/time';
 import { mockCountersMessage, mockPowerMessage, mockTodayCsv, mockWeekCsv } from './mockData';
 
 const QUERY_PATH = '/kiosk/api/query';

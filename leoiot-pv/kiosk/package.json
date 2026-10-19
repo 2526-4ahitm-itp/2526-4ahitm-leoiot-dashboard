@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@leoiot-pv/shared": "file:../shared",
     "chart.js": "^4.4.9"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 // Nächtliches Neuladen, damit ein neuer Stand nach einem Deploy ankommt.
-import { dayRange } from '../core/time';
+import { dayRange } from '@leoiot-pv/shared/time';
 
 export const RELOAD_AFTER_MIDNIGHT_MS = 3.5 * 60 * 60_000; // 03:30 Wiener Zeit
 export const RELOAD_RETRY_MS = 10 * 60_000;
