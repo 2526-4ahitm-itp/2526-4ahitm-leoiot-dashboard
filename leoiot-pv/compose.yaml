@@ -2,7 +2,10 @@ name: leoiot-pv
 
 services:
   kiosk:
-    build: ./kiosk
+    # Kontext leoiot-pv/, damit shared/ mitkommt (kiosk/build-context sagt CI dasselbe)
+    build:
+      context: .
+      dockerfile: kiosk/Dockerfile
     restart: unless-stopped
     ports:
       # Local only; the host nginx forwards /kiosk/ to this port.
