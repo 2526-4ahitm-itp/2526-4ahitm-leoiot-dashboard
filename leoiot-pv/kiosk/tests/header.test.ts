@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MISSING } from '../src/core/format';
+import { MISSING } from '@leoiot-pv/shared/format';
 import { updatedText } from '../src/ui/header';
 
 describe('updatedText', () => {

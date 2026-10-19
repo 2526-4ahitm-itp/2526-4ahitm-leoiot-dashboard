@@ -1,6 +1,6 @@
 // Donut-Modell: Mitte, Legende und Segmente aus Summe und Anteilen. Rein, ohne DOM.
 import type { Share, Source } from '@leoiot-pv/shared/energy';
-import { formatKwh, formatNumber } from '../core/format';
+import { formatKwh, formatNumber } from '@leoiot-pv/shared/format';
 
 export interface DonutRow {
   id: string;
