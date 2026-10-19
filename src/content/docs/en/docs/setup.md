@@ -34,10 +34,7 @@ Compose starts these services (all on the `leoiot` network):
 | `quarkus-app` | Build from `legacy/backend/sensor-data-generator` | Sensor data generator (publishes e.g. `sine`, `room-temperature`) |
 | `frontend` | `node:20-alpine`, `./frontend` | 3D explorer (Vite dev server) |
 | `dashboard-v2` | `node:20-alpine`, `./dashboard-v2` | Dashboard (room climate and PV, Vite dev server) |
-| `kiosk`, `kiosk2`, `kiosk3`, `kiosk4` | `node:20-alpine`, one directory each | superseded: former kiosk displays (Vite dev server) |
-| `leogreen-kiosk` | `node:20-alpine`, `./leogreenKiosk` | superseded: former LeoGreen kiosk |
 | `mqtt-ws-bridge` | `node:20-alpine`, `./mqtt-ws-bridge` | Bridge: passes MQTT readings on to the browser via WebSocket |
-| `solax-collector` | `node:20-alpine`, `./solax-collector` | Fetches Solax data, writes it to InfluxDB and publishes it via MQTT |
 | `fake-sensors` | `node:20-alpine`, `./fake-sensors` | Simulated sensors for testing |
 
 ## Ports
@@ -49,12 +46,10 @@ Compose starts these services (all on the `leoiot` network):
 | 3000 | Grafana |
 | 8080 | `frontend` (3D explorer) |
 | 8081 | `dashboard-v2` |
-| 8082 / 8083 / 8084 / 8085 | `kiosk` / `kiosk2` / `kiosk3` / `kiosk4` (superseded) |
-| 8087 | `leogreen-kiosk` (superseded) |
 | 8088 | Main kiosk (`leoiot-pv/`, on `127.0.0.1` only) |
 | 8090 | `mqtt-ws-bridge` (WebSocket) |
 
-`quarkus-app`, `telegraf`, `fake-sensors` and `solax-collector` publish no ports.
+`quarkus-app`, `telegraf` and `fake-sensors` publish no ports.
 
 ## Main kiosk
 
@@ -90,7 +85,7 @@ The tests run with `npm test`. How to start the kiosk with sample data and no da
 | `MQTT_PORT`, `UPDATE_INTERVAL` | optional, `fake-sensors` | Broker port (default 1883), publish interval in ms (default 10000) |
 | `WS_PORT` | `mqtt-ws-bridge` | WebSocket bridge port (8090 in Compose) |
 | `PV_MQTT_HOST`, `PV_MQTT_PORT`, `PV_MQTT_USER`, `PV_MQTT_PASS` | `mqtt-ws-bridge` | Access to an external MQTT broker (photovoltaics) |
-| `INFLUX_URL`, `INFLUX_TOKEN`, `INFLUX_ORG`, `INFLUX_BUCKET` | `solax-collector` | InfluxDB access |
+| `COLLECTOR_SOLAX_CLIENT_ID`, `COLLECTOR_SOLAX_CLIENT_SECRET`, `COLLECTOR_SOLAX_USERNAME`, `COLLECTOR_SOLAX_PASSWORD`, `COLLECTOR_SOLAX_PLANT_ID`, `COLLECTOR_INFLUX_TOKEN`, `COLLECTOR_MQTT_USER`, `COLLECTOR_MQTT_PASSWORD` | `leoiot-pv/.env`, service `collector` (only with the profile `collector`) | Required: Solax access, InfluxDB write token, MQTT access; optional among others `COLLECTOR_INFLUX_BUCKET`, `COLLECTOR_PUBLISH`; details in `leoiot-pv/collector/README.md` |
 | `DOCKER_INFLUXDB_INIT_*` | `influxdb` | Initial setup (mode, user, password, organisation, bucket, admin token) |
 
 :::caution[Credentials]
@@ -134,19 +129,14 @@ Standalone (against a broker on `localhost:1883`): `cd legacy/fake-sensors && np
 
 ## Local frontend development
 
-All seven frontends in the `legacy/` folder use Vite (development server and build tool for web interfaces). Scripts according to `package.json`; the main kiosk is described in the section [Main kiosk](#main-kiosk):
+Both frontends in the `legacy/` folder use Vite (development server and build tool for web interfaces). Scripts according to `package.json`; the main kiosk is described in the section [Main kiosk](#main-kiosk):
 
 | Project | `npm run dev` | Port |
 |---|---|---|
 | `legacy/frontend` | `vite` | Vite default; `--port 8080` in Compose |
 | `legacy/dashboard-v2` | `vite --port 8081` | 8081 |
-| `legacy/kiosk` (superseded) | `vite --port 8082` | 8082 |
-| `legacy/kiosk2` (superseded) | `vite --port 8083` | 8083 |
-| `legacy/kiosk3` (superseded) | `vite --port 8084` | 8084 |
-| `legacy/kiosk4` (superseded) | `vite --port 8085` | 8085 |
-| `legacy/leogreenKiosk` (superseded) | `vite --port 8087` | 8087 |
 
-All seven also provide `npm run build` (`vite build`) and `npm run preview`; Compose does not use the build, its dev servers run with `--host 0.0.0.0`. `frontend` depends on `three`; the others only have Vite as a dependency.
+Both also provide `npm run build` (`vite build`) and `npm run preview`; Compose does not use the build, its dev servers run with `--host 0.0.0.0`. `frontend` depends on `three`; `dashboard-v2` only has Vite as a dependency.
 
 ```bash
 cd legacy/dashboard-v2
@@ -161,5 +151,5 @@ npm run dev
 - `legacy/telegraf.conf`
 - `legacy/fake-sensors/index.js`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
-- `legacy/frontend/package.json`, `legacy/dashboard-v2/package.json`, `legacy/leogreenKiosk/package.json`
+- `legacy/frontend/package.json`, `legacy/dashboard-v2/package.json`
 - `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`, `leoiot-pv/kiosk/package.json`, `leoiot-pv/kiosk/README.md`

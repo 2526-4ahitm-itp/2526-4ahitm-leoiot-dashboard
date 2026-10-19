@@ -48,7 +48,7 @@ What counts is what changed since the **last successful deployment**. Its commit
 
 ### Configuration on the VM
 
-The `.env` files of the units (for example `leoiot-pv/.env`) exist only on the VM, are not in the repository and are neither created, read nor changed by the deployment. The deployment never passes `--profile`. Optional services behind a Compose profile run only if the VM's `.env` switches the profile on via `COMPOSE_PROFILES`. This matters most for the PV `collector`: the SolaX cloud allows one session per account, so it must never run next to the `solax-collector` from `legacy/`.
+The `.env` files of the units (for example `leoiot-pv/.env`) exist only on the VM, are not in the repository and are neither created, read nor changed by the deployment. The deployment never passes `--profile`. Optional services behind a Compose profile run only if the VM's `.env` switches the profile on via `COMPOSE_PROFILES`. This matters most for the PV `collector`: the SolaX cloud allows one session per account, so it must never run next to another collector using the same account.
 
 ### Check after the deployment
 
@@ -67,7 +67,7 @@ Under Actions → “Deploy to vm23” → “Run workflow” (choose the `relea
 
 ### When the checkout stops
 
-The deployment never overwrites anything that was changed locally on the VM. If a container rewrites a file that is tracked in the repository (typically `legacy/solax-collector/package-lock.json`, because `npm install` runs in the bind-mounted folder) and a release changes that file, the checkout stops. The error message names the file and the command; on the VM:
+The deployment never overwrites anything that was changed locally on the VM. If a container rewrites a file that is tracked in the repository (typically `legacy/frontend/package-lock.json`, because `npm install` runs in the bind-mounted folder) and a release changes that file, the checkout stops. The error message names the file and the command; on the VM:
 
 ```bash
 cd /home/solmqadmin/2526-4ahitm-leoiot-dashboard
@@ -94,7 +94,7 @@ As long as the runner and the `release` branch are missing, the manual route rem
 | `/dashboard/` | `127.0.0.1:8081/` (`dashboard-v2`, prefix stripped) |
 | `/kiosk/` | `127.0.0.1:8088` (main kiosk from `leoiot-pv/`) |
 | `/kiosk/ws` | `127.0.0.1:8088` (WebSocket to the bridge, via the main kiosk's own nginx) |
-| `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (also without `/`) | 302 redirect to `/kiosk/`, the query is kept |
+| `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (also without `/`) | permanent 301 redirect to `/kiosk/`, the query is kept |
 | `/grafana/` | `127.0.0.1:3000` (with `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, prefix stripped) |
 | `/ws` | `127.0.0.1:8090` (WebSocket upgrade, `mqtt-ws-bridge`) |
@@ -130,7 +130,6 @@ According to the InfluxDB documentation, `--full` replaces the entire data set i
 ## Known limitations
 
 - The Compose frontend services of the old stack (`legacy/`) start Vite dev servers (`npm run dev`) and run `npm install` on every start; there is no production build there. The main kiosk, in contrast, runs as a built image with nginx.
-- The five superseded kiosk containers (ports 8082 to 8085 and 8087) are temporarily still running, are no longer reachable via the addresses and will be removed.
 - Credentials and tokens are stored in plain text in `legacy/docker-compose.yaml`, `legacy/backup/*.sh` and other files (not reproduced here).
 - The weekly backup job (cron) is set up only on the VM and is not stored in the repository.
 - Backups are stored only on the same VM; no external target is configured.

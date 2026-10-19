@@ -48,7 +48,7 @@ Betroffen ist, was sich seit dem **letzten erfolgreichen Deployment** geändert 
 
 ### Konfiguration auf der VM
 
-Die `.env`-Dateien der Einheiten (zum Beispiel `leoiot-pv/.env`) liegen nur auf der VM, sind nicht im Repository und werden vom Deployment weder angelegt noch gelesen noch geändert. Das Deployment übergibt nie `--profile`. Optionale Dienste hinter einem Compose-Profil laufen nur, wenn die `.env` der VM das Profil über `COMPOSE_PROFILES` einschaltet. Das gilt besonders für den PV-`collector`: Die SolaX-Cloud erlaubt eine Sitzung pro Konto, er darf nie neben dem `solax-collector` aus `legacy/` laufen.
+Die `.env`-Dateien der Einheiten (zum Beispiel `leoiot-pv/.env`) liegen nur auf der VM, sind nicht im Repository und werden vom Deployment weder angelegt noch gelesen noch geändert. Das Deployment übergibt nie `--profile`. Optionale Dienste hinter einem Compose-Profil laufen nur, wenn die `.env` der VM das Profil über `COMPOSE_PROFILES` einschaltet. Das gilt besonders für den PV-`collector`: Die SolaX-Cloud erlaubt eine Sitzung pro Konto, er darf nie neben einem anderen Collector mit demselben Konto laufen.
 
 ### Prüfung nach dem Deployment
 
@@ -67,7 +67,7 @@ Unter Actions → „Deploy to vm23“ → „Run workflow“ (als Branch `relea
 
 ### Wenn der Checkout stehen bleibt
 
-Das Deployment überschreibt nichts, was auf der VM lokal geändert wurde. Beschreibt ein Container eine Datei, die im Repository versioniert ist (typisch `legacy/solax-collector/package-lock.json`, weil dort `npm install` im eingebundenen Ordner läuft), und ändert die Veröffentlichung diese Datei, bricht der Checkout ab. Die Fehlermeldung nennt die Datei und den Befehl; auf der VM:
+Das Deployment überschreibt nichts, was auf der VM lokal geändert wurde. Beschreibt ein Container eine Datei, die im Repository versioniert ist (typisch `legacy/frontend/package-lock.json`, weil dort `npm install` im eingebundenen Ordner läuft), und ändert die Veröffentlichung diese Datei, bricht der Checkout ab. Die Fehlermeldung nennt die Datei und den Befehl; auf der VM:
 
 ```bash
 cd /home/solmqadmin/2526-4ahitm-leoiot-dashboard
@@ -94,7 +94,7 @@ Solange Runner und Branch `release` fehlen, bleibt der Handweg: Der alte Stack w
 | `/dashboard/` | `127.0.0.1:8081/` (`dashboard-v2`, Präfix wird entfernt) |
 | `/kiosk/` | `127.0.0.1:8088` (Hauptkiosk aus `leoiot-pv/`) |
 | `/kiosk/ws` | `127.0.0.1:8088` (WebSocket zur Bridge, über den nginx des Hauptkiosks) |
-| `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (auch ohne `/`) | 302-Umleitung auf `/kiosk/`, die Query bleibt erhalten |
+| `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (auch ohne `/`) | dauerhafte 301-Umleitung auf `/kiosk/`, die Query bleibt erhalten |
 | `/grafana/` | `127.0.0.1:3000` (mit `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, Präfix wird entfernt) |
 | `/ws` | `127.0.0.1:8090` (WebSocket-Upgrade, `mqtt-ws-bridge`) |
@@ -130,7 +130,6 @@ Ohne Argument listet das Skript die vorhandenen Backups. Mit Datum prüft es, ob
 ## Bekannte Einschränkungen
 
 - Die Compose-Dienste für Frontends im alten Stack (`legacy/`) starten Vite-Dev-Server (`npm run dev`) und führen bei jedem Start `npm install` aus; dort gibt es keinen Produktions-Build. Der Hauptkiosk läuft dagegen als gebautes Image mit nginx.
-- Die fünf abgelösten Kiosk-Container (Ports 8082 bis 8085 und 8087) laufen vorübergehend noch, sind über die Adressen nicht mehr erreichbar und werden entfernt.
 - Zugangsdaten und Tokens stehen im Klartext in `legacy/docker-compose.yaml`, `legacy/backup/*.sh` und weiteren Dateien (nicht hier wiedergegeben).
 - Der wöchentliche Backup-Job (Cron) ist nur auf der VM eingerichtet und nicht im Repository abgelegt.
 - Backups liegen nur auf derselben VM; ein externes Ziel ist nicht konfiguriert.
