@@ -2,7 +2,7 @@
 import { completeCounters, type PartialCounters, type Power } from '@leoiot-pv/shared/energy';
 import { parseToday, parseWeek, todayQuery, validRows, weekQuery, type CounterRow } from '@leoiot-pv/shared/influx';
 import { SLOT_MS, addDays, dayRange, weekRange } from '@leoiot-pv/shared/time';
-import type { LiveMessage } from './live';
+import type { LiveMessage } from '@leoiot-pv/shared/live';
 
 export type Status = 'loading' | 'ok' | 'empty' | 'error';
 
