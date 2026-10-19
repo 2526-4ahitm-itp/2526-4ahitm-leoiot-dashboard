@@ -1,15 +1,39 @@
 @startuml
 !include <C4/C4_Container>
 
-UpdateElementStyle("person", $bgColor="#1b5e20", $borderColor="#1b5e20")
-UpdateElementStyle("container", $bgColor="#43a047", $borderColor="#43a047")
-UpdateElementStyle("external_system", $bgColor="#8a9e8c", $borderColor="#8a9e8c")
-UpdateRelStyle($textColor="#1b5e20", $lineColor="#4c7a50")
+' Farbvariante: Standard hell; mit -DTHEME=dark die dunkle Fassung.
+' Werte stammen aus src/styles/tokens.css (Hex, weil PlantUML keine CSS-Variablen kennt).
+!if %variable_exists("THEME") && %get_variable_value("THEME") == "dark"
+!$SURFACE = "#131922"
+!$SOFT    = "#0f141b"
+!$LINE    = "#8b95a5"
+!$INK     = "#f3f4f6"
+!$INK2    = "#a7b0be"
+!$ACCENT  = "#3ecf9f"
+!$ACCINK  = "#06261c"
+!else
+!$SURFACE = "#ffffff"
+!$SOFT    = "#fafafa"
+!$LINE    = "#6b7280"
+!$INK     = "#111827"
+!$INK2    = "#4b5563"
+!$ACCENT  = "#0b7a5a"
+!$ACCINK  = "#ffffff"
+!endif
+
+' Knotenarten: eigener Dienst = Fläche --surface, durchgezogener Rahmen;
+' externes System = Fläche --bg-soft (abgesetzt); zentrale Knoten (Mosquitto, InfluxDB) = Akzent.
+UpdateElementStyle("container", $bgColor=$SURFACE, $fontColor=$INK, $borderColor=$LINE)
+UpdateElementStyle("external_system", $bgColor=$SOFT, $fontColor=$INK, $borderColor=$LINE)
+AddElementTag("zentral", $bgColor=$ACCENT, $fontColor=$ACCINK, $borderColor=$ACCENT)
+UpdateRelStyle($textColor=$INK2, $lineColor=$INK2)
 
 LAYOUT_TOP_DOWN()
 HIDE_STEREOTYPE()
-skinparam backgroundColor white
+skinparam backgroundColor transparent
 skinparam shadowing false
+skinparam roundCorner 8
+skinparam defaultFontName sans-serif
 skinparam defaultFontSize 20
 skinparam rectangle {
   FontSize 20
@@ -23,33 +47,38 @@ skinparam person {
 skinparam arrow {
   FontSize 18
 }
-!$TECHN_FONT_SIZE = 16
+!$TECHN_FONT_SIZE = 18
 skinparam ranksep 30
 skinparam nodesep 25
-
 System_Ext(sensors, "Sensorboxen", "ESPHome")
 Container(fake, "fake-sensors", "Simulator")
 Container(quarkus, "quarkus-app", "Java-Generator")
 System_Ext(solaxcloud, "Solax Cloud", "PV-API")
 
-Container(collector, "solax-collector", "Node.js")
-Container(mosquitto, "Mosquitto", "MQTT :1883")
+Container(mosquitto, "Mosquitto", "MQTT :1883", $tags="zentral")
 Container(telegraf, "Telegraf", "")
-ContainerDb(influx, "InfluxDB", ":8086, Bucket server_data")
+ContainerDb(influx, "InfluxDB", ":8086, Bucket server_data", $tags="zentral")
 Container(bridge, "mqtt-ws-bridge", ":8090")
 Container(grafana, "Grafana", ":3000")
-System_Ext(browser, "Browser", "3D-Explorer, Dashboard v2, Kiosk")
+
+Container(collector, "collector", "leoiot-pv, Node.js")
+Container(kiosk, "kiosk", "leoiot-pv, nginx :8088")
+
+System_Ext(browser, "Browser", "3D-Explorer, Dashboard v2, Hauptkiosk")
 
 Rel(sensors, mosquitto, "MQTT")
 Rel(fake, mosquitto, "MQTT")
 Rel(quarkus, mosquitto, "MQTT")
 Rel(solaxcloud, collector, "HTTPS-API")
 Rel(collector, mosquitto, "MQTT")
-Rel(collector, influx, "HTTP-Write, solax_stats")
+Rel(collector, influx, "solax_stats")
 Rel(mosquitto, telegraf, "Topics abonniert")
 Rel(telegraf, influx, "Schreibt")
 Rel(mosquitto, bridge, "MQTT")
-Rel(bridge, browser, "WebSocket")
+Rel(bridge, browser, "WebSocket /ws")
 Rel(influx, grafana, "Flux")
 Rel(influx, browser, "Flux über /influx")
+Rel(influx, kiosk, "Flux")
+Rel(bridge, kiosk, "WebSocket")
+Rel(kiosk, browser, "/kiosk/")
 @enduml
