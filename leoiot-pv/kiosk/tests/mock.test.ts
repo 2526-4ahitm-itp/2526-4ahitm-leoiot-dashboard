@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseToday, parseWeek } from '../src/core/influx';
+import { parseToday, parseWeek } from '@leoiot-pv/shared/influx';
 import { parseLiveMessage } from '../src/data/live';
 import { mockCountersMessage, mockPowerMessage, mockTodayCsv, mockWeekCsv } from '../dev/mockData';
 

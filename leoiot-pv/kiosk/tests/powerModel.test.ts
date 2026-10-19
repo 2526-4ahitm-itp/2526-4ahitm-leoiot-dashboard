@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PowerPoint } from '../src/core/influx';
+import type { PowerPoint } from '@leoiot-pv/shared/influx';
 import { HOUR_MS, powerModel, powerScale, powerTick, timeLabel, timeTicks } from '../src/panels/powerModel';
 
 const pt = (production: number | null, consumption: number | null, t = 0): PowerPoint => ({ t, production, consumption });

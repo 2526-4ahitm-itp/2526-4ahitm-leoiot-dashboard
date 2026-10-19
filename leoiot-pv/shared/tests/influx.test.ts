@@ -11,7 +11,7 @@ import {
   validRows,
   weekQuery,
   type CounterRow,
-} from '../src/core/influx';
+} from '../src/influx';
 import type { Counters } from '@leoiot-pv/shared/energy';
 
 const fixture = (name: string): string =>

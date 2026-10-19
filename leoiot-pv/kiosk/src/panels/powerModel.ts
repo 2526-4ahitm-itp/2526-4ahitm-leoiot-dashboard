@@ -1,5 +1,5 @@
 // Leistungsfeld: Zahlen für das Diagramm, rein und ohne DOM.
-import type { PowerPoint } from '../core/influx';
+import type { PowerPoint } from '@leoiot-pv/shared/influx';
 import { formatTick } from '@leoiot-pv/shared/format';
 import { viennaTime } from '@leoiot-pv/shared/time';
 

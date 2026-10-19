@@ -48,7 +48,7 @@ Der Kiosk versucht den Live-Kanal zuerst unter `/kiosk/ws` und danach unter `/ws
 - `src/panels/`: die vier Felder, je ein Modell (reine Funktion) und die Darstellung
 - `src/styles/`: Stile
 - `dev/`: Mock-Modus
-- `tests/`: Tests und Beispielantworten unter `tests/fixtures/`
+- `tests/`: Tests; die Beispielantworten der Datenbank liegen in `../shared/tests/fixtures/`
 
 ## Theme
 
