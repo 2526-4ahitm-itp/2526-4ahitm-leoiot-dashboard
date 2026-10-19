@@ -12,10 +12,11 @@ New PV data collection, PV dashboard and kiosk displays.
 
 - `compose.yaml`: the Compose project `leoiot-pv`
 - `.env.example`: template for the local `.env`
+- `shared/`: code the kiosk and the coming dashboard share (energy quantities, Vienna time, database query, number format, live channel), TypeScript sources with their tests
 - `kiosk/`: the main kiosk
 - `collector/`: the PV collector for the SolaX cloud (Node, TypeScript, Vitest)
 
-Each application is its own folder with its own `package.json` and `Dockerfile`; there is no shared workspace. The kiosk is Vite + TypeScript + Vitest, served by an nginx image. Later applications (`collector/`, a second kiosk) follow the same pattern.
+Each application is its own folder with its own `package.json` and `Dockerfile`; there is no workspace. The kiosk is Vite + TypeScript + Vitest, served by an nginx image. It uses `shared/` as a local package (`"@leoiot-pv/shared": "file:../shared"`, imports like `@leoiot-pv/shared/energy`); its image is therefore built with `leoiot-pv/` as the context, which `kiosk/build-context` declares for CI and `compose.yaml` for the deployment. A change in `shared/` makes CI check `shared/` and every app that uses it.
 
 ## Dependency rule
 
@@ -26,8 +27,11 @@ This sub-project may depend only on the interfaces specified in the `platform` s
 Tests and build:
 
 ```
-cd leoiot-pv/kiosk && npm ci && npm test && npm run build
+cd leoiot-pv/shared && npm ci && npm test && npm run build
+cd ../kiosk && npm ci && npm test && npm run build
 ```
+
+Image as CI builds it, from the repository root: `.github/ci/image-build.sh leoiot-pv/kiosk`.
 
 Container:
 

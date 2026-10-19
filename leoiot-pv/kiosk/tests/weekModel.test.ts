@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { DayValues } from '../src/core/energy';
+import type { DayValues } from '@leoiot-pv/shared/energy';
 import { weekModel, weekTick } from '../src/panels/weekModel';
 
 const week: DayValues[] = [1, 2, 3, 4, 5, 6, 7].map((d) => ({

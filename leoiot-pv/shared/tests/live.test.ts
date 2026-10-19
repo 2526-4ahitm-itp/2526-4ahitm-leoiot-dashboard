@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createLiveClient, livePower, parseLiveMessage, RECONNECT_MAX_MS, RECONNECT_MIN_MS, type SocketLike } from '../src/data/live';
+import { createLiveClient, livePower, parseLiveMessage, RECONNECT_MAX_MS, RECONNECT_MIN_MS, type SocketLike } from '../src/live';
 
 const SPEC = { yield: 746.2, exported: 0, imported: 207, charged: 82.4, discharged: 141.2 };
 

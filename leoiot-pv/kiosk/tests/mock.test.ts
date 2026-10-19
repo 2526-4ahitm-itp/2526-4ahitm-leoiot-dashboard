@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseToday, parseWeek } from '../src/core/influx';
-import { parseLiveMessage } from '../src/data/live';
+import { parseToday, parseWeek } from '@leoiot-pv/shared/influx';
+import { parseLiveMessage } from '@leoiot-pv/shared/live';
 import { mockCountersMessage, mockPowerMessage, mockTodayCsv, mockWeekCsv } from '../dev/mockData';
 
 const TARGET = { yield: 746.2, exported: 0, imported: 207, charged: 82.4, discharged: 141.2 };

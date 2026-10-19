@@ -11,8 +11,8 @@ import {
   validRows,
   weekQuery,
   type CounterRow,
-} from '../src/core/influx';
-import type { Counters } from '../src/core/energy';
+} from '../src/influx';
+import type { Counters } from '@leoiot-pv/shared/energy';
 
 const fixture = (name: string): string =>
   readFileSync(new URL(`./fixtures/${name}.csv`, import.meta.url), 'utf8');

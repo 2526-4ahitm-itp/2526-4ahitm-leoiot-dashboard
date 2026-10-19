@@ -1,5 +1,5 @@
 // Live-Kanal (WebSocket): Nachrichten lesen und Verbindung mit Wiederverbindung halten.
-import { completeCounters, type Counters, type Power } from '../core/energy';
+import { completeCounters, type Counters, type Power } from '@leoiot-pv/shared/energy';
 
 export type LiveMessage =
   | { kind: 'power'; power: Power; t: number }
@@ -14,7 +14,7 @@ function finite(v: unknown): v is number {
 }
 
 /**
- * Rechnet die Vorzeichen des Live-Kanals in die des Kiosks um (grid > 0 Bezug, battery > 0 entlädt).
+ * Rechnet die Vorzeichen des Live-Kanals in die von Kiosk und Dashboard um (grid > 0 Bezug, battery > 0 entlädt).
  * Im Live-Kanal ist `grid_power_kw` bei Bezug negativ; das zeigt die Bilanz der echten Werte
  * (Verbrauch = Produktion + Bezug + Entladung). Für die Batterie entscheidet dieselbe Bilanz;
  * passt beides gleich gut, gilt wie beim Netz: positiv fließt von der Anlage weg (lädt).

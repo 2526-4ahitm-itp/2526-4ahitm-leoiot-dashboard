@@ -8,7 +8,7 @@ import {
   selfConsumption,
   weekValues,
   type Counters,
-} from '../src/core/energy';
+} from '../src/energy';
 
 const spec: Counters = { yield: 746.2, exported: 0, charged: 82.4, imported: 207, discharged: 141.2 };
 

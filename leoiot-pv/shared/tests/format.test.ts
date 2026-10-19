@@ -6,7 +6,7 @@ import {
   formatKwh,
   formatKw,
   formatTick,
-} from '../src/core/format';
+} from '../src/format';
 
 describe('format', () => {
   describe('formatNumber', () => {
@@ -218,6 +218,39 @@ describe('format', () => {
 
     it('NBSP ist ein geschütztes Leerzeichen', () => {
       expect(NBSP).toBe('\u00a0');
+    });
+  });
+
+  describe('Sprache und Tausendertrennung (Dashboard)', () => {
+    it('ohne Angabe bleibt alles wie im Kiosk: 1012 ohne Trennung, Dezimalkomma', () => {
+      expect(formatNumber(1012)).toBe('1012');
+      expect(formatNumber(12.5)).toBe('12,5');
+    });
+
+    it('Englisch: 12.5 liest sich "12.5"', () => {
+      expect(formatNumber(12.5, { lang: 'en' })).toBe('12.5');
+    });
+
+    it('Englisch mit Trennung: 1395.5 liest sich "1,396"', () => {
+      expect(formatNumber(1395.5, { lang: 'en', group: true })).toBe('1,396');
+    });
+
+    it('Deutsch mit Trennung: 84312.4 liest sich "84.312"', () => {
+      expect(formatNumber(84312.4, { lang: 'de', group: true })).toBe('84.312');
+    });
+
+    it('Trennung erst ab 1000 und auch bei negativen Werten', () => {
+      expect(formatNumber(999.6, { group: true })).toBe('1.000');
+      expect(formatNumber(356, { group: true })).toBe('356');
+      expect(formatNumber(-1234.6, { group: true })).toBe('-1.235');
+    });
+
+    it('Einheiten und Achsen reichen die Schreibweise weiter', () => {
+      expect(formatKwh(12.5, { lang: 'en' })).toBe('12.5' + NBSP + 'kWh');
+      expect(formatKw(62.4, { lang: 'en' })).toBe('62.4' + NBSP + 'kW');
+      expect(formatTick(2000, { group: true })).toBe('2.000');
+      expect(formatTick(2.5, { lang: 'en' })).toBe('2.5');
+      expect(formatKwh(null, { lang: 'en' })).toBe(MISSING);
     });
   });
 });

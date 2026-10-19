@@ -13,7 +13,7 @@ import {
   weekKeys,
   weekRange,
   weekRangeLabel,
-} from '../src/core/time';
+} from '../src/time';
 
 const iso = (d: Date) => d.toISOString();
 

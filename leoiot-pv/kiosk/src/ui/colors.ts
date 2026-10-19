@@ -1,5 +1,5 @@
 // Die eine Stelle für Datenfarben im Code: Werte kommen aus den CSS-Variablen des Themes.
-import type { Source } from '../core/energy';
+import type { Source } from '@leoiot-pv/shared/energy';
 
 export interface Colors {
   bg: string;
