@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Describes the PV dashboard: a page on one's own device where students, teachers and the building services look up what the school's photovoltaic system produced and where the energy went, for a chosen day, week, month or year. The main kiosk shows "now and today" on a screen nobody operates; the dashboard is for looking things up and comparing. Labels are quoted in German as they appear; the English labels are fixed in the design previews.
+Describes the PV dashboard: a page on one's own device where students, teachers and the building services look up what the school's photovoltaic system produced and where the energy went, for a chosen day, week, month or year. The main kiosk shows "now and today" on a screen nobody operates; the dashboard is for looking things up and comparing. Labels are quoted in German as they appear; the English labels are listed in design decision D9a.
 
 ## ADDED Requirements
 

@@ -4,8 +4,8 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. This ch
 
 ## 1. Design previews
 
-- [ ] 1.1 Build three clickable previews with sample data on localhost (day view of today with live power, month view of April 2026 with partial data, phone layout at 360 px), using Impeccable for direction and critique, the kiosk's quantity colours and the documentation site's tokens; verify each opens in a browser at 360 px and 1920 px without a horizontal scroll bar and shows both themes
-- [ ] 1.2 Daniel picks one; write the choice and the reason into `design.md` as D9a and fix the English labels in the spec's Purpose note; verify `openspec validate pv-dashboard --strict` passes
+- [x] 1.1 Build three clickable previews with sample data on localhost (day view of today with live power, month view of April 2026 with partial data, phone layout at 360 px), using Impeccable for direction and critique, the kiosk's quantity colours and the documentation site's tokens; verify each opens in a browser at 360 px and 1920 px without a horizontal scroll bar and shows both themes. Done 2026-10-19: previews A, B, C in `/home/daniel/leoiot/previews/pv-dashboard/` (outside the repository), screenshots at 1440 and 360 px in light and dark without script errors or horizontal scroll
+- [x] 1.2 Daniel picks one; write the choice and the reason into `design.md` as D9a and fix the English labels in the spec's Purpose note; verify `openspec validate pv-dashboard --strict` passes. Done 2026-10-19: A chosen, D9a written
 
 ## 2. Shared package and kiosk switch
 

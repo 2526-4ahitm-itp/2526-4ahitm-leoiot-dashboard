@@ -82,6 +82,20 @@ In the day view of today the dashboard opens the live channel as the kiosk does 
 
 Before any view is built, three clickable previews with sample data run on localhost (Impeccable for direction and critique, conservative, light animation), each covering the day view of today, the month view and the phone layout. Daniel picks one; the choice and the reason go into this design as D9a. Colours of the quantities and the design tokens are fixed by the kiosk and the documentation site and are not varied between the previews.
 
+### D9a. Chosen structure: plain-language report
+
+Daniel chose preview A ("Bericht") on 2026-10-19: "A ist am besten. B finde ich schrecklich." The three previews (structures drawn by the Impeccable surface seed `b4fad8c4` from seven candidates) were:
+
+- **A, Bericht (chosen):** one or two plain sentences summarise the shown period ("Am Mittwoch, 14. Oktober 2026 hat die Anlage 410 kWh produziert. Die Schule hat 356 kWh verbraucht, 95 % davon kamen nicht aus dem Netz."). Every number in the sentence is a chip in its quantity colour; pointing at or focusing it highlights the matching series in the chart. Below: the chart, the figures of all seven quantities, the two ratios with their explanations. Missing data are said in the sentence ("Vom 20. bis 30. April hat die Schule …").
+- **B, Archiv-Leiste (rejected):** a persistent side rail with months, production bars and a mini calendar. Rejected outright.
+- **C, Vergleich (not chosen):** every figure against the previous period, ghosted previous-period bars, energy balance bars. It would have needed a spec addition (previous-period comparison).
+
+*Why A fits:* the dashboard's main audience are students and teachers looking up a day or month (spec "Four views with one question each"); the sentence answers the view's question before any chart has to be read, and it states gaps in words, which the spec demands ("Missing readings are unknown, not zero").
+
+The previews live outside the repository in `/home/daniel/leoiot/previews/pv-dashboard/` (shared sample data `shared/data.js`); preview A is the reference for the build, not code to copy. The direction contract for the build is in `leoiot-pv/.impeccable/surfaces/dashboard.md`; product facts for design work are in `leoiot-pv/PRODUCT.md`.
+
+English labels, as used in the previews: Production, Consumption, Self-consumption, From grid, To grid, From battery, To battery, Self-sufficiency (Autarkie), Self-consumption rate (Eigenverbrauchsquote), Live, Avg. last 10 min, no data, Day, Week, Month, Year.
+
 ### D10. Replacing the legacy PV view
 
 After acceptance, one pull request changes `legacy/dashboard-v2/`: the button "PV System" becomes a link to `/pv/`, and the PV view (markup, the SolaX login and polling, the PV queries and charts, PV-only translations and styles) is removed. Another line removes `/solax/` from `legacy/deploy/nginx.conf`. The sensor part is checked before and after against the same running stack: same requests in the network log, same cards, charts and room table (rule from 2026-10-13: parts outside PV keep working as before).
