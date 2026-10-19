@@ -22,6 +22,27 @@ services:
     networks:
       - platform
 
+  dashboard:
+    # Kontext leoiot-pv/, damit shared/ mitkommt (dashboard/build-context sagt CI dasselbe)
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    restart: unless-stopped
+    ports:
+      # Local only; the host nginx forwards /pv/ to this port.
+      - "127.0.0.1:${DASHBOARD_PORT:-8089}:8089"
+    environment:
+      # The kiosk's read-only InfluxDB token (design D5), injected by nginx; the browser never sees it.
+      DASHBOARD_INFLUX_TOKEN: ${KIOSK_INFLUX_TOKEN:?KIOSK_INFLUX_TOKEN is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8089/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - platform
+
   collector:
     # Starts only on request: docker compose --profile collector up -d
     # The SolaX cloud keeps one session per account, so this service must never
