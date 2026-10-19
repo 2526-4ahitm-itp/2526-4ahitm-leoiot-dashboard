@@ -5,6 +5,10 @@ sidebar:
   order: 10
 ---
 
+import { Image } from 'astro:assets';
+import diagramLight from '../../../../assets/diagrams/architecture.en.svg';
+import diagramDark from '../../../../assets/diagrams/architecture.en.dark.svg';
+
 LeoIoT collects room climate data (temperature, CO₂) and photovoltaic data (Solax) and shows them in several user interfaces. The services of the old stack are started via `legacy/docker-compose.yaml` and run as Docker containers (self-contained program packages) in the shared network `leoiot`. The main kiosk is a separate Compose project called `leoiot-pv` (`leoiot-pv/compose.yaml`) that attaches to the network of the old stack. Two terms in brief: Solax is the manufacturer of the PV inverter, and a kiosk is a full-screen display without interaction.
 
 ## Pipeline overview
@@ -15,9 +19,8 @@ LeoIoT collects room climate data (temperature, CO₂) and photovoltaic data (So
 4. **Grafana** and the web frontends read history from InfluxDB (using Flux, InfluxDB’s query language).
 5. **Live path:** the `mqtt-ws-bridge` (a bridge between MQTT and the browser) receives the same measurements from Mosquitto and forwards them at once over a WebSocket (a connection that stays open to the browser). Live PV data additionally comes from an external PV broker (see `mqtt-ws-bridge` under “Role of the components”).
 
-![Architecture: data flow from the sensors to the dashboards](../../../../assets/diagrams/architecture.en.svg)
-
-The diagram does not yet show the main kiosk from `leoiot-pv/`.
+<Image src={diagramLight} alt="Architecture: data flow from the sensors to the dashboards" class="dark:sl-hidden" />
+<Image src={diagramDark} alt="Architecture: data flow from the sensors to the dashboards" class="light:sl-hidden" />
 
 :::note[Public paths]
 A reverse proxy (Nginx; a router that sends each request to the right service) makes all interfaces reachable under one domain (configuration: `legacy/deploy/nginx.conf`). The paths are listed in the section [Nginx routing](../operations/#nginx-routing) of the Operations page.

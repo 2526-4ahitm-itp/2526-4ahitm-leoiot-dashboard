@@ -5,6 +5,10 @@ sidebar:
   order: 10
 ---
 
+import { Image } from 'astro:assets';
+import diagramLight from '../../../assets/diagrams/architecture.svg';
+import diagramDark from '../../../assets/diagrams/architecture.dark.svg';
+
 LeoIoT sammelt Raumklimadaten (Temperatur, CO₂) sowie Photovoltaik-Daten (Solax) und zeigt sie in mehreren Oberflächen an. Die Dienste des alten Stacks werden über `legacy/docker-compose.yaml` gestartet und laufen als Docker-Container (abgeschottete Programmpakete) im gemeinsamen Netzwerk `leoiot`. Der Hauptkiosk ist ein eigenes Compose-Projekt namens `leoiot-pv` (`leoiot-pv/compose.yaml`), das am Netz des alten Stacks hängt. Kurz zu den Begriffen: Solax ist der Hersteller des PV-Wechselrichters, ein Kiosk ist eine Vollbild-Anzeige ohne Bedienung.
 
 ## Pipeline im Überblick
@@ -15,9 +19,8 @@ LeoIoT sammelt Raumklimadaten (Temperatur, CO₂) sowie Photovoltaik-Daten (Sola
 4. **Grafana** und die Web-Frontends lesen die Verlaufsdaten aus InfluxDB (mit Flux, der Abfragesprache von InfluxDB).
 5. **Live-Weg:** Die `mqtt-ws-bridge` (eine Brücke zwischen MQTT und dem Browser) empfängt dieselben Messwerte von Mosquitto und schickt sie über einen WebSocket (eine dauerhaft offene Verbindung zum Browser) sofort weiter. Die PV-Live-Daten kommen zusätzlich von einem externen PV-Broker (siehe `mqtt-ws-bridge` unter „Rolle der Komponenten“).
 
-![Architektur: Datenfluss von den Sensoren bis zu den Dashboards](../../../assets/diagrams/architecture.svg)
-
-Das Diagramm zeigt den Hauptkiosk aus `leoiot-pv/` noch nicht.
+<Image src={diagramLight} alt="Architektur: Datenfluss von den Sensoren bis zu den Dashboards" class="dark:sl-hidden" />
+<Image src={diagramDark} alt="Architektur: Datenfluss von den Sensoren bis zu den Dashboards" class="light:sl-hidden" />
 
 :::note[Öffentliche Pfade]
 Ein Reverse-Proxy (Nginx; ein Verteiler, der Anfragen an den richtigen Dienst leitet) macht alle Oberflächen unter einer gemeinsamen Domain erreichbar (Konfiguration: `legacy/deploy/nginx.conf`). Die Pfade stehen im Abschnitt [Nginx-Routing](../operations/#nginx-routing) der Seite Betrieb.
