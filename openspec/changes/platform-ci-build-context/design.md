@@ -20,7 +20,7 @@ See `proposal.md` for motivation. `.github/ci/affected.sh` (design D11 of `platf
 
 ### D1. Declaration in a file `build-context` next to the `Dockerfile`
 
-One line, a relative path such as `..`. `affected.sh` keeps printing `image <dir>`; the `images` job reads `<dir>/build-context` when present and runs `docker build -f "$dir/Dockerfile" "$context"`. A small check in the job resolves the path and fails unless it is an ancestor of `<dir>` inside the same `leoiot-*` folder.
+One line, a relative path such as `..`. `affected.sh` keeps printing `image <dir>`; the `images` job calls `.github/ci/image-build.sh <dir>`, which reads `<dir>/build-context` when present, fails unless the path is an ancestor of `<dir>` inside the same `leoiot-*` folder, and runs `docker build -f "$dir/Dockerfile" "$context"`. A script rather than inline workflow code, so that people run the same build locally and the test covers it (`--print`).
 
 *Why a file:* CI and humans see the declaration where the `Dockerfile` is, and `affected.sh` can find it with the same `git ls-files` walk. *Alternative:* read the context from the unit's `compose.yaml` (rejected: needs YAML parsing in the script and couples CI to service names). *Alternative:* a comment line in the `Dockerfile` (rejected: easy to break unnoticed by editing the `Dockerfile`). *Alternative:* always build with the sub-project root as context (rejected: changes every existing image build at once).
 

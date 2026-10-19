@@ -20,6 +20,8 @@ A workflow is an automatic sequence of steps on GitHub (GitHub Actions). A runne
 
 The Pages workflow may write to the `gh-pages` branch; a new run cancels a run that is still in progress.
 
+CI checks a component when one of its files changed, and also every Node component of the same sub-project that uses it as a local `file:` dependency in its `package.json` (for example a shared package of two apps); their images are built as well. An image is built with its own folder as the context, unless a file `build-context` next to the `Dockerfile` names an ancestor folder within the same `leoiot-*` folder (for example `..`); `.github/ci/image-build.sh <dir>` builds it exactly as CI does.
+
 :::caution[Status]
 The automatic deployment takes effect only once the runner is installed on the VM, the GitHub environment `production` exists and the `release` branch exists. Until then `deploy.yml` does not run, and changes to the application are brought onto the VM by hand (section “Updating by hand”).
 :::
@@ -140,7 +142,7 @@ According to the InfluxDB documentation, `--full` replaces the entire data set i
 ## Sources in the repository
 
 - `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
-- `.github/ci/deploy.sh`, `.github/ci/affected.sh`, `.github/ci/legacy-services.map`, `.github/ci/smoke-routes`
+- `.github/ci/deploy.sh`, `.github/ci/affected.sh`, `.github/ci/image-build.sh`, `.github/ci/legacy-services.map`, `.github/ci/smoke-routes`
 - `legacy/deploy/nginx.conf`
 - `leoiot-pv/compose.yaml`
 - `legacy/backup/backup.sh`, `legacy/backup/restore.sh`
