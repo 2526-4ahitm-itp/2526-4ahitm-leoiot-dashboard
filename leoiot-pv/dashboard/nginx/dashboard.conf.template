@@ -1,0 +1,72 @@
+# Vorlage für den nginx im Dashboard-Container.
+# Beim Start setzt das nginx-Image ${DASHBOARD_INFLUX_TOKEN} aus der Umgebung ein.
+
+server {
+    listen 8089;
+    server_name _;
+    server_tokens off;
+    absolute_redirect off;
+
+    # Namen erst bei der Anfrage auflösen (Docker-DNS), damit der Container
+    # auch startet, wenn InfluxDB oder Bridge noch nicht laufen
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
+    root /usr/share/nginx/html;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location = /pv {
+        return 301 /pv/;
+    }
+
+    # Flux-Abfrage: nur POST, festes Ziel, Token kommt aus der Umgebung
+    location = /pv/api/query {
+        if ($request_method != POST) {
+            return 405;
+        }
+        client_max_body_size 64k;
+        set $influx http://influxdb:8086;
+        proxy_pass $influx/api/v2/query?org=leoiot;
+        proxy_http_version 1.1;
+        proxy_set_header Host influxdb:8086;
+        proxy_set_header Connection "";
+        proxy_set_header Authorization "Token ${DASHBOARD_INFLUX_TOKEN}";
+        proxy_set_header Cookie "";
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+
+    # Live-Kanal der Bridge
+    location = /pv/ws {
+        set $bridge http://mqtt-ws-bridge:8090;
+        proxy_pass $bridge/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    # Dateien mit Hash im Namen dürfen lange im Cache bleiben
+    location /pv/assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # Die Seite selbst wird immer neu geholt, damit ein Deploy ankommt
+    location /pv/ {
+        index index.html;
+        add_header Cache-Control "no-cache";
+        try_files $uri $uri/ =404;
+    }
+
+    location / {
+        return 404;
+    }
+}
