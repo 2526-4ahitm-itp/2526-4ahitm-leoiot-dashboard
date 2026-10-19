@@ -1,0 +1,55 @@
+# Tasks
+
+Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. This change starts only after `platform-ci-build-context` is merged.
+
+## 1. Design previews
+
+- [ ] 1.1 Build three clickable previews with sample data on localhost (day view of today with live power, month view of April 2026 with partial data, phone layout at 360 px), using Impeccable for direction and critique, the kiosk's quantity colours and the documentation site's tokens; verify each opens in a browser at 360 px and 1920 px without a horizontal scroll bar and shows both themes
+- [ ] 1.2 Daniel picks one; write the choice and the reason into `design.md` as D9a and fix the English labels in the spec's Purpose note; verify `openspec validate pv-dashboard --strict` passes
+
+## 2. Shared package and kiosk switch
+
+- [ ] 2.1 Add `leoiot-pv/shared/` (`package.json` with `test` and `build`, `tsconfig.json`, Vitest) and move `energy`, `time`, `influx`, `format` and `live` from the kiosk with their tests, one commit per module, giving `format` a language parameter; verify after each commit that `npm test` passes in `shared/` and in `kiosk/` and that the kiosk's test count does not drop
+- [ ] 2.2 Switch the kiosk to `"@leoiot-pv/shared": "file:../shared"` and its `Dockerfile` to the build context `leoiot-pv/` as `platform-ci-build-context` specifies, and set `build.context`/`dockerfile` for the kiosk in `compose.yaml`; verify `.github/ci/affected.sh` lists `node leoiot-pv/shared`, `node leoiot-pv/kiosk` and `image leoiot-pv/kiosk` for a change in `shared/src/energy.ts`, and that the image builds the way CI builds it
+- [ ] 2.3 Verify the dependency rule: nothing in `leoiot-pv/` imports a file outside `leoiot-pv/`, and `kiosk/` and `dashboard/` reach each other only through `shared/`
+- [ ] 2.4 Verify the kiosk is unchanged: run the old and the new kiosk image side by side against the same local stack and readings; all four panels show the same numbers, and `GET /kiosk/`, `/healthz` and `POST /kiosk/api/query` behave as before
+- [ ] 2.5 Update `leoiot-pv/README.md` (layout with `shared/`, how to run tests); verify every command in it runs as written
+
+## 3. Dashboard scaffold
+
+- [ ] 3.1 Add `leoiot-pv/dashboard/` (Vite, TypeScript, Vitest, Chart.js, base path `/pv/`) with an nginx template like the kiosk's (`/pv/api/query` POST only with `DASHBOARD_INFLUX_TOKEN`, `/pv/ws`, `/healthz`, `/pv` → `/pv/`, everything else 404) and a `Dockerfile` on port 8089; verify `npm ci`, `npm test` and `npm run build` exit 0 and the built image answers `GET /pv/` 200, `GET /pv` 301, `GET /healthz` 200, `GET /pv/api/query` 405
+- [ ] 3.2 Add the service `dashboard` to `leoiot-pv/compose.yaml` (`127.0.0.1:${DASHBOARD_PORT:-8089}`, `DASHBOARD_INFLUX_TOKEN: ${KIOSK_INFLUX_TOKEN}`, health check, network `platform`) and the port to `.env.example`; verify `docker compose config -q` passes with the CI placeholder file
+- [ ] 3.3 Verify no credential is delivered: with `KIOSK_INFLUX_TOKEN` set to a marker value, a search of every file the dashboard container serves finds no marker, and no tracked file in `dashboard/` or `shared/` contains a token, password or login
+
+## 4. Views
+
+- [ ] 4.1 Router and frame: view and period in the query string, back and forward, date choice, limits at today and at the earliest reading, fallback to today for a broken address, language switch (DE/EN, browser language, kept), theme switch (system, kept); verify with tests for every scenario of "View and date are part of the address", "Moving through time", "Language" and "Themes"
+- [ ] 4.2 Data layer: per-day rows with `null` for missing fields (D6, D7), period totals with missing-day counts, Autarkie and Eigenverbrauchsquote over complete days only; verify with tests using the spec's numbers (410/52/60/18/40 → 298, 356, 95 %, 87 %; week sum 1395; April 2026 with 19 days missing) and a 25-hour day (25 October 2026)
+- [ ] 4.3 Day view with totals, ratios, power curve and, for today, live power with "Live" / "Ø letzte 10 Min" and a refresh every 60 s; verify with tests for the scenarios of "Day view" and "Today shows live power", and against the local stack that the live label changes to "Ø letzte 10 Min" two minutes after the bridge is stopped
+- [ ] 4.4 Week, month and year views with bars, period totals, unfinished current period, empty future and drill-down; verify with tests for their scenarios and visually at 360 px and 1920 px in both themes
+- [ ] 4.5 Data age, outage note with automatic recovery, text values on hover/tap and the table below each chart; verify with tests, and measure the year query for 2026 against vm23's data through an SSH tunnel (read token only); note the time in the pull request
+- [ ] 4.6 Accessibility and offline check: keyboard-only walk through all views, contrast 4.5:1 in both themes, touch targets 44 px, reduced motion, no request to a foreign server; verify and write the results into the pull request
+
+## 5. Going live on vm23
+
+- [ ] 5.1 Change `legacy/deploy/nginx.conf`: `/pv/` and `/pv/ws` (upgrade headers) to `127.0.0.1:8089`; verify `nginx -t` accepts the file in a throwaway container
+- [ ] 5.2 Release (pull request `main` → `release`, say beforehand what ships); verify the deployment run is green and on vm23 (read only) `docker compose ps` in `leoiot-pv/` shows kiosk and dashboard healthy and `/kiosk/` unchanged
+- [ ] 5.3 **(human, vm23)** Check that port 8089 is free before the release, install `legacy/deploy/nginx.conf` on the host and reload nginx; verify `https://vm23.htl-leonding.ac.at/pv/` shows the dashboard with data in all four views and the live label in the day view of today, and `/dashboard/`, `/kiosk/` and `/` still work
+- [ ] 5.4 In a pull request of its own add `/pv/` to `.github/ci/smoke-routes`; verify `bash .github/ci/affected.test.sh` passes
+
+## 6. Acceptance
+
+- [ ] 6.1 Daniel and Stefan check `/pv/` on a laptop and a phone and compare one past day and one past month with the SolaX portal (Produktion, Vom Netz, Ins Netz to within 1 kWh per day); verify the acceptance, the compared values and the date are written in the pull request or issue #64
+
+## 7. Replace the legacy PV view
+
+- [ ] 7.1 Record the sensor view of `/dashboard/` on a local legacy stack before the change: network requests, cards, charts, room table (screenshots and request list)
+- [ ] 7.2 In a pull request of its own change `legacy/dashboard-v2/`: "PV System" links to `/pv/`, the PV view with its SolaX login, polling, queries, charts, translations and styles is removed (D10); verify `npm run build` in `legacy/dashboard-v2` exits 0, a search of `legacy/dashboard-v2/` for `solax`, `pvSolar` and `SOLAX_` finds nothing, and the record of 7.1 matches the sensor view after the change
+- [ ] 7.3 Tell the Sensoren team with the link to the pull request of 7.2 before merging; verify the message is linked in the pull request
+- [ ] 7.4 Remove `/solax/` from `legacy/deploy/nginx.conf` in the same pull request; verify `nginx -t` passes
+- [ ] 7.5 Release; **(human, vm23)** install the nginx file and reload; verify "PV System" on `/dashboard/` opens `/pv/`, `/solax/openapi/auth/get_token` no longer reaches SolaX, the sensor view works, and `/pv/` and `/kiosk/` show data
+
+## 8. Documentation and spec
+
+- [ ] 8.1 Name `/pv/` on the documentation site (`architecture`, `setup`, `operations`, `interfaces`, `project` in both languages, architecture diagram) and in `leoiot-pv/README.md`, and remove the dashboard from "still in legacy"; verify `npm run build` at the root exits 0 and a search of `src/` for "PV" next to `/dashboard/` finds only statements about the link
+- [ ] 8.2 Sync the spec to `openspec/specs/pv/dashboard/spec.md` and archive the change; verify `openspec list --specs` shows `pv/dashboard` and issue #64 is closed with a comment linking the pull requests
