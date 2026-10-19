@@ -12,5 +12,5 @@
 
 ## 3. Merge
 
-- [ ] 3.1 Open the pull request, tell the Sensoren team's lead with its link, and merge after `ci-ok` is green; verify the run shows every check (a `.github/` change runs all) and all pass
+- [x] 3.1 Open the pull request, tell the Sensoren team's lead with its link, and merge after `ci-ok` is green; verify the run shows every check (a `.github/` change runs all) and all pass Done 2026-10-19: #73, all checks of the full run passed, @epointinger mentioned in the description.
 - [ ] 3.2 Sync the spec and archive the change once `platform-cicd-pipeline` is archived, so that `platform/ci-verification` exists in `openspec/specs/`; verify `openspec list --specs` shows the two added requirements
