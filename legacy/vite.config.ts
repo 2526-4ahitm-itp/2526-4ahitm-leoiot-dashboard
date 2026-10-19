@@ -13,26 +13,6 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
-      '/kiosk4': {
-        target: 'http://localhost:8085',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/kiosk4/, '') || '/',
-      },
-      '/kiosk3': {
-        target: 'http://localhost:8084',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/kiosk3/, '') || '/',
-      },
-      '/kiosk2': {
-        target: 'http://localhost:8083',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/kiosk2/, '') || '/',
-      },
-      '/kiosk': {
-        target: 'http://localhost:8082',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/kiosk/, '') || '/',
-      },
       '/dashboard': {
         target: 'http://localhost:8081',
         changeOrigin: true,

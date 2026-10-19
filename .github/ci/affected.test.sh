@@ -163,7 +163,7 @@ everything_ci=(
   "docs true"
   "ci-scripts true"
   "node legacy/frontend"
-  "node legacy/kiosk4"
+  "node legacy/dashboard-v2"
   "node leoiot-pv/kiosk"
   "node leoiot-pv/collector"
   "maven legacy/backend/sensor-data-generator"
@@ -291,8 +291,8 @@ expect_problem() { # expect_problem <name> <map file> <text the report must cont
 grep -v ' grafana$' "$map" >"$scratch/no-grafana.map"
 expect_problem "a service line deleted" "$scratch/no-grafana.map" "'grafana'"
 
-sed 's#^legacy/kiosk4/ #-                  #' "$map" >"$scratch/no-kiosk4.map"
-expect_problem "a directory line deleted" "$scratch/no-kiosk4.map" "legacy/kiosk4"
+sed 's#^legacy/fake-sensors/ #-                        #' "$map" >"$scratch/no-fake-sensors.map"
+expect_problem "a directory line deleted" "$scratch/no-fake-sensors.map" "legacy/fake-sensors"
 
 {
   cat "$map"
