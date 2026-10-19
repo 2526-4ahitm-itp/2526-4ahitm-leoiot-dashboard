@@ -37,8 +37,9 @@ services:
       COLLECTOR_INFLUX_TOKEN: ${COLLECTOR_INFLUX_TOKEN:-}
       COLLECTOR_MQTT_USER: ${COLLECTOR_MQTT_USER:-}
       COLLECTOR_MQTT_PASSWORD: ${COLLECTOR_MQTT_PASSWORD:-}
-      # Production: the bucket server_data and publishing on. For a test set
-      # COLLECTOR_INFLUX_BUCKET=pv_shadow and COLLECTOR_PUBLISH=0 in leoiot-pv/.env.
+      # Production: the bucket server_data and publishing on. For a test create a
+      # test bucket and set COLLECTOR_INFLUX_BUCKET=<test bucket> and
+      # COLLECTOR_PUBLISH=0 in leoiot-pv/.env.
       COLLECTOR_INFLUX_BUCKET: ${COLLECTOR_INFLUX_BUCKET:-server_data}
       COLLECTOR_PUBLISH: ${COLLECTOR_PUBLISH:-1}
     healthcheck:
