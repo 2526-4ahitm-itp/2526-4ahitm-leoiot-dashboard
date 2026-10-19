@@ -47,7 +47,8 @@ The previous stack (`legacy/docker-compose.yaml`) must be running, because Influ
 
 ## What is live
 
-The kiosk is built for `/kiosk/`. The switch on the host is a manual step and has not happened yet.
+- Main kiosk at `https://vm23.htl-leonding.ac.at/kiosk/` since 2026-10-13. The former kiosk addresses `/leogreen/`, `/kiosk2/`, `/kiosk3/` and `/kiosk4/` redirect permanently to it; the five old kiosks are removed from `legacy/`.
+- Collector writing to `server_data` since 2026-10-14.
 
 ## Still in the previous system
 

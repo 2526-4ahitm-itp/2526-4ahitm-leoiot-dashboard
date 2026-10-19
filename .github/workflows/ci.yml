@@ -85,8 +85,7 @@ jobs:
           # the legacy containers run node:20-alpine, everything else Node 22
           node-version: ${{ startsWith(matrix.dir, 'legacy/') && '20' || '22' }}
       - name: Install
-        # No lockfile (legacy/kiosk, legacy/kiosk4, legacy/leogreenKiosk): install
-        # without writing one.
+        # A folder without a lockfile is installed without writing one.
         run: |
           if [ -f package-lock.json ]; then
             npm ci
