@@ -13,11 +13,6 @@
 # prefix                                   legacy Compose service
 legacy/frontend/                           frontend
 legacy/dashboard-v2/                       dashboard-v2
-legacy/kiosk/                              kiosk
-legacy/kiosk2/                             kiosk2
-legacy/kiosk3/                             kiosk3
-legacy/kiosk4/                             kiosk4
-legacy/leogreenKiosk/                      leogreen-kiosk
 legacy/mqtt-ws-bridge/                     mqtt-ws-bridge
 legacy/fake-sensors/                       fake-sensors
 legacy/backend/sensor-data-generator/      quarkus-app
