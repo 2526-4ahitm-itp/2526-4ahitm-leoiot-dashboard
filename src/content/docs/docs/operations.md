@@ -20,6 +20,8 @@ Ein Workflow ist eine automatische Abfolge von Schritten bei GitHub (GitHub Acti
 
 Der Pages-Workflow darf in den Branch `gh-pages` schreiben; ein neuer Lauf bricht einen noch laufenden ab.
 
+CI prüft einen Bestandteil, wenn sich eine seiner Dateien geändert hat, und zusätzlich jeden Node-Bestandteil desselben Teilprojekts, der ihn in seiner `package.json` als lokale `file:`-Abhängigkeit einbindet (etwa ein gemeinsames Paket zweier Apps); auch deren Images werden gebaut. Ein Image wird mit seinem eigenen Ordner als Kontext gebaut, außer eine Datei `build-context` neben dem `Dockerfile` nennt einen übergeordneten Ordner innerhalb desselben `leoiot-*`-Ordners (etwa `..`); `.github/ci/image-build.sh <Ordner>` baut es genau wie CI.
+
 :::caution[Stand]
 Das automatische Deployment wirkt erst, wenn der Runner auf der VM installiert, die GitHub-Umgebung `production` angelegt ist und der Branch `release` existiert. Bis dahin läuft `deploy.yml` nicht, und Änderungen an der Anwendung kommen von Hand auf die VM (Abschnitt „Von Hand aktualisieren“).
 :::
@@ -140,7 +142,7 @@ Ohne Argument listet das Skript die vorhandenen Backups. Mit Datum prüft es, ob
 ## Quellen im Repository
 
 - `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
-- `.github/ci/deploy.sh`, `.github/ci/affected.sh`, `.github/ci/legacy-services.map`, `.github/ci/smoke-routes`
+- `.github/ci/deploy.sh`, `.github/ci/affected.sh`, `.github/ci/image-build.sh`, `.github/ci/legacy-services.map`, `.github/ci/smoke-routes`
 - `legacy/deploy/nginx.conf`
 - `leoiot-pv/compose.yaml`
 - `legacy/backup/backup.sh`, `legacy/backup/restore.sh`

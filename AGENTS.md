@@ -66,7 +66,7 @@ Then, per line of the output (the commands are the ones in `.github/workflows/ci
   docker compose -f leoiot-pv/compose.yaml --env-file "$env" config -q
   ```
 
-- `image <dir>`: `docker build <dir>`.
+- `image <dir>`: `.github/ci/image-build.sh <dir>`, which runs `docker build <dir>`, or builds from an ancestor folder within the same sub-project when `<dir>/build-context` names one (for example `..`, so that two apps can share a package of their sub-project). A Node component that uses another one of its sub-project as a local `file:` dependency is checked whenever that one changes.
 - `ci-scripts true`: `bash .github/ci/affected.test.sh`.
 - Specs: `openspec validate <change> --strict`.
 

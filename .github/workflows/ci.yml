@@ -164,7 +164,8 @@ jobs:
       - name: Build the image (not pushed)
         env:
           IMAGE_DIR: ${{ matrix.dir }}
-        run: docker build "$IMAGE_DIR"
+        # build context: the directory, or what its build-context file declares
+        run: .github/ci/image-build.sh "$IMAGE_DIR"
 
   ci-scripts:
     needs: changes

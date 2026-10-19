@@ -2,9 +2,11 @@
 # Test for .github/ci/affected.sh and .github/ci/legacy-services.map.
 # Part 1 feeds fixed lists of changed files to affected.sh and compares the
 # result; part 2 checks that the legacy service map matches
-# legacy/docker-compose.yaml and the legacy/* directories (design D11).
+# legacy/docker-compose.yaml and the legacy/* directories (design D11);
+# part 3 checks local dependencies and declared build contexts in a throwaway
+# tree (platform-ci-build-context, design D3).
 # Run from anywhere: .github/ci/affected.test.sh
-# Needs git and "docker compose config" (no Docker daemon).
+# Needs git, node and "docker compose config" (no Docker daemon).
 
 set -euo pipefail
 
@@ -299,6 +301,97 @@ expect_problem "a directory line deleted" "$scratch/no-fake-sensors.map" "legacy
   echo "legacy/ghost/                              ghost-service"
 } >"$scratch/ghost.map"
 expect_problem "a service that does not exist" "$scratch/ghost.map" "'ghost-service'"
+
+# ---- part 3: local dependencies and build contexts (throwaway tree) ---------
+
+fixture=$scratch/fixture
+mkdir -p "$fixture/.github/ci"
+cp "$affected" "$script_dir/image-build.sh" "$fixture/.github/ci/"
+echo "# no legacy services in this tree" >"$fixture/.github/ci/legacy-services.map"
+# put <path> <content>: write one fixture file
+put() {
+  mkdir -p "$fixture/$(dirname "$1")"
+  printf '%s\n' "$2" >"$fixture/$1"
+}
+put leoiot-x/compose.yaml "services: {}"
+put leoiot-x/shared/package.json '{ "name": "shared" }'
+put leoiot-x/shared/src/energy.ts "export {};"
+put leoiot-x/kiosk/package.json '{ "dependencies": { "shared": "file:../shared" } }'
+put leoiot-x/kiosk/Dockerfile "FROM scratch"
+put leoiot-x/kiosk/build-context ".."
+put leoiot-x/kiosk/src/main.ts "export {};"
+put leoiot-x/dashboard/package.json '{ "devDependencies": { "shared": "file:../shared/" } }'
+put leoiot-x/dashboard/Dockerfile "FROM scratch"
+put leoiot-x/dashboard/src/main.ts "export {};"
+put leoiot-x/wall/package.json '{ "dependencies": { "kiosk": "file:../kiosk" } }'
+put leoiot-x/wall/Dockerfile "FROM scratch"
+put leoiot-x/collector/package.json '{ "name": "collector" }'
+put leoiot-x/collector/Dockerfile "FROM scratch"
+put leoiot-x/collector/src/main.ts "export {};"
+put leoiot-y/app/package.json '{ "dependencies": { "shared": "file:../../leoiot-x/shared" } }'
+put leoiot-y/app/Dockerfile "FROM scratch"
+git -C "$fixture" init -q
+git -C "$fixture" add -A
+
+# fixture_expect <name> <files> <expected output>
+fixture_expect() {
+  local name=$1 files=$2 expected=$3 actual
+  checks=$((checks + 1))
+  actual=$(printf '%s\n' "$files" | "$fixture/.github/ci/affected.sh" --files 2>&1) || true
+  if [[ $actual != "$expected" ]]; then
+    fail "$name"
+    diff <(echo "$expected") <(echo "$actual") | sed 's/^/    /' >&2 || true
+  fi
+}
+
+fixture_expect "change in a shared package checks its dependents" \
+  "leoiot-x/shared/src/energy.ts" \
+  "node leoiot-x/dashboard
+node leoiot-x/kiosk
+node leoiot-x/shared
+node leoiot-x/wall
+image leoiot-x/dashboard
+image leoiot-x/kiosk
+image leoiot-x/wall
+unit leoiot-x"
+
+fixture_expect "change in a dependent leaves its dependency alone" \
+  "leoiot-x/dashboard/src/main.ts" \
+  "node leoiot-x/dashboard
+image leoiot-x/dashboard
+unit leoiot-x"
+
+fixture_expect "component without local dependents" \
+  "leoiot-x/collector/src/main.ts" \
+  "node leoiot-x/collector
+image leoiot-x/collector
+unit leoiot-x"
+
+# image_expect <name> <dir> <build-context content or "-"> <expected> [fails]
+image_expect() {
+  local name=$1 dir=$2 declared=$3 expected=$4 status=0 actual
+  checks=$((checks + 1))
+  rm -f "$fixture/$dir/build-context"
+  [[ $declared != - ]] && printf '%s\n' "$declared" >"$fixture/$dir/build-context"
+  actual=$("$fixture/.github/ci/image-build.sh" --print "$dir" 2>&1) || status=$?
+  if [[ ${5:-} == fails ]]; then
+    ((status != 0)) || fail "$name: succeeded"
+    grep -qF -- "$expected" <<<"$actual" || fail "$name: '$actual' does not mention '$expected'"
+  elif [[ $status != 0 || $actual != "$expected" ]]; then
+    fail "$name: got '$actual'"
+  fi
+}
+
+image_expect "declared context" leoiot-x/kiosk ".." \
+  "docker build -f leoiot-x/kiosk/Dockerfile leoiot-x"
+image_expect "no declaration" leoiot-x/collector - \
+  "docker build leoiot-x/collector"
+image_expect "context outside the sub-project" leoiot-x/kiosk "../.." \
+  "leoiot-x/kiosk/build-context" fails
+image_expect "context that is not an ancestor" leoiot-x/kiosk "../collector" \
+  "leoiot-x/kiosk/build-context" fails
+image_expect "absolute context" leoiot-x/kiosk "/" \
+  "leoiot-x/kiosk/build-context" fails
 
 # ---- result ---------------------------------------------------------------
 
