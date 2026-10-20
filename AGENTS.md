@@ -37,6 +37,7 @@ Rules for coding agents and people working in this repository. Read all of it be
   git branch -D feat/<task>  # only once the pull request is merged
   ```
 
+- To hand unfinished work to a later session, save a continuation prompt in `docs/continuations/`. The rules are in `docs/continuations/README.md`.
 - Push your branch and open a pull request into `main` (`gh pr create --base main`). CI runs only the components the change touches; the aggregate check `ci-ok` must be green before it merges. Merge only when your user asks you to.
 - **Never push to `main` or `release`** (both are protected) and never force-push a shared branch. `main` must always be shippable: do not merge unfinished work.
 
