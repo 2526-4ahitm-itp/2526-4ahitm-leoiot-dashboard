@@ -91,3 +91,25 @@ describe('Balken', () => {
     expect(m.labels[0]).toBe('Jan');
   });
 });
+
+import { smoothPower } from '../src/core/chartData';
+
+describe('smoothPower', () => {
+  it('gleichbleibende Reihe bleibt unverändert', () => {
+    expect(smoothPower([2, 2, 2, 2])).toEqual([2, 2, 2, 2]);
+  });
+  it('einzelne Spitze wird auf ein Drittel gesenkt', () => {
+    const out = smoothPower([0, 0, 3, 0, 0]);
+    expect(out[2]).toBeCloseTo(1);
+    expect(out[1]).toBeCloseTo(1);
+    expect(out[0]).toBe(0);
+  });
+  it('Ränder mitteln über die vorhandenen Fenster', () => {
+    expect(smoothPower([4, 2])).toEqual([3, 3]);
+  });
+  it('Lücken bleiben Lücken und werden nicht überbrückt', () => {
+    expect(smoothPower([1, null, 5])).toEqual([1, null, 5]);
+    const out = smoothPower([3, 3, null, 9, 9]);
+    expect(out).toEqual([3, 3, null, 9, 9]);
+  });
+});

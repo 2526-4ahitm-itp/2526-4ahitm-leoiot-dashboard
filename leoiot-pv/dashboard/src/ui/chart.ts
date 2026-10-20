@@ -11,6 +11,7 @@ import {
   PointElement,
   Tooltip,
   type ChartDataset,
+  type Plugin,
 } from 'chart.js';
 import { formatTick } from '@leoiot-pv/shared/format';
 import { TEXT, kw, kwh, type Lang } from '../core/i18n';
@@ -54,6 +55,25 @@ function hatch(color: string, alpha: number): CanvasPattern | string {
   ctx.lineTo(10, 6);
   ctx.stroke();
   return ctx.createPattern(c, 'repeat') ?? withAlpha(color, alpha * 0.5);
+}
+
+// Streifen für Schraffur der Lückenbänder
+function bandPattern(color: string): CanvasPattern | string {
+  const c = document.createElement('canvas');
+  c.width = c.height = 10;
+  const ctx = c.getContext('2d');
+  if (!ctx) return withAlpha(color, 0.3);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-2, 12);
+  ctx.lineTo(12, -2);
+  ctx.moveTo(-2, 2);
+  ctx.lineTo(2, -2);
+  ctx.moveTo(8, 12);
+  ctx.lineTo(12, 8);
+  ctx.stroke();
+  return ctx.createPattern(c, 'repeat') ?? withAlpha(color, 0.3);
 }
 
 export interface ChartOptions {
@@ -105,6 +125,43 @@ export function createChart(canvas: HTMLCanvasElement, opts: ChartOptions): Char
     });
   }
 
+  // Band hinter Tagen bzw. Monaten ohne Daten, über die ganze Höhe; Beschriftung ab drei Spalten Breite
+  const gapBands: Plugin = {
+    id: 'gapBands',
+    beforeDatasetsDraw(c) {
+      const cur = model;
+      if (cur?.kind !== 'bar' || !cur.gaps.some(Boolean)) return;
+      const { ctx, chartArea: a } = c;
+      const n = cur.gaps.length;
+      const w = (a.right - a.left) / n;
+      const line = cssVar('--line');
+      const text = TEXT[lang].noData;
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = bandPattern(line);
+      for (let i = 0; i < n; i++) {
+        if (!cur.gaps[i]) continue;
+        let j = i;
+        while (j + 1 < n && cur.gaps[j + 1]) j++;
+        const x = a.left + i * w;
+        const bw = (j - i + 1) * w;
+        ctx.fillRect(x, a.top, bw, a.bottom - a.top);
+        if (j - i + 1 >= 3) {
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = cssVar('--ink-3');
+          ctx.font = `12px ${Chart.defaults.font.family}`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(text, x + bw / 2, a.top + 6);
+          ctx.globalAlpha = 0.7;
+          ctx.fillStyle = bandPattern(line);
+        }
+        i = j;
+      }
+      ctx.restore();
+    },
+  };
+
   function build(m: ChartModel, animate: boolean): void {
     chart?.destroy();
     const L = TEXT[lang];
@@ -113,6 +170,7 @@ export function createChart(canvas: HTMLCanvasElement, opts: ChartOptions): Char
     const unit = m.kind === 'line' ? 'kW' : 'kWh';
     chart = new Chart(canvas, {
       type: m.kind === 'line' ? 'line' : 'bar',
+      plugins: [gapBands],
       data: { labels: m.labels, datasets: datasets(m) },
       options: {
         responsive: true,
@@ -172,7 +230,7 @@ export function createChart(canvas: HTMLCanvasElement, opts: ChartOptions): Char
               label(item) {
                 const v = item.parsed.y;
                 const text = v === null || v === undefined || Number.isNaN(v) ? L.noData : unit === 'kW' ? kw(v, lang) : kwh(v, lang);
-                return `${item.dataset.label}: ${text}`;
+                return `${item.dataset.label}${unit === 'kW' ? ` · ${L.avg15}` : ''}: ${text}`;
               },
               afterBody(items) {
                 const cur = model;
