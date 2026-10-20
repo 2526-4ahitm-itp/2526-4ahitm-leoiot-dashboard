@@ -11,7 +11,7 @@ import { isStale, liveState } from './core/live';
 import { dayRows, monthRows, totals, type DayRow, type MonthRow, type Totals } from './core/periods';
 import { parseRoute, periodDays, periodStart, routeSearch, stepRoute, type Route, type View } from './core/route';
 import { liveUrls, queryInflux } from './data/api';
-import { loadDayCurve, loadDayTotals, loadEarliest, loadLatest } from './data/queries';
+import { loadDayCurve, loadDayTotals, loadDayTotalsByMonth, loadEarliest, loadLatest, type MonthCache } from './data/queries';
 import { createBar } from './ui/bar';
 import { createChart } from './ui/chart';
 import { el, HATCHED, QUANTITY_COLOR, swatch } from './ui/dom';
@@ -45,6 +45,7 @@ export function startApp(): void {
   let theme: Theme = initialTheme(readStored(THEME_KEY), window.matchMedia('(prefers-color-scheme: dark)').matches);
   let route: Route = parseRoute(location.search, todayKey());
   let earliest: string | null | undefined; // undefined = noch nicht geladen
+  const monthCache: MonthCache = new Map();
   let data: ViewData | null = null;
   let status: Status = 'loading';
   let tableOpen = false;
@@ -108,7 +109,11 @@ export function startApp(): void {
       return { route: r, rows, totals: totals(rows), months: null, curve, latest: await latestPromise };
     }
     const days = periodDays(r.view, r.key);
-    const byDay = await loadDayTotals(query, days);
+    // Monat und Jahr monatsweise und mit Zwischenspeicher (Jahr am Stück dauert auf vm23 rund 4 s)
+    const byDay =
+      r.view === 'week'
+        ? await loadDayTotals(query, days)
+        : await loadDayTotalsByMonth(query, days, { earliestKey: earliest ?? null, todayKey: today, cache: monthCache });
     const rows = dayRows(days, byDay, today);
     const months = r.view === 'year' ? monthRows(Number(r.key.slice(0, 4)), rows, today) : null;
     return { route: r, rows, totals: totals(rows), months, curve: null, latest: await latestPromise };
