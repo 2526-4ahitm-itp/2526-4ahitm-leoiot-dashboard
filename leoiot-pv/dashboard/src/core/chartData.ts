@@ -15,7 +15,8 @@ export interface Series {
 export interface DayModel {
   kind: 'line';
   labels: string[]; // Uhrzeit je 5-Minuten-Fenster
-  series: Series[];
+  series: Series[]; // gleitender Mittelwert über 15 Minuten
+  raw: Series[]; // Werte je 5-Minuten-Fenster (Grundlage der Stundenmittel in der Tabelle)
 }
 
 export interface BarModel {
@@ -24,10 +25,28 @@ export interface BarModel {
   titles: string[]; // Überschrift je Balken im Tooltip und in der Tabelle
   marks: string[][]; // Hinweise je Balken ("keine Daten", "noch nicht abgeschlossen")
   keys: string[]; // Schlüssel zum Hineinspringen: Tag bzw. erster Tag des Monats
+  gaps: boolean[]; // Tag bzw. Monat ganz ohne Daten (vergangen)
   series: Series[];
 }
 
 export type ChartModel = DayModel | BarModel;
+
+/** Gleitender Mittelwert über drei Fenster (15 Minuten), zentriert; Lücken bleiben Lücken und werden nicht überbrückt, an Rändern zählen die vorhandenen Fenster. */
+export function smoothPower(data: (number | null)[]): (number | null)[] {
+  return data.map((v, i) => {
+    if (v === null) return null;
+    let sum = v;
+    let n = 1;
+    for (const j of [i - 1, i + 1]) {
+      const w = data[j];
+      if (w !== undefined && w !== null) {
+        sum += w;
+        n++;
+      }
+    }
+    return sum / n;
+  });
+}
 
 /** Tageskurve in kW je 5-Minuten-Fenster; null nach dem Jetzt, in Lücken und wo nichts gespeichert ist. */
 export function dayModel(power: PowerPoint[], dayStart: number, slots: number, now: number): DayModel {
@@ -40,9 +59,9 @@ export function dayModel(power: PowerPoint[], dayStart: number, slots: number, n
     cons[i] = p.consumption;
   }
   const labels = Array.from({ length: slots }, (_, i) => viennaTime(new Date(dayStart + i * SLOT_MS)));
-  const series: Series[] = [{ key: 'prod', data: prod }];
-  if (cons.some((v) => v !== null)) series.push({ key: 'cons', data: cons });
-  return { kind: 'line', labels, series };
+  const raw: Series[] = [{ key: 'prod', data: prod }];
+  if (cons.some((v) => v !== null)) raw.push({ key: 'cons', data: cons });
+  return { kind: 'line', labels, series: raw.map((s) => ({ key: s.key, data: smoothPower(s.data) })), raw };
 }
 
 const BAR_KEYS: SeriesKey[] = ['prod', 'cons', 'imp', 'exp'];
@@ -64,6 +83,7 @@ export function dayBars(rows: DayRow[], view: View, lang: Lang): BarModel {
       return m;
     }),
     keys: rows.map((r) => r.key),
+    gaps: rows.map((r) => r.gap && !r.future),
     series: BAR_KEYS.map((key) => ({ key, data: per.map((q) => pick(q, key)) })),
   };
 }
@@ -77,6 +97,7 @@ export function monthBars(months: MonthRow[], lang: Lang): BarModel {
     titles: months.map((m) => monthLabel(m.firstKey, lang)),
     marks: months.map((m) => (m.current ? [L.notFinished] : [])),
     keys: months.map((m) => m.firstKey),
+    gaps: months.map((m) => !m.future && !m.current && m.totals.pastDays > 0 && Object.values(m.totals.sum).every((v) => v === null)),
     series: BAR_KEYS.map((key) => ({
       key,
       data: months.map((m) => (m.future || m.totals.pastDays === 0 ? null : m.totals.sum[key])),
@@ -89,7 +110,7 @@ export function hourlyMeans(model: DayModel): { label: string; values: (number |
   const out: { label: string; values: (number | null)[] }[] = [];
   const n = model.labels.length;
   for (let from = 0; from < n; from += 12) {
-    const values = model.series.map((s) => {
+    const values = model.raw.map((s) => {
       const part = s.data.slice(from, from + 12).filter((v): v is number => v !== null);
       return part.length === 0 ? null : part.reduce((a, b) => a + b, 0) / part.length;
     });
