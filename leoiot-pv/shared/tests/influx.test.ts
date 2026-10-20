@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
   averagePower,
+  earliestQuery,
+  parseEarliest,
   parseCsv,
   parseToday,
   parseWeek,
@@ -320,5 +322,27 @@ describe('Rücksprünge einzelner Zähler (echte Messwerte)', () => {
     expect(valid[valid.length - 1].counters.imported).toBe(171);
     const low = [...REAL_ROWS.slice(0, 7)];
     expect(validRows(low, REAL_DAY_START, null)[6].counters.imported).toBe(131);
+  });
+});
+
+describe('earliestQuery und parseEarliest', () => {
+  it('Abfrage nimmt den ersten Produktionswert', () => {
+    const q = earliestQuery();
+    expect(q).toContain('first()');
+    expect(q).toContain('daily_yield');
+    expect(q).toContain('solax_stats');
+  });
+
+  it('liest den Zeitpunkt aus einer kleinen CSV', () => {
+    const csv = [
+      ',result,table,_start,_stop,_time,_value,_field,_measurement',
+      ',_result,0,2000-01-01T00:00:00Z,2026-10-20T00:00:00Z,2026-01-01T05:30:00Z,0.4,daily_yield,solax_stats',
+      '',
+    ].join('\n');
+    expect(parseEarliest(csv)?.toISOString()).toBe('2026-01-01T05:30:00.000Z');
+  });
+
+  it('leere Antwort ergibt null', () => {
+    expect(parseEarliest('')).toBeNull();
   });
 });
