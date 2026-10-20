@@ -155,6 +155,47 @@ The dashboard SHALL show the time of the most recent reading. If it is older tha
 - **WHEN** the data source does not answer while the month view is open
 - **THEN** a note in words replaces the chart, and the chart appears without reloading once the source answers again
 
+### Requirement: Every value is explained
+Every quantity and both ratios SHALL carry an info control that shows, in the chosen language, what the value means in one or two sentences, with its unit. A collapsible section "So lesen Sie das Dashboard" / "How to read this dashboard" SHALL explain the difference between power (kW) and energy (kWh), show a sketch of the energy flow between the plant, the school, the battery and the grid with the seven quantities on it, give the formulas of Eigenverbrauch, Verbrauch, Autarkie and Eigenverbrauchsquote, explain what "keine Daten" means, and say where the data come from (readings of the school's plant once per minute, live power about every two seconds).
+
+#### Scenario: Teacher asks what self-consumption is
+- **WHEN** the info control of "Eigenverbrauch" is activated
+- **THEN** a text explains that this is energy from the plant that the school used directly, without going through the battery or the grid, measured in kWh
+
+#### Scenario: Reading guide
+- **WHEN** "So lesen Sie das Dashboard" is opened
+- **THEN** it shows the energy flow sketch with all seven quantity names in their colours, the four formulas and the meaning of kW and kWh
+
+#### Scenario: Keyboard
+- **WHEN** an info control is reached with the tab key and activated with Enter
+- **THEN** the explanation appears, Esc closes it, and the focus returns to the control
+
+### Requirement: Peaks of the day
+The day view SHALL show the highest Produktion power with its time, the highest power drawn from the grid with its time, and the base load, defined as the mean Verbrauch power between 00:00 and 04:00. Peaks SHALL be taken from the same 15-minute average the power curve shows. For today the values SHALL be labelled as "bisher" / "so far"; a value whose readings are missing SHALL read "keine Daten".
+
+#### Scenario: Past day
+- **WHEN** the 15-minute averages of 12 October 2026 reach their highest Produktion of 61.8 kW at 12:45 and their highest grid draw of 104.3 kW at 11:15, and the mean Verbrauch between 00:00 and 04:00 is 31.2 kW
+- **THEN** the day view shows "Spitzenleistung 61,8 kW um 12:45", "höchster Netzbezug 104 kW um 11:15" and "Grundlast 31,2 kW"
+
+#### Scenario: Early morning today
+- **WHEN** it is 03:00 today
+- **THEN** the base load is labelled "bisher" and computed from 00:00 to 03:00
+
+#### Scenario: Day before complete readings
+- **WHEN** the day view of 15 April 2026 is open, which carries only production
+- **THEN** the Produktion peak is shown and the grid peak and the base load read "keine Daten"
+
+### Requirement: Key figures of a period
+The week, month and year views SHALL show, for the days of the period up to today: the day with the highest Produktion, Verbrauch and Vom Netz, each with its date and value; the day with the lowest Produktion; the mean Produktion and Verbrauch per day over the days that carry the value; and the data completeness, the share of past days of the period that carry all readings, as a whole percentage with the counts. Days without readings SHALL NOT count as lowest day or lower the mean.
+
+#### Scenario: Month with a long gap
+- **WHEN** the month view of August 2026 is open and readings exist for 1 to 9 August only
+- **THEN** completeness reads "29 % (9 von 31 Tagen)", and the means and extremes refer to 1 to 9 August
+
+#### Scenario: Current week
+- **WHEN** the week view of today is open on a Wednesday
+- **THEN** the key figures cover Monday to today, today's values are marked as not finished, and Thursday to Sunday do not count
+
 ### Requirement: Values readable as text
 Every value shown in a chart SHALL also be available as text: on pointing at or tapping a bar or point, and in a table of the shown period that can be opened below each chart.
 
