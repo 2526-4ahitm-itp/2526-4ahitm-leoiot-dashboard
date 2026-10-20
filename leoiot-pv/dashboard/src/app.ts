@@ -1,12 +1,14 @@
 // Zustand und Ablauf des Dashboards: Adresse, Laden, Aktualisieren, Live-Kanal, Darstellung der Teile.
 import { completeCounters, type Power } from '@leoiot-pv/shared/energy';
 import { createLiveClient } from '@leoiot-pv/shared/live';
-import { viennaDateKey, viennaDayStart, viennaTime, addDays } from '@leoiot-pv/shared/time';
+import { SLOT_MS, viennaDateKey, viennaDayStart, viennaTime, addDays } from '@leoiot-pv/shared/time';
 import type { PowerPoint } from '@leoiot-pv/shared/influx';
 import type { CounterRow } from '@leoiot-pv/shared/influx';
 import { dayBars, dayModel, monthBars, type ChartModel } from './core/chartData';
 import { gapSentence } from './core/gaps';
-import { initialLang, monthLabel, dateShort, TEXT, type Lang } from './core/i18n';
+import { EXPLAIN_KEYS, initialLang, monthLabel, dateShort, TEXT, type ExplainKey, type Lang } from './core/i18n';
+import { keyFigures } from './core/keyFigures';
+import { dayPeaks, gridSeries } from './core/peaks';
 import { leadParagraphs, liveParts, periodTitle, type ChipQuantity, type Part } from './core/lead';
 import { isStale, liveState } from './core/live';
 import { dayRows, monthRows, totals, type DayRow, type MonthRow, type Totals } from './core/periods';
@@ -18,6 +20,9 @@ import { createChart } from './ui/chart';
 import { el, HATCHED, QUANTITY_COLOR, swatch } from './ui/dom';
 import { renderFigures, quantityName } from './ui/figures';
 import { renderTable } from './ui/table';
+import { renderGuide } from './ui/guide';
+import { closeInfo, refreshInfo, wireInfo } from './ui/info';
+import { renderKeyFigures, renderPeaks } from './ui/insights';
 import { applyTheme, initialTheme, LANG_KEY, readStored, store, THEME_KEY, type Theme } from './ui/theme';
 
 interface ViewData {
@@ -186,6 +191,7 @@ export function startApp(): void {
         class: 'chip' + (ratio ? ' ratio' : '') + (HATCHED.has(c.quantity) ? ' hatch' : ''),
         'data-q': c.quantity,
         'aria-label': `${c.value}, ${name}`,
+        'aria-describedby': `desc-${c.quantity}`,
       },
       c.value,
     );
@@ -218,6 +224,7 @@ export function startApp(): void {
     main.querySelectorAll('.chip.on').forEach((c) => c.classList.remove('on'));
     chart.highlight(null);
   }
+  wireInfo();
   const lead = $('lead');
   lead.addEventListener('pointerover', (e) => {
     const c = (e.target as HTMLElement).closest<HTMLElement>('.chip');
@@ -289,6 +296,30 @@ export function startApp(): void {
     return dayBars(d.rows, d.route.view, lang);
   }
 
+  /** Spitzen des Tages bzw. Kennzahlen des Zeitraums unter dem Diagramm. */
+  function renderInsights(d: ViewData): void {
+    const L = TEXT[lang];
+    const box = $('insights');
+    if (d.route.view === 'day') {
+      if (!d.curve) {
+        $('insightsSec').hidden = true;
+        return;
+      }
+      const start = viennaDayStart(d.route.key);
+      const isToday = containsToday(d.route);
+      const nowSlot = isToday ? Math.floor((Date.now() - start.getTime()) / SLOT_MS) : null;
+      const peaks = dayPeaks(d.curve.power, gridSeries(d.curve.rows, start), d.curve.slots, start.getTime(), nowSlot);
+      $('insightsTitle').textContent = L.peaksTitle;
+      $('insightsSec').hidden = false;
+      renderPeaks(box, { peaks, today: isToday, lang });
+      return;
+    }
+    const figures = keyFigures(d.rows);
+    $('insightsTitle').textContent = L.keyFiguresTitle;
+    $('insightsSec').hidden = figures.completeness === null;
+    renderKeyFigures(box, { figures, lang, onOpenDay: (key) => go({ view: 'day', key }) });
+  }
+
   function renderAll(animate: boolean): void {
     const L = TEXT[lang];
     document.documentElement.lang = lang;
@@ -312,6 +343,8 @@ export function startApp(): void {
     syncLive();
     hideTip();
     renderTableState();
+    renderGuide($('guideSum'), $('guideBody'), lang);
+    $('descs').replaceChildren(...EXPLAIN_KEYS.map((k: ExplainKey) => el('span', { id: `desc-${k}` }, L.explain[k])));
     if (status !== 'ok' || !data) {
       leadEl.replaceChildren();
       liveEl.replaceChildren();
@@ -321,6 +354,8 @@ export function startApp(): void {
       overlay.textContent = status === 'error' ? L.loadError : L.loading;
       overlay.setAttribute('role', status === 'error' ? 'alert' : 'status');
       $('chartNote').textContent = '';
+      $('insightsSec').hidden = true;
+      closeInfo();
       return;
     }
     const d = data;
@@ -361,6 +396,8 @@ export function startApp(): void {
     renderTable($('tableBox'), model, d.route.view, lang, (key) => go(d.route.view === 'year' ? { view: 'month', key } : { view: 'day', key }));
     $('figTitle').textContent = L.figures;
     renderFigures($('figs'), $('ratios'), $('figNote'), { view: d.route.view, rows: d.rows, totals: d.totals, lang });
+    renderInsights(d);
+    refreshInfo();
   }
 
   history.replaceState(null, '', routeSearch(route));

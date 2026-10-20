@@ -12,6 +12,7 @@ The last PV part still in `legacy/` is the PV view of `/dashboard/` (`legacy/das
 - The dashboard service joins `leoiot-pv/compose.yaml` and reads with the kiosk's existing read token, injected by its own nginx; no credential reaches the browser.
 - After acceptance: in `legacy/dashboard-v2/` the button "PV System" becomes a link to `/pv/`, the legacy PV view and its SolaX login are removed, and the proxy entry `/solax/` disappears from `legacy/deploy/nginx.conf`. The sensor views stay unchanged.
 - **BREAKING** (after acceptance only) The PV tab of `/dashboard/` no longer shows PV data itself but leads to `/pv/`.
+- Every value is explained (info per quantity, a reading guide with flow sketch, formulas and kW/kWh), and the views show technical key figures: peaks and base load of a day, extremes, means and data completeness of a period (added 2026-10-20 after Daniel's review, so that teachers understand what they see).
 - Documentation site and `leoiot-pv/README.md` name the new address.
 
 Not in this change:

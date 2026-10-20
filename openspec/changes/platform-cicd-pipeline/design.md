@@ -67,7 +67,7 @@ Four layers, because the repo is public:
 
 1. No workflow that uses the self-hosted runner has a `pull_request` or `pull_request_target` trigger.
 2. The deploy job declares `environment: production`, and that environment's deployment branch policy allows only `release`. A workflow edited on another branch to target the runner is refused at the environment gate.
-3. The `release` ruleset (D6) means the only way onto `release` is a human-approved pull request.
+3. The `release` ruleset (D6) means the only way onto `release` is a pull request with green `ci-ok`, merged by a person (agents never merge it).
 4. Repository Actions setting "Require approval for all outside collaborators" for fork pull requests.
 
 The deploy workflow requests `permissions: contents: read` only.
@@ -137,11 +137,14 @@ Repository rulesets (not classic branch protection — they can be exported, and
 |---|---|---|
 | Pull request required | yes | yes |
 | Required status check | `ci-ok` | `ci-ok` |
-| Approving reviews | 0 | 1 |
+| Approving reviews | 0 | 0 |
+| Merge method | any | merge commit only |
 | Force push / delete | blocked | blocked |
 | Branches must be up to date | no | no |
 
-*Why 0 approvals on `main`:* agents open many small pull requests; requiring a second person for each would stall five people. CI is the gate on `main`; the human gate sits on `release`, where it costs one click per deployment. GitHub does not let an author approve their own pull request, so a release always involves two people.
+*Why 0 approvals on both branches:* agents open many small pull requests; requiring a second person for each would stall five people. `ci-ok` is the gate on `main` and on `release`. On `release` the safety net is `ci-ok` on the promotion pull request, the smoke test after the deploy, and rollback (see Rollback). Agents never approve or merge a pull request into `release`; a person merges it, and that person may be the author of the promotion pull request. `release` additionally allows merge commits only.
+
+*Changed on 2026-10-20:* the `release` ruleset first required 1 approving review. It was dropped because a required second-person approval on every release stalled a five-person school team; `ci-ok`, the smoke test after the deploy and rollback are the safety net.
 
 *Why not "up to date" / merge queue:* requiring up-to-date branches makes every merge invalidate all other open pull requests, which with five agents turns into constant rebasing. A merge queue fixes that properly but adds a concept the team has to learn. Start without; the push-to-`main` CI run and the `ci-ok` requirement on the promotion pull request catch a `main` that two individually-green merges broke before it can deploy. Revisit if that happens more than occasionally.
 

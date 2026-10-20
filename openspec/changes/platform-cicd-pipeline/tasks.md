@@ -49,9 +49,9 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 
 ## 7. Branch rules
 
-- [ ] 7.1 Tell the whole team (all teams and the maintainers) when the `main` ruleset goes live and that it blocks direct pushes, which people use today; verify every member has acknowledged it and nobody has unmerged work that depends on pushing to `main`
-- [ ] 7.2 **(repo admin)** Create the `main` ruleset per design D6 (pull request required, required check `ci-ok`, 0 approvals, no force push, no deletion, empty bypass list); verify a direct `git push origin HEAD:main` from a test commit is rejected
-- [ ] 7.3 **(repo admin)** Create the `release` ruleset (same, plus 1 approving review); verify a direct push is rejected and a `main` → `release` pull request shows "review required" and cannot be merged by its author alone
+- [x] 7.1 Tell the whole team (all teams and the maintainers) when the `main` ruleset goes live and that it blocks direct pushes, which people use today; verify every member has acknowledged it and nobody has unmerged work that depends on pushing to `main` — done 2026-10-19: the team was told before the ruleset went live
+- [x] 7.2 **(repo admin)** Create the `main` ruleset per design D6 (pull request required, required check `ci-ok`, 0 approvals, no force push, no deletion, empty bypass list); verify a direct `git push origin HEAD:main` from a test commit is rejected — done 2026-10-19: ruleset `main` (id 25400977) is active; a direct `git push origin HEAD:main` of a test commit was rejected with "Changes must be made through a pull request" and "Required status check "ci-ok" is expected"
+- [x] 7.3 **(repo admin)** Create the `release` ruleset (same, plus merge commits only); verify a direct push is rejected — done 2026-10-20: ruleset `release` (id 25458078) is active with required `ci-ok` and merge commits only; a direct push of a test commit was rejected. It first required 1 approving review; that was dropped the same day (see design D6)
 - [ ] 7.4 Export both rulesets as JSON into `.github/rulesets/` so the configuration is reviewable; verify the files match `gh api repos/.../rulesets/<id>`
 
 ## 8. Team and agent workflow
@@ -59,11 +59,11 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 - [x] 8.1 Write `AGENTS.md` per design D10: branch per task from fresh `main`, worktree per concurrent agent, branch naming, pull request into `main`, never push to `main`/`release`, never approve or merge a promotion, never change rulesets/runner/deploy target unprompted; the layout (which folder belongs to which team, `legacy/` frozen, each sub-project's code stays in its own folder), spec grouping with a pointer to `openspec/specs/README.md`, contract first (shared interfaces go into `openspec/specs/platform/` through a platform change before code relies on them); that shared files such as Compose files and `.github/` need extra care; how to run each CI step and `.github/ci/affected.sh` locally; verify every command in it runs as written
 - [x] 8.2 Add `CLAUDE.md` that imports `@AGENTS.md`; verify a fresh Claude Code session in the repo lists the branch rules when asked how to ship a change
 - [x] 8.3 Link `AGENTS.md` from the README and from the docs site's contributing page if one exists; verify the links resolve in the built site
-- [ ] 8.4 Land 8.1–8.3 through a pull request from a worktree, as the first change made under the new rules; verify it needed green `ci-ok` to merge
+- [x] 8.4 Land 8.1–8.3 through a pull request from a worktree, as the first change made under the new rules; verify it needed green `ci-ok` to merge — #61 merged on 2026-10-19 with `ci-ok` green, but a few minutes before the `main` ruleset existed; the pull request that ticks this task is the first one that could only merge with `ci-ok` green
 
 ## 9. End-to-end check
 
-- [ ] 9.1 Ship one trivial visible change the whole way: feature branch → pull request → `main` → promotion pull request approved by a second person → automatic deploy; verify the change is visible on https://vm23.htl-leonding.ac.at and the `production` environment shows the new commit
+- [ ] 9.1 Ship one trivial visible change the whole way: feature branch → pull request → `main` → promotion pull request → automatic deploy; verify the change is visible on https://vm23.htl-leonding.ac.at and the `production` environment shows the new commit
 - [ ] 9.2 Confirm with all five team members that a direct push to `main` is rejected for them and that they have run one pull request through the flow
 
 ## Workflow follow-up

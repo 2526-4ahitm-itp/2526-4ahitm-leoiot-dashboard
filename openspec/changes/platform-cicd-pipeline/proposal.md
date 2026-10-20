@@ -11,7 +11,7 @@ At the same time nothing is checked before a merge: there is no pull-request CI 
 - Add a pull-request CI workflow on GitHub-hosted runners that finds the components of the monorepo by rule instead of by list (every folder with a `package.json` or `pom.xml`, every Compose file, every `leoiot-*` image with a `Dockerfile`, and the docs site), checks each one (install, tests, build or syntax check, Maven `verify`, `docker compose config`, `docker build`) and reports one aggregate status. On a pull request it verifies only the components the change touches; on `main` it verifies everything.
 - Introduce one set of CI configuration files under `.github/ci/` — an affected-set script with its test, a map from `legacy/` paths to legacy Compose services, and a list of smoke-test routes — used by both CI and deployment, so "what does this change affect" has a single answer and a new sub-project is picked up without editing the workflow.
 - Protect `main` and `release` with repository rulesets: changes arrive by pull request only, the aggregate CI status must be green, no force pushes or deletions.
-- **BREAKING** Deployment no longer triggers on every push to `main`. It triggers on a push to a new `release` branch (and on a manual run for rollback). Promotion is a pull request from `main` to `release` approved by a human.
+- **BREAKING** Deployment no longer triggers on every push to `main`. It triggers on a push to a new `release` branch (and on a manual run for rollback). Promotion is a pull request from `main` to `release` with green `ci-ok`, merged by a person.
 - Deploy per *deploy unit*: a top-level folder with a Compose file — `legacy` and every `leoiot-*` folder that has a `compose.yaml` (today `leoiot-pv`). Each unit is its own Compose project, run from its folder so its own host-local `.env` is used. The deploy job updates only the units a release touches, in a fixed order.
 - Make the deploy job deploy the exact released commit, update only what changed since the last successful deployment — legacy per service (its Node containers bind-mount the repo and need a forced recreate), new units by rebuilding their images — smoke-test the public routes, and fail visibly when they do not answer. Today's `docker compose up -d --build` does not restart the bind-mounted Node services at all, so their changes never go live; and a full restart would blank the PV kiosk for a legacy-only release.
 - Allow a manual deployment of everything or of one unit.
@@ -28,7 +28,7 @@ Out of scope: moving the app off vm23 (for example to LeoCloud/Kubernetes), repl
 ### New Capabilities
 - `platform/ci-verification`: automated build and test verification of every repository component for proposed and merged changes, with a single aggregate result.
 - `platform/release-deployment`: how a released commit reaches vm23 — trigger, exact-commit deploy per deploy unit, selective update, post-deploy smoke test, rollback, runner availability and runner isolation.
-- `platform/branch-governance`: the rules for `main` and `release` — pull requests only, required checks, human approval for releases, and the working agreement for parallel agent work, including the layout and spec rules agents must follow.
+- `platform/branch-governance`: the rules for `main` and `release` — pull requests only, required checks, promotion to `release` by pull request only, and the working agreement for parallel agent work, including the layout and spec rules agents must follow.
 
 ### Modified Capabilities
 
@@ -42,5 +42,5 @@ None. The existing specs (`dashboard-pv`, `dashboard-sensors`) describe legacy d
 - **vm23** (needs shell access as `solmqadmin`): runner reinstall as a service, checkout moved from tracking `main` to deploying released commits, password rotation, a check that each unit's host-local `.env` exists.
 - **Repo content**: new `AGENTS.md` and `CLAUDE.md`; README deployment section and the `legacy/README.adoc` password lines updated.
 - **vm23 state**: a marker file outside the checkout records the last successfully deployed commit. Host `.env` files stay untracked and are never touched by the deploy.
-- **Team workflow**: one release train for all teams — promoting `main` ships everything merged, so unfinished work stays on its branch; direct pushes to `main`, which people use today, stop working for everyone; a merge to `main` no longer deploys; someone has to open and approve a `main` → `release` pull request to ship.
+- **Team workflow**: one release train for all teams — promoting `main` ships everything merged, so unfinished work stays on its branch; direct pushes to `main`, which people use today, stop working for everyone; a merge to `main` no longer deploys; someone has to open and merge a `main` → `release` pull request to ship.
 - **First release**: there is no recorded deployed commit, so it updates every unit and recreates every legacy service at once and needs to be attended.
