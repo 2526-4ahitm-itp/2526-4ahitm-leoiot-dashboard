@@ -186,15 +186,15 @@ The day view SHALL show the highest Produktion power with its time, the highest 
 - **THEN** the Produktion peak is shown and the grid peak and the base load read "keine Daten"
 
 ### Requirement: Key figures of a period
-The week, month and year views SHALL show, for the days of the period up to today: the day with the highest Produktion, Verbrauch and Vom Netz, each with its date and value; the day with the lowest Produktion; the mean Produktion and Verbrauch per day over the days that carry the value; and the data completeness, the share of past days of the period that carry all readings, as a whole percentage with the counts. Days without readings SHALL NOT count as lowest day or lower the mean.
+The week, month and year views SHALL show, over the finished days of the period: the day with the highest Produktion, Verbrauch and Vom Netz, each with its date and value; the day with the lowest Produktion; and the mean Produktion and Verbrauch per day over the days that carry the value. They SHALL also show the data completeness, the share of the days of the period up to today that carry all readings, as a whole percentage with the counts. The current, unfinished day SHALL NOT count as an extreme or in a mean; days without readings SHALL NOT count as lowest day or lower the mean.
 
 #### Scenario: Month with a long gap
 - **WHEN** the month view of August 2026 is open and readings exist for 1 to 9 August only
 - **THEN** completeness reads "29 % (9 von 31 Tagen)", and the means and extremes refer to 1 to 9 August
 
 #### Scenario: Current week
-- **WHEN** the week view of today is open on a Wednesday
-- **THEN** the key figures cover Monday to today, today's values are marked as not finished, and Thursday to Sunday do not count
+- **WHEN** the week view of today is open on a Wednesday at 09:00, with 6.6 kWh produced so far today
+- **THEN** extremes and means cover Monday and Tuesday only, today is not shown as the weakest day, completeness counts Monday to today, and Thursday to Sunday do not count
 
 ### Requirement: Values readable as text
 Every value shown in a chart SHALL also be available as text: on pointing at or tapping a bar or point, and in a table of the shown period that can be opened below each chart.

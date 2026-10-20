@@ -30,14 +30,15 @@ describe('keyFigures', () => {
     expect(f.meanProd?.days).toBe(9);
   });
 
-  it('laufende Woche an einem Mittwoch: Montag bis heute, Donnerstag bis Sonntag zählen nicht', () => {
+  it('laufende Woche an einem Mittwoch: Bestwerte und Mittel nur Montag und Dienstag, Vollständigkeit bis heute', () => {
     const days = periodDays('week', '2026-10-05'); // Mo 5.10. bis So 11.10.
-    const byDay = { '2026-10-05': full(50, 5, 80), '2026-10-06': full(60, 6, 90), '2026-10-07': full(20, 2, 40) };
+    // heute (Mittwoch) erst 6,6 kWh: darf nicht der schwächste Tag sein und das Mittel nicht drücken
+    const byDay = { '2026-10-05': full(50, 5, 80), '2026-10-06': full(60, 6, 90), '2026-10-07': full(6.6, 2, 40) };
     const f = keyFigures(dayRows(days, byDay, '2026-10-07'));
     expect(f.completeness).toEqual({ percent: 100, complete: 3, past: 3, includesToday: true });
-    expect(f.worstProd).toEqual({ key: '2026-10-07', value: 20, today: true });
+    expect(f.worstProd).toEqual({ key: '2026-10-05', value: 50, today: false });
     expect(f.bestProd?.key).toBe('2026-10-06');
-    expect(f.meanProd?.includesToday).toBe(true);
+    expect(f.meanProd).toEqual({ value: 55, days: 2, includesToday: false });
   });
 
   it('Tage ohne Daten sind nie der schwächste Tag und senken den Mittelwert nicht', () => {
