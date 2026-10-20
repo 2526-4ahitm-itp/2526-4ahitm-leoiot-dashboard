@@ -6,11 +6,27 @@
 <title>LeoIoT PV – HTL Leonding</title>
 </head>
 <body>
-<header class="bar">
-  <span class="brand">LeoIoT PV</span>
-</header>
-<main class="main" id="app">
-  <p class="placeholder">Das PV-Dashboard wird gerade aufgebaut.</p>
+<header class="bar" id="bar"></header>
+<main class="wrap" id="main" data-state="loading">
+  <section class="lead" id="lead">
+    <div id="leadText" aria-live="polite"></div>
+    <p class="live" id="live"></p>
+    <p class="lnote" id="status"></p>
+  </section>
+  <div class="tip" id="tip" role="tooltip" hidden></div>
+  <section class="chartsec">
+    <h2 class="sr" id="chartTitle"></h2>
+    <div class="chartbox"><canvas id="chart" role="img"></canvas><div class="overlay" id="overlay" hidden></div></div>
+    <ul class="legend" id="legend"></ul>
+    <p class="chartnote" id="chartNote"></p>
+    <button type="button" class="btn tbtn" id="tableBtn" aria-expanded="false" aria-controls="tableBox"></button>
+    <div class="tablebox" id="tableBox" hidden></div>
+  </section>
+  <section class="figs" aria-labelledby="figTitle">
+    <h2 id="figTitle"></h2>
+    <dl class="grid" id="figs"></dl>
+    <dl class="ratios" id="ratios"></dl>
+  </section>
 </main>
 <script type="module" src="/src/main.ts"></script>
 </body>

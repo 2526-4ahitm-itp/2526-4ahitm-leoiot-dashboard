@@ -55,6 +55,12 @@ export interface Texts {
   light: string;
   dark: string;
   week: string;
+  loadError: string;
+  loading: string;
+  hourlyMean: string;
+  figures: string;
+  viewLabel: string;
+  period: string;
 }
 
 export const TEXT: Record<Lang, Texts> = {
@@ -110,6 +116,12 @@ export const TEXT: Record<Lang, Texts> = {
     light: 'Hell',
     dark: 'Dunkel',
     week: 'KW',
+    loadError: 'Die Daten konnten nicht geladen werden. Die Seite versucht es automatisch erneut.',
+    loading: 'Daten werden geladen …',
+    hourlyMean: 'Mittlere Leistung je Stunde (kW)',
+    figures: 'Zahlen im Überblick',
+    viewLabel: 'Ansicht',
+    period: 'Zeitraum',
   },
   en: {
     brand: 'LeoIoT PV',
@@ -163,6 +175,12 @@ export const TEXT: Record<Lang, Texts> = {
     light: 'Light',
     dark: 'Dark',
     week: 'Week',
+    loadError: 'The data could not be loaded. The page tries again automatically.',
+    loading: 'Loading data …',
+    hourlyMean: 'Mean power per hour (kW)',
+    figures: 'Figures at a glance',
+    viewLabel: 'View',
+    period: 'Period',
   },
 };
 

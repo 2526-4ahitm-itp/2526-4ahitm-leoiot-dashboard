@@ -1,6 +1,7 @@
 // Dünne Ladefunktionen: Abfrage über eine übergebene query-Funktion, Auswertung mit dem gemeinsamen Code.
 import type { Counters, PartialCounters } from '@leoiot-pv/shared/energy';
 import {
+  BUCKET,
   earliestQuery,
   parseEarliest,
   parseToday,
@@ -12,6 +13,7 @@ import {
   type CounterRow,
   type PowerPoint,
 } from '@leoiot-pv/shared/influx';
+import { yieldPower } from '../core/yieldCurve';
 import { addDays, slotCount, viennaDateKey, viennaDayStart } from '@leoiot-pv/shared/time';
 
 export type Query = (flux: string) => Promise<string>;
@@ -38,5 +40,24 @@ export async function loadDayCurve(
   const start = viennaDayStart(key);
   const csv = await query(todayQuery(start, viennaDayStart(addDays(key, 1))));
   const rows = validRows(parseToday(csv), start, yesterday);
-  return { rows, power: powerSeries(rows, start), slots: slotCount(key) };
+  // ohne vollständige Zählerstände nur die Produktionskurve
+  const power = rows.length > 0 ? powerSeries(rows, start) : yieldPower(csv, start);
+  return { rows, power, slots: slotCount(key) };
+}
+
+/** Zeitpunkt (ms) des jüngsten gespeicherten Produktionswerts der letzten Tage; null, wenn keiner da ist. */
+export async function loadLatest(query: Query, now: number = Date.now()): Promise<number | null> {
+  const csv = await query(
+    [
+      `from(bucket: "${BUCKET}")`,
+      `  |> range(start: ${new Date(now - 7 * 86_400_000).toISOString()})`,
+      '  |> filter(fn: (r) => r._measurement == "solax_stats")',
+      '  |> filter(fn: (r) => r._field == "daily_yield")',
+      '  |> last()',
+      '  |> group()',
+      '  |> sort(columns: ["_time"], desc: true)',
+      '  |> limit(n: 1)',
+    ].join('\n'),
+  );
+  return parseEarliest(csv)?.getTime() ?? null;
 }
