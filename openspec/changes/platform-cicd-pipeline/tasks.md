@@ -64,7 +64,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 ## 9. End-to-end check
 
 - [ ] 9.1 Ship one trivial visible change the whole way: feature branch → pull request → `main` → promotion pull request → automatic deploy; verify the change is visible on https://vm23.htl-leonding.ac.at and the `production` environment shows the new commit
-- [ ] 9.2 Confirm with all five team members that a direct push to `main` is rejected for them and that they have run one pull request through the flow
+- [x] 9.2 ~~Confirm with all five team members that a direct push to `main` is rejected for them and that they have run one pull request through the flow~~ — dropped 2026-10-20 by the project lead: 7.2/7.3 proved that the rulesets reject a direct push, and the team has worked through pull requests since 2026-10-19
 
 ## Workflow follow-up
 
@@ -74,4 +74,4 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 - Consider contract checks for the MQTT topics and InfluxDB fields the sub-projects share; path-scoped CI cannot see breakage across them.
 - Revisit a merge queue on `main` after a few weeks of parallel agent work.
 - Add a README and `AGENTS.md` pointer to the platform owner once `leoiot-platform` has one.
-- Archive this change once 9.1 and 9.2 are done.
+- Archive this change once 9.1 is done.
