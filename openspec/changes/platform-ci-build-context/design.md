@@ -28,7 +28,7 @@ One line, a relative path such as `..`. `affected.sh` keeps printing `image <dir
 
 While walking the tree, `affected.sh` reads each `leoiot-*` component's `package.json` and records entries in `dependencies` and `devDependencies` whose value starts with `file:`, resolved relative to the component. When a changed file belongs to a component that others depend on, those dependents are added as Node components, and their nearest Dockerfile directories as images. One level is enough; a dependency chain is resolved by repeating until nothing is added.
 
-Reading JSON uses `node -e` (Node is present on the runner and locally for everyone who runs the checks); `jq` would also work but is not needed elsewhere in the script.
+The `file:` values are read with `grep` and resolved with `realpath`, without a JSON parser. The first version used `node -e`; the release deployment of 2026-10-20 failed with it, because the deployment runs `affected.sh` on vm23, which has no Node.js. `affected.test.sh` now fails if the script calls `node`.
 
 *Alternative:* follow the TypeScript import graph (rejected: much more work for the same answer in this repository).
 
