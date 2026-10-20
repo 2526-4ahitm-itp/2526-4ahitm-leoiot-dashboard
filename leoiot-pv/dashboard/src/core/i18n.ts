@@ -27,6 +27,14 @@ export interface Texts {
   noDataBefore: string;
   gapDay: string;
   incomplete: (n: number) => string;
+  totalsExclude: (n: number, ranges: string) => string;
+  weekShort: string;
+  avg15: string;
+  prevMonth: string;
+  nextMonth: string;
+  prevYear: string;
+  nextYear: string;
+  years: string;
   ratiosCover: (from: string, to: string) => string;
   notFinished: string;
   noProduction: string;
@@ -88,6 +96,14 @@ export const TEXT: Record<Lang, Texts> = {
     noDataBefore: 'Netz, Batterie und Verbrauch werden erst ab 20. April 2026 erfasst.',
     gapDay: 'An diesem Tag wurden keine Werte gespeichert.',
     incomplete: (n) => `unvollständig, ${n} ${n === 1 ? 'Tag' : 'Tage'} ohne Daten`,
+    totalsExclude: (n, ranges) => `Summen ohne ${n} ${n === 1 ? 'Tag' : 'Tage'} ohne Daten${ranges ? ` (${ranges})` : ''}`,
+    weekShort: 'KW',
+    avg15: 'Ø 15 Min',
+    prevMonth: 'Vorheriger Monat',
+    nextMonth: 'Nächster Monat',
+    prevYear: 'Vorheriges Jahr',
+    nextYear: 'Nächstes Jahr',
+    years: 'Jahre',
     ratiosCover: (from, to) => `Kennzahlen über ${from} bis ${to}`,
     notFinished: 'noch nicht abgeschlossen',
     noProduction: 'Es wurde nichts produziert.',
@@ -147,6 +163,14 @@ export const TEXT: Record<Lang, Texts> = {
     noDataBefore: 'Grid, battery and consumption are recorded from 20 April 2026 on.',
     gapDay: 'No readings were stored on this day.',
     incomplete: (n) => `incomplete, ${n} ${n === 1 ? 'day' : 'days'} without data`,
+    totalsExclude: (n, ranges) => `Totals exclude ${n} ${n === 1 ? 'day' : 'days'} without data${ranges ? ` (${ranges})` : ''}`,
+    weekShort: 'Wk',
+    avg15: '15-min avg',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    prevYear: 'Previous year',
+    nextYear: 'Next year',
+    years: 'Years',
     ratiosCover: (from, to) => `Figures cover ${from} to ${to}`,
     notFinished: 'not finished yet',
     noProduction: 'Nothing was produced.',
@@ -259,4 +283,14 @@ export function weekdayShort(key: string, lang: Lang): string {
 export function dayMonth(key: string, lang: Lang): string {
   const { m, d } = parts(key);
   return lang === 'en' ? `${d} ${MONTHS_SHORT.en[m - 1]}` : `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.`;
+}
+
+/** Voller Monatsname, month 1..12. */
+export function monthName(month: number, lang: Lang): string {
+  return MONTHS[lang][month - 1];
+}
+
+/** Kurzer Wochentag, i 0..6 mit Montag = 0. */
+export function weekdayByIndex(i: number, lang: Lang): string {
+  return WEEKDAYS_SHORT[lang][(i + 1) % 7];
 }

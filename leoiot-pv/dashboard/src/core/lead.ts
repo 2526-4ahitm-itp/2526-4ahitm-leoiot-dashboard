@@ -24,7 +24,7 @@ const t = (text: string): Part => ({ text });
 const chip = (value: string, quantity: ChipQuantity): Part => ({ chip: { value, quantity } });
 
 // Tag und Monat ausgeschrieben: '7. Oktober' / '7 October'
-function dayMonthLong(key: string, lang: Lang): string {
+export function dayMonthLong(key: string, lang: Lang): string {
   const d = Number(key.slice(8, 10));
   const month = monthLabel(key, lang).split(' ')[0];
   return lang === 'en' ? `${d} ${month}` : `${d}. ${month}`;

@@ -1,5 +1,6 @@
 // Zahlenblock: sieben Größen, Autarkie und Eigenverbrauchsquote mit Erklärung und Hinweisen.
 import { MISSING } from '@leoiot-pv/shared/format';
+import { daysPlain, missingSummary } from '../core/gaps';
 import { dateShort, kwh, pct, TEXT, type Lang, type Texts } from '../core/i18n';
 import type { DayRow, Quantities, Totals } from '../core/periods';
 import type { View } from '../core/route';
@@ -26,17 +27,20 @@ export interface FiguresInput {
   lang: Lang;
 }
 
-export function renderFigures(grid: HTMLElement, ratios: HTMLElement, i: FiguresInput): void {
+export function renderFigures(grid: HTMLElement, ratios: HTMLElement, note: HTMLElement, i: FiguresInput): void {
   const L = TEXT[i.lang];
   const day = i.view === 'day';
   const gapDay = day && i.rows[0].gap;
   const t = i.totals;
+  const miss = day ? { common: null, extra: {} } : missingSummary(i.rows, t.sum);
+  note.textContent = miss.common ? L.totalsExclude(miss.common.n, daysPlain(i.rows, miss.common.days, i.view, i.lang)) : '';
 
   grid.replaceChildren(
     ...FIGURE_ORDER.map((k) => {
       const v = t.sum[k];
       const dd = el('dd', { class: v === null ? 'none' : 'num' }, v === null ? L.noData : kwh(v, i.lang));
-      if (v !== null && t.missing[k] > 0 && !day) dd.append(el('span', { class: 'note' }, L.incomplete(t.missing[k])));
+      const extra = (miss.extra as Partial<Record<keyof Quantities, number>>)[k];
+      if (v !== null && extra !== undefined) dd.append(el('span', { class: 'note' }, L.incomplete(extra)));
       if (v === null && gapDay) dd.append(el('span', { class: 'note' }, L.gapDay));
       else if (v === null && t.sum.prod !== null) dd.append(el('span', { class: 'note' }, L.noDataBefore));
       return el('div', { class: 'fig' }, el('dt', {}, swatch(k), quantityName(k, i.lang)), dd);

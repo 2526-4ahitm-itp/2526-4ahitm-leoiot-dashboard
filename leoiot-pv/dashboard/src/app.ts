@@ -5,6 +5,7 @@ import { viennaDateKey, viennaDayStart, viennaTime, addDays } from '@leoiot-pv/s
 import type { PowerPoint } from '@leoiot-pv/shared/influx';
 import type { CounterRow } from '@leoiot-pv/shared/influx';
 import { dayBars, dayModel, monthBars, type ChartModel } from './core/chartData';
+import { gapSentence } from './core/gaps';
 import { initialLang, monthLabel, dateShort, TEXT, type Lang } from './core/i18n';
 import { leadParagraphs, liveParts, periodTitle, type ChipQuantity, type Part } from './core/lead';
 import { isStale, liveState } from './core/live';
@@ -60,10 +61,8 @@ export function startApp(): void {
       const next = stepRoute(route, dir, todayKey(), earliest ?? null);
       if (next) go(next);
     },
-    onDate: (value) => {
-      const next = parseRoute(`?view=${route.view}&date=${value}`, todayKey());
-      if (/^\d{4}-\d{2}-\d{2}$/.test(value) && next.view === route.view) go(next);
-      else renderAll(false);
+    onPick: (r) => {
+      if (r.view === route.view && r.key !== route.key) go(r);
     },
     onToday: () => go({ view: route.view, key: periodStart(route.view, todayKey()) }),
     onLang: (l) => {
@@ -71,8 +70,9 @@ export function startApp(): void {
       store(LANG_KEY, l);
       renderAll(false);
     },
-    onTheme: () => {
-      theme = theme === 'dark' ? 'light' : 'dark';
+    onTheme: (t) => {
+      if (t === theme) return;
+      theme = t;
       store(THEME_KEY, theme);
       applyTheme(theme);
       chart.recolor();
@@ -302,8 +302,8 @@ export function startApp(): void {
       title: periodTitle(route, lang),
       canPrev: stepRoute(route, -1, today, first) !== null,
       canNext: stepRoute(route, 1, today, first) !== null,
-      date: route.key,
-      min: first ?? '',
+      key: route.key,
+      min: first,
       max: today,
       atToday: containsToday(route),
     });
@@ -353,12 +353,14 @@ export function startApp(): void {
     if (d.route.view !== 'day' && containsToday(d.route)) {
       notes.push(`${d.route.view === 'year' ? monthLabel(today, lang) : dateShort(today, lang)}: ${L.notFinished}`);
     }
-    const gaps = d.route.view === 'week' || d.route.view === 'month' ? d.rows.filter((r) => r.gap && !r.future) : [];
-    if (gaps.length > 0) notes.push(`${L.noData}: ${gaps.map((r) => dateShort(r.key, lang)).join(', ')}`);
+    if (d.route.view !== 'day') {
+      const gaps = gapSentence(d.rows, d.route.view, lang);
+      if (gaps) notes.push(gaps);
+    }
     $('chartNote').textContent = notes.join(' · ');
     renderTable($('tableBox'), model, d.route.view, lang, (key) => go(d.route.view === 'year' ? { view: 'month', key } : { view: 'day', key }));
     $('figTitle').textContent = L.figures;
-    renderFigures($('figs'), $('ratios'), { view: d.route.view, rows: d.rows, totals: d.totals, lang });
+    renderFigures($('figs'), $('ratios'), $('figNote'), { view: d.route.view, rows: d.rows, totals: d.totals, lang });
   }
 
   history.replaceState(null, '', routeSearch(route));
