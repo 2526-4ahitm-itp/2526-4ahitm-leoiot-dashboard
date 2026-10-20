@@ -33,9 +33,9 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. This ch
 ## 5. Going live on vm23
 
 - [x] 5.1 Change `legacy/deploy/nginx.conf`: `/pv/` and `/pv/ws` (upgrade headers) to `127.0.0.1:8089`; verify `nginx -t` accepts the file in a throwaway container Done 2026-10-20: `nginx -t` passes in a throwaway nginx:stable-alpine container with dummy certificates; port 8089 is free on vm23 (`ss -ltn`), the host file was identical to the repository copy before the change
-- [ ] 5.2 Release (pull request `main` → `release`, say beforehand what ships); verify the deployment run is green and on vm23 (read only) `docker compose ps` in `leoiot-pv/` shows kiosk and dashboard healthy and `/kiosk/` unchanged
-- [ ] 5.3 **(human, vm23)** Check that port 8089 is free before the release, install `legacy/deploy/nginx.conf` on the host and reload nginx; verify `https://vm23.htl-leonding.ac.at/pv/` shows the dashboard with data in all four views and the live label in the day view of today, and `/dashboard/`, `/kiosk/` and `/` still work
-- [ ] 5.4 In a pull request of its own add `/pv/` to `.github/ci/smoke-routes`; verify `bash .github/ci/affected.test.sh` passes
+- [x] 5.2 Release (pull request `main` → `release`, say beforehand what ships); verify the deployment run is green and on vm23 (read only) `docker compose ps` in `leoiot-pv/` shows kiosk and dashboard healthy and `/kiosk/` unchanged Done 2026-10-20: the first release (#81) failed before rolling anything out (`affected.sh` needed Node.js, which vm23 lacks; fixed in #82); the second release (#83) deployed `5c3590c`: `leoiot-pv-dashboard` and `leoiot-pv-kiosk` healthy, collector untouched, `/kiosk/` unchanged
+- [x] 5.3 **(human, vm23)** Check that port 8089 is free before the release, install `legacy/deploy/nginx.conf` on the host and reload nginx; verify `https://vm23.htl-leonding.ac.at/pv/` shows the dashboard with data in all four views and the live label in the day view of today, and `/dashboard/`, `/kiosk/` and `/` still work Done 2026-10-20: port 8089 was free; Daniel installed the nginx file and reloaded; `https://vm23.htl-leonding.ac.at/pv/` shows the dashboard with real data in all views, the live label reads "Live", `/pv` redirects to `/pv/`, `/dashboard/`, `/kiosk/` and `/` still answer 200, host file identical to the repository
+- [x] 5.4 In a pull request of its own add `/pv/` to `.github/ci/smoke-routes`; verify `bash .github/ci/affected.test.sh` passes Done 2026-10-20: `/pv/` added; `affected.test.sh` passes
 
 ## 6. Acceptance
 
