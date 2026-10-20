@@ -6,7 +6,7 @@
 # part 3 checks local dependencies and declared build contexts in a throwaway
 # tree (platform-ci-build-context, design D3).
 # Run from anywhere: .github/ci/affected.test.sh
-# Needs git, node and "docker compose config" (no Docker daemon).
+# Needs git and "docker compose config" (no Docker daemon).
 
 set -euo pipefail
 
@@ -392,6 +392,13 @@ image_expect "context that is not an ancestor" leoiot-x/kiosk "../collector" \
   "leoiot-x/kiosk/build-context" fails
 image_expect "absolute context" leoiot-x/kiosk "/" \
   "leoiot-x/kiosk/build-context" fails
+
+# The deployment runs affected.sh on vm23, which has no Node.js (failed release
+# deployment on 2026-10-20): the script must not call node.
+checks=$((checks + 1))
+if grep -nE '(^|[^[:alnum:]_-])node[[:space:]]+-' "$affected" >/dev/null; then
+  fail "affected.sh calls node; the deployment host has none"
+fi
 
 # ---- result ---------------------------------------------------------------
 

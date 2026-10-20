@@ -30,7 +30,8 @@
 # A leoiot-* Node component that names another one of the same sub-project as
 # a local "file:" dependency in its package.json is checked, and its image
 # built, whenever that dependency is affected (openspec/changes/
-# platform-ci-build-context, design D2).
+# platform-ci-build-context, design D2). Needs no Node.js (the deployment runs
+# this script on vm23).
 # Exits non-zero when the change set cannot be determined.
 
 # The r_* result arrays are read through namerefs (in sorted_keys), which the
@@ -108,25 +109,16 @@ done < <(git -c core.quotePath=false ls-files)
 # Local dependencies: dependents[<dir>] holds the leoiot-* Node components of
 # the same sub-project that depend on <dir> through "file:", space-separated.
 declare -A dependents=()
-local_deps=()
+# Read with grep and realpath only: the deployment runs this script on vm23,
+# which has no Node.js. A "file:" value appears only as a dependency version.
 for d in "${!pkg[@]}"; do
-  [[ ${d%%/*} == leoiot-* ]] && grep -q '"file:' "$d/package.json" && local_deps+=("$d")
+  [[ ${d%%/*} == leoiot-* ]] || continue
+  while IFS= read -r spec; do
+    dep=$(realpath -m --relative-to=. "$d/${spec#file:}")
+    [[ -n ${pkg[$dep]:-} && ${dep%%/*} == "${d%%/*}" ]] || continue
+    dependents[$dep]+="$d "
+  done < <(grep -oE '"file:[^"]*"' "$d/package.json" | tr -d '"')
 done
-if ((${#local_deps[@]})); then
-  command -v node >/dev/null || die "node is needed to read the local dependencies of ${local_deps[*]}"
-  while read -r dependent dep; do
-    [[ -n ${pkg[$dep]:-} && ${dep%%/*} == "${dependent%%/*}" ]] || continue
-    dependents[$dep]+="$dependent "
-  done < <(node -e '
-    const fs = require("fs"), path = require("path");
-    for (const dir of process.argv.slice(1)) {
-      const p = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
-      for (const v of Object.values({ ...p.dependencies, ...p.devDependencies })) {
-        if (typeof v === "string" && v.startsWith("file:"))
-          console.log(dir, path.posix.normalize(path.posix.join(dir, v.slice(5))).replace(/\/$/, ""));
-      }
-    }' "${local_deps[@]}")
-fi
 
 # The legacy service map: parallel arrays, in file order.
 map_prefix=()
