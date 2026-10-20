@@ -1,6 +1,6 @@
 // Abfragen an die InfluxDB und Auswertung der CSV-Antworten (reine Funktionen).
-import { completeCounters, powerBetween, type Counters, type PartialCounters, type Power } from '@leoiot-pv/shared/energy';
-import { SLOT_MS, viennaDateKey } from '@leoiot-pv/shared/time';
+import { completeCounters, powerBetween, type Counters, type PartialCounters, type Power } from './energy';
+import { SLOT_MS, viennaDateKey } from './time';
 
 export const BUCKET = 'server_data';
 
@@ -41,6 +41,21 @@ export function weekQuery(start: Date, end: Date): string {
     '  |> filter(fn: (r) => r._measurement == "solax_stats")',
     `  |> filter(fn: (r) => ${FIELD_FILTER})`,
     '  |> aggregateWindow(every: 1d, fn: last, createEmpty: false, timeSrc: "_start")',
+  ].join('\n');
+}
+
+/** Flux-Abfrage: Zeitpunkt des frühesten gespeicherten Produktionswerts. */
+export function earliestQuery(): string {
+  return [
+    `from(bucket: "${BUCKET}")`,
+    '  |> range(start: 2000-01-01T00:00:00Z)',
+    '  |> filter(fn: (r) => r._measurement == "solax_stats")',
+    '  |> filter(fn: (r) => r._field == "daily_yield")',
+    // erst je Reihe der erste Punkt (billig), dann der früheste davon
+    '  |> first()',
+    '  |> group()',
+    '  |> sort(columns: ["_time"])',
+    '  |> limit(n: 1)',
   ].join('\n');
 }
 
@@ -220,4 +235,14 @@ export function averagePower(rawRows: CounterRow[]): { power: Power; t: number }
   if (!ref || last.t - ref.t > 20 * MINUTE_MS) return null;
   const p = powerBetween(ref.counters, last.counters, (last.t - ref.t) / HOUR_MS);
   return p === null ? null : { power: p, t: last.t };
+}
+
+/** Frühester Zeitpunkt aus der Antwort von earliestQuery; null, wenn keine Daten vorliegen. */
+export function parseEarliest(csv: string): Date | null {
+  let best: number | null = null;
+  for (const row of parseCsv(csv)) {
+    const t = Date.parse(row._time ?? '');
+    if (Number.isFinite(t) && (best === null || t < best)) best = t;
+  }
+  return best === null ? null : new Date(best);
 }
