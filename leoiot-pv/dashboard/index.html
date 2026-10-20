@@ -22,13 +22,23 @@
     <button type="button" class="btn tbtn" id="tableBtn" aria-expanded="false" aria-controls="tableBox"></button>
     <div class="tablebox" id="tableBox" hidden></div>
   </section>
+  <section class="insights" id="insightsSec" aria-labelledby="insightsTitle" hidden>
+    <h2 id="insightsTitle"></h2>
+    <dl class="grid three" id="insights"></dl>
+  </section>
   <section class="figs" aria-labelledby="figTitle">
     <h2 id="figTitle"></h2>
     <p class="lnote figsnote" id="figNote"></p>
     <dl class="grid" id="figs"></dl>
     <dl class="ratios" id="ratios"></dl>
   </section>
+  <details class="guide" id="guide">
+    <summary id="guideSum"></summary>
+    <div class="guidebody" id="guideBody"></div>
+  </details>
 </main>
+<div class="infopop" id="infoPop" role="note" hidden></div>
+<div class="sr" id="descs"></div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

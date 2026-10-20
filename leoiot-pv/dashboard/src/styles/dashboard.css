@@ -779,3 +779,146 @@ main[data-state='error'] .figs {
 .figsnote {
   margin: 0 0 var(--space-4);
 }
+
+/* Erklär-Knöpfe und Fenster */
+.infobtn {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  margin: calc((var(--tap) - 24px) / -2) calc((var(--tap) - 24px) / -2) calc((var(--tap) - 24px) / -2) calc((var(--tap) - 24px) / -2 - 6px);
+  padding: 0;
+  color: var(--ink-3);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+.infobtn:hover,
+.infobtn[aria-expanded='true'] {
+  color: var(--ink);
+}
+.infopop {
+  position: absolute;
+  z-index: 30;
+  max-width: min(34ch, calc(100vw - 16px));
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--surface);
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+}
+.infopop[hidden] {
+  display: none;
+}
+
+/* Spitzen und Kennzahlen */
+.insights {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: var(--bw) solid var(--line);
+}
+.insights[hidden] {
+  display: none;
+}
+.insights h2 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-h3);
+}
+.insights .grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+.insights .fig dd {
+  font-size: 20px;
+}
+.insights .fig dd.none {
+  font-size: var(--fs-card);
+}
+.daylink {
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.daylink:hover {
+  color: var(--accent);
+}
+
+/* Leseführer */
+.guide {
+  margin-top: var(--space-7);
+  border-top: var(--bw) solid var(--line);
+  padding-top: var(--space-4);
+}
+.guide summary {
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-h3);
+  cursor: pointer;
+}
+.guidebody {
+  max-width: 64ch;
+  padding-bottom: var(--space-6);
+}
+.guidebody h3 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--fs-card);
+  font-weight: var(--fw-kicker);
+}
+.guidebody p {
+  margin: 0;
+  color: var(--ink-2);
+}
+.formulas {
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--ink-2);
+}
+.flow {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+}
+.flow .fbox {
+  fill: var(--surface);
+  stroke: var(--line-2);
+  stroke-width: 1.5;
+}
+.flow .fname {
+  fill: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.flow .fsub,
+.flow .flabel {
+  fill: var(--ink);
+  font-size: 12.5px;
+}
+.flow .fhatch {
+  stroke: var(--bg);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+
+@media (max-width: 720px) {
+  .insights .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.ratios dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
