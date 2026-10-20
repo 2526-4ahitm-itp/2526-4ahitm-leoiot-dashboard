@@ -6,7 +6,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 
 - [x] 1.1 **(human, vm23)** ~~Change the `solmqadmin` password on vm23~~ — not done: the project lead decided on 2026-10-14 to keep the password and accept the risk (see design, Risks). The password is removed from the current README (1.2) but stays in Git history
 - [x] 1.2 Remove the SSH password and the web UI admin password (Grafana, InfluxDB) from `legacy/README.adoc` and replace them with "ask a maintainer"; removing a secret is an allowed change to frozen `legacy/`. Do not write the removed values anywhere, including the pull request. Verify that in the "Console Access (SSH)" section the only line mentioning a password says "ask a maintainer", and that no line of the Configuration table still has an `Admin /` entry
-- [ ] 1.3 **(human, vm23)** Inventory the checkout in `/home/solmqadmin/2526-4ahitm-leoiot-dashboard`: record `git rev-parse HEAD`, `git status --short` and the current branch in the pull request for 5.x; commit or discard local edits deliberately so `git status --short` is empty; verify the three outputs are recorded
+- [x] 1.3 **(human, vm23)** Inventory the checkout in `/home/solmqadmin/2526-4ahitm-leoiot-dashboard`: record `git rev-parse HEAD`, `git status --short` and the current branch in the pull request for 5.x; commit or discard local edits deliberately so `git status --short` is empty; verify the three outputs are recorded — done 2026-10-20: the stray lockfiles were removed, and so were the untracked folders `legacy/kiosk2`, `legacy/kiosk3`, `legacy/kiosk4` and `legacy/leogreenKiosk` (taken out of Git in #62, used by no container); `git status --short` on vm23 is now empty. Since 6.2 the deploy workflow owns the checkout: HEAD is detached at the deployed `release` commit, which the marker file records
 - [x] 1.4 **(human, vm23)** Compare `/etc/nginx/sites-available/leoiot` with the `legacy/deploy/nginx.conf` of the commit recorded in 1.3 (the one currently running), and record the differences; do not apply the `main` version: it contains the PV kiosk cut-over (port 8088 and the redirects from `/kiosk2/`, `/kiosk3/`, `/kiosk4/`, `/leogreen/`), which may only be applied once `leoiot-pv` runs on vm23, coordinated with the PV team, and is not part of this change; verify `nginx -t` passes and note the diff result — done 2026-10-15: `diff` against `legacy/deploy/nginx.conf` of `main` (4db0bb9) shows no difference, so the cut-over is already applied on vm23
 - [x] 1.5 **(human, vm23)** List the running Compose projects (`docker compose ls`) and check that `leoiot-pv/.env` exists with `KIOSK_INFLUX_TOKEN` set, that no `.env` is tracked by Git (`git ls-files '*.env'` prints nothing), and whether `COMPOSE_PROFILES` is set in any `.env`; verify `cd leoiot-pv && docker compose config -q` succeeds and that the `collector` service is not running — done 2026-10-15: `docker compose ls` shows `2526-4ahitm-leoiot-dashboard` and `leoiot-pv`; `leoiot-pv/.env` has every key of `.env.example` plus `COMPOSE_PROFILES`, mode 600; `docker compose config --services` lists `collector` and `kiosk`; no `.env` is tracked
 
@@ -52,7 +52,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 - [x] 7.1 Tell the whole team (all teams and the maintainers) when the `main` ruleset goes live and that it blocks direct pushes, which people use today; verify every member has acknowledged it and nobody has unmerged work that depends on pushing to `main` — done 2026-10-19: the team was told before the ruleset went live
 - [x] 7.2 **(repo admin)** Create the `main` ruleset per design D6 (pull request required, required check `ci-ok`, 0 approvals, no force push, no deletion, empty bypass list); verify a direct `git push origin HEAD:main` from a test commit is rejected — done 2026-10-19: ruleset `main` (id 25400977) is active; a direct `git push origin HEAD:main` of a test commit was rejected with "Changes must be made through a pull request" and "Required status check "ci-ok" is expected"
 - [x] 7.3 **(repo admin)** Create the `release` ruleset (same, plus merge commits only); verify a direct push is rejected — done 2026-10-20: ruleset `release` (id 25458078) is active with required `ci-ok` and merge commits only; a direct push of a test commit was rejected. It first required 1 approving review; that was dropped the same day (see design D6)
-- [ ] 7.4 Export both rulesets as JSON into `.github/rulesets/` so the configuration is reviewable; verify the files match `gh api repos/.../rulesets/<id>`
+- [x] 7.4 ~~Export both rulesets as JSON into `.github/rulesets/` so the configuration is reviewable; verify the files match `gh api repos/.../rulesets/<id>`~~ — dropped 2026-10-20 by the project lead: the rulesets are described in design D6 and in 7.2/7.3, and no export is kept in the repository
 
 ## 8. Team and agent workflow
 
@@ -64,7 +64,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 ## 9. End-to-end check
 
 - [ ] 9.1 Ship one trivial visible change the whole way: feature branch → pull request → `main` → promotion pull request → automatic deploy; verify the change is visible on https://vm23.htl-leonding.ac.at and the `production` environment shows the new commit
-- [ ] 9.2 Confirm with all five team members that a direct push to `main` is rejected for them and that they have run one pull request through the flow
+- [x] 9.2 ~~Confirm with all five team members that a direct push to `main` is rejected for them and that they have run one pull request through the flow~~ — dropped 2026-10-20 by the project lead: 7.2/7.3 proved that the rulesets reject a direct push, and the team has worked through pull requests since 2026-10-19
 
 ## Workflow follow-up
 
@@ -74,4 +74,4 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 - Consider contract checks for the MQTT topics and InfluxDB fields the sub-projects share; path-scoped CI cannot see breakage across them.
 - Revisit a merge queue on `main` after a few weeks of parallel agent work.
 - Add a README and `AGENTS.md` pointer to the platform owner once `leoiot-platform` has one.
-- Archive this change once 9.1 and 9.2 are done.
+- Archive this change once 9.1 is done.
