@@ -104,6 +104,18 @@ The Sensoren team is told with a link to the pull request before it is merged; t
 
 *Why a link rather than a redirect of `/dashboard/`:* the sensor views stay at that address. *Alternative:* leave the legacy PV view in place and only add a link (rejected: the client secret would stay in every visitor's browser, against #64 criterion 3).
 
+### D11. Peaks, base load and key figures
+
+Peaks of the day come from the 15-minute centred average of the power curve, not from single 5-minute slots: the daily counters move in steps of 0.1 kWh, so one 5-minute slot can jump by more than 1 kW without any real change, and a peak taken from raw slots would show these steps. Grid draw per slot is the positive part of the grid power from `powerSeries` (draw, not feed-in). The base load is the mean Verbrauch power between 00:00 and 04:00 Vienna time: the school is empty then and the battery mostly idle, so it shows what runs all the time (servers, ventilation, standby). Minimum instead of mean was rejected: one dip in the data would set it.
+
+Key figures of a period use the per-day rows that the views already load (D6); no extra query. Completeness counts past days with all five counters; future days do not count.
+
+### D12. Where the explanations live
+
+An info button (ⓘ, 44 px target) next to each quantity name in the figures grid and next to both ratios opens a small popover with the text; the lead sentence chips keep their highlight behaviour and get the same text as their accessible description. The reading guide is a `<details>` section at the end of the page, closed by default, with an inline SVG flow sketch drawn from the quantity colours and names (no image file). Texts live in `core/i18n.ts` in both languages.
+
+Not included, decided by Daniel on 2026-10-20: specific yield in kWh/kWp (needs the installed capacity) and the battery's state of charge (not in `platform/data-contract`).
+
 ## Risks / Trade-offs
 
 - **Moving code out of the kiosk changes what it shows** → one module per commit, kiosk tests after each, and a side-by-side comparison of the running kiosk against the same readings before merging (task 2.4).
