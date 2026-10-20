@@ -42,7 +42,7 @@ Rules for coding agents and people working in this repository. Read all of it be
 
 ## Shipping
 
-- A merge into `main` does not deploy. Shipping is a pull request `main` → `release`, merged with a merge commit after another person approved it; the push to `release` starts the deployment to vm23 (`.github/workflows/deploy.yml`, details in `src/content/docs/en/docs/operations.md`). One promotion ships everything on `main`.
+- A merge into `main` does not deploy. Shipping is a pull request `main` → `release`, merged with a merge commit once `ci-ok` is green. It needs no approval: the person who opened it may merge it. The push to `release` starts the deployment to vm23 (`.github/workflows/deploy.yml`, details in `src/content/docs/en/docs/operations.md`). One promotion ships everything on `main`.
 - You may open a promotion pull request when your user asks. You never approve or merge a pull request into `release`.
 - Without the explicit instruction of your user, do not change rulesets, the runner, the `production` environment, the deploy workflow's targets or anything on vm23, and do not log in to vm23.
 

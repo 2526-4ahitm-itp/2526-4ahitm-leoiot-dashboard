@@ -17,16 +17,16 @@ The repository SHALL reject direct pushes, force pushes and deletion of `main`, 
 - **WHEN** a pull request into `main` has a failed or missing aggregate verification status
 - **THEN** it cannot be merged
 
-### Requirement: Release changes only through approved promotion
-The repository SHALL reject direct pushes, force pushes and deletion of `release`, and SHALL allow a pull request into `release` to merge only with a successful aggregate verification status and an approving review from a person other than the pull request's author.
+### Requirement: Release changes only through a promotion pull request
+The repository SHALL reject direct pushes, force pushes and deletion of `release`, and SHALL allow a pull request into `release` to merge only with a successful aggregate verification status, using a merge commit. It SHALL NOT require an approving review.
 
-#### Scenario: Promotion without approval
-- **WHEN** a pull request from `main` into `release` has passing verification but no approving review
+#### Scenario: Promotion with failing checks
+- **WHEN** a pull request from `main` into `release` has a failed or missing aggregate verification status
 - **THEN** it cannot be merged and nothing is deployed
 
-#### Scenario: Approved promotion
-- **WHEN** a pull request from `main` into `release` has passing verification and one approving review
-- **THEN** it can be merged, which starts a deployment
+#### Scenario: Promotion with passing checks
+- **WHEN** a pull request from `main` into `release` has a successful aggregate verification status
+- **THEN** its author may merge it with a merge commit, and the push to `release` starts a deployment
 
 ### Requirement: Isolated work per task
 Each task SHALL be developed on its own short-lived branch created from the current `main`, and concurrent agents on one machine SHALL each use a separate worktree.

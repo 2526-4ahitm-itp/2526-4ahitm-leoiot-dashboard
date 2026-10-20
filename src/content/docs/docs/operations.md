@@ -29,7 +29,7 @@ Das automatische Deployment wirkt erst, wenn der Runner auf der VM installiert, 
 ### Ablauf einer Veröffentlichung
 
 1. Änderungen kommen per Pull Request nach `main`. Ein Merge nach `main` startet **kein** Deployment.
-2. Veröffentlichen heißt: ein Pull Request von `main` nach `release`, den eine zweite Person freigibt, und der mit einem Merge-Commit gemergt wird. Es geht dabei alles, was in `main` gemergt ist, in einem Zug live; unfertige Arbeit bleibt deshalb auf ihrem eigenen Branch.
+2. Veröffentlichen heißt: ein Pull Request von `main` nach `release`, der mit einem Merge-Commit gemergt wird, sobald `ci-ok` grün ist. Er braucht keine Freigabe: Wer ihn geöffnet hat, darf ihn mergen. Es geht dabei alles, was in `main` gemergt ist, in einem Zug live; unfertige Arbeit bleibt deshalb auf ihrem eigenen Branch.
 3. Der Push auf `release` startet `deploy.yml`. Der Runner auf der VM stellt den Checkout `/home/solmqadmin/2526-4ahitm-leoiot-dashboard` auf genau diesen Commit (`git checkout --detach`, ohne `--force`), aktualisiert die betroffenen Einheiten und prüft danach die öffentlichen Adressen.
 4. Es läuft immer nur ein Deployment; ein zweiter Push wartet, bis das erste fertig ist.
 

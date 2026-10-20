@@ -51,7 +51,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 
 - [x] 7.1 Tell the whole team (all teams and the maintainers) when the `main` ruleset goes live and that it blocks direct pushes, which people use today; verify every member has acknowledged it and nobody has unmerged work that depends on pushing to `main` — done 2026-10-19: the team was told before the ruleset went live
 - [x] 7.2 **(repo admin)** Create the `main` ruleset per design D6 (pull request required, required check `ci-ok`, 0 approvals, no force push, no deletion, empty bypass list); verify a direct `git push origin HEAD:main` from a test commit is rejected — done 2026-10-19: ruleset `main` (id 25400977) is active; a direct `git push origin HEAD:main` of a test commit was rejected with "Changes must be made through a pull request" and "Required status check "ci-ok" is expected"
-- [x] 7.3 **(repo admin)** Create the `release` ruleset (same, plus 1 approving review); verify a direct push is rejected and a `main` → `release` pull request shows "review required" and cannot be merged by its author alone — done 2026-10-20: ruleset `release` (id 25458078) is active with 1 approving review, required `ci-ok` and merge commits only; a direct push of a test commit was rejected. The "review required" state shows on the next `main` → `release` pull request (#86 was still merged without a review, before the ruleset existed)
+- [x] 7.3 **(repo admin)** Create the `release` ruleset (same, plus merge commits only); verify a direct push is rejected — done 2026-10-20: ruleset `release` (id 25458078) is active with required `ci-ok` and merge commits only; a direct push of a test commit was rejected. It first required 1 approving review; that was dropped the same day (see design D6)
 - [ ] 7.4 Export both rulesets as JSON into `.github/rulesets/` so the configuration is reviewable; verify the files match `gh api repos/.../rulesets/<id>`
 
 ## 8. Team and agent workflow
@@ -63,7 +63,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`; tasks m
 
 ## 9. End-to-end check
 
-- [ ] 9.1 Ship one trivial visible change the whole way: feature branch → pull request → `main` → promotion pull request approved by a second person → automatic deploy; verify the change is visible on https://vm23.htl-leonding.ac.at and the `production` environment shows the new commit
+- [ ] 9.1 Ship one trivial visible change the whole way: feature branch → pull request → `main` → promotion pull request → automatic deploy; verify the change is visible on https://vm23.htl-leonding.ac.at and the `production` environment shows the new commit
 - [ ] 9.2 Confirm with all five team members that a direct push to `main` is rejected for them and that they have run one pull request through the flow
 
 ## Workflow follow-up
