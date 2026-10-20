@@ -29,7 +29,7 @@ The automatic deployment takes effect only once the runner is installed on the V
 ### How a release works
 
 1. Changes arrive by pull request into `main`. A merge into `main` does **not** start a deployment.
-2. Releasing means a pull request from `main` into `release`, approved by a second person and merged with a merge commit. Everything merged into `main` goes live in one step, so unfinished work stays on its own branch.
+2. Releasing means a pull request from `main` into `release`, merged with a merge commit once `ci-ok` is green. It needs no approval: its author may merge it. Everything merged into `main` goes live in one step, so unfinished work stays on its own branch.
 3. The push to `release` starts `deploy.yml`. The runner on the VM puts the checkout `/home/solmqadmin/2526-4ahitm-leoiot-dashboard` on exactly that commit (`git checkout --detach`, without `--force`), updates the affected units and then checks the public addresses.
 4. Only one deployment runs at a time; a second push waits until the first is finished.
 
