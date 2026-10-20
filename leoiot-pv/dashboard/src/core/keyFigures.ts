@@ -25,10 +25,14 @@ export interface KeyFigures {
   completeness: { percent: number; complete: number; past: number; includesToday: boolean } | null;
 }
 
-/** Kennzahlen über die vergangenen Tage (heute zählt, ist aber als nicht abgeschlossen markiert); Tage ohne Wert zählen nie. */
+/**
+ * Kennzahlen eines Zeitraums. Bestwerte, schwächster Tag und Mittel nur über abgeschlossene Tage
+ * (ein angefangener Tag wäre sonst oft der schwächste und drückt das Mittel); die Vollständigkeit
+ * zählt heute mit. Tage ohne Wert zählen nie.
+ */
 export function keyFigures(rows: DayRow[]): KeyFigures {
   const past = rows.filter((r) => !r.future);
-  const per = past.map((r) => ({ row: r, q: quantities(r.gap ? null : r.counters) }));
+  const per = past.filter((r) => !r.today).map((r) => ({ row: r, q: quantities(r.gap ? null : r.counters) }));
 
   const pick = (field: keyof Quantities, best: 'max' | 'min'): Extreme | null => {
     let found: Extreme | null = null;
