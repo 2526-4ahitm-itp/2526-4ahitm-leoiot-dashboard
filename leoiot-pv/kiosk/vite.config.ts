@@ -27,7 +27,8 @@ export default defineConfig(({ mode }) => {
   return {
     base: '/kiosk/',
     plugins: useMock ? [kioskMock(mock, env.KIOSK_MOCK_LIVE !== '0')] : [],
-    server: { port: 8088, strictPort: true, allowedHosts: true, ...(useMock ? {} : { proxy }) },
+    // fs.allow: das gemeinsame Paket liegt in ../shared, außerhalb dieses Ordners
+    server: { port: 8088, strictPort: true, allowedHosts: true, fs: { allow: ['..'] }, ...(useMock ? {} : { proxy }) },
     preview: { port: 8088, ...(useMock ? {} : { proxy }) },
     build: { outDir: 'dist', target: 'es2022' },
     test: { environment: 'node', include: ['tests/**/*.test.ts'] },

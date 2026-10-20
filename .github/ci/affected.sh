@@ -22,10 +22,15 @@
 #   node <dir>           Node component to check
 #   maven <dir>          Maven component to check
 #   compose <file>       Compose file to validate
-#   image <dir>          leoiot-* Dockerfile directory to build
+#   image <dir>          leoiot-* Dockerfile directory to build (its build
+#                        context: .github/ci/image-build.sh)
 #   unit <folder>        deploy unit to update, in deployment order
 #   service <name>       legacy Compose service to recreate, in map order
 #   nginx-warning true   an nginx file changed that CI does not apply
+# A leoiot-* Node component that names another one of the same sub-project as
+# a local "file:" dependency in its package.json is checked, and its image
+# built, whenever that dependency is affected (openspec/changes/
+# platform-ci-build-context, design D2).
 # Exits non-zero when the change set cannot be determined.
 
 # The r_* result arrays are read through namerefs (in sorted_keys), which the
@@ -100,6 +105,29 @@ while IFS= read -r f; do
   esac
 done < <(git -c core.quotePath=false ls-files)
 
+# Local dependencies: dependents[<dir>] holds the leoiot-* Node components of
+# the same sub-project that depend on <dir> through "file:", space-separated.
+declare -A dependents=()
+local_deps=()
+for d in "${!pkg[@]}"; do
+  [[ ${d%%/*} == leoiot-* ]] && grep -q '"file:' "$d/package.json" && local_deps+=("$d")
+done
+if ((${#local_deps[@]})); then
+  command -v node >/dev/null || die "node is needed to read the local dependencies of ${local_deps[*]}"
+  while read -r dependent dep; do
+    [[ -n ${pkg[$dep]:-} && ${dep%%/*} == "${dependent%%/*}" ]] || continue
+    dependents[$dep]+="$dependent "
+  done < <(node -e '
+    const fs = require("fs"), path = require("path");
+    for (const dir of process.argv.slice(1)) {
+      const p = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
+      for (const v of Object.values({ ...p.dependencies, ...p.devDependencies })) {
+        if (typeof v === "string" && v.startsWith("file:"))
+          console.log(dir, path.posix.normalize(path.posix.join(dir, v.slice(5))).replace(/\/$/, ""));
+      }
+    }' "${local_deps[@]}")
+fi
+
 # The legacy service map: parallel arrays, in file order.
 map_prefix=()
 map_service=()
@@ -130,6 +158,34 @@ add_all_components() {
 add_all_legacy_services() {
   local s
   for s in "${map_service[@]}"; do r_service[$s]=1; done
+}
+
+# nearest_dockerdir <dir>: the nearest ancestor of <dir> (itself included) with
+# a Dockerfile below a leoiot-* folder, or nothing
+nearest_dockerdir() {
+  local d=$1
+  while [[ -n $d && $d == leoiot-* ]]; do
+    [[ -n ${dockerdir[$d]:-} ]] && echo "$d" && return
+    [[ $d == */* ]] && d=${d%/*} || d=""
+  done
+}
+
+# add_dependents: check the local dependents of every affected Node component,
+# repeated until nothing is added
+add_dependents() {
+  local added=1 d dep img
+  while ((added)); do
+    added=0
+    for d in "${!r_node[@]}"; do
+      for dep in ${dependents[$d]:-}; do
+        [[ -n ${r_node[$dep]:-} ]] && continue
+        r_node[$dep]=1
+        added=1
+        img=$(nearest_dockerdir "$dep")
+        [[ -n $img ]] && r_image[$img]=1
+      done
+    done
+  done
 }
 
 # classify <path>: record what one changed file affects.
@@ -238,11 +294,13 @@ case $mode in
     while IFS= read -r f; do
       [[ -n $f ]] && classify "$f"
     done <<<"$changed"
+    add_dependents
     ;;
   files)
     while IFS= read -r f; do
       [[ -n $f ]] && classify "$f"
     done
+    add_dependents
     ;;
   all)
     add_all_components

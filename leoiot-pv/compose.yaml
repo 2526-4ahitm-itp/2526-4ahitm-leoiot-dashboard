@@ -2,7 +2,10 @@ name: leoiot-pv
 
 services:
   kiosk:
-    build: ./kiosk
+    # Kontext leoiot-pv/, damit shared/ mitkommt (kiosk/build-context sagt CI dasselbe)
+    build:
+      context: .
+      dockerfile: kiosk/Dockerfile
     restart: unless-stopped
     ports:
       # Local only; the host nginx forwards /kiosk/ to this port.
@@ -12,6 +15,27 @@ services:
       KIOSK_INFLUX_TOKEN: ${KIOSK_INFLUX_TOKEN:?KIOSK_INFLUX_TOKEN is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8088/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - platform
+
+  dashboard:
+    # Kontext leoiot-pv/, damit shared/ mitkommt (dashboard/build-context sagt CI dasselbe)
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    restart: unless-stopped
+    ports:
+      # Local only; the host nginx forwards /pv/ to this port.
+      - "127.0.0.1:${DASHBOARD_PORT:-8089}:8089"
+    environment:
+      # The kiosk's read-only InfluxDB token (design D5), injected by nginx; the browser never sees it.
+      DASHBOARD_INFLUX_TOKEN: ${KIOSK_INFLUX_TOKEN:?KIOSK_INFLUX_TOKEN is not set; copy leoiot-pv/.env.example to leoiot-pv/.env and fill it in}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8089/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       start_period: 10s
@@ -37,8 +61,9 @@ services:
       COLLECTOR_INFLUX_TOKEN: ${COLLECTOR_INFLUX_TOKEN:-}
       COLLECTOR_MQTT_USER: ${COLLECTOR_MQTT_USER:-}
       COLLECTOR_MQTT_PASSWORD: ${COLLECTOR_MQTT_PASSWORD:-}
-      # Production: the bucket server_data and publishing on. For a test set
-      # COLLECTOR_INFLUX_BUCKET=pv_shadow and COLLECTOR_PUBLISH=0 in leoiot-pv/.env.
+      # Production: the bucket server_data and publishing on. For a test create a
+      # test bucket and set COLLECTOR_INFLUX_BUCKET=<test bucket> and
+      # COLLECTOR_PUBLISH=0 in leoiot-pv/.env.
       COLLECTOR_INFLUX_BUCKET: ${COLLECTOR_INFLUX_BUCKET:-server_data}
       COLLECTOR_PUBLISH: ${COLLECTOR_PUBLISH:-1}
     healthcheck:

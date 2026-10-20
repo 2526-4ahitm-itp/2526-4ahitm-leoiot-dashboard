@@ -1,6 +1,6 @@
 // Kopfzeile: Uhr, letzte Aktualisierung und Veraltet-Hinweis.
-import { MISSING } from '../core/format';
-import { viennaClock, viennaTime } from '../core/time';
+import { MISSING } from '@leoiot-pv/shared/format';
+import { viennaClock, viennaTime } from '@leoiot-pv/shared/time';
 import type { KioskView } from '../data/view';
 
 /** Text hinter "Zuletzt aktualisiert:"; reine Funktion. */

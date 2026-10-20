@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { consumption, consumptionShares, productionShares, type Counters } from '../src/core/energy';
-import { MISSING, NBSP } from '../src/core/format';
+import { consumption, consumptionShares, productionShares, type Counters } from '@leoiot-pv/shared/energy';
+import { MISSING, NBSP } from '@leoiot-pv/shared/format';
 import { donutModel } from '../src/panels/todayModel';
 
 const c: Counters = { yield: 746.2, exported: 0, imported: 207, charged: 82.4, discharged: 141.2 };

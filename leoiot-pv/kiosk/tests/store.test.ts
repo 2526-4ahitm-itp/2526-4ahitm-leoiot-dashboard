@@ -4,7 +4,7 @@ import { createKiosk, type Kiosk } from '../src/data/store';
 import { buildView } from '../src/data/view';
 
 const fixture = (name: string): string =>
-  readFileSync(new URL(`./fixtures/${name}.csv`, import.meta.url), 'utf8');
+  readFileSync(new URL(`../../shared/tests/fixtures/${name}.csv`, import.meta.url), 'utf8');
 
 const SPEC = { yield: 746.2, exported: 0, imported: 207, charged: 82.4, discharged: 141.2 };
 const ZERO = { yield: 0, exported: 0, imported: 0, charged: 0, discharged: 0 };

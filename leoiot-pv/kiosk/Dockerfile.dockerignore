@@ -1,0 +1,5 @@
+# Gilt für kiosk/Dockerfile mit leoiot-pv/ als Kontext; Pfade relativ zu leoiot-pv/.
+**/node_modules
+**/dist
+**/.env*
+collector

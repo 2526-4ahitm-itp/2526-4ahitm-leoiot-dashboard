@@ -42,13 +42,13 @@ Der Kiosk versucht den Live-Kanal zuerst unter `/kiosk/ws` und danach unter `/ws
 
 ## Aufbau
 
-- `src/core/`: reine Funktionen (Zeit, Energie, Format, InfluxDB)
-- `src/data/`: Abruf, Live-Kanal, Zustand, Sicht
+- `../shared/` (Paket `@leoiot-pv/shared`): reine Funktionen für Zeit, Energie, Format, InfluxDB und den Live-Kanal, gemeinsam mit dem Dashboard
+- `src/data/`: Abruf, Zustand, Sicht
 - `src/ui/`: Header, Theme, Farben, Feld-Zustände, nächtliches Neuladen
 - `src/panels/`: die vier Felder, je ein Modell (reine Funktion) und die Darstellung
 - `src/styles/`: Stile
 - `dev/`: Mock-Modus
-- `tests/`: Tests und Beispielantworten unter `tests/fixtures/`
+- `tests/`: Tests; die Beispielantworten der Datenbank liegen in `../shared/tests/fixtures/`
 
 ## Theme
 

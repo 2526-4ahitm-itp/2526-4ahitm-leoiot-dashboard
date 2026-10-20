@@ -1,7 +1,7 @@
 // Leistungsfeld: Zahlen für das Diagramm, rein und ohne DOM.
-import type { PowerPoint } from '../core/influx';
-import { formatTick } from '../core/format';
-import { viennaTime } from '../core/time';
+import type { PowerPoint } from '@leoiot-pv/shared/influx';
+import { formatTick } from '@leoiot-pv/shared/format';
+import { viennaTime } from '@leoiot-pv/shared/time';
 
 export const HOUR_MS = 3_600_000;
 

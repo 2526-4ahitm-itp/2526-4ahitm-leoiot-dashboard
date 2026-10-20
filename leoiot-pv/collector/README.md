@@ -24,7 +24,7 @@ Alle Einstellungen kommen aus der Umgebung. Fehlt eine Pflichtvariable, beendet 
 | `COLLECTOR_INTERVAL_MS` | nein | `60000` |
 | `COLLECTOR_HEALTH_FILE` | nein | `/tmp/collector-last-delivery` |
 
-Das Programm selbst schreibt ohne weitere Angaben in den Testbucket und veröffentlicht nichts. Der Compose-Dienst in `leoiot-pv/compose.yaml` setzt dagegen den Betrieb: Bucket `server_data`, Veröffentlichen an. Für einen Test in `leoiot-pv/.env` `COLLECTOR_INFLUX_BUCKET=pv_shadow` und `COLLECTOR_PUBLISH=0` setzen.
+Das Programm selbst schreibt ohne weitere Angaben in den Bucket `pv_shadow` und veröffentlicht nichts. Diesen Bucket gibt es seit dem Umstieg (2026-10-19) nicht mehr; ohne Einstellung scheitern die Schreibversuche also, und `server_data` bleibt unberührt. Der Compose-Dienst in `leoiot-pv/compose.yaml` setzt den Betrieb: Bucket `server_data`, Veröffentlichen an. Für einen Test zuerst einen Testbucket anlegen und in `leoiot-pv/.env` `COLLECTOR_INFLUX_BUCKET=<Testbucket>` und `COLLECTOR_PUBLISH=0` setzen.
 
 ## Tests
 

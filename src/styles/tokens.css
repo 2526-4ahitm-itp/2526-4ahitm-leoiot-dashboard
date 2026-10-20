@@ -244,14 +244,6 @@ starlight-menu-button button:has(~ :popover-open) {
   box-shadow: none;
 }
 
-/* Architekturdiagramm im Dark Mode: SVG hat weißen Hintergrund; invertieren, Farbtöne zurückdrehen
-   (Grüntöne bleiben grün), Hintergrund = Seitenhintergrund (#fff -> ~#0b0f14 durch Invertierung). */
-html[data-theme='dark'] .sl-markdown-content img[src*='architecture'] {
-  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.95);
-  background: #fff;
-  border-radius: var(--r-md);
-}
-
 /* Druck: Starlight-Header ausblenden, Diagramm begrenzen */
 @media print {
   header.header, .sidebar, .right-sidebar, starlight-menu-button { display: none !important; }

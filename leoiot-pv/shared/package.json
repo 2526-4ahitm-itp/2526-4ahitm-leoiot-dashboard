@@ -1,0 +1,19 @@
+{
+  "name": "@leoiot-pv/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gemeinsamer Code von Kiosk und Dashboard: Größen, Wiener Zeit, Datenbankabfrage, Zahlenformat, Live-Kanal",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

@@ -3,7 +3,7 @@ import './styles/kiosk.css';
 import './ui/chartSetup'; // registriert Chart.js
 import { buildView } from './data/view';
 import { createKiosk } from './data/store';
-import { createLiveClient } from './data/live';
+import { createLiveClient } from '@leoiot-pv/shared/live';
 import { liveUrls, queryInflux } from './data/api';
 import { initTheme } from './ui/theme';
 import { readColors } from './ui/colors';
