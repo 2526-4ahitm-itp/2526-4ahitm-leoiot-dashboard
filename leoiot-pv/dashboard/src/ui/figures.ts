@@ -5,6 +5,7 @@ import { dateShort, kwh, pct, TEXT, type Lang, type Texts } from '../core/i18n';
 import type { DayRow, Quantities, Totals } from '../core/periods';
 import type { View } from '../core/route';
 import { el, swatch } from './dom';
+import { nameWithInfo } from './insights';
 
 export const FIGURE_ORDER: (keyof Quantities)[] = ['prod', 'cons', 'self', 'imp', 'exp', 'dis', 'chg'];
 
@@ -43,7 +44,7 @@ export function renderFigures(grid: HTMLElement, ratios: HTMLElement, note: HTML
       if (v !== null && extra !== undefined) dd.append(el('span', { class: 'note' }, L.incomplete(extra)));
       if (v === null && gapDay) dd.append(el('span', { class: 'note' }, L.gapDay));
       else if (v === null && t.sum.prod !== null) dd.append(el('span', { class: 'note' }, L.noDataBefore));
-      return el('div', { class: 'fig' }, el('dt', {}, swatch(k), quantityName(k, i.lang)), dd);
+      return el('div', { class: 'fig' }, nameWithInfo(k, quantityName(k, i.lang), i.lang, swatch(k)), dd);
     }),
   );
 
@@ -51,16 +52,16 @@ export function renderFigures(grid: HTMLElement, ratios: HTMLElement, note: HTML
     !day && t.ratioDays > 0 && t.ratioDays < t.pastDays && t.ratioFrom !== null && t.ratioTo !== null
       ? L.ratiosCover(dateShort(t.ratioFrom, i.lang), dateShort(t.ratioTo, i.lang))
       : '';
-  const ratio = (name: string, value: number | null, explain: string, noProduction: boolean): HTMLElement => {
+  const ratio = (key: 'autarky' | 'selfRate', name: string, value: number | null, explain: string, noProduction: boolean): HTMLElement => {
     const v = el('span', { class: 'v' + (value === null ? '' : ' num') }, value === null ? (noProduction ? MISSING : L.noData) : pct(value, i.lang));
     const dd = el('dd', {}, v, el('span', { class: 'e' }, explain));
     if (value !== null && cover) dd.append(el('span', { class: 'note' }, cover));
     if (value === null && noProduction) dd.append(el('span', { class: 'note' }, L.noProduction));
     else if (value === null && (gapDay || t.sum.prod !== null)) dd.append(el('span', { class: 'note' }, gapDay ? L.gapDay : L.noDataBefore));
-    return el('div', {}, el('dt', {}, name), dd);
+    return el('div', {}, nameWithInfo(key, name, i.lang), dd);
   };
   ratios.replaceChildren(
-    ratio(L.autarky, t.ratios.autarky, L.autarkyExplain, false),
-    ratio(L.selfRate, t.ratios.selfRate, L.selfRateExplain, t.sum.prod === 0),
+    ratio('autarky', L.autarky, t.ratios.autarky, L.autarkyExplain, false),
+    ratio('selfRate', L.selfRate, t.ratios.selfRate, L.selfRateExplain, t.sum.prod === 0),
   );
 }
