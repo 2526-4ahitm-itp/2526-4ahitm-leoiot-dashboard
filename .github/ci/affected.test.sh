@@ -91,10 +91,9 @@ unit legacy
 service quarkus-app"
 
 expect_exact "legacy file no component owns" \
-  "legacy/config/mosquitto.conf" \
+  "legacy/README.md" \
   "compose legacy/docker-compose.yaml
-unit legacy
-service mosquitto"
+unit legacy"
 
 expect_exact "legacy/telegraf.conf" \
   "legacy/telegraf.conf" \
