@@ -34,7 +34,7 @@ See `proposal.md` for motivation. Current state, read from the repository (not c
 
 ### D2. The platform owns the network under its current name
 
-The platform Compose file defines the network with the explicit name `2526-4ahitm-leoiot-dashboard_leoiot`. `legacy/docker-compose.yaml` declares it `external: true` with that name; `leoiot-pv` already does. *Why the old name:* `leoiot-pv`'s default `PLATFORM_NETWORK` and every running legacy container use it, so nothing outside the platform changes. *Consequence:* the existing network carries the legacy project's Compose labels, and Compose does not adopt a network created by another project, so it is removed and recreated once at the cutover (D8). *Alternatives:* a new network name (rejected: changes `leoiot-pv`); keeping it external everywhere and creating it with a script (rejected: nothing would own it, and a fresh host would need a manual step).
+The platform Compose file defines the network with the explicit name `2526-4ahitm-leoiot-dashboard_leoiot`. `legacy/docker-compose.yaml` declares it `external: true` with that name; `leoiot-pv` already does. *Why the old name:* `leoiot-pv`'s default `PLATFORM_NETWORK` and every running legacy container use it, so nothing outside the platform changes. *Consequence:* the existing network carries the legacy project's Compose labels. Compose 2.40 only warns about that and uses the network (checked locally on 2026-10-22); vm23 runs Compose 5.1.1, which is checked with a dry run before the cutover (D8). The network is therefore taken over as it is, without stopping `leoiot-pv`; its labels still name the legacy project until it is recreated some day, which changes nothing for the units that join it. *Alternatives:* a new network name (rejected: changes `leoiot-pv`); keeping it external everywhere and creating it with a script (rejected: nothing would own it, and a fresh host would need a manual step).
 
 ### D3. Two listeners with their own settings
 
@@ -61,29 +61,28 @@ The WebSocket rules contain no account and are in Git, so the rule that keeps th
 
 Only removals: the `mosquitto` service, the `depends_on: mosquitto` entries, the network definition (replaced by the external reference of D2), the `mosquitto_data` volume declaration, and `legacy/config/`. The MQTT clients in legacy reconnect on their own, so the missing start order does no harm.
 
-### D8. One cutover on vm23
+### D8. The cutover rides on the release deployment
 
-Because of D2, the switch is done by hand once, at a quiet time, before the release that contains this change is deployed:
+The deploy job already starts the platform unit before `legacy` and runs `docker compose up -d --remove-orphans` in each unit (`.github/ci/deploy.sh`), so it does the switch itself. Only three steps are done by hand on vm23 (checked there read-only on 2026-10-22: Compose 5.1.1, one broker account `leoiot`, `pwfile` mode 644, nginx identical to the repository file, `sudo` needs a password):
 
-1. Copy the host's `legacy/config/pwfile` to `leoiot-platform/broker/pwfile` and write `leoiot-platform/broker/acl` from the example with the real account names.
-2. Stop `leoiot-pv` and the legacy stack; remove the network.
-3. Start the platform unit (creates the network); start legacy and `leoiot-pv` from the new commit.
-4. Apply the new nginx file and reload nginx.
-5. Check the scenarios of `platform/broker` and the browser scenarios of `platform/data-contract`.
+1. **Before the promotion**, after this change is on `main`: create `leoiot-platform/broker/` in the deploy checkout with a copy of `legacy/config/pwfile` and an `acl` that gives `leoiot` `readwrite #` (both ignored by Git, so the deployment's checkout keeps them), and dry-run the platform unit from the `main` commit to see that Compose 5.1.1 accepts the existing network.
+2. **Right before the promotion pull request is merged:** stop the legacy broker container, so that port 1883 is free. Devices and services lose the broker until the deploy job has started the platform unit, about a minute, and reconnect on their own.
+3. **After the deployment:** the old broker container is gone (`--remove-orphans`), the legacy services that changed are recreated, `leoiot-pv` is untouched. The sensors team lead applies `leoiot-platform/proxy/nginx.conf` with `sudo` and reloads nginx.
 
-The release deployment that follows finds everything up to date. *Rollback:* stop all units, remove the network, check out the previous release and start legacy and `leoiot-pv` as before; restore the old nginx file.
+The `sensors-collector` account is not part of the cutover: it is added with `mosquitto_passwd` plus an `acl` block when the collector is built. *Rollback:* if the platform unit fails to start, `docker start` the stopped legacy broker; after a completed deployment, run the deploy workflow on the previous `release` commit, which brings back the legacy broker, and restore the old nginx file. *Alternative:* a manual cutover that recreates the network with all units stopped (rejected: it stops the PV kiosk and dashboard as well, for a label change that nothing reads).
 
 ## Risks / Trade-offs
 
 - [A missing account in `broker/acl` locks a device or service out] → the example lists the known services; task 2.1 lists the accounts in the host's password file before the cutover, and step 5 checks every service and the real box.
-- [The cutover stops PV kiosk and dashboard for a few minutes] → quiet time, announced to the PV team beforehand.
+- [The broker is down for about a minute during the deployment] → promotion at a quiet time; devices and services reconnect on their own; `leoiot-pv` keeps running.
+- [Compose on vm23 refuses the existing network] → the dry run of D8 step 1 shows it before anything is stopped; then the network is recreated as in the rejected alternative.
 - [Anonymous WebSocket clients exhaust the broker] → connection limit on the WebSocket listener and in nginx.
 - [nginx is applied wrongly by hand] → `nginx -t` before reload; the old file is kept for rollback.
 - [The Kubernetes move (`platform-k8s-resources`) replaces this setup soon] → the access rules, listeners and network role carry over; only the Compose file is specific to vm23.
 
 ## Migration Plan
 
-See D8. After the cutover, the release containing this change is promoted as usual; `legacy/README.md` records the removal with the date.
+See D8: the cutover is the promotion of this change to `release`, with three steps by hand around it. `legacy/README.md` then records the removal with the date.
 
 ## Open Questions
 

@@ -9,7 +9,7 @@ There is no classic web interface (REST API) for sensor data. Data flows via MQT
 
 ## MQTT topics
 
-Broker (message relay): Mosquitto, port 1883, login required (`legacy/config/mosquitto.conf`).
+Broker (message relay): Mosquitto from `leoiot-platform/`, port 1883, login required (`leoiot-platform/broker/mosquitto.conf`). Browsers reach it read-only over MQTT over WebSocket at `/mqtt` (room-climate topics only; specs `platform/broker` and `platform/data-contract`).
 
 A topic is the “mailbox” name of an MQTT message, the payload is its content, QoS is the delivery guarantee (1 = at least once).
 
@@ -37,7 +37,7 @@ Solax data is additionally written by the collector from `leoiot-pv/collector/` 
 
 A WebSocket is a permanent connection between browser and bridge; the browser receives new values immediately without asking. A snapshot is the last known state, sent right after subscribing.
 
-- Server: `mqtt-ws-bridge`, port 8090 (variable `WS_PORT`). Reachable directly at `ws://<host>:8090`; behind the reverse proxy (Nginx, which bundles all services under one address) at path `/ws` (`legacy/deploy/nginx.conf`). The main kiosk (`leoiot-pv/kiosk/`) connects via `/kiosk/ws` first (its own nginx passes the WebSocket on to the bridge) and via `/ws` afterwards. Dashboard v2 uses `:8090` locally (`localhost`, `127.0.0.1`) and `/ws` otherwise (`wss:` on HTTPS); the 3D explorer always connects via `/ws` and therefore needs the Nginx proxy or a Vite proxy (Vite is the frontends' development server). The superseded kiosks connected as follows: the LeoGreen kiosk like Dashboard v2, `legacy/kiosk/` always via `/ws`.
+- Server: `mqtt-ws-bridge`, port 8090 (variable `WS_PORT`). Reachable directly at `ws://<host>:8090`; behind the reverse proxy (Nginx, which bundles all services under one address) at path `/ws` (`leoiot-platform/proxy/nginx.conf`). The main kiosk (`leoiot-pv/kiosk/`) connects via `/kiosk/ws` first (its own nginx passes the WebSocket on to the bridge) and via `/ws` afterwards. Dashboard v2 uses `:8090` locally (`localhost`, `127.0.0.1`) and `/ws` otherwise (`wss:` on HTTPS); the 3D explorer always connects via `/ws` and therefore needs the Nginx proxy or a Vite proxy (Vite is the frontends' development server). The superseded kiosks connected as follows: the LeoGreen kiosk like Dashboard v2, `legacy/kiosk/` always via `/ws`.
 - Messages are JSON objects.
 
 Client to server:
@@ -110,13 +110,13 @@ The code and the slides use 800 and 1000 ppm. The functional specification (`do
 
 ## Sources in the repository
 
-- `legacy/docker-compose.yaml`, `legacy/telegraf.conf`, `legacy/config/mosquitto.conf`
+- `legacy/docker-compose.yaml`, `legacy/telegraf.conf`, `leoiot-platform/compose.yaml`, `leoiot-platform/broker/mosquitto.conf`
 - `legacy/mqtt-ws-bridge/index.js`
 - `legacy/fake-sensors/index.js`
 - `leoiot-pv/collector/src/main.ts`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/grafana/provisioning/`, `legacy/grafana/dashboards/main-dashboard.json`
-- `legacy/deploy/nginx.conf`
+- `leoiot-platform/proxy/nginx.conf`
 - `leoiot-pv/kiosk/`
 - `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`
 - `legacy/sensorbox/nili-ldr/nili-ldr.yaml`, `legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml`

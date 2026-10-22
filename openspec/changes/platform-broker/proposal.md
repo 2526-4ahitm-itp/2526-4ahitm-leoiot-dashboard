@@ -35,7 +35,7 @@ None. The browser access to the broker is already a requirement of `platform/dat
 
 ## Impact
 
-- **vm23:** one cutover with all stacks briefly stopped, because the shared network is recreated under the platform; the password file is copied from the host's `legacy/config/` to the platform folder; the new nginx configuration is applied by hand. Steps that need vm23 are done only on the explicit instruction of the sensors team lead.
+- **vm23:** the cutover is the release deployment of this change (design D8): the password file is copied from the host's `legacy/config/` to the platform folder beforehand, the legacy broker is stopped right before the promotion is merged (about a minute without broker), and the new nginx configuration is applied by hand afterwards. `leoiot-pv` keeps running. Steps that need vm23 are done only on the explicit instruction of the sensors team lead.
 - **Devices:** none. They keep connecting to port 1883 of vm23 with their current accounts.
 - **`leoiot-pv/`:** none. Its default network name stays valid. The PV routes in the nginx configuration move with the file.
 - **CI and deployment:** `leoiot-platform/` is picked up by shape (a `compose.yaml` in the sub-project root) and is deployed first, before `legacy` and the other units (`.github/ci/deploy.sh`). No workflow changes.

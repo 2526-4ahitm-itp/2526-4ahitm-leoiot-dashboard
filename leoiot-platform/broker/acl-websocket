@@ -1,0 +1,4 @@
+# Access rules of the WebSocket listener (anonymous browsers).
+# Read-only, room climate only (platform/data-contract: "Browsers read
+# room-climate live data from the broker"). No other line belongs here.
+topic read leoiot/room-climate/#

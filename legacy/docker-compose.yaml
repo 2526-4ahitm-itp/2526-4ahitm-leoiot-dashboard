@@ -1,16 +1,6 @@
 name: 2526-4ahitm-leoiot-dashboard
 
 services:
-  mosquitto:
-    image: eclipse-mosquitto:latest
-    ports:
-      - "1883:1883"
-    volumes:
-      - mosquitto_data:/mosquitto/data
-      - ./config:/mosquitto/config
-    networks:
-      - leoiot
-
   influxdb:
     container_name: influxdb
     image: influxdb:2.7
@@ -34,7 +24,6 @@ services:
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
     depends_on:
-      - mosquitto
       - influxdb
     networks:
       - leoiot
@@ -75,8 +64,6 @@ services:
       dockerfile: src/main/docker/Dockerfile
     environment:
       - MQTT_HOST=mosquitto
-    depends_on:
-      - mosquitto
     networks:
       - leoiot
 
@@ -101,8 +88,6 @@ services:
     command: sh -c "npm install && node index.js"
     environment:
       - MQTT_HOST=mosquitto
-    depends_on:
-      - mosquitto
     networks:
       - leoiot
 
@@ -121,16 +106,16 @@ services:
       - PV_MQTT_PASS=sTuD@w0rck
     ports:
       - "8090:8090"
-    depends_on:
-      - mosquitto
     networks:
       - leoiot
 
 networks:
+  # Provided by leoiot-platform/compose.yaml together with the broker
+  # (spec platform/broker); this stack only joins it.
   leoiot:
-    driver: bridge
+    external: true
+    name: 2526-4ahitm-leoiot-dashboard_leoiot
 
 volumes:
-  mosquitto_data:
   influxdb_data:
   influxdb_backups:

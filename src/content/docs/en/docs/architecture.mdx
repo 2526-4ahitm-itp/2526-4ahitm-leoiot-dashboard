@@ -23,16 +23,16 @@ LeoIoT collects room climate data (temperature, CO₂) and photovoltaic data (So
 <Image src={diagramDark} alt="Architecture: data flow from the sensors to the dashboards" class="light:sl-hidden" />
 
 :::note[Public paths]
-A reverse proxy (Nginx; a router that sends each request to the right service) makes all interfaces reachable under one domain (configuration: `legacy/deploy/nginx.conf`). The paths are listed in the section [Nginx routing](../operations/#nginx-routing) of the Operations page.
+A reverse proxy (Nginx; a router that sends each request to the right service) makes all interfaces reachable under one domain (configuration: `leoiot-platform/proxy/nginx.conf`). The paths are listed in the section [Nginx routing](../operations/#nginx-routing) of the Operations page.
 :::
 
 ## Services
 
-Ports as published in `legacy/docker-compose.yaml` and, for the main kiosk, in `leoiot-pv/compose.yaml`.
+Ports as published in `leoiot-platform/compose.yaml` (broker), `legacy/docker-compose.yaml` and, for the main kiosk, in `leoiot-pv/compose.yaml`.
 
 | Service | Port | Purpose |
 |---|---|---|
-| `mosquitto` | 1883 | MQTT broker (Eclipse Mosquitto), login required (`allow_anonymous false`) |
+| `mosquitto` (project `leoiot-platform`) | 1883, 9001 | MQTT broker (Eclipse Mosquitto): 1883 with login only; 9001 MQTT over WebSocket on `127.0.0.1` only, anonymous and read-only on the room-climate topics, reachable at `/mqtt` |
 | `influxdb` | 8086 | Time-series database InfluxDB 2.7, organisation `leoiot`, bucket `server_data` |
 | `telegraf` | – | Moves MQTT messages into InfluxDB (no published port) |
 | `grafana` | 3000 | Dashboards; data source and dashboard are provisioned from `legacy/grafana/` |
@@ -46,7 +46,7 @@ Ports as published in `legacy/docker-compose.yaml` and, for the main kiosk, in `
 
 ## Role of the components
 
-- **Mosquitto**: the central MQTT broker, i.e. the switchboard: sensors send messages to it, other services pick them up. `legacy/config/mosquitto.conf` accepts connections on port 1883 from the whole network and forbids anonymous connections.
+- **Mosquitto**: the central MQTT broker, i.e. the switchboard: sensors send messages to it, other services pick them up. It runs from `leoiot-platform/` (`leoiot-platform/broker/mosquitto.conf`), which also creates the shared network of all stacks. Port 1883 accepts connections from the whole network and forbids anonymous connections; port 9001 serves browsers over WebSocket, anonymously and read-only on `leoiot/room-climate/#`.
 - **Telegraf**: two MQTT consumers in `legacy/telegraf.conf`. The first reads topics `nili3/#`, `nili3_co2/#`, `homeassistant/#`, `esphome/#` as a number (`data_format = "value"`, type `float`). The second reads `room-temperature` as JSON and stores the value under measurement `room_temperature` with tag `room`. Output: InfluxDB bucket `server_data`.
 - **InfluxDB**: stores all measurements. Organisation `leoiot` and bucket `server_data` are created at first start (`DOCKER_INFLUXDB_INIT_*`).
 - **Grafana**: the data source `InfluxDB-Flux` (Flux, default bucket `server_data`) and the dashboard `legacy/grafana/dashboards/main-dashboard.json` are loaded at start.
@@ -78,12 +78,12 @@ The repository contains credentials and an InfluxDB token as default values in s
 
 - `legacy/docker-compose.yaml`
 - `legacy/telegraf.conf`
-- `legacy/config/mosquitto.conf`
+- `leoiot-platform/compose.yaml`, `leoiot-platform/broker/mosquitto.conf`
 - `legacy/mqtt-ws-bridge/index.js`
 - `leoiot-pv/collector/src/main.ts`
 - `legacy/fake-sensors/index.js`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/grafana/provisioning/`, `legacy/grafana/dashboards/main-dashboard.json`
-- `legacy/deploy/nginx.conf`
+- `leoiot-platform/proxy/nginx.conf`
 - `leoiot-pv/kiosk/`, `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`
 - `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`

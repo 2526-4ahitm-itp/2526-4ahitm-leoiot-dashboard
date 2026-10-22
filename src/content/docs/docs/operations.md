@@ -46,7 +46,7 @@ Betroffen ist, was sich seit dem **letzten erfolgreichen Deployment** geändert 
 - **`legacy`: pro Dienst.** Die Node-Dienste binden ihren Ordner ein; ein Compose-`up` allein startet sie nicht neu. Deshalb werden genau die Dienste mit geänderten Dateien mit `--force-recreate` neu erstellt (ein `npm install` läuft dabei neu, der Dienst ist einige Minuten nicht erreichbar). `quarkus-app` wird zusätzlich durch `--build` neu gebaut.
 - **Neue Einheiten (`leoiot-pv`): pro Image.** Die Images werden neu gebaut, und nur Dienste mit geändertem Image oder geänderter Definition werden neu erstellt.
 - **Einheiten ohne Änderung** werden nicht angefasst: Eine reine Legacy-Veröffentlichung baut keine PV-Images, eine reine PV-Veröffentlichung startet keinen Legacy-Container neu.
-- **Nginx** wird nicht vom Deployment verwaltet. Ändert sich `legacy/deploy/nginx.conf` (oder später eine `nginx*.conf` in `leoiot-platform/`), oder gibt es noch kein früheres Deployment, steht im Lauf eine Warnung: Die Datei muss von Hand auf der VM übernommen werden (`/etc/nginx/sites-available/leoiot` ist eine Kopie).
+- **Nginx** wird nicht vom Deployment verwaltet. Ändert sich eine `nginx*.conf` in `leoiot-platform/` (heute `leoiot-platform/proxy/nginx.conf`), oder gibt es noch kein früheres Deployment, steht im Lauf eine Warnung: Die Datei muss von Hand auf der VM übernommen werden (`/etc/nginx/sites-available/leoiot` ist eine Kopie).
 
 ### Konfiguration auf der VM
 
@@ -88,7 +88,7 @@ Solange Runner und Branch `release` fehlen, bleibt der Handweg: Der alte Stack w
 
 ## Nginx-Routing
 
-`legacy/deploy/nginx.conf` definiert einen Server für den Schul-Hostnamen: Anfragen auf Port 80 (unverschlüsselt) werden automatisch auf HTTPS (verschlüsselt, Port 443) umgeleitet. Die Verschlüsselung (TLS) wird in Nginx abgewickelt; die Zertifikate stammen von Let’s Encrypt (`/etc/letsencrypt`). Nginx ist hier der Reverse-Proxy: Er nimmt alle Anfragen an und reicht sie an die Dienste weiter, die auf `127.0.0.1` laufen.
+`leoiot-platform/proxy/nginx.conf` definiert einen Server für den Schul-Hostnamen: Anfragen auf Port 80 (unverschlüsselt) werden automatisch auf HTTPS (verschlüsselt, Port 443) umgeleitet. Die Verschlüsselung (TLS) wird in Nginx abgewickelt; die Zertifikate stammen von Let’s Encrypt (`/etc/letsencrypt`). Nginx ist hier der Reverse-Proxy: Er nimmt alle Anfragen an und reicht sie an die Dienste weiter, die auf `127.0.0.1` laufen.
 
 | Pfad | Ziel |
 |---|---|
@@ -100,6 +100,7 @@ Solange Runner und Branch `release` fehlen, bleibt der Handweg: Der alte Stack w
 | `/grafana/` | `127.0.0.1:3000` (mit `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, Präfix wird entfernt) |
 | `/ws` | `127.0.0.1:8090` (WebSocket-Upgrade, `mqtt-ws-bridge`) |
+| `/mqtt` | `127.0.0.1:9001` (MQTT über WebSocket, Broker aus `leoiot-platform/`; anonym, nur lesend auf den Raumklima-Topics; höchstens 20 Verbindungen pro Client-Adresse) |
 | `/solax/` | externe Solax-Cloud-API (`openapi-eu.solaxcloud.com`), Header `Access-Control-Allow-Origin: *` wird gesetzt |
 
 Nur die Pfade `/kiosk` und `/dashboard` ohne Schrägstrich am Ende werden per 301 auf die Variante mit `/` umgeleitet. Grafana ist passend dazu mit `GF_SERVER_ROOT_URL` und `GF_SERVER_SERVE_FROM_SUB_PATH=true` konfiguriert.
@@ -136,14 +137,14 @@ Ohne Argument listet das Skript die vorhandenen Backups. Mit Datum prüft es, ob
 - Der wöchentliche Backup-Job (Cron) ist nur auf der VM eingerichtet und nicht im Repository abgelegt.
 - Backups liegen nur auf derselben VM; ein externes Ziel ist nicht konfiguriert.
 - Der Deploy-Workflow (`deploy.yml`) wirkt erst, wenn der Runner auf der VM installiert, die Umgebung `production` angelegt ist und der Branch `release` existiert; bis dahin wird von Hand aktualisiert. Er nutzt einen festen Pfad auf der VM (`/home/solmqadmin/2526-4ahitm-leoiot-dashboard`).
-- Die Nginx-Konfiguration liegt in `legacy/deploy/`, wird aber nicht automatisch auf die VM übertragen (dort `/etc/nginx/sites-available/leoiot`).
+- Die Nginx-Konfiguration liegt in `leoiot-platform/proxy/`, wird aber nicht automatisch auf die VM übertragen (dort `/etc/nginx/sites-available/leoiot`).
 - Grafana ist zusätzlich direkt auf Port 3000 erreichbar, nicht nur über Nginx unter `/grafana/`.
 
 ## Quellen im Repository
 
 - `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
 - `.github/ci/deploy.sh`, `.github/ci/affected.sh`, `.github/ci/image-build.sh`, `.github/ci/legacy-services.map`, `.github/ci/smoke-routes`
-- `legacy/deploy/nginx.conf`
+- `leoiot-platform/proxy/nginx.conf`
 - `leoiot-pv/compose.yaml`
 - `legacy/backup/backup.sh`, `legacy/backup/restore.sh`
 - `legacy/docker-compose.yaml`
