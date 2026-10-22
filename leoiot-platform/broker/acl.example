@@ -1,0 +1,19 @@
+# Access rules of the TCP listener (port 1883). Copy this file to "acl" on
+# the host (not in Git) and give every account of "pwfile" a block.
+
+# Accounts that existed before the platform broker keep the access they had,
+# which was everything (platform/broker: "Existing accounts keep their
+# access"). The legacy services use this account:
+user leoiot
+topic readwrite #
+
+# One block like this per further existing account (sensor boxes, PV
+# collector, ...):
+# user <account>
+# topic readwrite #
+
+# Sensors collector: reads everything, publishes only room climate
+# (platform/broker: "New writer accounts publish only on their own topics").
+user sensors-collector
+topic read #
+topic write leoiot/room-climate/#

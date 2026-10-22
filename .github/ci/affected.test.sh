@@ -91,10 +91,9 @@ unit legacy
 service quarkus-app"
 
 expect_exact "legacy file no component owns" \
-  "legacy/config/mosquitto.conf" \
+  "legacy/README.md" \
   "compose legacy/docker-compose.yaml
-unit legacy
-service mosquitto"
+unit legacy"
 
 expect_exact "legacy/telegraf.conf" \
   "legacy/telegraf.conf" \
@@ -152,7 +151,9 @@ nginx-warning true"
 
 expect_exact "nginx file of the platform" \
   "leoiot-platform/proxy/nginx.conf" \
-  "nginx-warning true"
+  "compose leoiot-platform/compose.yaml
+unit leoiot-platform
+nginx-warning true"
 
 expect_exact "new legacy app is checked against the map" \
   "legacy/newapp/package.json" \
@@ -189,7 +190,7 @@ unit legacy"
 
 checks=$((checks + 1))
 all=$("$affected" --all)
-for line in "${everything_ci[@]}" "unit legacy" "unit leoiot-pv" "service frontend" \
+for line in "${everything_ci[@]}" "unit leoiot-platform" "unit legacy" "unit leoiot-pv" "service frontend" \
   "service influxdb" "service quarkus-app" "nginx-warning true"; do
   grep -qxF -- "$line" <<<"$all" || fail "--all: missing '$line'"
 done
@@ -197,7 +198,7 @@ done
 checks=$((checks + 1))
 units=$("$affected" --all | grep '^unit ' | tr '\n' ' ')
 case $units in
-  "unit legacy unit leoiot-pv ") ;;
+  "unit leoiot-platform unit legacy unit leoiot-pv ") ;;
   *) fail "--all: units not in deployment order: $units" ;;
 esac
 

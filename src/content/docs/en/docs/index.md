@@ -8,7 +8,7 @@ sidebar:
 
 LeoIoT is a school project of class 5AHITM at HTL Leonding (a technical secondary school in Austria). It shows data from the PV (photovoltaic, solar power) system (manufacturer Solax) and CO₂ and temperature values from classrooms in a dashboard, a kiosk display (a full-screen display for screens in the school building) and a 3D model of the school. The data comes from sensor boxes via MQTT and from the Solax Cloud and is stored in InfluxDB; everything runs in Docker on the school’s virtual machine (VM) (the old stack in `legacy/` plus the main kiosk in `leoiot-pv/`).
 
-As of today, one real sensor box delivers measurements (room 153). All other rooms are fed with simulated test values.
+As of today, one real sensor box delivers measurements (room 105). All other rooms are fed with simulated test values.
 
 ## Where to start
 

@@ -23,16 +23,16 @@ LeoIoT sammelt Raumklimadaten (Temperatur, CO₂) sowie Photovoltaik-Daten (Sola
 <Image src={diagramDark} alt="Architektur: Datenfluss von den Sensoren bis zu den Dashboards" class="light:sl-hidden" />
 
 :::note[Öffentliche Pfade]
-Ein Reverse-Proxy (Nginx; ein Verteiler, der Anfragen an den richtigen Dienst leitet) macht alle Oberflächen unter einer gemeinsamen Domain erreichbar (Konfiguration: `legacy/deploy/nginx.conf`). Die Pfade stehen im Abschnitt [Nginx-Routing](../operations/#nginx-routing) der Seite Betrieb.
+Ein Reverse-Proxy (Nginx; ein Verteiler, der Anfragen an den richtigen Dienst leitet) macht alle Oberflächen unter einer gemeinsamen Domain erreichbar (Konfiguration: `leoiot-platform/proxy/nginx.conf`). Die Pfade stehen im Abschnitt [Nginx-Routing](../operations/#nginx-routing) der Seite Betrieb.
 :::
 
 ## Dienste
 
-Ports laut `legacy/docker-compose.yaml` (nach außen veröffentlichte Ports) und, für den Hauptkiosk, laut `leoiot-pv/compose.yaml`.
+Ports laut `leoiot-platform/compose.yaml` (Broker), `legacy/docker-compose.yaml` (nach außen veröffentlichte Ports) und, für den Hauptkiosk, laut `leoiot-pv/compose.yaml`.
 
 | Dienst | Port | Zweck |
 |---|---|---|
-| `mosquitto` | 1883 | MQTT-Broker (Eclipse Mosquitto), Zugriff nur mit Login (`allow_anonymous false`) |
+| `mosquitto` (Projekt `leoiot-platform`) | 1883, 9001 | MQTT-Broker (Eclipse Mosquitto): 1883 nur mit Login; 9001 MQTT über WebSocket nur auf `127.0.0.1`, anonym und nur lesend auf den Raumklima-Topics, erreichbar unter `/mqtt` |
 | `influxdb` | 8086 | Zeitreihendatenbank InfluxDB 2.7, Organisation `leoiot`, Bucket `server_data` |
 | `telegraf` | – | Überträgt MQTT-Nachrichten nach InfluxDB (kein veröffentlichter Port) |
 | `grafana` | 3000 | Dashboards, Datenquelle und Dashboard werden aus `legacy/grafana/` provisioniert |
@@ -46,7 +46,7 @@ Ports laut `legacy/docker-compose.yaml` (nach außen veröffentlichte Ports) und
 
 ## Rolle der Komponenten
 
-- **Mosquitto**: der zentrale MQTT-Broker, also die Vermittlungsstelle: Sensoren senden Nachrichten hin, andere Dienste holen sie ab. `legacy/config/mosquitto.conf` nimmt Verbindungen auf Port 1883 aus dem ganzen Netz an und verbietet anonyme Verbindungen.
+- **Mosquitto**: der zentrale MQTT-Broker, also die Vermittlungsstelle: Sensoren senden Nachrichten hin, andere Dienste holen sie ab. Er läuft aus `leoiot-platform/` (`leoiot-platform/broker/mosquitto.conf`), das auch das gemeinsame Netz aller Stacks anlegt. Port 1883 nimmt Verbindungen aus dem ganzen Netz an und verbietet anonyme Verbindungen; Port 9001 bedient Browser über WebSocket, anonym und nur lesend auf `leoiot/room-climate/#`.
 - **Telegraf**: zwei MQTT-Consumer in `legacy/telegraf.conf`. Der erste liest die Topics `nili3/#`, `nili3_co2/#`, `homeassistant/#`, `esphome/#` als Zahlenwert (`data_format = "value"`, Typ `float`). Der zweite liest `room-temperature` als JSON und legt den Wert unter dem Measurement `room_temperature` mit dem Tag `room` ab. Ausgabe: InfluxDB-Bucket `server_data`.
 - **InfluxDB**: speichert alle Messwerte. Beim Start wird die Organisation `leoiot` und der Bucket `server_data` angelegt (`DOCKER_INFLUXDB_INIT_*`).
 - **Grafana**: Datenquelle `InfluxDB-Flux` (Flux, Standard-Bucket `server_data`) und das Dashboard `legacy/grafana/dashboards/main-dashboard.json` werden beim Start geladen.
@@ -78,12 +78,12 @@ Im Repository stehen an mehreren Stellen Zugangsdaten und ein InfluxDB-Token als
 
 - `legacy/docker-compose.yaml`
 - `legacy/telegraf.conf`
-- `legacy/config/mosquitto.conf`
+- `leoiot-platform/compose.yaml`, `leoiot-platform/broker/mosquitto.conf`
 - `legacy/mqtt-ws-bridge/index.js`
 - `leoiot-pv/collector/src/main.ts`
 - `legacy/fake-sensors/index.js`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/grafana/provisioning/`, `legacy/grafana/dashboards/main-dashboard.json`
-- `legacy/deploy/nginx.conf`
+- `leoiot-platform/proxy/nginx.conf`
 - `leoiot-pv/kiosk/`, `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`
 - `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`

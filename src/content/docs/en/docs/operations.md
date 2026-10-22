@@ -46,7 +46,7 @@ What counts is what changed since the **last successful deployment**. Its commit
 - **`legacy`: per service.** The Node services bind-mount their folder, so a Compose `up` alone does not restart them. Exactly the services with changed files are therefore recreated with `--force-recreate` (`npm install` runs again, and the service is unreachable for a few minutes). `quarkus-app` is additionally rebuilt by `--build`.
 - **New units (`leoiot-pv`): per image.** The images are rebuilt, and only services whose image or definition changed are recreated.
 - **Units without changes** are not touched: a legacy-only release does not build PV images, and a PV-only release does not restart a legacy container.
-- **Nginx** is not managed by the deployment. If `legacy/deploy/nginx.conf` (or later an `nginx*.conf` in `leoiot-platform/`) changes, or there is no earlier deployment, the run prints a warning: the file has to be applied on the VM by hand (`/etc/nginx/sites-available/leoiot` is a copy).
+- **Nginx** is not managed by the deployment. If an `nginx*.conf` in `leoiot-platform/` (today `leoiot-platform/proxy/nginx.conf`) changes, or there is no earlier deployment, the run prints a warning: the file has to be applied on the VM by hand (`/etc/nginx/sites-available/leoiot` is a copy).
 
 ### Configuration on the VM
 
@@ -88,7 +88,7 @@ As long as the runner and the `release` branch are missing, the manual route rem
 
 ## Nginx routing
 
-`legacy/deploy/nginx.conf` defines one server for the school hostname: requests on port 80 (unencrypted) are automatically redirected to HTTPS (encrypted, port 443). Nginx handles the encryption (TLS); the certificates come from Let’s Encrypt (`/etc/letsencrypt`). Nginx acts as the reverse proxy here: it receives all requests and passes them on to the services running on `127.0.0.1`.
+`leoiot-platform/proxy/nginx.conf` defines one server for the school hostname: requests on port 80 (unencrypted) are automatically redirected to HTTPS (encrypted, port 443). Nginx handles the encryption (TLS); the certificates come from Let’s Encrypt (`/etc/letsencrypt`). Nginx acts as the reverse proxy here: it receives all requests and passes them on to the services running on `127.0.0.1`.
 
 | Path | Target |
 |---|---|
@@ -100,6 +100,7 @@ As long as the runner and the `release` branch are missing, the manual route rem
 | `/grafana/` | `127.0.0.1:3000` (with `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, prefix stripped) |
 | `/ws` | `127.0.0.1:8090` (WebSocket upgrade, `mqtt-ws-bridge`) |
+| `/mqtt` | `127.0.0.1:9001` (MQTT over WebSocket, broker of `leoiot-platform/`; anonymous, read-only on the room-climate topics; at most 20 connections per client address) |
 | `/solax/` | external Solax cloud API (`openapi-eu.solaxcloud.com`), header `Access-Control-Allow-Origin: *` is set |
 
 Only the paths `/kiosk` and `/dashboard` without a trailing slash are redirected with a 301 to the variant with `/`. Grafana is configured to match with `GF_SERVER_ROOT_URL` and `GF_SERVER_SERVE_FROM_SUB_PATH=true`.
@@ -136,14 +137,14 @@ According to the InfluxDB documentation, `--full` replaces the entire data set i
 - The weekly backup job (cron) is set up only on the VM and is not stored in the repository.
 - Backups are stored only on the same VM; no external target is configured.
 - The deploy workflow (`deploy.yml`) takes effect only once the runner is installed on the VM, the `production` environment exists and the `release` branch exists; until then updates are made by hand. It uses a fixed path on the VM (`/home/solmqadmin/2526-4ahitm-leoiot-dashboard`).
-- The Nginx configuration lives in `legacy/deploy/` but is not copied to the VM automatically (there: `/etc/nginx/sites-available/leoiot`).
+- The Nginx configuration lives in `leoiot-platform/proxy/` but is not copied to the VM automatically (there: `/etc/nginx/sites-available/leoiot`).
 - Grafana is additionally reachable directly on port 3000, not only via Nginx under `/grafana/`.
 
 ## Sources in the repository
 
 - `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/docs.yaml`, `package.json`
 - `.github/ci/deploy.sh`, `.github/ci/affected.sh`, `.github/ci/image-build.sh`, `.github/ci/legacy-services.map`, `.github/ci/smoke-routes`
-- `legacy/deploy/nginx.conf`
+- `leoiot-platform/proxy/nginx.conf`
 - `leoiot-pv/compose.yaml`
 - `legacy/backup/backup.sh`, `legacy/backup/restore.sh`
 - `legacy/docker-compose.yaml`
