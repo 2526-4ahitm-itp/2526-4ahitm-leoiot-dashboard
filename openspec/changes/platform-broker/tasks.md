@@ -1,6 +1,6 @@
 # Tasks
 
-Tasks marked **(human, vm23)** need a shell on the host and are done only on the explicit instruction of the sensors team lead. Passwords and account files never enter the repository.
+Tasks marked **(vm23)** run on the host; **(human, vm23)** ones need `sudo` and are done by the sensors team lead himself. Passwords and account files never enter the repository.
 
 ## 1. Broker unit
 
@@ -19,18 +19,22 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 
 ## 4. Signposts for other teams' agents
 
-- [x] 4.1 Add an entry under "Removed parts" in `legacy/README.md` naming `mosquitto`, `config/`, `deploy/nginx.conf` and the network definition as replaced by `leoiot-platform/`, with the date the platform broker went live (filled in after task 5.2); verify the entry exists and points to `leoiot-platform/`
+- [x] 4.1 Add an entry under "Removed parts" in `legacy/README.md` naming `mosquitto`, `config/`, `deploy/nginx.conf` and the network definition as replaced by `leoiot-platform/`, with the date the platform broker went live (filled in by task 5.6); verify the entry exists and points to `leoiot-platform/`
 - [x] 4.2 Rewrite the `config/pwfile` note in `legacy/README.md` so it says the password file and `acl` now live in `leoiot-platform/broker/` and are copied there on a new host; verify `grep -n "legacy/config" legacy/README.md` finds no instruction to copy files there
 - [x] 4.3 Update `leoiot-platform/README.md`: status, what runs from the folder (broker, network, proxy configuration), and how to provide `broker/pwfile` and `broker/acl` on a host; verify the README no longer says "Not started"
 - [x] 4.4 Update `src/content/docs/{docs,en/docs}/{setup.md,interfaces.md,architecture.mdx}` and the operations pages wherever they place the broker, its config or `nginx.conf` in `legacy/`; verify `grep -rn -E "legacy/config|legacy/deploy/nginx.conf" src/content/docs` finds nothing outdated and `npm run build` at the root succeeds
 
-## 5. Cutover (design D8)
+## 5. Cutover with the release deployment (design D8)
 
-- [ ] 5.1 **(human, vm23)** List the account names in the host's `legacy/config/pwfile` (names only), write `leoiot-platform/broker/acl` from the example, copy the password file to `leoiot-platform/broker/pwfile`, and add the sensors collector account; verify every name in the password file has a line in `acl`
-- [ ] 5.2 **(human, vm23)** At a quiet time announced to the PV team: stop `leoiot-pv` and legacy, remove the network, start the platform unit, then legacy and `leoiot-pv` from the commit of this change; verify `docker network inspect 2526-4ahitm-leoiot-dashboard_leoiot` shows the Compose project `leoiot-platform` and all containers of the three units run
-- [ ] 5.3 **(human, vm23)** Apply `leoiot-platform/proxy/nginx.conf` to `/etc/nginx/sites-available/leoiot`, keeping the old file; verify `nginx -t` passes, nginx reloads and every route in `.github/ci/smoke-routes` answers
-- [ ] 5.4 Check on the running system: the real box `nili3` still delivers (recent points in `mqtt_consumer`), the PV kiosk shows live data, a browser can subscribe at `wss://vm23.htl-leonding.ac.at/mqtt`, an anonymous publish there is not delivered, and retained messages survive `docker compose restart mosquitto`; verify each check is noted in the pull request
+Steps on vm23 are done by Claude over SSH (allowed by the sensors team lead on 2026-10-22) except where `sudo` is needed; nothing there is stopped or changed before he says go.
+
+- [ ] 5.1 **(vm23)** After this change is merged into `main`: create `leoiot-platform/broker/` in the deploy checkout `/home/solmqadmin/2526-4ahitm-leoiot-dashboard`, copy `legacy/config/pwfile` to `leoiot-platform/broker/pwfile`, and write `leoiot-platform/broker/acl` with a block `user leoiot` / `topic readwrite #`, both mode 644; verify every name in `pwfile` (`cut -d: -f1`) has a block in `acl` and `git status` in the checkout shows neither file
+- [ ] 5.2 **(vm23)** Dry-run the platform unit from the `main` commit in a temporary worktree (`docker compose --dry-run up -d`) and remove the worktree again; verify Compose 5.1.1 accepts the existing network `2526-4ahitm-leoiot-dashboard_leoiot` (a warning is fine, an error stops the cutover and falls back to recreating the network)
+- [ ] 5.3 Open the promotion pull request `main` → `release` on request; right before the sensors team lead merges it, **(vm23)** stop the legacy broker (`docker stop 2526-4ahitm-leoiot-dashboard-mosquitto-1`); verify port 1883 is free on vm23 before the merge, and the deploy run (`.github/workflows/deploy.yml`) ends green, smoke test included
+- [ ] 5.4 **(vm23)** After the deployment: verify the container `leoiot-platform-mosquitto-1` runs and listens on 1883 and on `127.0.0.1:9001`, the old container `2526-4ahitm-leoiot-dashboard-mosquitto-1` is gone, the broker log shows the legacy services and the PV collector connecting as `leoiot`, and `leoiot-pv` kept running
+- [ ] 5.5 **(human, vm23)** The sensors team lead applies the nginx file with `sudo`: keep `/etc/nginx/sites-available/leoiot` as a copy, copy `leoiot-platform/proxy/nginx.conf` over it, `sudo nginx -t`, `sudo systemctl reload nginx`; verify every route in `.github/ci/smoke-routes` still answers
+- [ ] 5.6 Check on the running system: the real box `nili3` still delivers (recent points in `mqtt_consumer`), the PV kiosk shows live data, a browser can subscribe at `wss://vm23.htl-leonding.ac.at/mqtt`, an anonymous publish there is not delivered, and retained messages survive `docker compose restart mosquitto`; then fill in the date in the "Removed parts" entry of `legacy/README.md` (task 4.1) in a docs pull request; verify each check is noted in that pull request
 
 ## 6. Close
 
-- [ ] 6.1 Verify `openspec validate platform-broker --strict` passes, then archive the change after task 5.4 so `openspec/specs/platform/broker/spec.md` exists
+- [ ] 6.1 Verify `openspec validate platform-broker --strict` passes, then archive the change after task 5.6 so `openspec/specs/platform/broker/spec.md` exists
