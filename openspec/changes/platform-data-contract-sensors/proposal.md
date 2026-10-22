@@ -39,6 +39,6 @@ None.
 - **Unblocks** the first `sensors-…` changes (collector, simulator, dashboard) and gives the 3D team a room-climate source.
 - **Broker**: gains a WebSocket listener for browsers, an anonymous read-only access rule and a route on the reverse proxy. Because `legacy/` will be deleted, these land on a broker owned by `leoiot-platform/`, set up by a follow-up change `platform-broker` (`design.md` D8); `legacy/` only loses its `mosquitto` service.
 - **Database**: one write token for the sensors collector (the existing requirement on separate tokens covers it); no new bucket.
-- **Storage**: one point per reading kept without a time limit is a large, mostly simulated volume. Marked as an important open decision in `design.md`; it is settled before this change is merged.
+- **Storage**: one point per reading kept without a time limit is a large, mostly simulated volume. Decided 2026-10-22 (`design.md`, "Important decision: storage volume"): the contract stays as it is and the new simulator publishes about once a minute.
 - **Legacy**: no change. Telegraf, `mqtt-ws-bridge`, `dashboard-v2` and Grafana keep reading and writing the legacy sensor data.
 - **Docs**: `src/content/docs/{docs,en/docs}/{index,project}.md`.

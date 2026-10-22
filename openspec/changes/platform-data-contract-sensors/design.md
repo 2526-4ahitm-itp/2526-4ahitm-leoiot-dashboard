@@ -30,9 +30,9 @@ Unlike the PV part of the contract, nothing in this change exists yet: the inter
 - Changing or cleaning up the legacy sensor path. It runs unchanged until its readers are removed, then it is deleted with `legacy/`.
 - Device configuration, device topics, simulator behaviour (all `sensors`).
 
-## Important decision still open: storage volume
+## Important decision: storage volume
 
-**To be decided before this change is merged.** The spec currently states the choice made on 2026-10-22: one point per reading (requirement "Room-climate readings are stored as `room_climate`") and no time limit (retention requirement). Together they mean a large volume that is mostly invented data:
+**Decided 2026-10-22: option B.** The contract keeps one point per reading (requirement "Room-climate readings are stored as `room_climate`") and no time limit (retention requirement). The volume is kept down on the simulator side: the new simulator in `leoiot-sensors/` publishes about once a minute per room instead of every 10 s; physical devices keep their full rate. The simulator's rate is a `sensors` decision and is specified in its own change. Background for the decision, the volume of one point per reading kept without a limit:
 
 - Real box: three fields every 10 s, about 26 000 values a day. Negligible.
 - A simulator at the legacy rate (about 120 rooms, three fields, every 10 s): about 3 million values a day. At a few bytes per value after compression, roughly 5 to 20 MB a day, several GB a year, with no end.
@@ -46,7 +46,7 @@ Options:
 | C | Simulated readings are published live but not stored | requirement "Simulated readings are marked" and the storage requirement change |
 | D | Raw readings for a limited time plus per-minute means kept forever | storage and retention requirements change; needs a second bucket, since retention is per bucket in InfluxDB |
 
-Task 1.1 records the decision; if it is C or D, the spec is changed before merge.
+B was chosen because it needs no change to the contract, keeps real readings at full resolution and cuts the generated volume about sixfold. If the volume still grows too fast, D can follow as its own `platform-…` change.
 
 ## Decisions
 
@@ -106,7 +106,7 @@ A month compared with the same month a year before needs 13 months. The bucket c
 
 ## Migration Plan
 
-1. Merge this change (contract first); decide the storage question before.
+1. Merge this change (contract first).
 2. Create the write token for the collector and a broker account that may publish only on `leoiot/room-climate/#`.
 3. `sensors-…`: the collector writes `room_climate` and publishes the live topic; the simulator marks its readings.
 4. `platform-broker`: broker in `leoiot-platform/`, WebSocket listener, access rules, `/mqtt` route; `legacy/` loses its `mosquitto` service.

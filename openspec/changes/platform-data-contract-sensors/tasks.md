@@ -4,8 +4,8 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 
 ## 1. Decide before merge
 
-- [ ] 1.1 **Important.** Decide the storage volume question in `design.md` ("Important decision still open: storage volume", options A to D) with the sensors team; verify the section states the chosen option and the date, and, if it is C or D, that the storage and retention requirements in `specs/platform/data-contract/spec.md` are changed to match
-- [ ] 1.2 Verify `openspec validate platform-data-contract-sensors --strict` passes after task 1.1
+- [x] 1.1 **Important.** Decide the storage volume question in `design.md` ("Important decision: storage volume", options A to D) with the sensors team; verify the section states the chosen option and the date, and, if it is C or D, that the storage and retention requirements in `specs/platform/data-contract/spec.md` are changed to match
+- [x] 1.2 Verify `openspec validate platform-data-contract-sensors --strict` passes after task 1.1
 
 ## 2. Documentation
 
