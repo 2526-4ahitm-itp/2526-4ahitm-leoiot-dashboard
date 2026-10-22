@@ -6,7 +6,7 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 
 - [x] 1.1 Create `leoiot-platform/compose.yaml` (project `leoiot-platform`, service `mosquitto` on an exact `2.0.x` image tag, ports `1883:1883` and `127.0.0.1:9001:9001`, a persistence volume, and the network with the explicit name `2526-4ahitm-leoiot-dashboard_leoiot`); verify `docker compose -f leoiot-platform/compose.yaml config -q` passes
 - [x] 1.2 Add `leoiot-platform/broker/`: `mosquitto.conf` (per-listener settings, TCP 1883 with password file and `acl`, WebSocket 9001 anonymous with `acl-websocket`, persistence, a connection limit on 9001), `acl-websocket` (read `leoiot/room-climate/#` only), `acl.example` (existing accounts `readwrite #`, sensors collector `read #` and `write leoiot/room-climate/#`), and Git ignores for `pwfile` and `acl`; verify `git check-ignore leoiot-platform/broker/pwfile leoiot-platform/broker/acl` names both
-- [ ] 1.3 Run the unit locally with a throwaway password file and `acl` (one legacy-style account, one collector account) and check every scenario of `specs/platform/broker/spec.md` that can run locally, plus the three browser scenarios of `platform/data-contract` against `ws://127.0.0.1:9001`; verify each scenario's result is noted in this task's pull request
+- [x] 1.3 Run the unit locally with a throwaway password file and `acl` (one legacy-style account, one collector account) and check every scenario of `specs/platform/broker/spec.md` that can run locally, plus the three browser scenarios of `platform/data-contract` against `ws://127.0.0.1:9001`; verify each scenario's result is noted in this task's pull request
 
 ## 2. Legacy removal
 
@@ -15,7 +15,7 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 
 ## 3. Reverse proxy
 
-- [ ] 3.1 Move `legacy/deploy/nginx.conf` to `leoiot-platform/proxy/nginx.conf` with `git mv` and add `location /mqtt` forwarding WebSocket upgrades to `127.0.0.1:9001` with a long read timeout; verify `git log --follow leoiot-platform/proxy/nginx.conf` shows the old history, the diff against the old file is only the new block, and `nginx -t` passes for the file in an nginx container with certificate paths stubbed
+- [x] 3.1 Move `legacy/deploy/nginx.conf` to `leoiot-platform/proxy/nginx.conf` with `git mv` and add `location /mqtt` forwarding WebSocket upgrades to `127.0.0.1:9001` with a long read timeout; verify `git log --follow leoiot-platform/proxy/nginx.conf` shows the old history, the diff against the old file is only the new block, and `nginx -t` passes for the file in an nginx container with certificate paths stubbed
 
 ## 4. Signposts for other teams' agents
 
