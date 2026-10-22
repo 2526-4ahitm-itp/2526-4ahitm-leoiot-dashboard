@@ -1,0 +1,31 @@
+name: leoiot-platform
+
+services:
+  # The broker of all sub-projects (spec platform/broker). It keeps the host
+  # name "mosquitto" and port 1883 of the broker it replaced in legacy/.
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22
+    restart: unless-stopped
+    ports:
+      # Devices and services, with an account.
+      - "1883:1883"
+      # MQTT over WebSocket for browsers. Local only: nginx forwards /mqtt
+      # (leoiot-platform/proxy/nginx.conf).
+      - "127.0.0.1:9001:9001"
+    volumes:
+      # mosquitto.conf and acl-websocket come from Git; pwfile and acl are
+      # host-local (see leoiot-platform/README.md).
+      - ./broker:/mosquitto/config:ro
+      - broker_data:/mosquitto/data
+    networks:
+      - leoiot
+
+volumes:
+  broker_data:
+
+networks:
+  # The shared network of all deploy units (spec platform/broker). It keeps
+  # the name it had under legacy/, so legacy/ and leoiot-pv/ join it as an
+  # external network without any change of name.
+  leoiot:
+    name: 2526-4ahitm-leoiot-dashboard_leoiot

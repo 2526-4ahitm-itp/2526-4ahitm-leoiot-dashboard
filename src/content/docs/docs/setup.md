@@ -1,33 +1,35 @@
 ---
 title: Einrichtung
-description: Voraussetzungen, Start des alten Stacks in legacy/ und des Hauptkiosks in leoiot-pv/ mit Docker Compose, Ports, benötigte Dateien und lokale Entwicklung.
+description: Voraussetzungen, Start der Plattform-Einheit in leoiot-platform/, des alten Stacks in legacy/ und des Hauptkiosks in leoiot-pv/ mit Docker Compose, Ports, benötigte Dateien und lokale Entwicklung.
 sidebar:
   order: 30
 ---
 
-Diese Seite beschreibt, wie der alte Stack in `legacy/` und zusätzlich der Hauptkiosk in `leoiot-pv/` lokal gestartet werden. Docker Compose (Werkzeug zum gemeinsamen Starten mehrerer Container) startet die Dienste eines Stacks mit einem Befehl.
+Diese Seite beschreibt, wie die Plattform-Einheit in `leoiot-platform/` (Broker und gemeinsames Netz), der alte Stack in `legacy/` und zusätzlich der Hauptkiosk in `leoiot-pv/` lokal gestartet werden. Docker Compose (Werkzeug zum gemeinsamen Starten mehrerer Container) startet die Dienste eines Stacks mit einem Befehl.
 
 ## Voraussetzungen
 
 - Docker mit dem Compose-Plugin (der Start erfolgt über `docker compose`).
 - Die Node-Dienste (JavaScript-Programme) laufen im Container (`node:20-alpine`) und installieren ihre Bibliotheken beim Start selbst (`npm install`). Node muss daher nicht auf dem eigenen Rechner installiert sein.
 - Der Dienst `quarkus-app` wird aus `legacy/backend/sensor-data-generator` per Dockerfile gebaut (`src/main/docker/Dockerfile`).
-- Für den Dienst `mosquitto` muss die Datei `legacy/config/pwfile` existieren (siehe unten).
+- Für den Dienst `mosquitto` (in `leoiot-platform/`) müssen die Dateien `leoiot-platform/broker/pwfile` und `leoiot-platform/broker/acl` existieren (siehe unten).
 
 ## Start
 
 ```bash
-# im Ordner legacy/ des Repositorys
+# zuerst im Ordner leoiot-platform/: Broker und gemeinsames Netz
+docker compose up -d
+
+# dann im Ordner legacy/ des Repositorys
 docker compose up -d
 ```
 
 Ohne `-d` laufen die Logs im Vordergrund. Logs einzelner Dienste: `docker compose logs -f dashboard-v2`, Stoppen: `docker compose down`.
 
-Compose startet folgende Dienste (alle im Netzwerk `leoiot`):
+Die Plattform-Einheit (`leoiot-platform/compose.yaml`) startet den Broker `mosquitto` (`eclipse-mosquitto:2.0.22`) und legt das gemeinsame Netz `2526-4ahitm-leoiot-dashboard_leoiot` an. In `legacy/` startet Compose folgende Dienste (alle in diesem Netz, dem der alte Stack als externem Netz beitritt):
 
 | Dienst | Image / Quelle | Zweck |
 |---|---|---|
-| `mosquitto` | `eclipse-mosquitto:latest` | MQTT-Broker (Nachrichten-Vermittler) |
 | `influxdb` | `influxdb:2.7` | Zeitreihendatenbank (Setup-Modus beim ersten Start) |
 | `telegraf` | `telegraf:latest` | liest MQTT-Topics und schreibt nach InfluxDB (`legacy/telegraf.conf`) |
 | `grafana` | `grafana/grafana:latest` | Dashboards (Provisioning aus `legacy/grafana/`) |
@@ -41,7 +43,8 @@ Compose startet folgende Dienste (alle im Netzwerk `leoiot`):
 
 | Port | Dienst |
 |---|---|
-| 1883 | Mosquitto (MQTT) |
+| 1883 | Mosquitto (MQTT, `leoiot-platform/`) |
+| 9001 | Mosquitto (MQTT über WebSocket, nur auf `127.0.0.1`; von außen über Nginx unter `/mqtt`) |
 | 8086 | InfluxDB |
 | 3000 | Grafana |
 | 8080 | `frontend` (3D-Explorer) |
@@ -53,7 +56,7 @@ Compose startet folgende Dienste (alle im Netzwerk `leoiot`):
 
 ## Hauptkiosk
 
-Der Hauptkiosk liegt in `leoiot-pv/kiosk/` und läuft als eigenes Compose-Projekt `leoiot-pv` (`leoiot-pv/compose.yaml`). Er hängt am Netz des alten Stacks (`2526-4ahitm-leoiot-dashboard_leoiot`); der alte Stack muss deshalb laufen.
+Der Hauptkiosk liegt in `leoiot-pv/kiosk/` und läuft als eigenes Compose-Projekt `leoiot-pv` (`leoiot-pv/compose.yaml`). Er hängt am gemeinsamen Netz (`2526-4ahitm-leoiot-dashboard_leoiot`), das die Plattform-Einheit anlegt; die Plattform-Einheit muss deshalb laufen.
 
 ```bash
 # im Ordner leoiot-pv/ des Repositorys
@@ -78,8 +81,9 @@ Die Tests laufen mit `npm test`. Wie der Kiosk ohne Datenquelle mit Beispieldate
 
 | Name | Wo | Bedeutung |
 |---|---|---|
-| `legacy/config/mosquitto.conf` | im Repository | Listener 1883, `allow_anonymous false`, `password_file /mosquitto/config/pwfile` |
-| `legacy/config/pwfile` | **nicht** im Repository (`.gitignore`) | Passwortdatei des Brokers |
+| `leoiot-platform/broker/mosquitto.conf` | im Repository | Listener 1883 nur mit Zugang (`pwfile`, `acl`); Listener 9001 (WebSocket) anonym und nur lesend auf `leoiot/room-climate/#` (`acl-websocket`) |
+| `leoiot-platform/broker/pwfile` | **nicht** im Repository (`.gitignore`) | Passwortdatei des Brokers |
+| `leoiot-platform/broker/acl` | **nicht** im Repository (`.gitignore`) | Zugriffsregeln der Zugänge; Aufbau in `acl.example` |
 | `legacy/telegraf.conf` | im Repository | MQTT-Zugang (Benutzername/Passwort) und InfluxDB-Token; die Werte werden aus Sicherheitsgründen nicht genannt |
 | `MQTT_HOST` | Compose-Umgebung von `quarkus-app`, `fake-sensors`, `mqtt-ws-bridge` | Hostname des Brokers (im Compose-Netz `mosquitto`) |
 | `MQTT_PORT`, `UPDATE_INTERVAL` | optional, `fake-sensors` | Broker-Port (Standard 1883), Publish-Intervall in ms (Standard 10000) |
@@ -92,23 +96,23 @@ Die Tests laufen mit `npm test`. Wie der Kiosk ohne Datenquelle mit Beispieldate
 Zu Zugangsdaten und Tokens im Repository siehe [Betrieb](../operations/), Abschnitt „Bekannte Einschränkungen“.
 :::
 
-## Fehlende `legacy/config/pwfile`
+## Fehlende `leoiot-platform/broker/pwfile` oder `acl`
 
-Mosquitto lässt nur angemeldete Benutzer zu. Dafür braucht es eine Passwortdatei (`legacy/config/pwfile`, im Container `/mosquitto/config/pwfile`). Sie steht aus Sicherheitsgründen in `.gitignore` und fehlt daher nach einem frischen Clone (Download des Projekts); im Repository liegt nur `legacy/config/mosquitto.conf`. Das Verzeichnis `legacy/config/` wird als Volume (gemeinsamer Ordner mit dem Container) eingebunden.
+Auf Port 1883 lässt Mosquitto nur angemeldete Benutzer zu. Dafür braucht es eine Passwortdatei (`leoiot-platform/broker/pwfile`, im Container `/mosquitto/config/pwfile`) und die Zugriffsregeln der Zugänge (`leoiot-platform/broker/acl`). Beide stehen aus Sicherheitsgründen in `.gitignore` und fehlen daher nach einem frischen Clone (Download des Projekts); im Repository liegen `mosquitto.conf`, `acl-websocket` und das Beispiel `acl.example`. Das Verzeichnis `leoiot-platform/broker/` wird nur lesend als Volume (gemeinsamer Ordner mit dem Container) eingebunden, deshalb müssen beide Dateien für alle lesbar sein (`chmod 644`).
 
 Die Datei wird mit dem Mosquitto-Werkzeug `mosquitto_passwd` erzeugt. Prinzip (Platzhalter, keine realen Werte):
 
 ```bash
-# im Ordner legacy/: Datei anlegen, ersten Benutzer eintragen (Passwortabfrage)
-docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest \
+# im Ordner leoiot-platform/: Datei anlegen, ersten Benutzer eintragen (Passwortabfrage)
+docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.0.22 \
   mosquitto_passwd -c /mosquitto/config/pwfile <BENUTZER>
 
-# im Ordner legacy/: weiteren Benutzer ergänzen (ohne -c, sonst wird die Datei überschrieben)
-docker run --rm -it -v "$PWD/config:/mosquitto/config" eclipse-mosquitto:latest \
+# im Ordner leoiot-platform/: weiteren Benutzer ergänzen (ohne -c, sonst wird die Datei überschrieben)
+docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.0.22 \
   mosquitto_passwd /mosquitto/config/pwfile <WEITERER_BENUTZER>
 ```
 
-Die verwendeten Benutzer/Passwörter müssen zu den Clients passen: Telegraf, `fake-sensors` und das Backend (`quarkus-app`) melden sich mit Benutzername und Passwort am Broker an (Konfiguration in `legacy/telegraf.conf`, `legacy/fake-sensors/index.js` bzw. der Backend-`application.properties`).
+Die verwendeten Benutzer/Passwörter müssen zu den Clients passen: Telegraf, `fake-sensors` und das Backend (`quarkus-app`) melden sich mit Benutzername und Passwort am Broker an (Konfiguration in `legacy/telegraf.conf`, `legacy/fake-sensors/index.js` bzw. der Backend-`application.properties`). Danach `broker/acl.example` nach `broker/acl` kopieren und jedem Zugang einen Block geben; ein Zugang ohne Block kann sich verbinden, aber weder senden noch abonnieren. Mehr in `leoiot-platform/README.md`.
 
 ## Fake-Sensoren zum Testen
 
@@ -147,7 +151,7 @@ npm run dev
 ## Quellen im Repository
 
 - `legacy/docker-compose.yaml`
-- `legacy/config/mosquitto.conf`, `.gitignore`
+- `leoiot-platform/compose.yaml`, `leoiot-platform/broker/` (`mosquitto.conf`, `acl-websocket`, `acl.example`, `.gitignore`), `leoiot-platform/README.md`
 - `legacy/telegraf.conf`
 - `legacy/fake-sensors/index.js`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`

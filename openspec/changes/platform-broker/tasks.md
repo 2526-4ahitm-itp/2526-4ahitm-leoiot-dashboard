@@ -4,13 +4,13 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 
 ## 1. Broker unit
 
-- [ ] 1.1 Create `leoiot-platform/compose.yaml` (project `leoiot-platform`, service `mosquitto` on an exact `2.0.x` image tag, ports `1883:1883` and `127.0.0.1:9001:9001`, a persistence volume, and the network with the explicit name `2526-4ahitm-leoiot-dashboard_leoiot`); verify `docker compose -f leoiot-platform/compose.yaml config -q` passes
-- [ ] 1.2 Add `leoiot-platform/broker/`: `mosquitto.conf` (per-listener settings, TCP 1883 with password file and `acl`, WebSocket 9001 anonymous with `acl-websocket`, persistence, a connection limit on 9001), `acl-websocket` (read `leoiot/room-climate/#` only), `acl.example` (existing accounts `readwrite #`, sensors collector `read #` and `write leoiot/room-climate/#`), and Git ignores for `pwfile` and `acl`; verify `git check-ignore leoiot-platform/broker/pwfile leoiot-platform/broker/acl` names both
+- [x] 1.1 Create `leoiot-platform/compose.yaml` (project `leoiot-platform`, service `mosquitto` on an exact `2.0.x` image tag, ports `1883:1883` and `127.0.0.1:9001:9001`, a persistence volume, and the network with the explicit name `2526-4ahitm-leoiot-dashboard_leoiot`); verify `docker compose -f leoiot-platform/compose.yaml config -q` passes
+- [x] 1.2 Add `leoiot-platform/broker/`: `mosquitto.conf` (per-listener settings, TCP 1883 with password file and `acl`, WebSocket 9001 anonymous with `acl-websocket`, persistence, a connection limit on 9001), `acl-websocket` (read `leoiot/room-climate/#` only), `acl.example` (existing accounts `readwrite #`, sensors collector `read #` and `write leoiot/room-climate/#`), and Git ignores for `pwfile` and `acl`; verify `git check-ignore leoiot-platform/broker/pwfile leoiot-platform/broker/acl` names both
 - [ ] 1.3 Run the unit locally with a throwaway password file and `acl` (one legacy-style account, one collector account) and check every scenario of `specs/platform/broker/spec.md` that can run locally, plus the three browser scenarios of `platform/data-contract` against `ws://127.0.0.1:9001`; verify each scenario's result is noted in this task's pull request
 
 ## 2. Legacy removal
 
-- [ ] 2.1 In `legacy/docker-compose.yaml` remove the `mosquitto` service, every `depends_on: mosquitto`, and the `mosquitto_data` volume declaration, and declare the network `leoiot` as `external: true` with the name `2526-4ahitm-leoiot-dashboard_leoiot`; remove `legacy/config/`; verify `docker compose -f legacy/docker-compose.yaml config -q` passes and `grep -n mosquitto legacy/docker-compose.yaml` shows only `MQTT_HOST` values
+- [x] 2.1 In `legacy/docker-compose.yaml` remove the `mosquitto` service, every `depends_on: mosquitto`, and the `mosquitto_data` volume declaration, and declare the network `leoiot` as `external: true` with the name `2526-4ahitm-leoiot-dashboard_leoiot`; remove `legacy/config/`; verify `docker compose -f legacy/docker-compose.yaml config -q` passes and `grep -n mosquitto legacy/docker-compose.yaml` shows only `MQTT_HOST` values
 
 ## 3. Reverse proxy
 
@@ -18,10 +18,10 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 
 ## 4. Signposts for other teams' agents
 
-- [ ] 4.1 Add an entry under "Removed parts" in `legacy/README.md` naming `mosquitto`, `config/`, `deploy/nginx.conf` and the network definition as replaced by `leoiot-platform/`, with the date the platform broker went live (filled in after task 5.2); verify the entry exists and points to `leoiot-platform/`
-- [ ] 4.2 Rewrite the `config/pwfile` note in `legacy/README.md` so it says the password file and `acl` now live in `leoiot-platform/broker/` and are copied there on a new host; verify `grep -n "legacy/config" legacy/README.md` finds no instruction to copy files there
-- [ ] 4.3 Update `leoiot-platform/README.md`: status, what runs from the folder (broker, network, proxy configuration), and how to provide `broker/pwfile` and `broker/acl` on a host; verify the README no longer says "Not started"
-- [ ] 4.4 Update `src/content/docs/{docs,en/docs}/{setup.md,interfaces.md,architecture.mdx}` and the operations pages wherever they place the broker, its config or `nginx.conf` in `legacy/`; verify `grep -rn -E "legacy/config|legacy/deploy/nginx.conf" src/content/docs` finds nothing outdated and `npm run build` at the root succeeds
+- [x] 4.1 Add an entry under "Removed parts" in `legacy/README.md` naming `mosquitto`, `config/`, `deploy/nginx.conf` and the network definition as replaced by `leoiot-platform/`, with the date the platform broker went live (filled in after task 5.2); verify the entry exists and points to `leoiot-platform/`
+- [x] 4.2 Rewrite the `config/pwfile` note in `legacy/README.md` so it says the password file and `acl` now live in `leoiot-platform/broker/` and are copied there on a new host; verify `grep -n "legacy/config" legacy/README.md` finds no instruction to copy files there
+- [x] 4.3 Update `leoiot-platform/README.md`: status, what runs from the folder (broker, network, proxy configuration), and how to provide `broker/pwfile` and `broker/acl` on a host; verify the README no longer says "Not started"
+- [x] 4.4 Update `src/content/docs/{docs,en/docs}/{setup.md,interfaces.md,architecture.mdx}` and the operations pages wherever they place the broker, its config or `nginx.conf` in `legacy/`; verify `grep -rn -E "legacy/config|legacy/deploy/nginx.conf" src/content/docs` finds nothing outdated and `npm run build` at the root succeeds
 
 ## 5. Cutover (design D8)
 
