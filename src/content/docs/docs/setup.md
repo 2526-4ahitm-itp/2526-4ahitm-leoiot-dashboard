@@ -26,7 +26,7 @@ docker compose up -d
 
 Ohne `-d` laufen die Logs im Vordergrund. Logs einzelner Dienste: `docker compose logs -f dashboard-v2`, Stoppen: `docker compose down`.
 
-Die Plattform-Einheit (`leoiot-platform/compose.yaml`) startet den Broker `mosquitto` (`eclipse-mosquitto:2.0.22`) und legt das gemeinsame Netz `2526-4ahitm-leoiot-dashboard_leoiot` an. In `legacy/` startet Compose folgende Dienste (alle in diesem Netz, dem der alte Stack als externem Netz beitritt):
+Die Plattform-Einheit (`leoiot-platform/compose.yaml`) startet den Broker `mosquitto` (`eclipse-mosquitto:2.1.2-alpine`) und legt das gemeinsame Netz `2526-4ahitm-leoiot-dashboard_leoiot` an. In `legacy/` startet Compose folgende Dienste (alle in diesem Netz, dem der alte Stack als externem Netz beitritt):
 
 | Dienst | Image / Quelle | Zweck |
 |---|---|---|
@@ -104,11 +104,11 @@ Die Datei wird mit dem Mosquitto-Werkzeug `mosquitto_passwd` erzeugt. Prinzip (P
 
 ```bash
 # im Ordner leoiot-platform/: Datei anlegen, ersten Benutzer eintragen (Passwortabfrage)
-docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.0.22 \
+docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.1.2-alpine \
   mosquitto_passwd -c /mosquitto/config/pwfile <BENUTZER>
 
 # im Ordner leoiot-platform/: weiteren Benutzer ergänzen (ohne -c, sonst wird die Datei überschrieben)
-docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.0.22 \
+docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.1.2-alpine \
   mosquitto_passwd /mosquitto/config/pwfile <WEITERER_BENUTZER>
 ```
 

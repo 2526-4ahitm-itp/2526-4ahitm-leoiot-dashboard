@@ -30,7 +30,7 @@ See `proposal.md` for motivation. Current state, read from the repository (not c
 
 ### D1. `leoiot-platform/` becomes a Compose deploy unit
 
-`leoiot-platform/compose.yaml`, project name `leoiot-platform`, with one service `mosquitto` (an exact `2.0.x` image tag instead of `latest`). Broker files sit in `leoiot-platform/broker/`. *Why:* CI and deployment pick the unit up by shape and deploy it first, so the broker and the network exist before `legacy` and `leoiot-pv` start. *Alternative:* keep the broker in the legacy stack and only add files (rejected: everything there is deleted with `legacy/`).
+`leoiot-platform/compose.yaml`, project name `leoiot-platform`, with one service `mosquitto` (an exact image tag instead of `latest`: `2.1.2-alpine`, because the password file on vm23 holds Mosquitto 2.1 hashes, which 2.0 rejects; see D8). Broker files sit in `leoiot-platform/broker/`. *Why:* CI and deployment pick the unit up by shape and deploy it first, so the broker and the network exist before `legacy` and `leoiot-pv` start. *Alternative:* keep the broker in the legacy stack and only add files (rejected: everything there is deleted with `legacy/`).
 
 ### D2. The platform owns the network under its current name
 
@@ -74,6 +74,8 @@ The deploy job starts the platform unit before `legacy` and runs `docker compose
 
 Legacy (`/dashboard/`, `/grafana/`, `/influx/`, the broker) is down for the length of the deployment, a few minutes while its Node services run `npm install`; PV live data pauses from step 2 to step 4. The `sensors-collector` account is not part of the cutover: it is added with `mosquitto_passwd` plus an `acl` block when the collector is built.
 
+**What happened on 2026-10-22.** The promotion (#103) was merged before step 2, so the deployment stopped at the platform unit ("network … has active endpoints"); nothing had changed. Step 2 was then done by hand. Disconnecting the PV containers took their published ports down as well, so the PV pages were unreachable until step 4 (about ten minutes): a container's published ports need a network. The rerun of the deployment rolled out the platform and legacy, and its smoke test failed only on the PV routes. The platform broker then rejected every account: the old broker was `eclipse-mosquitto:latest` (2.1.2), whose password hashes the pinned 2.0.22 cannot verify. A hotfix on vm23 ran the broker from the host's local 2.1.2 image through a Compose override outside the checkout (`/tmp/leoiot-platform-hotfix.yaml`), Telegraf and `fake-sensors` were started again, the PV containers were reconnected, and every client was back. The pin is now `2.1.2-alpine` (tested locally against a 2.1 password file), and the next deployment replaces the hotfix container. Lessons for a cutover of this kind: the PV pages are part of the downtime when their containers leave the network, and the version of a replaced service is compared with the old one before it is pinned.
+
 *Rollback:* if the deployment fails, the deploy checkout is put back on the previous `release` commit, `docker compose down` runs in `leoiot-platform/` if its unit started, `docker compose up -d` in `legacy/` brings back the network and the legacy broker, and the PV containers are connected again; the deployment marker only advances after a passed smoke test. After a completed deployment the same steps apply, plus restoring the old nginx file. *Alternatives:* taking the network over as it is (rejected: Compose 5.1.1 recreates it, see the dry run); a manual cutover with every unit stopped (rejected: it also takes the PV pages down).
 
 ## Risks / Trade-offs
@@ -92,4 +94,3 @@ See D8: the cutover is the promotion of this change to `release`, with three ste
 
 ## Open Questions
 
-- Which exact `2.0.x` patch version to pin; decided when the Compose file is written, from the current Mosquitto releases.
