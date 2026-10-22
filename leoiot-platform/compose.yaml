@@ -4,7 +4,9 @@ services:
   # The broker of all sub-projects (spec platform/broker). It keeps the host
   # name "mosquitto" and port 1883 of the broker it replaced in legacy/.
   mosquitto:
-    image: eclipse-mosquitto:2.0.22
+    # 2.1: the password file on vm23 holds 2.1 hashes, which 2.0 cannot
+    # verify (every account was rejected on 2026-10-22).
+    image: eclipse-mosquitto:2.1.2-alpine
     restart: unless-stopped
     ports:
       # Devices and services, with an account.

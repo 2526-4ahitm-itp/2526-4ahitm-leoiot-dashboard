@@ -41,7 +41,7 @@ Specs: `openspec/specs/platform/broker/` and `openspec/specs/platform/data-contr
 1. Create the password file with `mosquitto_passwd` (placeholders, no real values):
 
    ```bash
-   docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.0.22 \
+   docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.1.2-alpine \
      mosquitto_passwd -c /mosquitto/config/pwfile <USER>
    ```
 
