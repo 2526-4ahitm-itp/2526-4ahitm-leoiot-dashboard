@@ -17,6 +17,5 @@ legacy/mqtt-ws-bridge/                     mqtt-ws-bridge
 legacy/fake-sensors/                       fake-sensors
 legacy/backend/sensor-data-generator/      quarkus-app
 legacy/telegraf.conf                       telegraf
-legacy/config/                             mosquitto
 legacy/grafana/                            grafana
 -                                          influxdb
