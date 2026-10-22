@@ -9,7 +9,7 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 
 ## 2. Documentation
 
-- [ ] 2.1 Correct the room of the real sensor box from 153 to 105 in `src/content/docs/docs/index.md`, `src/content/docs/docs/project.md`, `src/content/docs/en/docs/index.md` and `src/content/docs/en/docs/project.md`; verify `grep -rn "153" src/content/docs` no longer names it as the box's room and `npm run build` at the root succeeds
+- [x] 2.1 Correct the room of the real sensor box from 153 to 105 in `src/content/docs/docs/index.md`, `src/content/docs/docs/project.md`, `src/content/docs/en/docs/index.md` and `src/content/docs/en/docs/project.md`; verify `grep -rn "153" src/content/docs` no longer names it as the box's room and `npm run build` at the root succeeds
 
 ## 3. Agreement
 
