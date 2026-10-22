@@ -11,6 +11,7 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 ## 2. Legacy removal
 
 - [x] 2.1 In `legacy/docker-compose.yaml` remove the `mosquitto` service, every `depends_on: mosquitto`, and the `mosquitto_data` volume declaration, and declare the network `leoiot` as `external: true` with the name `2526-4ahitm-leoiot-dashboard_leoiot`; remove `legacy/config/`; verify `docker compose -f legacy/docker-compose.yaml config -q` passes and `grep -n mosquitto legacy/docker-compose.yaml` shows only `MQTT_HOST` values
+- [ ] 2.2 In a pull request of its own (`.github/` is shared), remove the line `legacy/config/ mosquitto` from `.github/ci/legacy-services.map` and update the matching case in `.github/ci/affected.test.sh`, so that a release without `legacy/config/` does not try to recreate the removed legacy service `mosquitto`; it is merged before this change is promoted to `release`. Verify `bash .github/ci/affected.test.sh` passes
 
 ## 3. Reverse proxy
 
