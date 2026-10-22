@@ -26,7 +26,7 @@ docker compose up -d
 
 Without `-d` the logs stay in the foreground. Logs of one service: `docker compose logs -f dashboard-v2`; stop: `docker compose down`.
 
-The platform unit (`leoiot-platform/compose.yaml`) starts the broker `mosquitto` (`eclipse-mosquitto:2.0.22`) and creates the shared network `2526-4ahitm-leoiot-dashboard_leoiot`. In `legacy/`, Compose starts these services (all on that network, which the old stack joins as an external one):
+The platform unit (`leoiot-platform/compose.yaml`) starts the broker `mosquitto` (`eclipse-mosquitto:2.1.2-alpine`) and creates the shared network `2526-4ahitm-leoiot-dashboard_leoiot`. In `legacy/`, Compose starts these services (all on that network, which the old stack joins as an external one):
 
 | Service | Image / source | Purpose |
 |---|---|---|
@@ -104,11 +104,11 @@ The file is created with the Mosquitto tool `mosquitto_passwd`. Principle (place
 
 ```bash
 # in leoiot-platform/: create the file, add the first user (asks for a password)
-docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.0.22 \
+docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.1.2-alpine \
   mosquitto_passwd -c /mosquitto/config/pwfile <USER>
 
 # in leoiot-platform/: add another user (without -c, otherwise the file is overwritten)
-docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.0.22 \
+docker run --rm -it -v "$PWD/broker:/mosquitto/config" eclipse-mosquitto:2.1.2-alpine \
   mosquitto_passwd /mosquitto/config/pwfile <OTHER_USER>
 ```
 
