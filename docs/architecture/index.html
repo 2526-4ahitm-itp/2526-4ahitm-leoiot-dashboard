@@ -65,9 +65,9 @@
 </ol>
 <img src="/2526-4ahitm-leoiot-dashboard/_astro/architecture.D8cJF652_ZrKSvc.svg" alt="Architektur: Datenfluss von den Sensoren bis zu den Dashboards" loading="lazy" decoding="async" width="909" height="952" class="dark:sl-hidden">
 <img src="/2526-4ahitm-leoiot-dashboard/_astro/architecture.dark.CYuLwjF-_ZrKSvc.svg" alt="Architektur: Datenfluss von den Sensoren bis zu den Dashboards" loading="lazy" decoding="async" width="909" height="952" class="light:sl-hidden">
-<aside aria-label="Öffentliche Pfade" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1Zm.38-3.92a1 1 0 0 0-.76 0 1 1 0 0 0-.33.21 1.15 1.15 0 0 0-.21.33 1 1 0 0 0 .21 1.09c.097.088.209.16.33.21A1 1 0 0 0 13 8a1.05 1.05 0 0 0-.29-.71 1 1 0 0 0-.33-.21ZM12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16.001A8 8 0 0 1 12 20Z"/></svg>Öffentliche Pfade</p><div class="starlight-aside__content"><p>Ein Reverse-Proxy (Nginx; ein Verteiler, der Anfragen an den richtigen Dienst leitet) macht alle Oberflächen unter einer gemeinsamen Domain erreichbar (Konfiguration: <code dir="auto">legacy/deploy/nginx.conf</code>). Die Pfade stehen im Abschnitt <a href="../operations/#nginx-routing">Nginx-Routing</a> der Seite Betrieb.</p></div></aside>
+<aside aria-label="Öffentliche Pfade" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1Zm.38-3.92a1 1 0 0 0-.76 0 1 1 0 0 0-.33.21 1.15 1.15 0 0 0-.21.33 1 1 0 0 0 .21 1.09c.097.088.209.16.33.21A1 1 0 0 0 13 8a1.05 1.05 0 0 0-.29-.71 1 1 0 0 0-.33-.21ZM12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16.001A8 8 0 0 1 12 20Z"/></svg>Öffentliche Pfade</p><div class="starlight-aside__content"><p>Ein Reverse-Proxy (Nginx; ein Verteiler, der Anfragen an den richtigen Dienst leitet) macht alle Oberflächen unter einer gemeinsamen Domain erreichbar (Konfiguration: <code dir="auto">leoiot-platform/proxy/nginx.conf</code>). Die Pfade stehen im Abschnitt <a href="../operations/#nginx-routing">Nginx-Routing</a> der Seite Betrieb.</p></div></aside>
 <div class="sl-heading-wrapper level-h2"><h2 id="dienste">Dienste</h2><a class="sl-anchor-link" href="#dienste"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Dienste“</span></a></div>
-<p>Ports laut <code dir="auto">legacy/docker-compose.yaml</code> (nach außen veröffentlichte Ports) und, für den Hauptkiosk, laut <code dir="auto">leoiot-pv/compose.yaml</code>.</p>
+<p>Ports laut <code dir="auto">leoiot-platform/compose.yaml</code> (Broker), <code dir="auto">legacy/docker-compose.yaml</code> (nach außen veröffentlichte Ports) und, für den Hauptkiosk, laut <code dir="auto">leoiot-pv/compose.yaml</code>.</p>
 <table>
 <thead>
 <tr>
@@ -78,9 +78,9 @@
 </thead>
 <tbody>
 <tr>
-<td><code dir="auto">mosquitto</code></td>
-<td>1883</td>
-<td>MQTT-Broker (Eclipse Mosquitto), Zugriff nur mit Login (<code dir="auto">allow_anonymous false</code>)</td>
+<td><code dir="auto">mosquitto</code> (Projekt <code dir="auto">leoiot-platform</code>)</td>
+<td>1883, 9001</td>
+<td>MQTT-Broker (Eclipse Mosquitto): 1883 nur mit Login; 9001 MQTT über WebSocket nur auf <code dir="auto">127.0.0.1</code>, anonym und nur lesend auf den Raumklima-Topics, erreichbar unter <code dir="auto">/mqtt</code></td>
 </tr>
 <tr>
 <td><code dir="auto">influxdb</code></td>
@@ -136,7 +136,7 @@
 </table>
 <div class="sl-heading-wrapper level-h2"><h2 id="rolle-der-komponenten">Rolle der Komponenten</h2><a class="sl-anchor-link" href="#rolle-der-komponenten"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Abschnitt betitelt „Rolle der Komponenten“</span></a></div>
 <ul>
-<li><strong>Mosquitto</strong>: der zentrale MQTT-Broker, also die Vermittlungsstelle: Sensoren senden Nachrichten hin, andere Dienste holen sie ab. <code dir="auto">legacy/config/mosquitto.conf</code> nimmt Verbindungen auf Port 1883 aus dem ganzen Netz an und verbietet anonyme Verbindungen.</li>
+<li><strong>Mosquitto</strong>: der zentrale MQTT-Broker, also die Vermittlungsstelle: Sensoren senden Nachrichten hin, andere Dienste holen sie ab. Er läuft aus <code dir="auto">leoiot-platform/</code> (<code dir="auto">leoiot-platform/broker/mosquitto.conf</code>), das auch das gemeinsame Netz aller Stacks anlegt. Port 1883 nimmt Verbindungen aus dem ganzen Netz an und verbietet anonyme Verbindungen; Port 9001 bedient Browser über WebSocket, anonym und nur lesend auf <code dir="auto">leoiot/room-climate/#</code>.</li>
 <li><strong>Telegraf</strong>: zwei MQTT-Consumer in <code dir="auto">legacy/telegraf.conf</code>. Der erste liest die Topics <code dir="auto">nili3/#</code>, <code dir="auto">nili3_co2/#</code>, <code dir="auto">homeassistant/#</code>, <code dir="auto">esphome/#</code> als Zahlenwert (<code dir="auto">data_format = "value"</code>, Typ <code dir="auto">float</code>). Der zweite liest <code dir="auto">room-temperature</code> als JSON und legt den Wert unter dem Measurement <code dir="auto">room_temperature</code> mit dem Tag <code dir="auto">room</code> ab. Ausgabe: InfluxDB-Bucket <code dir="auto">server_data</code>.</li>
 <li><strong>InfluxDB</strong>: speichert alle Messwerte. Beim Start wird die Organisation <code dir="auto">leoiot</code> und der Bucket <code dir="auto">server_data</code> angelegt (<code dir="auto">DOCKER_INFLUXDB_INIT_*</code>).</li>
 <li><strong>Grafana</strong>: Datenquelle <code dir="auto">InfluxDB-Flux</code> (Flux, Standard-Bucket <code dir="auto">server_data</code>) und das Dashboard <code dir="auto">legacy/grafana/dashboards/main-dashboard.json</code> werden beim Start geladen.</li>
@@ -180,13 +180,13 @@
 <ul>
 <li><code dir="auto">legacy/docker-compose.yaml</code></li>
 <li><code dir="auto">legacy/telegraf.conf</code></li>
-<li><code dir="auto">legacy/config/mosquitto.conf</code></li>
+<li><code dir="auto">leoiot-platform/compose.yaml</code>, <code dir="auto">leoiot-platform/broker/mosquitto.conf</code></li>
 <li><code dir="auto">legacy/mqtt-ws-bridge/index.js</code></li>
 <li><code dir="auto">leoiot-pv/collector/src/main.ts</code></li>
 <li><code dir="auto">legacy/fake-sensors/index.js</code></li>
 <li><code dir="auto">legacy/backend/sensor-data-generator/src/main/resources/application.properties</code></li>
 <li><code dir="auto">legacy/grafana/provisioning/</code>, <code dir="auto">legacy/grafana/dashboards/main-dashboard.json</code></li>
-<li><code dir="auto">legacy/deploy/nginx.conf</code></li>
+<li><code dir="auto">leoiot-platform/proxy/nginx.conf</code></li>
 <li><code dir="auto">leoiot-pv/kiosk/</code>, <code dir="auto">leoiot-pv/compose.yaml</code>, <code dir="auto">leoiot-pv/.env.example</code></li>
 <li><code dir="auto">legacy/frontend/logic.js</code>, <code dir="auto">legacy/dashboard-v2/dashboard.js</code></li>
 </ul></div><footer class="sl-flex astro-ddtxxk7k"><div class="meta sl-flex astro-ddtxxk7k"></div><div class="pagination-links print:hidden astro-b5raizh3" dir="ltr"><a href="/2526-4ahitm-leoiot-dashboard/docs/project/" rel="prev" class="astro-b5raizh3"><svg aria-hidden="true" class="astro-b5raizh3 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg><span class="astro-b5raizh3">Vorherige Seite<br class="astro-b5raizh3"><span class="link-title astro-b5raizh3">Projekt</span></span></a><a href="/2526-4ahitm-leoiot-dashboard/docs/interfaces/" rel="next" class="astro-b5raizh3"><svg aria-hidden="true" class="astro-b5raizh3 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg><span class="astro-b5raizh3">Nächste Seite<br class="astro-b5raizh3"><span class="link-title astro-b5raizh3">Schnittstellen</span></span></a></div></footer></div></div></main></div></div></div></div></body></html>
