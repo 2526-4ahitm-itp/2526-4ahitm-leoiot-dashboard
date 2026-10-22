@@ -33,7 +33,7 @@ Out of scope: automatically opening/closing windows or doors and other building 
 
 Everything runs in the browser, without login, in German and English. It is hosted on the school VM. The application is brought there by hand; only the documentation site is published automatically (GitHub Actions).
 
-Note on the data: as of today, one real sensor box delivers measurements (room 153); all other rooms are fed with test values by a simulator (`fake-sensors`).
+Note on the data: as of today, one real sensor box delivers measurements (room 105); all other rooms are fed with test values by a simulator (`fake-sensors`).
 
 ## Requirements
 

@@ -33,7 +33,7 @@ Nicht Teil des Projekts: automatisches Öffnen/Schließen von Fenstern oder Tür
 
 Alles läuft im Browser, ohne Login, auf Deutsch und Englisch. Gehostet wird auf der Schul-VM. Die Anwendung wird von Hand dorthin gebracht; automatisch veröffentlicht wird nur die Doku-Seite (GitHub Actions).
 
-Hinweis zu den Daten: Stand heute liefert eine echte Sensorbox Messwerte (Raum 153); die übrigen Räume werden von einem Simulator (`fake-sensors`) mit Testwerten versorgt.
+Hinweis zu den Daten: Stand heute liefert eine echte Sensorbox Messwerte (Raum 105); die übrigen Räume werden von einem Simulator (`fake-sensors`) mit Testwerten versorgt.
 
 ## Anforderungen
 
