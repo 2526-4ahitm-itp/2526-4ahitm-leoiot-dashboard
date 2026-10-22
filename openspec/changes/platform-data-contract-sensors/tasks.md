@@ -13,9 +13,11 @@ Tasks marked **(human, vm23)** need a shell on the host and are done only on the
 
 ## 3. Agreement
 
-- [ ] 3.1 Link the pull request for the PV team (Daniel Lettner, Stefan Schachner) and the 3D team (Paul Kreinecker, Jonas Leitner); verify both teams have answered or reacted on the pull request before it is merged
-- [ ] 3.2 Get the repository maintainers' agreement to D8 (broker moves into `leoiot-platform/`, `legacy/` only loses its `mosquitto` service); verify the agreement is recorded on the pull request
-- [ ] 3.3 Elias Pointinger accepts the final spec for the sensors team after tasks 1.1 to 3.2; verify he has said so on the pull request
+Decided by Elias Pointinger, sensors team lead, on 2026-10-22: no separate review by the other teams or the maintainers is needed. PR #98 was merged with his acceptance, and the signposts required by task 4.1 redirect the other teams' agents to `leoiot-platform/`. Tasks 3.1 to 3.3 are closed on that basis.
+
+- [x] 3.1 Link the pull request for the PV team (Daniel Lettner, Stefan Schachner) and the 3D team (Paul Kreinecker, Jonas Leitner); verify both teams have answered or reacted on the pull request before it is merged
+- [x] 3.2 Get the repository maintainers' agreement to D8 (broker moves into `leoiot-platform/`, `legacy/` only loses its `mosquitto` service); verify the agreement is recorded on the pull request
+- [x] 3.3 Elias Pointinger accepts the final spec for the sensors team after tasks 1.1 to 3.2; verify he has said so on the pull request
 
 ## 4. Follow-up and access (after merge)
 
