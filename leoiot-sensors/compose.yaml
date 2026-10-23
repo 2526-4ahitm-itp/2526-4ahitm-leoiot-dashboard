@@ -1,0 +1,29 @@
+name: leoiot-sensors
+
+services:
+  collector:
+    build: ./collector
+    restart: unless-stopped
+    env_file:
+      # SENSORS_INFLUX_TOKEN, SENSORS_MQTT_USER and SENSORS_MQTT_PASSWORD live in a
+      # file on vm23 outside the checkout. Without the file the collector exits
+      # and names the missing variables; "docker compose config" still works in CI.
+      - path: ${SENSORS_COLLECTOR_ENV_FILE:-/home/solmqadmin/leoiot-host-secrets/sensors-collector.env}
+        required: false
+    healthcheck:
+      # Unhealthy when the broker has been gone for more than two minutes or
+      # writing to the database has been failing for more than five.
+      test: ["CMD", "node", "healthcheck.mjs"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 2
+    networks:
+      - platform
+
+networks:
+  # The broker and InfluxDB run on the shared network of the platform unit
+  # (platform/broker), which this unit joins as an external network.
+  platform:
+    external: true
+    name: ${PLATFORM_NETWORK:-2526-4ahitm-leoiot-dashboard_leoiot}
