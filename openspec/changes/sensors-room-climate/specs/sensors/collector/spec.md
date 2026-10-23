@@ -31,8 +31,12 @@ For every valid value a mapped device delivers, the collector SHALL store one po
 - **THEN** a reader of room-climate readings finds within ten seconds one new point for room `105`, device `nili3`, source `sensor`, carrying only the temperature 22.4, stamped with the time of receipt
 
 #### Scenario: Two quantities at nearly the same time
-- **WHEN** `nili3` delivers temperature and humidity within the same second
-- **THEN** two points are stored, one per value, and neither carries the other quantity as zero
+- **WHEN** `nili3` delivers temperature and humidity within the same millisecond
+- **THEN** two points are stored, one per value, with distinct timestamps, and neither carries the other quantity as zero
+
+#### Scenario: Retained value replayed by the broker
+- **WHEN** the collector subscribes (at start or after a reconnect) and the broker replays the last retained value of a device topic
+- **THEN** the replayed value is not a delivery: it is neither stored nor published, because its time of receipt would not be the time it was measured
 
 ### Requirement: Readings are published as the contract specifies
 For every valid value a mapped device delivers, the collector SHALL publish the room's live message as specified in `platform/data-contract`, carrying the device's latest value of every quantity it has delivered since the collector started, and as time the receipt of the value just delivered.

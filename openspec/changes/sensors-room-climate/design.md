@@ -35,7 +35,7 @@ Both components use TypeScript and Vitest like `leoiot-pv/`. The collector uses 
 
 ### D2. One point per delivered value
 
-ESPHome sends each quantity as its own message, so every message becomes one single-field point stamped at receipt. *Alternative:* collect temperature and humidity that arrive within a short window into one point (rejected: an arbitrary window, a reading would be delayed, and the contract explicitly allows single-field points).
+ESPHome sends each quantity as its own message, so every message becomes one single-field point stamped at receipt. Two values received in the same millisecond get timestamps a few nanoseconds apart, because InfluxDB would otherwise merge them into one point. ESPHome publishes its states retained, so the broker replays the last value of every device topic on each subscribe; such a replay carries the retain flag and is ignored (logged once), since stamping it with the receipt time would invent a reading. *Alternative:* collect temperature and humidity that arrive within a short window into one point (rejected: an arbitrary window, a reading would be delayed, and the contract explicitly allows single-field points).
 
 ### D3. Exact topic subscriptions, never a pattern
 
@@ -51,7 +51,7 @@ The collector keeps the last value of each quantity per device in memory and pub
 
 ### D6. A bounded write buffer
 
-Points go to the database in batches every two seconds. When a write fails, they stay in an in-memory queue of at most one hour (about 1 100 points for `nili3`) and are written in order once the database answers. A restart loses the queue; the box keeps no history either, so a longer outage loses readings in any case.
+Points go to the database in batches every two seconds. When a write fails, they stay in an in-memory queue of at most one hour (about 1 100 points for `nili3`) and are written in order once the database answers. A batch that InfluxDB rejects as invalid (HTTP 400 or 422) is dropped and logged instead of retried, so one bad point cannot block the queue; every other error is retried. A restart loses the queue; the box keeps no history either, so a longer outage loses readings in any case.
 
 ### D7. Health from a status file
 
