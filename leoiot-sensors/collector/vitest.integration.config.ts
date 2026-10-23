@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     include: ['integration/**/*.integration.ts'],
     environment: 'node',
+    globalSetup: ['integration/build.ts'],
     testTimeout: 120_000,
     hookTimeout: 180_000,
     // One stack per file, files one after the other.
