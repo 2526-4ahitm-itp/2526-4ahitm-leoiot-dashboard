@@ -1,0 +1,14 @@
+{
+  "devices": [
+    {
+      "device": "nili3",
+      "room": "105",
+      "source": "sensor",
+      "topics": {
+        "co2": "nili3/sensor/nili3_co2/state",
+        "temperature": "nili3/sensor/nili3_temperature/state",
+        "humidity": "nili3/sensor/nili3_humidity/state"
+      }
+    }
+  ]
+}
