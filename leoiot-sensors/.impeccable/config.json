@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/previews/room-105/index.html"
+        ],
+        "createdAt": "2026-10-23T08:52:04.630Z",
+        "reason": "Claude decided: segmented controls (24 h / 7 Tage, DE / EN) fill the pressed segment up to the control's border by design; the labels sit centred in a 36px-high control"
+      }
+    ]
+  }
+}
