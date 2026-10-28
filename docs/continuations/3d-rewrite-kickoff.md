@@ -5,7 +5,7 @@ Continuation prompt for the 3D-Modell team (Paul Kreinecker, Jonas Leitner). It 
 ## State
 
 - **Branch / change:** none yet. No `3d-…` change exists in `openspec/changes/`, `openspec/specs/3d/` is empty, `leoiot-3d/` holds only `README.md` (status "Not started").
-- **Next step:** propose the first change, e.g. `3d-building-explorer`, with the scope in "Decisions" below, plus the `platform-…` change for the route. When the 3D change exists, rename this prompt to the change name (rule: `docs/continuations/README.md`).
+- **Next step:** propose the first change, e.g. `3d-building-explorer`, with the scope in "Decisions" below. The route `/3d/` is a separate plain platform pull request without an OpenSpec change (D2, prompt `docs/continuations/platform-3d-route.md`). This prompt is on `main`, so a worktree from `origin/main` contains it. When the 3D change exists, rename this prompt to the change name (rule: `docs/continuations/README.md`).
 - Exploration only so far: no code was written.
 - Work in a worktree: `git fetch origin && git worktree add ../leoiot-3d-<task> -b feat/<task> origin/main`.
 
@@ -15,7 +15,7 @@ Read `AGENTS.md`, `openspec/specs/README.md`, `openspec/config.yaml`, `leoiot-3d
 
 - Code lives only in `leoiot-3d/`. It **must not import, copy or mount anything from `legacy/`** or a sibling sub-project. Legacy logic is re-specified and re-implemented. Exception decided by the team: the glTF model files (see Decisions, D1).
 - Specs: `openspec/specs/3d/<capability>/spec.md`. Changes are named `3d-…`. Never create `openspec/` inside `leoiot-3d/`.
-- Contract first: any topic, payload, field, route or shared interface the 3D app relies on must already be in `openspec/specs/platform/`. If it is not, a `platform-…` change is merged first.
+- Contract first: any topic, payload, field, route or shared interface the 3D app relies on must already be in `openspec/specs/platform/`. If it is not, a `platform-…` change is merged first. (The proxy route `/3d/` is not such an interface: no platform spec covers routes, so it is a plain platform pull request, see D2.)
 - The tech stack and scaffolding are decided in the first `3d-…` change (`leoiot-3d/README.md`).
 - CI picks the sub-project up by shape: `package.json` per component, `Dockerfile`, `compose.yaml` in `leoiot-3d/`, routes in `.github/ci/smoke-routes`. Node 22 for `leoiot-*`. Run `.github/ci/affected.sh origin/main HEAD` and the listed checks before pushing.
 - Never commit credentials. **`legacy/frontend/logic.js` contains a hard-coded InfluxDB admin token (`INFLUXDB_TOKEN`). Do not copy it.** The new app must not hold any token in browser code.
@@ -49,7 +49,7 @@ From `openspec/specs/platform/data-contract/spec.md` and `openspec/specs/platfor
 
 ## Hosting / routes today
 
-- `leoiot-platform/proxy/nginx.conf`: catch-all `location /` → `127.0.0.1:8080`, which is the **legacy** 3D frontend (Vite dev server in `node:20-alpine`, `legacy/docker-compose.yaml` service `frontend`; also listed in `src/content/docs/en/docs/operations.md` and `.github/ci/legacy-services.map`). `/mqtt` → broker WS (9001). Ports in use: 3000, 8080, 8081, 8086, 8088 (`/kiosk/`), 8089 (`/pv/`), 8090, 9001.
+- `leoiot-platform/proxy/nginx.conf`: catch-all `location /` → `127.0.0.1:8080`, which is the **legacy** 3D frontend (Vite dev server in `node:20-alpine`, `legacy/docker-compose.yaml` service `frontend`; also listed in `src/content/docs/en/docs/operations.md` and `.github/ci/legacy-services.map`). `/mqtt` → broker WS (9001). Ports in use: 1883 (broker MQTT, `leoiot-platform/compose.yaml`), 3000, 8080, 8081, 8086, 8088 (`/kiosk/`), 8089 (`/pv/`), 8090, 9001. 8091 is free.
 - `.github/ci/smoke-routes` checks `/` among others.
 - Target (decision D2): new app at `/3d/`; `/` stays unchanged for now. See D2 for the proxy plan.
 
@@ -140,32 +140,15 @@ Corridor centre lines (legacy `segments`, x/z): ring z = −13.9 and z = 5.1 for
 
 - Admin InfluxDB token in browser code; Flux queries built by string concatenation from room names.
 - Reads legacy data (`room_temperature`, `mqtt_consumer` `nili3/…` topics, special case for room 105) and the legacy `/ws` bridge instead of `room_climate` / `/mqtt`.
-- 240 MB of base64-embedded glTF loaded at once; no compression (Draco/Meshopt), no `.glb`, no per-floor lazy loading; the floor files duplicate the lower floors.
+- About 192 MB of base64-embedded glTF loaded at once (six models; the unused `building.glb` adds another 41 MB on disk); no compression (Draco/Meshopt), no `.glb`, no per-floor lazy loading; the floor files duplicate the lower floors.
 - three.js version mismatch (package.json vs. CDN importmap); runs as a Vite **dev** server in production.
 - No stale-data indicator (FR-08), English only, `alert()` for unknown room, heavy console logging, global `window.*` functions.
 
 ## Decisions (team, 2026-10-28)
 
-- **D1 – Models are copied.** The glTF files are copied from `legacy/frontend/` into `leoiot-3d/`; without them there is no model. This is a deliberate exception to the "copy nothing from legacy" rule for data assets only; record it in the change's `design.md`. Floor models: **4** – basement `ModelU.gltf`, ground floor `ModelE.gltf` (E = Erdgeschoss), first floor `Model1F.gltf`, second floor `Model2F.gltf`. There is no third-floor model: the only other floor-like meshes are `ceiling_floor-*` (roof slab) inside `ModelFull.gltf`. Also copied: `ModelFull.gltf` (whole building, start view and "Reset View") and `ModelT.gltf` (gym) – both are important. The waypoint files are only needed for the navigation change. `building.glb` and `temp.html` are unused and not copied. Converting to compressed `.glb` is allowed later, but not required for the first change.
+- **D1 – Models are copied.** The glTF files are copied from `legacy/frontend/` into `leoiot-3d/`; without them there is no model. This is a deliberate exception to the "copy nothing from legacy" rule for data assets only; record it in the change's `design.md`. Floor models: **4** – basement `ModelU.gltf`, ground floor `ModelE.gltf` (E = Erdgeschoss), first floor `Model1F.gltf`, second floor `Model2F.gltf`. There is no third-floor model: the only other floor-like meshes are `ceiling_floor-*` (roof slab) inside `ModelFull.gltf`. Also copied: `ModelFull.gltf` (whole building, start view and "Reset View") and `ModelT.gltf` (gym) – both are important. The waypoint files are only needed for the navigation change. `building.glb` and `temp.html` are unused and not copied. **The files are copied as they are** (plain git, no Git LFS, no conversion): about 192 MB, `ModelFull.gltf` is 53 MB and triggers GitHub's 50 MB warning on push (the limit is 100 MB per file). They will be changed later anyway; compressing them (e.g. `.glb` with Draco/Meshopt) is a later change. The nginx image serves them, so they are part of the Docker build context.
 - **D2 – Route `/3d/` only; the main page stays as it is.** The new app is deployed at `https://vm23.htl-leonding.ac.at/3d/`. `/` keeps showing what it shows today (the legacy 3D explorer); nothing changes there. Making `/` open the new app (or another main page) is a later iteration. Vite needs `base: '/3d/'`.
-  The route only matters to 3D, but the files are shared, so it goes in its own small pull request (e.g. `feat/platform-3d-route`). No OpenSpec change is needed: no platform spec covers proxy routes, and the route is not a data interface.
-  - `leoiot-platform/proxy/nginx.conf` (the repository copy of the host's nginx site): add two blocks next to the PV ones, in the same style. Nothing else changes. nginx picks the longest matching prefix, so `/3d/` wins over the catch-all `location /` wherever it stands.
-
-    ```nginx
-    # 3D building explorer of leoiot-3d (leoiot-3d/compose.yaml)
-    location = /3d { return 301 /3d/$is_args$args; }
-
-    location /3d/ {
-        proxy_pass http://127.0.0.1:8091;
-        proxy_set_header Host $host;
-    }
-    ```
-
-    `proxy_pass` has no trailing slash, so the `/3d/` prefix is kept; the container serves the build under `/3d/` (as the PV dashboard does under `/pv/`), and Vite builds with `base: '/3d/'`. Port 8091 is free today; the 3D `compose.yaml` binds it to `127.0.0.1` only. Live data needs no extra block: the app connects to the existing `location = /mqtt`.
-  - `.github/ci/smoke-routes`: add `/3d/` (the release-deployment spec says a sub-project adds its routes there). Files in `.github/` make CI run every check.
-  - `src/content/docs/en/docs/operations.md`: route table.
-  - **nginx is not deployed automatically.** After a release, someone with access to vm23 copies `leoiot-platform/proxy/nginx.conf` to `/etc/nginx/sites-available/leoiot` by hand and reloads nginx (`operations.md`, "Nginx is not managed by the deployment"). Agents do not touch vm23.
-  - **Order:** `/3d/` in `smoke-routes` fails the deployment until the 3D container runs and nginx is applied, so add the smoke route in the same release as the app.
+  The route only matters to 3D, but the files are shared, so it goes in its own small pull request. No OpenSpec change is needed: no platform spec covers proxy routes, and the route is not a data interface. The complete plan (nginx blocks, `smoke-routes`, `operations.md`, applying nginx on vm23, release order, later `/` redirect) is in its own prompt: **`docs/continuations/platform-3d-route.md`**. For the 3D app this means: the container listens on `127.0.0.1:8091`, serves the build under `/3d/` (prefix kept, as PV does under `/pv/`), and live data uses the existing `/mqtt`.
 - **D3 – Tech stack like legacy.** three.js (`GLTFLoader`, `OrbitControls`, `CSS2DRenderer`) built with Vite, Node 22; one pinned three.js version from npm (no CDN importmap). Production image: Vite build served by nginx (pattern: `leoiot-pv/dashboard/Dockerfile`), with `/healthz`. TypeScript optional (PV uses it). Browser MQTT client for `/mqtt`, e.g. `mqtt` (mqtt.js) – pick in the change.
 - **D4 – Current values only, no database token.** The broker keeps the latest message per room (retained), so subscribing to `leoiot/room-climate/#` at `/mqtt` delivers every room's current value immediately, without credentials. No InfluxDB access, no token, no server-side injection. A room with no retained message shows "No data for room"; a message whose `ts` is older than 5 minutes is shown as stale (FR-08). Only if history is wanted later does a read token (injected server-side) become necessary.
 - **D5 – Scope of the first change:** room click with info panel, per-floor view (floor buttons + reset), live values, temperature and CO2 heatmaps (CO2 colours per FR-07). Navigation is a later change (`3d-room-navigation`).
@@ -187,13 +170,4 @@ Later change (`3d-room-navigation`):
 Later change (`3d-german-translation`):
 - German UI next to English (FSD AC-12), switchable language.
 
-Separate platform pull request: route `/3d/` (D2).
-
-Later iteration (not now): make `/` open the new 3D app instead of the legacy explorer, until another page becomes the main page. Platform pull request again, in `nginx.conf`:
-
-```nginx
-# Main page: the 3D explorer, until another page becomes the main page
-location = / { return 302 /3d/; }
-```
-
-302, not 301, because browsers cache a 301 and the main page will change again. The legacy catch-all `location /` stays until legacy is switched off. Apply on vm23 by hand as above.
+Separate platform pull request: route `/3d/` and, in a later iteration, `/` → `/3d/` (D2, prompt `docs/continuations/platform-3d-route.md`).
