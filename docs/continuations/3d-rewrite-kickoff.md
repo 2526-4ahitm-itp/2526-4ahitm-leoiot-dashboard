@@ -8,6 +8,8 @@ Continuation prompt for the 3D-Modell team (Paul Kreinecker, Jonas Leitner). It 
 - **Next step:** propose the first change, e.g. `3d-building-explorer`, with the scope in "Decisions" below. The route `/3d/` is a separate plain platform pull request without an OpenSpec change (D2, prompt `docs/continuations/platform-3d-route.md`). This prompt is on `main`, so a worktree from `origin/main` contains it. When the 3D change exists, rename this prompt to the change name (rule: `docs/continuations/README.md`).
 - Exploration only so far: no code was written.
 - Work in a worktree: `git fetch origin && git worktree add ../leoiot-3d-<task> -b feat/<task> origin/main`.
+- **How to start the next session:** `/opsx:propose 3d-building-explorer`, telling it to read this prompt first. The proposal follows D1–D8 below; `openspec/config.yaml` names `docs/functional-specification.md` as the source for new specs. Validate with `openspec validate 3d-building-explorer --strict`.
+- **Order (recommended):** 3D change first, platform route pull request last (see "Order of work" below).
 
 ## Rules that bind this sub-project
 
@@ -52,6 +54,46 @@ From `openspec/specs/platform/data-contract/spec.md` and `openspec/specs/platfor
 - `leoiot-platform/proxy/nginx.conf`: catch-all `location /` → `127.0.0.1:8080`, which is the **legacy** 3D frontend (Vite dev server in `node:20-alpine`, `legacy/docker-compose.yaml` service `frontend`; also listed in `src/content/docs/en/docs/operations.md` and `.github/ci/legacy-services.map`). `/mqtt` → broker WS (9001). Ports in use: 1883 (broker MQTT, `leoiot-platform/compose.yaml`), 3000, 8080, 8081, 8086, 8088 (`/kiosk/`), 8089 (`/pv/`), 8090, 9001. 8091 is free.
 - `.github/ci/smoke-routes` checks `/` among others.
 - Target (decision D2): new app at `/3d/`; `/` stays unchanged for now. See D2 for the proxy plan.
+
+## Before you start: data, local development, tests, deployment
+
+### No room-climate data on `/mqtt` yet
+
+The broker and `/mqtt` are live (`platform-broker`, archived 2026-10-22), but **nothing publishes `leoiot/room-climate/#` yet**. The collector and simulator that will write it are `sensors-…` changes, and `leoiot-sensors/` has not started (its README: "Not started"). The legacy sensor data (`nili3/…`, `room-temperature`, the `/ws` bridge) is off-limits for new code. Consequences:
+
+- On vm23 the new app will at first show "No data for room" for every room and an empty heatmap. That is correct behaviour, not a bug; the spec must cover the empty state (no retained message for a room, and no message at all).
+- This does not block the 3D work: the contract is fixed, so the app can be built and tested against it now.
+- For development and tests, provide data yourself (see below). Coordinate with the sensors team (Elias Pointinger) on when their simulator publishes; once it does, real values appear without any change in 3D.
+
+### Local development
+
+- `vite` dev server with `base: '/3d/'`. The app derives the broker URL from the page's own host (`wss://<host>/mqtt`, or `ws://` on http), so it needs no configuration in production.
+- Live data in development, options to pick in `design.md`:
+  - a dev proxy in `vite.config` that forwards `/mqtt` to a local Mosquitto with a WebSocket listener, where test messages are published by hand with `mosquitto_pub -r -t leoiot/room-climate/105 -m '{"room":"105","device":"dev","source":"simulated","ts":<ms>,"co2":850,"temperature":22.4}'` (dev-only config inside `leoiot-3d/`, written new, not copied from `leoiot-platform/broker/`, anonymous publish allowed only there);
+  - or forward `/mqtt` to `wss://vm23.htl-leonding.ac.at/mqtt` (anonymous, read-only) – useful once the sensors simulator publishes.
+- Test messages must follow the contract (fields, `source` = `simulated`, `ts` in ms).
+
+### Tests
+
+- Follow `leoiot-pv/dashboard`: Vite + `vitest` (`"test": "vitest run"`); CI runs `npm ci && npm test --if-present && npm run build` with Node 22.
+- Unit-testable pure logic: room id from mesh name (part before the first `_`, e.g. `134_1` → `134`), which floor a room belongs to (prefix `U`/`E`/`1`/`2`/`T`), parsing and validating a room-climate message (unknown fields ignored, missing fields unknown not zero), staleness from `ts` (5 min), temperature and CO2 colour scales (FR-07 boundaries: 599/600, 1200/1201), which rooms a heatmap covers per floor.
+- The WebGL scene itself is checked by hand in the browser.
+
+### Deployment shape (how CI and deploy pick it up)
+
+- `leoiot-3d/compose.yaml` makes `leoiot-3d` a deploy unit; units deploy in the order platform, legacy, then the others alphabetically (`.github/ci/deploy.sh`). Compose reads `leoiot-3d/.env` only if it exists; the 3D app needs no `.env` and no secrets.
+- Suggested layout like PV: `leoiot-3d/compose.yaml` + one component folder (e.g. `leoiot-3d/explorer/`) with `package.json`, `Dockerfile`, `vite.config.ts`, `src/`, `tests/`, `public/models/` (the copied glTF files).
+- Service: built image, `restart: unless-stopped`, port `127.0.0.1:8091:8091` only, healthcheck `wget -q -O /dev/null http://127.0.0.1:8091/healthz`. It does not need the shared broker network: the browser reaches the broker through nginx `/mqtt`, not the container.
+- Image: stage 1 `node:22-alpine` builds, stage 2 `nginx:stable-alpine` serves `dist` under `/usr/share/nginx/html/3d` with `listen 8091`, `location = /healthz`, `location /3d/`, and a redirect `/3d` → `/3d/` (pattern: `leoiot-pv/dashboard/Dockerfile` and `leoiot-pv/dashboard/nginx/dashboard.conf.template`, without the token and query parts). The models make the image about 200 MB larger; that is accepted (D1). Serve `.gltf` with a long cache lifetime and gzip, since they are text.
+- CI checks for the change: `node leoiot-3d/explorer`, `image leoiot-3d/explorer`, `compose leoiot-3d/compose.yaml` (see `AGENTS.md`, "Run the checks locally").
+
+### Order of work
+
+1. **3D first:** `/opsx:propose 3d-building-explorer`, then implement, test locally, merge into `main`. Nothing reaches users yet because nginx has no `/3d/` route; the container just runs on `127.0.0.1:8091`.
+2. **Platform route last:** the pull request from `docs/continuations/platform-3d-route.md` (nginx blocks, `/3d/` in `smoke-routes`, `operations.md`), merged after the 3D app is on `main`, so both ship in the same promotion.
+3. After the release, nginx is applied on vm23 by hand.
+
+Why not platform first: `main` must always be shippable (`AGENTS.md`). A `/3d/` smoke route on `main` without the app would fail the next deployment of everyone. The nginx block alone would do no harm, but has nothing to serve, and changing `.github/` runs every CI check.
 
 ## What the legacy app does (`legacy/frontend/`, reference only)
 
