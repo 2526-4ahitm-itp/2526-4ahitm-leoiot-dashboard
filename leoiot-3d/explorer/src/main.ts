@@ -2,7 +2,7 @@ import './ui/styles.css';
 import { App } from './app';
 import { RoomStore } from './core/store';
 import { connectBroker } from './live/broker';
-import { LoadError, loadModels, type Model, type ViewId } from './scene/models';
+import { LoadError, loadModels, type Model, useSplitFirstFloor, type ViewId } from './scene/models';
 import { Viewer } from './scene/viewer';
 import { Controls } from './ui/controls';
 import { el } from './ui/dom';
@@ -34,6 +34,7 @@ async function load(): Promise<void> {
     console.error(err);
     return;
   }
+  useSplitFirstFloor(models);
   loading.hide();
   new App(viewer, models, store, controls, panel);
 }

@@ -11,7 +11,7 @@ import f2Url from '../../models/Model2F.gltf?url';
 import tUrl from '../../models/ModelT.gltf?url';
 import type { FloorId } from '../core/rooms';
 import { applyMaterials } from './materials';
-import { roomOf } from './names';
+import { nodeName, roomOf } from './names';
 
 export type ViewId = 'full' | FloorId;
 
@@ -74,4 +74,39 @@ export async function loadModels(loaded: Map<ViewId, Model>, onProgress: Progres
   );
   const failed = results.filter((r) => r.status === 'rejected').length;
   if (failed > 0) throw new LoadError(failed, VIEWS.length);
+}
+
+/**
+ * Model1F and Model2F carry the structure of the first floor as one mesh with
+ * one material (`first_floor-Mat.94`), so its windows, frames and metal parts
+ * cannot get their own materials. ModelFull has the same floor split by
+ * material, in the same coordinates (checked 2026-10-30). The floor-1 and
+ * floor-2 views therefore show ModelFull's parts instead of the merged mesh;
+ * the model files stay as they are (design D1).
+ */
+export function useSplitFirstFloor(models: Map<ViewId, Model>): void {
+  const full = models.get('full');
+  if (!full) return;
+  full.root.updateMatrixWorld(true);
+  const parts: Mesh[] = [];
+  full.root.traverse((o) => {
+    if ((o as Mesh).isMesh && nodeName(o).startsWith('first_floor-')) parts.push(o as Mesh);
+  });
+  for (const view of ['1', '2'] as const) {
+    const model = models.get(view);
+    if (!model) continue;
+    const merged: Mesh[] = [];
+    model.root.traverse((o) => {
+      if ((o as Mesh).isMesh && nodeName(o).startsWith('first_floor-Mat')) merged.push(o as Mesh);
+    });
+    if (merged.length === 0 || parts.length === 0) continue;
+    for (const m of merged) m.removeFromParent();
+    model.root.updateMatrixWorld(true);
+    const toRoot = model.root.matrixWorld.clone().invert();
+    for (const p of parts) {
+      const copy = p.clone();
+      copy.matrix.multiplyMatrices(toRoot, p.matrixWorld).decompose(copy.position, copy.quaternion, copy.scale);
+      model.root.add(copy);
+    }
+  }
 }

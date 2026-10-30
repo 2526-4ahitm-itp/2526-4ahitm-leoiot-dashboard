@@ -30,6 +30,8 @@ See `proposal.md` for the motivation and `specs/model3d/*/spec.md` for the behav
 
 `ModelU.gltf`, `ModelE.gltf`, `Model1F.gltf`, `Model2F.gltf`, `ModelFull.gltf` and `ModelT.gltf` are copied from `legacy/frontend/` into `leoiot-3d/explorer/models/`, byte for byte, in plain git (no LFS, no conversion). This is a deliberate, team-decided exception (kickoff D1, 2026-10-28) to the rule that nothing is copied from `legacy/`: it applies to these data assets only, never to code. The waypoint files belong to `model3d-room-navigation`; `building.glb` and `temp.html` are unused and not copied.
 
+**Known defect of the copied files** (found at the user's review on 2026-10-30): `Model1F.gltf` and `Model2F.gltf` carry the structure of the first floor as one mesh with one material (`first_floor-Mat.94`), so its windows, frames and doors cannot get their own materials. `ModelFull.gltf` has the same floor split by material (`GLAS_NORMALGLAS_1`, `FENSTERRAHMEN_1`, `METALL_*`, `FARBE__WEI__2`) in the same coordinates. The floor-1 and floor-2 views therefore show `ModelFull`'s first-floor parts instead of the merged mesh (`useSplitFirstFloor` in `scene/models.ts`); the files themselves stay unchanged. When the models are re-exported, the merged mesh should be split and this step removed.
+
 *Why:* without the models there is nothing to show, and they will be replaced later anyway. *Alternative:* Git LFS or compression now (rejected by the team: a later change).
 
 ### D2. Layout
