@@ -15,6 +15,7 @@ describe('cell', () => {
     expect(cell('temperature', { room: '105', ts: now - 8 * 60_000, temperature: 21.3 }, now)).toEqual({
       kind: 'stale',
       colour: '#9e9e9e',
+      value: 21.3,
       text: '21.3°C',
       status: undefined,
     }));

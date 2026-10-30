@@ -14,17 +14,17 @@ export const HEATMAP_FLOORS: readonly FloorId[] = ['U', 'E', '1', '2'];
 
 export type Cell =
   | { kind: 'none' } // no value for this quantity: normal look, label "No data"
-  | { kind: 'current'; colour: string; text: string; status?: Co2Status }
-  | { kind: 'stale'; colour: string; text: string; status?: Co2Status };
+  | { kind: 'current'; colour: string; value: number; text: string; status?: Co2Status }
+  | { kind: 'stale'; colour: string; value: number; text: string; status?: Co2Status };
 
 export function cell(kind: HeatmapKind, reading: Reading | undefined, now: number): Cell {
   const value = kind === 'co2' ? reading?.co2 : reading?.temperature;
   if (reading === undefined || value === undefined) return { kind: 'none' };
   const text = kind === 'co2' ? formatCo2(value) : formatTemperature(value);
   const status = kind === 'co2' ? co2Status(value) : undefined;
-  if (freshness(reading.ts, now) === 'stale') return { kind: 'stale', colour: STALE_COLOUR, text, status };
+  if (freshness(reading.ts, now) === 'stale') return { kind: 'stale', colour: STALE_COLOUR, value, text, status };
   const colour = kind === 'co2' ? co2Colour(value) : temperatureColour(value);
-  return { kind: 'current', colour, text, status };
+  return { kind: 'current', colour, value, text, status };
 }
 
 /** Rooms a heatmap colours on a floor: only those of that floor itself. */
