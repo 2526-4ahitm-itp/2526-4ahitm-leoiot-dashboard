@@ -1,0 +1,16 @@
+name: leoiot-3d
+
+services:
+  explorer:
+    build: ./explorer
+    restart: unless-stopped
+    ports:
+      # Local only; the host nginx forwards /3d/ to this port. The browser
+      # reaches the broker through the host's /mqtt, so no network is joined.
+      - "127.0.0.1:8091:8091"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8091/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3

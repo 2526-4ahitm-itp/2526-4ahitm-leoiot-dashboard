@@ -1,6 +1,6 @@
 # platform-3d-route
 
-Continuation prompt for the reverse-proxy route of the new 3D building explorer. Planned 2026-10-28 by the 3D-Modell team (Paul Kreinecker, Jonas Leitner) together with `docs/continuations/model3d-rewrite-kickoff.md`; read that prompt for the 3D app itself. Nothing of this is implemented yet.
+Continuation prompt for the reverse-proxy route of the new 3D building explorer. Planned 2026-10-28 by the 3D-Modell team (Paul Kreinecker, Jonas Leitner) together with the change `model3d-building-explorer`; read that change for the 3D app itself. Nothing of this is implemented yet.
 
 ## State
 
@@ -82,3 +82,4 @@ location = / { return 302 /3d/; }
 - `location = /` matches only the bare `/`; the legacy catch-all `location /` stays for all other paths until legacy is switched off.
 - Update the `/` row in `operations.md`; `smoke-routes` already has `/` (redirects are followed).
 - Apply on vm23 by hand as above.
+- **Before** this redirect ships, a `model3d-…` change removes the temporary "Last reading" time from the info panel (spec `model3d/room-climate-view`, requirement "The info panel shows the time of the last reading, for now"; decision D12 of `model3d-building-explorer`).
