@@ -4,9 +4,9 @@ Merge gate (design D15): `ci-ok` green and Jonas Leitner has tried the explorer 
 
 ## 1. Scaffold and deploy unit
 
-- [ ] 1.1 Add `leoiot-3d/explorer/` (Vite, TypeScript, Vitest, `base: '/3d/'`, `three` and `mqtt` pinned to exact versions, scripts `dev`, `build` = `tsc --noEmit && vite build`, `test` = `vitest run`, `preview`, `dev:publish`) with a placeholder page; verify `npm ci`, `npm test` and `npm run build` exit 0 with Node 22
-- [ ] 1.2 Add `explorer/Dockerfile` and `explorer/nginx/explorer.conf` per design D4 (port 8091, `/healthz`, `/3d` → 301, `/3d/assets/` immutable with `gzip_static` and `model/gltf+json`, `/3d/` no-cache, rest 404) and a `.dockerignore` (`node_modules`, `dist`, `.env*`); verify `.github/ci/image-build.sh leoiot-3d/explorer` succeeds and the image answers `GET /3d/` 200, `/3d` 301, `/healthz` 200, `/other` 404
-- [ ] 1.3 Add `leoiot-3d/compose.yaml` (service `explorer`, `127.0.0.1:8091:8091`, `restart: unless-stopped`, health check, no network, no `.env`); verify `docker compose -f leoiot-3d/compose.yaml config -q` passes and `.github/ci/affected.sh origin/main HEAD` lists `node leoiot-3d/explorer`, `image leoiot-3d/explorer` and `compose leoiot-3d/compose.yaml`
+- [x] 1.1 Add `leoiot-3d/explorer/` (Vite, TypeScript, Vitest, `base: '/3d/'`, `three` and `mqtt` pinned to exact versions, scripts `dev`, `build` = `tsc --noEmit && vite build`, `test` = `vitest run`, `preview`, `dev:publish`) with a placeholder page; verify `npm ci`, `npm test` and `npm run build` exit 0 with Node 22
+- [x] 1.2 Add `explorer/Dockerfile` and `explorer/nginx/explorer.conf` per design D4 (port 8091, `/healthz`, `/3d` → 301, `/3d/assets/` immutable with `gzip_static` and `model/gltf+json`, `/3d/` no-cache, rest 404) and a `.dockerignore` (`node_modules`, `dist`, `.env*`); verify `.github/ci/image-build.sh leoiot-3d/explorer` succeeds and the image answers `GET /3d/` 200, `/3d` 301, `/healthz` 200, `/other` 404
+- [x] 1.3 Add `leoiot-3d/compose.yaml` (service `explorer`, `127.0.0.1:8091:8091`, `restart: unless-stopped`, health check, no network, no `.env`); verify `docker compose -f leoiot-3d/compose.yaml config -q` passes and `.github/ci/affected.sh origin/main HEAD` lists `node leoiot-3d/explorer`, `image leoiot-3d/explorer` and `compose leoiot-3d/compose.yaml`
 
 ## 2. Local development and test stack
 
