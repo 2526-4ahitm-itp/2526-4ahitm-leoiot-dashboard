@@ -170,6 +170,10 @@
 <td><code dir="auto">127.0.0.1:8088</code> (main kiosk from <code dir="auto">leoiot-pv/</code>)</td>
 </tr>
 <tr>
+<td><code dir="auto">/3d/</code></td>
+<td><code dir="auto">127.0.0.1:8091</code> (3D building explorer from <code dir="auto">leoiot-3d/</code>, prefix kept)</td>
+</tr>
+<tr>
 <td><code dir="auto">/kiosk/ws</code></td>
 <td><code dir="auto">127.0.0.1:8088</code> (WebSocket to the bridge, via the main kiosk’s own nginx)</td>
 </tr>
@@ -199,7 +203,7 @@
 </tr>
 </tbody>
 </table>
-<p>Only the paths <code dir="auto">/kiosk</code> and <code dir="auto">/dashboard</code> without a trailing slash are redirected with a 301 to the variant with <code dir="auto">/</code>. Grafana is configured to match with <code dir="auto">GF_SERVER_ROOT_URL</code> and <code dir="auto">GF_SERVER_SERVE_FROM_SUB_PATH=true</code>.</p>
+<p>Only the paths <code dir="auto">/kiosk</code>, <code dir="auto">/dashboard</code> and <code dir="auto">/3d</code> without a trailing slash are redirected with a 301 to the variant with <code dir="auto">/</code>. Grafana is configured to match with <code dir="auto">GF_SERVER_ROOT_URL</code> and <code dir="auto">GF_SERVER_SERVE_FROM_SUB_PATH=true</code>.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="backup-and-restore">Backup and restore</h2><a class="sl-anchor-link" href="#backup-and-restore"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Section titled “Backup and restore”</span></a></div>
 <p>The InfluxDB database is backed up with the command-line tool <code dir="auto">influx backup</code> (a backup is a safety copy). Backups are stored in the container volume <code dir="auto">influxdb_backups</code> (<code dir="auto">/backups</code>) and additionally on the host.</p>
 <div class="sl-heading-wrapper level-h3"><h3 id="backup-legacybackupbackupsh">Backup (<code dir="auto">legacy/backup/backup.sh</code>)</h3><a class="sl-anchor-link" href="#backup-legacybackupbackupsh"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Section titled “Backup (legacy/backup/backup.sh)”</span></a></div>
