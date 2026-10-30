@@ -28,9 +28,9 @@ See `proposal.md` for the motivation and `specs/model3d/*/spec.md` for the behav
 
 ### D1. The models are copied from legacy as they are
 
-`ModelU.gltf`, `ModelE.gltf`, `Model1F.gltf`, `Model2F.gltf`, `ModelFull.gltf` and `ModelT.gltf` are copied from `legacy/frontend/` into `leoiot-3d/explorer/models/`, byte for byte, in plain git (no LFS, no conversion). This is a deliberate, team-decided exception (kickoff D1, 2026-10-28) to the rule that nothing is copied from `legacy/`: it applies to these data assets only, never to code. The waypoint files belong to `model3d-room-navigation`; `building.glb` and `temp.html` are unused and not copied.
+`ModelU.gltf`, `ModelE.gltf`, `Model1F.gltf`, `Model2F.gltf`, `ModelFull.gltf` and `ModelT.gltf` are copied from `legacy/frontend/` into `leoiot-3d/explorer/models/`, in plain git (no LFS, no conversion). This is a deliberate, team-decided exception (kickoff D1, 2026-10-28) to the rule that nothing is copied from `legacy/`: it applies to these data assets only, never to code. The waypoint files belong to `model3d-room-navigation`; `building.glb` and `temp.html` are unused and not copied.
 
-**Known defect of the copied files** (found at the user's review on 2026-10-30): `Model1F.gltf` and `Model2F.gltf` carry the structure of the first floor as one mesh with one material (`first_floor-Mat.94`), so its windows, frames and doors cannot get their own materials. `ModelFull.gltf` has the same floor split by material (`GLAS_NORMALGLAS_1`, `FENSTERRAHMEN_1`, `METALL_*`, `FARBE__WEI__2`) in the same coordinates. The floor-1 and floor-2 views therefore show `ModelFull`'s first-floor parts instead of the merged mesh (`useSplitFirstFloor` in `scene/models.ts`); the files themselves stay unchanged. When the models are re-exported, the merged mesh should be split and this step removed.
+**One edit to the copied files** (user's review, 2026-10-30): the legacy `Model1F.gltf` and `Model2F.gltf` carried the structure of the first floor as one mesh with one material (`first_floor-Mat.94`), so its windows, frames and doors could not get their own materials. In both files that mesh was replaced by the five parts of `ModelFull.gltf` (`first_floor-FARBE__WEI__2`, `-FENSTERRAHMEN_1`, `-GLAS_NORMALGLAS_1`, `-METALL_STAHL__MATT_1`, `-METALL_ALUMINIUM__MATT_1`), which lie in the same world coordinates, under a new node `first_floor` without a transform. All other nodes are unchanged. `ModelFull` is the reference at the user's request: its glass, frames and metal all exist in the old merged mesh, but the walls differ in about 1 % of the vertices (about 2,160 only in the old mesh at x −26…2.5, z −18…24; about 700 only in `ModelFull`). The other four files stay byte-identical to `legacy/frontend/`. A unit test checks the parts.
 
 *Why:* without the models there is nothing to show, and they will be replaced later anyway. *Alternative:* Git LFS or compression now (rejected by the team: a later change).
 
@@ -100,12 +100,9 @@ The floor models are cumulative, which gives "a floor with the floors beneath it
 
 ### D7. Rooms, materials and highlight
 
-A node is a room when its name starts with `U`, `E`, `1`, `2` or `T`; its room id is the part before the first `_`. This is the legacy rule, re-implemented in `core/rooms.ts` and checked against the node names of all six models in a test that reads the names from the copied files. The name is read from `userData.name`: three.js' `GLTFLoader` removes dots and other reserved characters from `Object3D.name` (`U74.1` becomes `U741`) and keeps the original only there. Legacy read `Object3D.name`, so room `U74.1` could never match its data. Materials are replaced by name as in legacy (`GLAS` → transparent glass, `METALL` or `FENSTERRAHMEN` → metal, others → light base material); the exact look is tuned by eye. The selected room's parts get the highlight colour `#f1c40f`. A click (pointer released within 5 px of where it was pressed, so a drag does not select) is resolved with a raycast against the visible model. The nearest hit decides, as in legacy, with two refinements found while testing on 2026-10-30:
+A node is a room when its name starts with `U`, `E`, `1`, `2` or `T`; its room id is the part before the first `_`. This is the legacy rule, re-implemented in `core/rooms.ts` and checked against the node names of all six models in a test that reads the names from the copied files. The name is read from `userData.name`: three.js' `GLTFLoader` removes dots and other reserved characters from `Object3D.name` (`U74.1` becomes `U741`) and keeps the original only there. Legacy read `Object3D.name`, so room `U74.1` could never match its data. Materials are replaced by name as in legacy (`GLAS` → transparent glass, `METALL` or `FENSTERRAHMEN` → metal, others → light base material); the exact look is tuned by eye. The selected room's parts get the highlight colour `#f1c40f`. A click (pointer released within 5 px of where it was pressed, so a drag does not select) is resolved with a raycast against the visible model. The nearest hit decides, as in legacy, with one refinement found while testing on 2026-10-30: the room meshes are flat patches lying almost on the floor slab (0.15–0.5 units apart along the ray), so a room hit within 0.5 units behind the nearest hit wins over it.
 
-- see-through glass is skipped, so a room seen through a window can be clicked;
-- the room meshes are flat patches lying almost on the floor slab (0.15–0.5 units apart along the ray), so a room hit within 0.5 units behind the nearest hit wins over it.
-
-A wall in front of a room still blocks the click, so what can be clicked is what can be seen: in the whole-building view the roof covers the rooms (only rooms seen through windows can be clicked), and the gym's rooms are deep (walls 8 m high) and can be clicked when the camera looks down into them.
+Walls, roof and windows in front of a room block the click. Decided by the user on 2026-10-30: clicking rooms from above is enough, clicking through windows is not wanted. So in the whole-building view, where the roof covers the rooms, no room can be clicked in practice, and the gym's deep rooms (walls 8 m high) can be clicked when the camera looks down into them. This narrows kickoff D6 ("room click works in every view").
 
 ### D8. Live data
 
@@ -117,7 +114,7 @@ Two devices in one room publish on the same retained topic, so the explorer sees
 
 Kickoff D9 (2026-10-29): the CO₂ heatmap uses a continuous scale so that 400 and 599 ppm look different; therefore 599 and 600 ppm look almost the same. FSD FR-07 and AC-04 ("CO2 colors render correctly at threshold boundaries") are met by the **status** — a coloured symbol with a text, decided by the exact limits < 600, 600–1200, > 1200 — shown in the info panel and in every heatmap label. AC-04 is tested on the status, not on the gradient.
 
-Colour stops chosen for this change (to confirm at the visual review): green `#4caf50` at ≤ 400 ppm, yellow `#ffd54f` at 600, red `#e53935` at 1200, deeper red `#8e0000` at ≥ 2000, linear in RGB between stops. Status texts: "Good" (green), "Elevated" (yellow), "High" (red), held in `ui/strings.ts`.
+Colour stops, confirmed by the user on 2026-10-30: green `#4caf50` at ≤ 400 ppm, yellow `#ffd54f` at 600, red `#e53935` at 1200, deeper red `#8e0000` at ≥ 2000, linear in RGB between stops. Status texts: "Good" (green), "Elevated" (yellow), "High" (red), held in `ui/strings.ts`.
 
 ### D10. Temperature
 
@@ -185,4 +182,4 @@ Rollback: revert the merge. The deployment runs `docker compose up` for the unit
 
 ## Open Questions
 
-- CO₂ colour stops and status texts (D9) are a first choice and are confirmed or changed at the visual review.
+None.

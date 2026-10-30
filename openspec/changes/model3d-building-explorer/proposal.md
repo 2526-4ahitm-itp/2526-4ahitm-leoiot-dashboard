@@ -11,7 +11,7 @@ The 3D building explorer that runs on vm23 today is `legacy/frontend/`: it holds
 - Room climate: clicking a room highlights it and opens an info panel with room id, CO₂ (with FR-07 status) and temperature, updated live; "No data for room" without a message; a warning symbol and the last values when the newest reading is older than 5 minutes. For now the panel also shows the time of the last reading (temporary, D12 of the kickoff).
 - Heatmaps: temperature and CO₂ colouring of the selected floor's rooms with value labels, updated live; uncoloured "No data" rooms; grey stale rooms with a warning symbol.
 - Live data only from the broker at `/mqtt` (`leoiot/room-climate/#`, retained messages); no database access.
-- The glTF models of `legacy/frontend/` are copied into `leoiot-3d/` as they are (ModelU, ModelE, Model1F, Model2F, ModelFull, ModelT; about 192 MB), a deliberate exception to "copy nothing from legacy" for data assets.
+- The glTF models of `legacy/frontend/` are copied into `leoiot-3d/` (ModelU, ModelE, Model1F, Model2F, ModelFull, ModelT; about 192 MB), a deliberate exception to "copy nothing from legacy" for data assets. In Model1F and Model2F the merged first floor is replaced by the split parts of ModelFull.
 - Deploy unit `leoiot-3d/compose.yaml`; a local test stack `leoiot-3d/compose.dev.yaml` (not deployed) with the production image, a development broker and a proxy that behaves like vm23; a development publisher for simulated room-climate messages.
 - Not in this change: the proxy route `/3d/` on vm23 (separate platform pull request, `docs/continuations/platform-3d-route.md`), navigation to a room (`model3d-room-navigation`), German UI (`model3d-german-translation`, FSD AC-12), history from the database, model compression.
 

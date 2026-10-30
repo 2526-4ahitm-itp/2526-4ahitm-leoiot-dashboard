@@ -59,7 +59,7 @@ A room's values SHALL be stale when the `ts` of its newest message is more than 
 - **THEN** the value is still current
 
 ### Requirement: Clicking a room opens its info panel
-Clicking or tapping a room SHALL select it in every view, including the whole building and the gym: all parts of the room are highlighted, any previous selection is removed, and an info panel opens. If a heatmap is shown, it SHALL be switched off when a room is selected. Clicking a place that is not a room, or closing the panel, SHALL remove the selection.
+Clicking or tapping a room SHALL select it in every view: all parts of the room are highlighted, any previous selection is removed, and an info panel opens. If a heatmap is shown, it SHALL be switched off when a room is selected. Clicking a place that is not a room, or closing the panel, SHALL remove the selection. A click SHALL select only what is the nearest surface under the pointer, so that a room is clicked from above, and walls, roof and windows in front of a room block the click.
 
 #### Scenario: Selecting a room
 - **WHEN** the user clicks room `153` in the floor 1 view
@@ -72,6 +72,10 @@ Clicking or tapping a room SHALL select it in every view, including the whole bu
 #### Scenario: Click while a heatmap is on
 - **WHEN** the CO₂ heatmap is shown and the user clicks room `105`
 - **THEN** the heatmap is switched off, room `105` is highlighted and its panel opens
+
+#### Scenario: Window in front of a room
+- **WHEN** the user clicks a window behind which a room lies
+- **THEN** no room is selected
 
 #### Scenario: Clicking empty space
 - **WHEN** a room is selected and the user clicks the background

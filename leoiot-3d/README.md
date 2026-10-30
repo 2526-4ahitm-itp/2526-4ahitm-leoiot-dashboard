@@ -13,7 +13,7 @@ New 3D building model and navigation.
 
 This sub-project may depend only on the interfaces specified in the `platform` spec group (`openspec/specs/platform/`). It must not import, copy or mount anything from `legacy/` or from a sibling sub-project. Legacy logic is re-specified and re-implemented, never referenced.
 
-One exception, decided by the team: the glTF models in `explorer/models/` were copied unchanged from `legacy/frontend/` (data assets only, design D1 of `model3d-building-explorer`).
+One exception, decided by the team: the glTF models in `explorer/models/` were copied from `legacy/frontend/` (data assets only, design D1 of `model3d-building-explorer`, which also records the edit to `Model1F.gltf` and `Model2F.gltf`).
 
 ## Replaces from `legacy/`
 

@@ -17,7 +17,6 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
-import { isGlass } from './materials';
 import { roomOf } from './names';
 
 // Start camera relative to the centre of the whole building (legacy: (100, 80, 100))
@@ -116,8 +115,8 @@ export class Viewer {
   }
 
   /**
-   * The room under a point of the canvas: the nearest hit decides, see-through
-   * glass is skipped, and a room lying on the nearest surface wins over it.
+   * The room under a point of the canvas: the nearest hit decides, and a room
+   * lying on the nearest surface wins over it. Walls, roof and windows block.
    */
   private pick(clientX: number, clientY: number): string | null {
     if (!this.current) return null;
@@ -126,8 +125,6 @@ export class Viewer {
     this.raycaster.setFromCamera(ndc, this.camera);
     let nearest: number | null = null;
     for (const hit of this.raycaster.intersectObject(this.current, true)) {
-      const material = (hit.object as { material?: Parameters<typeof isGlass>[0] }).material;
-      if (material && isGlass(material)) continue;
       nearest ??= hit.distance;
       if (hit.distance > nearest + SAME_SURFACE) break;
       const room = roomOf(hit.object);

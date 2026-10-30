@@ -58,6 +58,20 @@ describe('rooms in the models', () => {
     expect(count(full, 'T')).toBe(0);
   });
 
+  it('floor models carry the first floor split by material', () => {
+    for (const file of ['Model1F.gltf', 'Model2F.gltf']) {
+      const gltf = JSON.parse(readFileSync(new URL(`../models/${file}`, import.meta.url), 'utf8')) as { nodes: { name?: string }[] };
+      const names = gltf.nodes.map((n) => n.name ?? '').filter((n) => n.startsWith('first_floor-'));
+      expect(names.sort()).toEqual([
+        'first_floor-FARBE__WEI__2',
+        'first_floor-FENSTERRAHMEN_1',
+        'first_floor-GLAS_NORMALGLAS_1',
+        'first_floor-METALL_ALUMINIUM__MATT_1',
+        'first_floor-METALL_STAHL__MATT_1',
+      ]);
+    }
+  });
+
   it('gym', () => {
     const t = roomsIn('ModelT.gltf');
     expect(t.size).toBe(13);

@@ -2,7 +2,7 @@
 // base material for everything else. Every room part gets its own material so
 // that it can be highlighted or coloured on its own.
 
-import { Color, type Material, type Mesh, MeshStandardMaterial, type Object3D } from 'three';
+import { Color, type Mesh, MeshStandardMaterial, type Object3D } from 'three';
 import { nodeName } from './names';
 
 export const ROOM_BASE_COLOUR = new Color('#e6e6e6');
@@ -11,10 +11,6 @@ export const HIGHLIGHT_COLOUR = new Color('#f1c40f');
 const glass = new MeshStandardMaterial({ color: '#b8d4e6', transparent: true, opacity: 0.3, depthWrite: false, roughness: 0.1 });
 const metal = new MeshStandardMaterial({ color: '#8a8f95', metalness: 0.6, roughness: 0.4 });
 const base = new MeshStandardMaterial({ color: '#e6e6e6', roughness: 0.9 });
-
-export function isGlass(material: Material | Material[]): boolean {
-  return material === glass;
-}
 
 export function structureMaterial(name: string): MeshStandardMaterial {
   if (name.includes('GLAS')) return glass;
