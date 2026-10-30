@@ -3,6 +3,7 @@
 // data is published per room"). Local testing only.
 //
 //   npm run dev:publish              publish the fixed set, then live updates every 5 s
+//                                    and the fixed set again every minute
 //   npm run dev:publish -- --once    publish the fixed set and exit
 //   npm run dev:publish -- --clear   remove every retained message this script publishes
 //
@@ -52,6 +53,9 @@ const fixed = [
 
 // Rooms that get a new reading every 5 seconds (a small random walk)
 const live = ['105', 'E10', 'U04', '203', 'T1'];
+// The fixed set is sent again this often with a fresh ts, so that its rooms
+// stay current; rooms with ageMin stay that many minutes old, i.e. stale.
+const REFRESH_MS = 60_000;
 
 const args = new Set(process.argv.slice(2));
 const client = mqtt.connect(url, { clientId: `${DEVICE}-${process.pid}`, reconnectPeriod: 2000 });
@@ -69,10 +73,11 @@ function publish(topic, payload) {
   );
 }
 
-async function publishFixed() {
+async function publishFixed(skip = new Set()) {
   const now = Date.now();
-  for (const r of fixed) await publish(TOPIC + r.room, message(r, now - (r.ageMin ?? 0) * MINUTE));
-  console.log(`published ${fixed.length} rooms to ${url}`);
+  const rooms = fixed.filter((r) => !skip.has(r.room));
+  for (const r of rooms) await publish(TOPIC + r.room, message(r, now - (r.ageMin ?? 0) * MINUTE));
+  console.log(`published ${rooms.length} rooms to ${url}`);
 }
 
 async function clear() {
@@ -95,6 +100,8 @@ function startLive() {
     }
     console.log(`updated ${live.join(', ')}`);
   }, 5000);
+  // The live rooms keep their own values instead of jumping back to the fixed ones
+  setInterval(() => publishFixed(new Set(live)).catch((err) => console.error(err)), REFRESH_MS);
 }
 
 client.on('error', (err) => console.error(`broker ${url}: ${err.message}`));
@@ -110,7 +117,7 @@ client.once('connect', async () => {
       client.end();
       return;
     }
-    console.log('live updates every 5 s, Ctrl+C to stop');
+    console.log('live updates every 5 s, fixed set every minute, Ctrl+C to stop');
     startLive();
   } catch (err) {
     console.error(err);

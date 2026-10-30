@@ -73,7 +73,7 @@ docker compose -f compose.dev.yaml up -d --build
 
 ```bash
 cd explorer
-npm run dev:publish              # fixed set, then live updates every 5 s; Ctrl+C stops
+npm run dev:publish              # fixed set, live updates every 5 s, fixed set again every minute; Ctrl+C stops
 npm run dev:publish -- --once    # fixed set only
 npm run dev:publish -- --clear   # remove what it published
 ```
