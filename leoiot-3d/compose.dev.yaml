@@ -1,0 +1,30 @@
+# Local test stack, never deployed (deployment and CI read compose.yaml only).
+# Runs the production image of the explorer behind a proxy that behaves like
+# vm23, with a development broker. Open http://localhost:8000/3d/ and publish
+# test data with `npm run dev:publish` in explorer/ (see README.md).
+name: leoiot-3d-dev
+
+services:
+  explorer:
+    build: ./explorer
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    volumes:
+      - ./dev/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    ports:
+      - "127.0.0.1:${DEV_MQTT_PORT:-1883}:1883"
+      # Used by `npm run dev`, whose dev server forwards /mqtt here
+      - "127.0.0.1:${DEV_MQTT_WS_PORT:-9001}:9001"
+
+  proxy:
+    image: nginx:stable-alpine
+    volumes:
+      - ./dev/proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:${DEV_PROXY_PORT:-8000}:80"
+    depends_on:
+      explorer:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
