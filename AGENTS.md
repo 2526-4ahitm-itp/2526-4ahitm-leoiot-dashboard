@@ -20,7 +20,7 @@ Rules for coding agents and people working in this repository. Read all of it be
 
 ## Specs
 
-- One spec tree at the root, `openspec/specs/<group>/<capability>/spec.md`, group = `platform`, `sensors`, `pv` or `3d`. The rules are in `openspec/specs/README.md`; read them, do not copy them. Never create an `openspec/` folder inside a sub-project.
+- One spec tree at the root, `openspec/specs/<group>/<capability>/spec.md`, group = `platform`, `sensors`, `pv` or `model3d`. The rules are in `openspec/specs/README.md`; read them, do not copy them. Never create an `openspec/` folder inside a sub-project.
 - A change is named after its group: `pv-daily-yield-kiosk`, `sensors-stale-warning`, `platform-data-contract`. It normally touches one group. A change that needs another group's spec is a `platform-…` change or is split.
 - Contract first: a topic, payload, field or any other shared interface goes into `openspec/specs/platform/` through a `platform-…` change that is merged before code relies on it.
 

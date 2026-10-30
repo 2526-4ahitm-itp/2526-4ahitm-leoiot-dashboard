@@ -96,17 +96,17 @@ openspec/
 │   │   └── ci-verification/ …       (from platform-cicd-pipeline)
 │   ├── sensors/           leoiot-sensors
 │   ├── pv/                leoiot-pv
-│   └── 3d/                leoiot-3d
+│   └── model3d/           leoiot-3d
 └── changes/
     ├── platform-…/
     ├── sensors-…/
     ├── pv-…/
-    └── 3d-…/
+    └── model3d-…/
 ```
 
 The rules, written into both `specs/README.md` and the `context:` of `openspec/config.yaml`:
 
-1. **Path = group / capability.** Every capability lives at `openspec/specs/<group>/<capability>/spec.md`. The group is the sub-project that implements it: `platform` → `leoiot-platform/`, `sensors` → `leoiot-sensors/`, `pv` → `leoiot-pv/`, `3d` → `leoiot-3d/`.
+1. **Path = group / capability.** Every capability lives at `openspec/specs/<group>/<capability>/spec.md`. The group is the sub-project that implements it: `platform` → `leoiot-platform/`, `sensors` → `leoiot-sensors/`, `pv` → `leoiot-pv/`, `model3d` → `leoiot-3d/`.
 2. **One home per capability.** A capability belongs to exactly one group. If two sub-projects rely on a behaviour, it is not duplicated — it belongs in `platform`.
 3. **`platform` owns everything shared.** Broker, database, reverse proxy, deployment, CI, repository rules, and above all the data contract: topics, payloads, measurements, fields, retention. Sub-project specs refer to the contract ("publishes readings as specified in `platform/data-contract`") and never restate topic names or field lists.
 4. **Contract first.** A sub-project may not rely on an interface that is not in the platform spec yet. The interface change is proposed and merged first.
