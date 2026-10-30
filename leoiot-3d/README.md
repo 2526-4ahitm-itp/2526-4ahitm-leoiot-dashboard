@@ -6,7 +6,7 @@ New 3D building model and navigation.
 |---|---|
 | **Owning team** | 3D-Modell — Paul Kreinecker, Jonas Leitner |
 | **Status** | Not started |
-| **Spec group** | `openspec/specs/3d/` |
+| **Spec group** | `openspec/specs/model3d/` |
 
 ## Dependency rule
 
@@ -18,4 +18,4 @@ This sub-project may depend only on the interfaces specified in the `platform` s
 
 ## Tech stack and scaffolding
 
-The tech stack and the project scaffolding are decided in this sub-project's own first OpenSpec change (`3d-…`). Nothing is set up here yet.
+The tech stack and the project scaffolding are decided in this sub-project's own first OpenSpec change (`model3d-…`). Nothing is set up here yet.

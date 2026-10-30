@@ -1,11 +1,11 @@
 # platform-3d-route
 
-Continuation prompt for the reverse-proxy route of the new 3D building explorer. Planned 2026-10-28 by the 3D-Modell team (Paul Kreinecker, Jonas Leitner) together with `docs/continuations/3d-rewrite-kickoff.md`; read that prompt for the 3D app itself. Nothing of this is implemented yet.
+Continuation prompt for the reverse-proxy route of the new 3D building explorer. Planned 2026-10-28 by the 3D-Modell team (Paul Kreinecker, Jonas Leitner) together with `docs/continuations/model3d-rewrite-kickoff.md`; read that prompt for the 3D app itself. Nothing of this is implemented yet.
 
 ## State
 
 - **Branch / change:** none yet. Planned branch `feat/platform-3d-route`, created from `origin/main` in its own worktree (`AGENTS.md`). No OpenSpec change: no platform spec covers proxy routes, and a route is not a data interface.
-- **Depends on:** the 3D app from the change `3d-building-explorer` (`leoiot-3d/`), which serves its build under `/3d/` on `127.0.0.1:8091`. It does not exist yet.
+- **Depends on:** the 3D app from the change `model3d-building-explorer` (`leoiot-3d/`), which serves its build under `/3d/` on `127.0.0.1:8091`. It does not exist yet.
 - **Next step:** when the 3D app is ready to ship, open this pull request so that both go out in the same release (see "Order").
 
 ## Goal

@@ -1,14 +1,14 @@
-# 3d-rewrite-kickoff
+# model3d-rewrite-kickoff
 
 Continuation prompt for the 3D-Modell team (Paul Kreinecker, Jonas Leitner). It collects everything a fresh session needs to start the rewrite of the 3D building explorer in `leoiot-3d/`. Written 2026-10-28 from an exploration of the repository; no code exists yet.
 
 ## State
 
-- **Branch / change:** none yet. No `3d-…` change exists in `openspec/changes/`, `openspec/specs/3d/` is empty, `leoiot-3d/` holds only `README.md` (status "Not started").
-- **Next step:** propose the first change, e.g. `3d-building-explorer`, with the scope in "Decisions" below. The route `/3d/` is a separate plain platform pull request without an OpenSpec change (D2, prompt `docs/continuations/platform-3d-route.md`). This prompt is on `main`, so a worktree from `origin/main` contains it. When the 3D change exists, rename this prompt to the change name (rule: `docs/continuations/README.md`).
+- **Branch / change:** none yet. No `model3d-…` change exists in `openspec/changes/`, `openspec/specs/model3d/` is empty, `leoiot-3d/` holds only `README.md` (status "Not started").
+- **Next step:** propose the first change, e.g. `model3d-building-explorer`, with the scope in "Decisions" below. The route `/3d/` is a separate plain platform pull request without an OpenSpec change (D2, prompt `docs/continuations/platform-3d-route.md`). This prompt is on `main`, so a worktree from `origin/main` contains it. When the 3D change exists, rename this prompt to the change name (rule: `docs/continuations/README.md`).
 - Exploration only so far: no code was written.
 - Work in a worktree: `git fetch origin && git worktree add ../leoiot-3d-<task> -b feat/<task> origin/main`.
-- **How to start the next session:** `/opsx:propose 3d-building-explorer`, telling it to read this prompt first. The proposal follows D1–D8 below; `openspec/config.yaml` names `docs/functional-specification.md` as the source for new specs. Validate with `openspec validate 3d-building-explorer --strict`.
+- **How to start the next session:** `/opsx:propose model3d-building-explorer`, telling it to read this prompt first. The proposal follows D1–D8 below; `openspec/config.yaml` names `docs/functional-specification.md` as the source for new specs. Validate with `openspec validate model3d-building-explorer --strict`.
 - **Order (recommended):** 3D change first, platform route pull request last (see "Order of work" below).
 
 ## Rules that bind this sub-project
@@ -16,9 +16,9 @@ Continuation prompt for the 3D-Modell team (Paul Kreinecker, Jonas Leitner). It 
 Read `AGENTS.md`, `openspec/specs/README.md`, `openspec/config.yaml`, `leoiot-3d/README.md`. In short:
 
 - Code lives only in `leoiot-3d/`. It **must not import, copy or mount anything from `legacy/`** or a sibling sub-project. Legacy logic is re-specified and re-implemented. Exception decided by the team: the glTF model files (see Decisions, D1).
-- Specs: `openspec/specs/3d/<capability>/spec.md`. Changes are named `3d-…`. Never create `openspec/` inside `leoiot-3d/`.
+- Specs: `openspec/specs/model3d/<capability>/spec.md`. Changes are named `model3d-…`. Never create `openspec/` inside `leoiot-3d/`.
 - Contract first: any topic, payload, field, route or shared interface the 3D app relies on must already be in `openspec/specs/platform/`. If it is not, a `platform-…` change is merged first. (The proxy route `/3d/` is not such an interface: no platform spec covers routes, so it is a plain platform pull request, see D2.)
-- The tech stack and scaffolding are decided in the first `3d-…` change (`leoiot-3d/README.md`).
+- The tech stack and scaffolding are decided in the first `model3d-…` change (`leoiot-3d/README.md`).
 - CI picks the sub-project up by shape: `package.json` per component, `Dockerfile`, `compose.yaml` in `leoiot-3d/`, routes in `.github/ci/smoke-routes`. Node 22 for `leoiot-*`. Run `.github/ci/affected.sh origin/main HEAD` and the listed checks before pushing.
 - Never commit credentials. **`legacy/frontend/logic.js` contains a hard-coded InfluxDB admin token (`INFLUXDB_TOKEN`). Do not copy it.** The new app must not hold any token in browser code.
 
@@ -89,7 +89,7 @@ The broker and `/mqtt` are live (`platform-broker`, archived 2026-10-22), but **
 
 ### Order of work
 
-1. **3D first:** `/opsx:propose 3d-building-explorer`, then implement, test locally, merge into `main`. Nothing reaches users yet because nginx has no `/3d/` route; the container just runs on `127.0.0.1:8091`.
+1. **3D first:** `/opsx:propose model3d-building-explorer`, then implement, test locally, merge into `main`. Nothing reaches users yet because nginx has no `/3d/` route; the container just runs on `127.0.0.1:8091`.
 2. **Platform route last:** the pull request from `docs/continuations/platform-3d-route.md` (nginx blocks, `/3d/` in `smoke-routes`, `operations.md`), merged after the 3D app is on `main`, so both ship in the same promotion.
 3. After the release, nginx is applied on vm23 by hand.
 
@@ -193,10 +193,10 @@ Corridor centre lines (legacy `segments`, x/z): ring z = −13.9 and z = 5.1 for
   The route only matters to 3D, but the files are shared, so it goes in its own small pull request. No OpenSpec change is needed: no platform spec covers proxy routes, and the route is not a data interface. The complete plan (nginx blocks, `smoke-routes`, `operations.md`, applying nginx on vm23, release order, later `/` redirect) is in its own prompt: **`docs/continuations/platform-3d-route.md`**. For the 3D app this means: the container listens on `127.0.0.1:8091`, serves the build under `/3d/` (prefix kept, as PV does under `/pv/`), and live data uses the existing `/mqtt`.
 - **D3 – Tech stack like legacy.** three.js (`GLTFLoader`, `OrbitControls`, `CSS2DRenderer`) built with Vite, Node 22; one pinned three.js version from npm (no CDN importmap). Production image: Vite build served by nginx (pattern: `leoiot-pv/dashboard/Dockerfile`), with `/healthz`. TypeScript optional (PV uses it). Browser MQTT client for `/mqtt`, e.g. `mqtt` (mqtt.js) – pick in the change.
 - **D4 – Current values only, no database token.** The broker keeps the latest message per room (retained), so subscribing to `leoiot/room-climate/#` at `/mqtt` delivers every room's current value immediately, without credentials. No InfluxDB access, no token, no server-side injection. A room with no retained message shows "No data for room"; a message whose `ts` is older than 5 minutes is shown as stale (FR-08). Only if history is wanted later does a read token (injected server-side) become necessary.
-- **D5 – Scope of the first change:** room click with info panel, per-floor view (floor buttons + reset), live values, temperature and CO2 heatmaps (CO2 colours per FR-07). Navigation is a later change (`3d-room-navigation`).
+- **D5 – Scope of the first change:** room click with info panel, per-floor view (floor buttons + reset), live values, temperature and CO2 heatmaps (CO2 colours per FR-07). Navigation is a later change (`model3d-room-navigation`).
 
 - **D6 – Layered floor view like legacy.** Selecting a floor shows that floor and every floor beneath it (Floor 2 = U + E + 1F + 2F), which the cumulative model files already provide. Exception: the gym is a separate building segment and is shown alone (it would not fit on one screen together with the school). Heatmaps colour only the rooms of the selected floor; the full-building view and the gym have no heatmap (as in legacy, decided 2026-10-29). Room click works in every view, including full building and gym.
-- **D7 – English UI only for now**, as in legacy. This deviates from FSD AC-12 (DE/EN). The proposal lists German as a non-goal of this change and names a later change for it (e.g. `3d-german-translation`). To keep that easy, the first change keeps all UI text in one place instead of spreading strings through the code.
+- **D7 – English UI only for now**, as in legacy. This deviates from FSD AC-12 (DE/EN). The proposal lists German as a non-goal of this change and names a later change for it (e.g. `model3d-german-translation`). To keep that easy, the first change keeps all UI text in one place instead of spreading strings through the code.
 - **D8 – Stale threshold 5 minutes** (FSD FR-08), judged by the message's `ts`.
 
 Decided 2026-10-29:
@@ -207,17 +207,17 @@ Decided 2026-10-29:
 - **D12 – Info panel content:** production shows CO2 and temperature only (FR-02), with the room id. **For now** it also shows the time of the last reading (from `ts`, school-local time), so the team can check that live data arrives. This is temporary: the spec marks it as such, and a task or later change removes it before the app becomes the main page. Humidity and `source` are not shown.
 - **Defaults (no team decision needed, change if wrong):** if two devices publish for one room, the newest message by `ts` wins; desktop first, but the layout must not break on small screens (legacy's mobile layout is a nice-to-have); the "running on vm 23" badge is not carried over.
 
-## Suggested capability split for `openspec/specs/3d/`
+## Suggested capability split for `openspec/specs/model3d/`
 
-First change (`3d-building-explorer`):
+First change (`model3d-building-explorer`):
 - `building-viewer` – load models, floor switching, camera, reset, loading screen.
 - `room-climate-view` – room click, highlight, info panel, live values from `platform/data-contract`, stale marker, "No data for room".
 - `room-heatmap` – temperature/CO2 colouring per floor, labels, live updates (FR-07 colours).
 
-Later change (`3d-room-navigation`):
+Later change (`model3d-room-navigation`):
 - `room-navigation` – search with suggestions, route from entrance to room across floors and gym, using the waypoint files.
 
-Later change (`3d-german-translation`):
+Later change (`model3d-german-translation`):
 - German UI next to English (FSD AC-12), switchable language.
 
 Separate platform pull request: route `/3d/` and, in a later iteration, `/` → `/3d/` (D2, prompt `docs/continuations/platform-3d-route.md`).

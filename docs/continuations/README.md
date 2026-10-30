@@ -4,7 +4,7 @@ A continuation prompt is a self-contained text that lets a fresh session on any 
 
 ## Name
 
-`<group>-<task>.md`, in kebab-case. The group is `platform`, `sensors`, `pv` or `3d`, as in change names. If the prompt continues an OpenSpec change, the file name is the change name.
+`<group>-<task>.md`, in kebab-case. The group is `platform`, `sensors`, `pv` or `model3d`, as in change names. If the prompt continues an OpenSpec change, the file name is the change name.
 
 Examples: `pv-main-kiosk.md`, `sensors-stale-warning.md`.
 

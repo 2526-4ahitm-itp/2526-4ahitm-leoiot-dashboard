@@ -54,7 +54,7 @@ Until every route is served by a new implementation, the legacy stack SHALL be s
 - **THEN** it runs from the script's new location and produces a backup
 
 ### Requirement: Specs are grouped by sub-project
-The repository SHALL have a single spec tree. Every capability SHALL live under exactly one group — `platform`, `sensors`, `pv` or `3d` — matching the sub-project that implements it, and the grouping rules SHALL be part of the context agents receive when they create spec artifacts.
+The repository SHALL have a single spec tree. Every capability SHALL live under exactly one group — `platform`, `sensors`, `pv` or `model3d` — matching the sub-project that implements it, and the grouping rules SHALL be part of the context agents receive when they create spec artifacts.
 
 #### Scenario: Agent proposes a PV capability
 - **WHEN** an agent creates a spec for a new PV kiosk behaviour
