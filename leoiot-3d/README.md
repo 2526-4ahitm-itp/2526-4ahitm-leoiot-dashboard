@@ -26,6 +26,7 @@ leoiot-3d/
 ├── compose.yaml          deploy unit: the explorer on 127.0.0.1:8091
 ├── compose.dev.yaml      local test stack, never deployed
 ├── dev/                  configuration of the local test stack
+├── temporary-simulator/  TEMPORARY stopgap for room-climate data, delete it later
 └── explorer/             the 3D building explorer (Vite, TypeScript, three.js, mqtt.js)
     ├── models/           the building models (glTF)
     ├── dev/publish.mjs   development publisher of simulated room-climate readings
@@ -39,6 +40,8 @@ leoiot-3d/
 ## Live data
 
 The explorer reads the room-climate live data of `platform/data-contract` from `/mqtt` of the host that served the page, without credentials. It has no token and no configuration. On vm23 every room shows "No data for room" until the sensors collector or simulator publishes.
+
+**Temporary:** `temporary-simulator/` generates made-up room-climate values so that the explorer has something to display until the sensors team publishes. It is off unless the host switches it on, and it gets deleted then; see its README.
 
 ## Develop and test
 

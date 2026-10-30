@@ -1,0 +1,15 @@
+{
+  "name": "leoiot-3d-temporary-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TEMPORARY stopgap: generated room-climate readings until the sensors team publishes. Delete it then.",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "mqtt": "5.16.1"
+  }
+}

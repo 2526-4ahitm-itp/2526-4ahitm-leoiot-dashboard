@@ -14,3 +14,23 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 3
+
+  # TEMPORARY stopgap, delete it when the sensors team publishes room climate
+  # (temporary-simulator/README.md). Off unless leoiot-3d/.env on the host says
+  # COMPOSE_PROFILES=temporary-simulator; the program names a missing variable.
+  temporary-simulator:
+    profiles: ["temporary-simulator"]
+    build: ./temporary-simulator
+    restart: unless-stopped
+    environment:
+      SIMULATOR_MQTT_USER: ${SIMULATOR_MQTT_USER:-}
+      SIMULATOR_MQTT_PASSWORD: ${SIMULATOR_MQTT_PASSWORD:-}
+      SIMULATOR_MQTT_URL: ${SIMULATOR_MQTT_URL:-mqtt://mosquitto:1883}
+    networks:
+      - platform
+
+networks:
+  # Only for the temporary simulator: the broker's network, provided by leoiot-platform
+  platform:
+    external: true
+    name: ${PLATFORM_NETWORK:-2526-4ahitm-leoiot-dashboard_leoiot}
