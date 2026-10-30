@@ -48,10 +48,10 @@ Merge gate (design D15): `ci-ok` green and Jonas Leitner has tried the explorer 
 - [x] 7.4 Dependency rule: nothing in `leoiot-3d/` imports, references or mounts a file outside `leoiot-3d/` except the copied models' origin noted in D1 Done 2026-10-30: no import, path or mount outside leoiot-3d/ in code, Compose, nginx or Dockerfile
 - [x] 7.5 Full manual run on the production-like stack in Chrome and Firefox: load, every view, reset, room click in every view, both heatmaps on every floor, live updates, stale, "No data for room", broker restart; write the result into the pull request Done 2026-10-30, automated with puppeteer against the dev stack (headless Chrome with SwiftShader and headless Firefox); screenshots kept outside the repository. The hands-on check is 7.7
 - [ ] 7.6 Run the checks of `.github/ci/affected.sh origin/main HEAD` locally (`node`, `image`, `compose` for `leoiot-3d`), push, open the pull request; `ci-ok` is green
-- [ ] 7.7 Jonas Leitner tries the explorer locally from the pull request branch and approves it (merge gate)
+- [x] 7.7 Jonas Leitner tries the explorer locally from the pull request branch and approves it (merge gate) Done 2026-10-30: approved after the review changes (first floor in the model files, windows block clicks, buttons on the left)
 
 ## 8. Documentation and hand-over
 
-- [ ] 8.1 Update `docs/continuations/model3d-building-explorer.md` with the state while work is open; delete it in the pull request that finishes the change
+- [x] 8.1 Update `docs/continuations/model3d-building-explorer.md` with the state while work is open; delete it in the pull request that finishes the change Done 2026-10-30: deleted in the pull request of this change; references updated
 - [ ] 8.2 Tell the sensors team (Elias Pointinger) that the explorer reads `room_climate` live data from `/mqtt` and shows "No data for room" until their collector or simulator publishes
 - [x] 8.3 Add a task or note to the change that will make the explorer the main page: remove the temporary reading time from the info panel (spec "The info panel shows the time of the last reading, for now") Done 2026-10-30: noted in docs/continuations/platform-3d-route.md, "Later iteration"

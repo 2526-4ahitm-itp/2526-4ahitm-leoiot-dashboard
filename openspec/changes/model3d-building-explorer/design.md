@@ -2,7 +2,7 @@
 
 ## Context
 
-See `proposal.md` for the motivation and `specs/model3d/*/spec.md` for the behaviour. The team's decisions are collected in `docs/continuations/model3d-building-explorer.md` (formerly `model3d-rewrite-kickoff.md`, decisions D1–D12 there); this design records how they are built. Facts that shape the approach:
+See `proposal.md` for the motivation and `specs/model3d/*/spec.md` for the behaviour. The team's decisions were collected in a kickoff prompt (decisions D1–D12, called "kickoff" below); this design records them and how they are built. The prompt was deleted when this change was finished; its analysis of the legacy explorer, including the waypoints and corridors that `model3d-room-navigation` needs, stays in git history at `docs/continuations/model3d-building-explorer.md`. Facts that shape the approach:
 
 - **The legacy explorer** (`legacy/frontend/`, read only): three.js with `GLTFLoader`, `OrbitControls` and `CSS2DRenderer`; six glTF models with base64-embedded buffers, loaded and cached up front; materials replaced by mesh name; room meshes named by room id with optional `_<suffix>`; a yellow highlight `#f1c40f` for the selected room; temperature and CO₂ heatmaps of the current floor. Its data access (admin token, legacy measurements, `/ws`) is not carried over.
 - **The models**, checked on 2026-10-30 by reading their node names: `ModelU` 26 rooms, `ModelE` +17, `Model1F` +29, `Model2F` +22 (94 school rooms in `Model2F` and `ModelFull`), `ModelT` 13 gym rooms. Structure nodes are named `<cellar|ground_floor|first_floor|second_floor|ceiling_floor>-<MATERIAL>`; no room id contains `-`. No glTF extensions are used.
