@@ -5,41 +5,49 @@ import type { ViewId } from '../scene/models';
 import { el } from './dom';
 import { strings } from './strings';
 
-const FLOOR_BUTTONS = ['U', 'E', '1', '2', 'T'] as const;
+// Top to bottom as in the building
+const FLOOR_BUTTONS = ['2', '1', 'E', 'U'] as const;
 
 export class Controls {
   readonly element = el('nav', 'bar');
   private readonly views = new Map<ViewId, HTMLButtonElement>();
   private readonly heatmaps = new Map<HeatmapKind, HTMLButtonElement>();
+  private readonly reset = el('button', 'button', strings.views.reset);
 
   onView: (view: ViewId) => void = () => undefined;
   onReset: () => void = () => undefined;
   onHeatmap: (kind: HeatmapKind) => void = () => undefined;
 
   constructor() {
-    const viewGroup = el('div', 'bar-group');
-    for (const v of FLOOR_BUTTONS) {
-      const b = el('button', 'button', strings.views[v]);
-      b.addEventListener('click', () => this.onView(v));
-      this.views.set(v, b);
-      viewGroup.append(b);
-    }
-    const reset = el('button', 'button', strings.views.reset);
-    reset.addEventListener('click', () => this.onReset());
-    viewGroup.append(reset);
-
-    const heatGroup = el('div', 'bar-group');
+    const actions = el('div', 'bar-group');
     for (const k of ['temperature', 'co2'] as const) {
       const b = el('button', 'button', strings.heatmap[k]);
       b.addEventListener('click', () => this.onHeatmap(k));
       this.heatmaps.set(k, b);
-      heatGroup.append(b);
+      actions.append(b);
     }
-    this.element.append(viewGroup, heatGroup);
+    this.reset.addEventListener('click', () => this.onReset());
+    actions.append(this.reset);
+
+    const gym = el('div', 'bar-group');
+    gym.append(this.viewButton('T'));
+
+    const floors = el('div', 'bar-group');
+    for (const v of FLOOR_BUTTONS) floors.append(this.viewButton(v));
+    this.element.append(actions, gym, floors);
+  }
+
+  private viewButton(view: (typeof FLOOR_BUTTONS)[number] | 'T'): HTMLButtonElement {
+    const b = el('button', 'button', strings.views[view]);
+    b.addEventListener('click', () => this.onView(view));
+    this.views.set(view, b);
+    return b;
   }
 
   update(view: ViewId, heatmap: HeatmapKind | null, heatmapAllowed: boolean): void {
     for (const [v, b] of this.views) b.setAttribute('aria-pressed', String(v === view));
+    // Stands out only when another view is shown; in the whole building it still resets the camera
+    this.reset.classList.toggle('button-reset', view !== 'full');
     for (const [k, b] of this.heatmaps) {
       b.setAttribute('aria-pressed', String(k === heatmap));
       b.disabled = !heatmapAllowed;
