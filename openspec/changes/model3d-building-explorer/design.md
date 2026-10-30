@@ -65,13 +65,15 @@ leoiot-3d/
 
 Vite, TypeScript (`tsc --noEmit` in `build`), Vitest, `three` (with `GLTFLoader`, `OrbitControls`, `CSS2DRenderer` from its addons) and `mqtt` (mqtt.js) for the broker connection. Both runtime libraries are pinned to an exact version in `package.json` when the component is set up; there is no CDN import map. The UI is a handful of buttons and one panel, written with plain DOM code.
 
+Pinned on 2026-10-30: `three` 0.186.0 with `@types/three` 0.186.0 (0.187.0 had been published that day; a release is used only once it is some weeks old) and `mqtt` 5.16.1.
+
 *Why:* kickoff D3 and the user's choice (2026-10-29): TypeScript as in `leoiot-pv`, mqtt.js because it speaks MQTT over WebSocket in the browser and reconnects by itself. *Alternative:* plain JavaScript as in legacy, `paho-mqtt` (both rejected on 2026-10-29).
 
 ### D4. Container: nginx on 8091, prefix `/3d/`, hashed and pre-compressed models
 
 The image builds with `node:22-alpine` and serves `dist` from `nginx:stable-alpine` under `/usr/share/nginx/html/3d`, listening on 8091: `location = /healthz` (200), `location = /3d` (301 to `/3d/`), `location /3d/assets/` (long cache, `immutable`), `location /3d/` (`index.html` with `Cache-Control: no-cache`), everything else 404. `compose.yaml` publishes `127.0.0.1:8091:8091` only, with `restart: unless-stopped` and the health check `wget -q -O /dev/null http://127.0.0.1:8091/healthz`. It joins no network: the browser reaches the broker through the host's `/mqtt`, not through this container. No `.env` is needed.
 
-The models live in `explorer/models/` and are imported with Vite's `?url` suffix, so the build copies them to `dist/assets/` with a content hash in the name. A changed model therefore gets a new name, and the long cache lifetime is safe. The build stage writes a gzip copy next to each `.gltf` (`gzip -k -9`) and nginx serves it with `gzip_static on` and the type `model/gltf+json` to browsers that accept gzip. Compressing once at build time avoids compressing about 192 MB on every request.
+The models live in `explorer/models/` and are imported with Vite's `?url` suffix, so the build copies them to `dist/assets/` with a content hash in the name. A changed model therefore gets a new name, and the long cache lifetime is safe. The build stage writes a gzip copy next to each `.gltf` (`gzip -k -9`) and nginx serves it with `gzip_static on` and the type `model/gltf+json` to browsers that accept gzip. Compressing once at build time avoids compressing about 192 MB on every request. Measured 2026-10-30: the six models are 191.2 MB, their gzip copies 49.8 MB (26 %), which is what a first visit downloads.
 
 *Why the deviation from the kickoff's `public/models/`:* files in `public/` keep their names, so a long cache lifetime would keep an outdated model in browsers after an update. *Alternative:* on-the-fly `gzip on` (rejected: CPU for every download of large files).
 
@@ -96,7 +98,12 @@ The floor models are cumulative, which gives "a floor with the floors beneath it
 
 ### D7. Rooms, materials and highlight
 
-A node is a room when its name starts with `U`, `E`, `1`, `2` or `T`; its room id is the part before the first `_`. This is the legacy rule, re-implemented in `core/rooms.ts` and checked against the node names of all six models in a test that reads the names from the copied files. Materials are replaced by name as in legacy (`GLAS` → transparent glass, `METALL` or `FENSTERRAHMEN` → metal, others → light base material); the exact look is tuned by eye. The selected room's parts get the highlight colour `#f1c40f`. A click is resolved with a raycast against the visible model; the nearest hit that is a room wins, so a room behind glass can be clicked.
+A node is a room when its name starts with `U`, `E`, `1`, `2` or `T`; its room id is the part before the first `_`. This is the legacy rule, re-implemented in `core/rooms.ts` and checked against the node names of all six models in a test that reads the names from the copied files. The name is read from `userData.name`: three.js' `GLTFLoader` removes dots and other reserved characters from `Object3D.name` (`U74.1` becomes `U741`) and keeps the original only there. Legacy read `Object3D.name`, so room `U74.1` could never match its data. Materials are replaced by name as in legacy (`GLAS` → transparent glass, `METALL` or `FENSTERRAHMEN` → metal, others → light base material); the exact look is tuned by eye. The selected room's parts get the highlight colour `#f1c40f`. A click (pointer released within 5 px of where it was pressed, so a drag does not select) is resolved with a raycast against the visible model. The nearest hit decides, as in legacy, with two refinements found while testing on 2026-10-30:
+
+- see-through glass is skipped, so a room seen through a window can be clicked;
+- the room meshes are flat patches lying almost on the floor slab (0.15–0.5 units apart along the ray), so a room hit within 0.5 units behind the nearest hit wins over it.
+
+A wall in front of a room still blocks the click, so what can be clicked is what can be seen: in the whole-building view the roof covers the rooms (only rooms seen through windows can be clicked), and the gym's rooms are deep (walls 8 m high) and can be clicked when the camera looks down into them.
 
 ### D8. Live data
 
@@ -121,6 +128,7 @@ Kickoff D10: linear from `#8da1d6` at ≤ 20 °C to `#d68d8d` at ≥ 25 °C, lab
 - Switching floors keeps the heatmap and recolours the new floor; whole building, gym and "Reset View" switch it off (user, 2026-10-30).
 - No data → normal look and label "No data"; stale → grey `#9e9e9e` with ⚠ and the last value (kickoff D11).
 - Labels are `CSS2DObject`s at each room's bounding-box centre, one per room id.
+- Turning a heatmap on removes the selection (the highlight and the heatmap colours would mix). A selection stays when switching views if the room exists in the new view.
 
 ### D12. Info panel and the temporary reading time
 
@@ -139,7 +147,7 @@ Two ways to run it, both configured through defaults and environment variables o
 
 `dev/mosquitto.conf` and `dev/proxy.conf` are written new for this purpose; nothing is copied or mounted from `leoiot-platform/` or `legacy/`. They are development-only and never deployed (`compose.dev.yaml` is not a deploy unit).
 
-**Development publisher** `explorer/dev/publish.mjs` (`npm run dev:publish`, broker `DEV_MQTT_URL`, default `mqtt://localhost:1883`) publishes retained messages that follow the contract (`source` = `simulated`, `ts` in ms, `device` = `dev-publisher`): rooms on every floor and in the gym with CO₂ at 399, 599, 600, 1200, 1201 and 2600 ppm and temperatures from 18 to 27.5 °C; one room with CO₂ only and one with temperature only; one stale room (`ts` 12 minutes old); some rooms left without a message; then a new reading for a few rooms every 5 seconds. `--clear` removes all retained messages it published. It can only publish to a broker that allows it; the vm23 broker refuses anonymous publishing.
+**Development publisher** `explorer/dev/publish.mjs` (`npm run dev:publish`, `-- --once` for the fixed set only, broker `DEV_MQTT_URL`, default `mqtt://localhost:1883`) publishes retained messages that follow the contract (`source` = `simulated`, `ts` in ms, `device` = `dev-publisher`): rooms on every floor and in the gym with CO₂ at 399, 599, 600, 1200, 1201 and 2600 ppm and temperatures from 18 to 27.5 °C; one room with CO₂ only and one with temperature only; one stale room (`ts` 12 minutes old); some rooms left without a message; then a new reading for a few rooms every 5 seconds. `--clear` removes all retained messages it published. It can only publish to a broker that allows it; the vm23 broker refuses anonymous publishing.
 
 *Why both:* the user chose a switchable data source and a production-like stack (2026-10-29/30). The stack catches what `npm run dev` hides: the nginx config, the `/3d/` prefix, caching and gzip of the models, `wss`/`ws` selection behind a proxy.
 

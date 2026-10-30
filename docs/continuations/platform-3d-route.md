@@ -82,3 +82,4 @@ location = / { return 302 /3d/; }
 - `location = /` matches only the bare `/`; the legacy catch-all `location /` stays for all other paths until legacy is switched off.
 - Update the `/` row in `operations.md`; `smoke-routes` already has `/` (redirects are followed).
 - Apply on vm23 by hand as above.
+- **Before** this redirect ships, a `model3d-…` change removes the temporary "Last reading" time from the info panel (spec `model3d/room-climate-view`, requirement "The info panel shows the time of the last reading, for now"; decision D12 of `model3d-building-explorer`).
