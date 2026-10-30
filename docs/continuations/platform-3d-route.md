@@ -1,6 +1,6 @@
 # platform-3d-route
 
-Continuation prompt for the reverse-proxy route of the new 3D building explorer. Planned 2026-10-28 by the 3D-Modell team (Paul Kreinecker, Jonas Leitner) together with `docs/continuations/model3d-rewrite-kickoff.md`; read that prompt for the 3D app itself. Nothing of this is implemented yet.
+Continuation prompt for the reverse-proxy route of the new 3D building explorer. Planned 2026-10-28 by the 3D-Modell team (Paul Kreinecker, Jonas Leitner) together with `docs/continuations/model3d-building-explorer.md`; read that prompt for the 3D app itself. Nothing of this is implemented yet.
 
 ## State
 

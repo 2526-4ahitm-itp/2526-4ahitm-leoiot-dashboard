@@ -1,15 +1,15 @@
-# model3d-rewrite-kickoff
+# model3d-building-explorer
 
-Continuation prompt for the 3D-Modell team (Paul Kreinecker, Jonas Leitner). It collects everything a fresh session needs to start the rewrite of the 3D building explorer in `leoiot-3d/`. Written 2026-10-28 from an exploration of the repository; no code exists yet.
+Continuation prompt for the 3D-Modell team (Paul Kreinecker, Jonas Leitner). It collects everything a fresh session needs to work on the first 3D change, `model3d-building-explorer`, in `leoiot-3d/`. Written 2026-10-28 from an exploration of the repository as `model3d-rewrite-kickoff.md`; renamed when the change was proposed on 2026-10-30.
 
 ## State
 
-- **Branch / change:** none yet. No `model3d-…` change exists in `openspec/changes/`, `openspec/specs/model3d/` is empty, `leoiot-3d/` holds only `README.md` (status "Not started").
-- **Next step:** propose the first change, e.g. `model3d-building-explorer`, with the scope in "Decisions" below. The route `/3d/` is a separate plain platform pull request without an OpenSpec change (D2, prompt `docs/continuations/platform-3d-route.md`). This prompt is on `main`, so a worktree from `origin/main` contains it. When the 3D change exists, rename this prompt to the change name (rule: `docs/continuations/README.md`).
-- Exploration only so far: no code was written.
-- Work in a worktree: `git fetch origin && git worktree add ../leoiot-3d-<task> -b feat/<task> origin/main`.
-- **How to start the next session:** `/opsx:propose model3d-building-explorer`, telling it to read this prompt first. The proposal follows D1–D8 below; `openspec/config.yaml` names `docs/functional-specification.md` as the source for new specs. Validate with `openspec validate model3d-building-explorer --strict`.
-- **Order (recommended):** 3D change first, platform route pull request last (see "Order of work" below).
+- **Branch / change:** branch `feat/model3d-building-explorer` (worktree `../leoiot-model3d-building-explorer`), change `openspec/changes/model3d-building-explorer/` with proposal, design, specs (`model3d/building-viewer`, `model3d/room-climate-view`, `model3d/room-heatmap`) and tasks. No code yet; `leoiot-3d/` holds only `README.md`.
+- **Next step:** `/opsx:apply model3d-building-explorer`, starting with task group 1. The design records the decisions D1–D12 below plus those of 2026-10-29/30 (TypeScript, mqtt.js, all models loaded up front, heatmap off on room click, heatmap follows the floor, dev stack and publisher).
+- **Merge gate:** `ci-ok` green and Jonas Leitner has tried the explorer locally and approved it (design D15). Pushing unfinished work to the branch is fine; nothing merges before the gate.
+- **Spec group:** `model3d` (renamed from `3d` in PR #110, because the OpenSpec CLI rejects change names that start with a digit). The folder stays `leoiot-3d/`, the address stays `/3d/`.
+- **OpenSpec CLI 1.4.1:** `openspec validate --strict` reports "No deltas found" for every change with the nested layout `specs/<group>/<capability>/`; `openspec archive` then does not apply the deltas, so they are written into `openspec/specs/` by hand when the change is archived.
+- **Order:** 3D change first, platform route pull request last (see "Order of work" below).
 
 ## Rules that bind this sub-project
 
