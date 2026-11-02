@@ -17,7 +17,7 @@ A continuation prompt SHALL be a Markdown file directly in `docs/continuations/`
 - **THEN** the reviewer asks for it to be moved to `docs/continuations/`
 
 ### Requirement: A prompt is named after its group and task
-The file name SHALL be `<group>-<task>.md`, in kebab-case, where `<group>` is `platform`, `sensors`, `pv` or `3d` as in change names. If the prompt continues an OpenSpec change, the file name SHALL be the change name.
+The file name SHALL be `<group>-<task>.md`, in kebab-case, where `<group>` is `platform`, `sensors`, `pv` or `model3d` as in change names. If the prompt continues an OpenSpec change, the file name SHALL be the change name.
 
 #### Scenario: Prompt for an OpenSpec change
 - **WHEN** a prompt continues the change `pv-main-kiosk`
@@ -26,6 +26,10 @@ The file name SHALL be `<group>-<task>.md`, in kebab-case, where `<group>` is `p
 #### Scenario: Prompt for work without a change
 - **WHEN** a prompt continues sensor work that has no change yet, for example a stale-reading warning
 - **THEN** its file name starts with `sensors-`, for example `docs/continuations/sensors-stale-warning.md`
+
+#### Scenario: Prompt for 3D work
+- **WHEN** a prompt continues work of the 3D-Modell team in `leoiot-3d/`
+- **THEN** its file name starts with `model3d-`, for example `docs/continuations/model3d-building-explorer.md`
 
 ### Requirement: A prompt is self-contained and holds no secrets
 A prompt SHALL name the branch or change it continues, the state of the work and the next steps, so that a session with no earlier context can go on from it. It SHALL NOT contain credentials, tokens, the contents of `.env` files or the credentials found in `legacy/`.

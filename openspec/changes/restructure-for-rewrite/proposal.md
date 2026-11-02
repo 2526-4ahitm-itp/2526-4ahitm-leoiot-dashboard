@@ -13,7 +13,7 @@ The current code base grew without specs or structure and is not a base the team
   - `leoiot-pv/` — new PV data collection, dashboard and kiosks
   - `leoiot-3d/` — new building model and navigation
 - Keep the documentation site (Astro, published to GitHub Pages) at the repository root as the documentation of the new system, and mark it as outdated: it currently describes the legacy system and will be updated as the new implementations land.
-- Keep one `openspec/` at the root and group specs by sub-project (`platform/`, `sensors/`, `pv/`, `3d/`). Write the grouping rules into `openspec/specs/README.md` and into the OpenSpec project context so every agent sees them when it creates artifacts.
+- Keep one `openspec/` at the root and group specs by sub-project (`platform/`, `sensors/`, `pv/`, `model3d/`). Write the grouping rules into `openspec/specs/README.md` and into the OpenSpec project context so every agent sees them when it creates artifacts.
 - Move the two existing as-built specs (`dashboard-pv`, `dashboard-sensors`) and their conversion tracker into `legacy/` as reference material. The functional specification (`docs/functional-specification.md`) stays at the root as the source for the new specs.
 - Keep legacy deployable from its new location with its existing data: pin the Compose project name before the move, so the stack keeps its data volumes, and update the host-side paths that point into the repository (backup cron job).
 - Update `.gitignore` entries that name moved paths, so ignored credential files stay ignored.

@@ -197,8 +197,10 @@ done
 
 checks=$((checks + 1))
 units=$("$affected" --all | grep '^unit ' | tr '\n' ' ')
+# platform, legacy, then the others alphabetically, whichever sub-projects exist
+rest=$(git ls-files 'leoiot-*/compose.yaml' | cut -d/ -f1 | grep -v '^leoiot-platform$' | LC_ALL=C sort | sed 's/^/unit /' | tr '\n' ' ')
 case $units in
-  "unit leoiot-platform unit legacy unit leoiot-pv ") ;;
+  "unit leoiot-platform unit legacy $rest") ;;
   *) fail "--all: units not in deployment order: $units" ;;
 esac
 

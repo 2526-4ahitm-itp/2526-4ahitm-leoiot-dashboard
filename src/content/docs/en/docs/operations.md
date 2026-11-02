@@ -95,6 +95,7 @@ As long as the runner and the `release` branch are missing, the manual route rem
 | `/` | `127.0.0.1:8080` (`frontend`, 3D explorer) |
 | `/dashboard/` | `127.0.0.1:8081/` (`dashboard-v2`, prefix stripped) |
 | `/kiosk/` | `127.0.0.1:8088` (main kiosk from `leoiot-pv/`) |
+| `/3d/` | `127.0.0.1:8091` (3D building explorer from `leoiot-3d/`, prefix kept) |
 | `/kiosk/ws` | `127.0.0.1:8088` (WebSocket to the bridge, via the main kiosk's own nginx) |
 | `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (also without `/`) | permanent 301 redirect to `/kiosk/`, the query is kept |
 | `/grafana/` | `127.0.0.1:3000` (with `X-Forwarded-Proto`) |
@@ -103,7 +104,7 @@ As long as the runner and the `release` branch are missing, the manual route rem
 | `/mqtt` | `127.0.0.1:9001` (MQTT over WebSocket, broker of `leoiot-platform/`; anonymous, read-only on the room-climate topics; at most 20 connections per client address) |
 | `/solax/` | external Solax cloud API (`openapi-eu.solaxcloud.com`), header `Access-Control-Allow-Origin: *` is set |
 
-Only the paths `/kiosk` and `/dashboard` without a trailing slash are redirected with a 301 to the variant with `/`. Grafana is configured to match with `GF_SERVER_ROOT_URL` and `GF_SERVER_SERVE_FROM_SUB_PATH=true`.
+Only the paths `/kiosk`, `/dashboard` and `/3d` without a trailing slash are redirected with a 301 to the variant with `/`. Grafana is configured to match with `GF_SERVER_ROOT_URL` and `GF_SERVER_SERVE_FROM_SUB_PATH=true`.
 
 ## Backup and restore
 
