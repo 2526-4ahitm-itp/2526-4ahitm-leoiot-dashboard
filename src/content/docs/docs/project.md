@@ -72,7 +72,7 @@ Stand der Präsentation ([zur Präsentation, nur Deutsch](../../slides/)) vom 5.
 - Deployment auf der Schul-VM mit HTTPS
 - Continuous Deployment und Datenbank-Backups
 
-Zwei Punkte weichen heute von diesem Stand ab: Die Anwendung wird über einen Pull Request von `main` nach `release` auf die Schul-VM gebracht (siehe [Betrieb](../operations/)); die Doku-Seite wird automatisch veröffentlicht, die Datenbank-Backups bleiben bestehen, und es gibt einen Hauptkiosk unter `/kiosk/` aus `leoiot-pv/` statt mehrerer Kiosk-Anzeigen. Die früheren Kiosk-Adressen (`/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/`) leiten dauerhaft (301) dorthin um.
+Drei Punkte weichen heute von diesem Stand ab: Die Anwendung wird über einen Pull Request von `main` nach `release` auf die Schul-VM gebracht (siehe [Betrieb](../operations/)); die Doku-Seite wird automatisch veröffentlicht, die Datenbank-Backups bleiben bestehen, und es gibt einen Hauptkiosk unter `/kiosk/` aus `leoiot-pv/` statt mehrerer Kiosk-Anzeigen. Die früheren Kiosk-Adressen (`/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/`) leiten dauerhaft (301) dorthin um. Das PV-Dashboard steht seit dem 20.10.2026 unter `/pv/` (Ansichten Tag, Woche, Monat und Jahr); die alte PV-Ansicht im Dashboard v2 unter `/dashboard/` bleibt, bis sie durch einen Link auf `/pv/` ersetzt ist (Issue #128).
 
 ## Meilensteine
 

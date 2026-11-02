@@ -65,6 +65,7 @@ Server to client:
 - Measurements used in the code: `mqtt_consumer` (tag `topic`, field `value`), `room_temperature` (tag `room`, field `temperature`), `solax_stats` (see above).
 - The frontends of the old stack query InfluxDB through the path `/influx` (`/api/v2/query`). Flux is InfluxDB's query language.
 - The main kiosk queries via `POST /kiosk/api/query`. Its nginx passes the request on to InfluxDB and adds a read-only token from the environment variable `KIOSK_INFLUX_TOKEN`; the token stays on the server and the browser never receives it.
+- The PV dashboard queries the same way via `POST /pv/api/query`; its nginx adds the same read-only token.
 - For `server_data` there is, besides the admin token, a read-only token and a write-only token (for the PV team). The values are not part of the documentation.
 
 The example below fetches the CO₂ history of one sensor for the last 24 hours as 10-minute averages (token is a placeholder):
@@ -117,7 +118,7 @@ The code and the slides use 800 and 1000 ppm. The functional specification (`do
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/grafana/provisioning/`, `legacy/grafana/dashboards/main-dashboard.json`
 - `leoiot-platform/proxy/nginx.conf`
-- `leoiot-pv/kiosk/`
+- `leoiot-pv/kiosk/`, `leoiot-pv/dashboard/`
 - `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`
 - `legacy/sensorbox/nili-ldr/nili-ldr.yaml`, `legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml`
 - `docs/functional-specification.md`

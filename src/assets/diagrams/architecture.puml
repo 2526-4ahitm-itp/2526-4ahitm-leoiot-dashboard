@@ -63,8 +63,9 @@ Container(grafana, "Grafana", ":3000")
 
 Container(collector, "collector", "leoiot-pv, Node.js")
 Container(kiosk, "kiosk", "leoiot-pv, nginx :8088")
+Container(dashboard, "dashboard", "leoiot-pv, nginx :8089")
 
-System_Ext(browser, "Browser", "3D-Explorer, Dashboard v2, Hauptkiosk")
+System_Ext(browser, "Browser", "3D-Explorer, Dashboard v2, Hauptkiosk, PV-Dashboard")
 
 Rel(sensors, mosquitto, "MQTT")
 Rel(fake, mosquitto, "MQTT")
@@ -80,5 +81,8 @@ Rel(influx, grafana, "Flux")
 Rel(influx, browser, "Flux über /influx")
 Rel(influx, kiosk, "Flux")
 Rel(bridge, kiosk, "WebSocket")
+Rel(influx, dashboard, "Flux")
+Rel(bridge, dashboard, "WebSocket")
 Rel(kiosk, browser, "/kiosk/")
+Rel(dashboard, browser, "/pv/")
 @enduml

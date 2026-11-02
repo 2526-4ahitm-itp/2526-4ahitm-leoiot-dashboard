@@ -95,8 +95,11 @@ As long as the runner and the `release` branch are missing, the manual route rem
 | `/` | `127.0.0.1:8080` (`frontend`, 3D explorer) |
 | `/dashboard/` | `127.0.0.1:8081/` (`dashboard-v2`, prefix stripped) |
 | `/kiosk/` | `127.0.0.1:8088` (main kiosk from `leoiot-pv/`) |
+| `/pv/` | `127.0.0.1:8089` (PV dashboard from `leoiot-pv/`) |
 | `/3d/` | `127.0.0.1:8091` (3D building explorer from `leoiot-3d/`, prefix kept) |
 | `/kiosk/ws` | `127.0.0.1:8088` (WebSocket to the bridge, via the main kiosk's own nginx) |
+| `/pv/ws` | `127.0.0.1:8089` (WebSocket to the bridge, via the PV dashboard's own nginx) |
+| `/dashboard/pv`, `/dashboard/pv/…` | 301 redirect to `/pv/` |
 | `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (also without `/`) | permanent 301 redirect to `/kiosk/`, the query is kept |
 | `/grafana/` | `127.0.0.1:3000` (with `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, prefix stripped) |

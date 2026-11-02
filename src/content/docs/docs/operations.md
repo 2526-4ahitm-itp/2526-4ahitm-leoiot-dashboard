@@ -95,8 +95,11 @@ Solange Runner und Branch `release` fehlen, bleibt der Handweg: Der alte Stack w
 | `/` | `127.0.0.1:8080` (`frontend`, 3D-Explorer) |
 | `/dashboard/` | `127.0.0.1:8081/` (`dashboard-v2`, Präfix wird entfernt) |
 | `/kiosk/` | `127.0.0.1:8088` (Hauptkiosk aus `leoiot-pv/`) |
+| `/pv/` | `127.0.0.1:8089` (PV-Dashboard aus `leoiot-pv/`) |
 | `/3d/` | `127.0.0.1:8091` (3D-Gebäudeexplorer aus `leoiot-3d/`, Präfix bleibt erhalten) |
 | `/kiosk/ws` | `127.0.0.1:8088` (WebSocket zur Bridge, über den nginx des Hauptkiosks) |
+| `/pv/ws` | `127.0.0.1:8089` (WebSocket zur Bridge, über den nginx des PV-Dashboards) |
+| `/dashboard/pv`, `/dashboard/pv/…` | 301-Umleitung auf `/pv/` |
 | `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (auch ohne `/`) | dauerhafte 301-Umleitung auf `/kiosk/`, die Query bleibt erhalten |
 | `/grafana/` | `127.0.0.1:3000` (mit `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, Präfix wird entfernt) |
