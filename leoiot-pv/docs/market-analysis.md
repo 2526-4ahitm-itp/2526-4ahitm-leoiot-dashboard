@@ -13,7 +13,7 @@ Status 2026-11-02. Compares three vendor portals and one public-display product 
 
 ## What they have in common
 
-The three portals are built for whoever owns, runs or services a system. They answer "does my system work, and how do I get more out of it?": faults, device status, tariffs, control, several plants in one account. They sit behind a login. Showing a system to the public is an add-on, and in Fronius' case a paid one. Solarfox covers the public screen but is a separate product that shows the data of a portal, without its own definitions of the numbers.
+The three portals are built for whoever owns, runs or services a system. They answer "does my system work, and how do I get more out of it?": faults, device status, tariffs, control, several plants in one account. They sit behind a login. Showing a system to the public is an add-on, and in Fronius' case a paid one. Solarfox covers the public screen, but as a separate product that shows the data of a portal.
 
 ## What ours does differently
 
@@ -31,7 +31,7 @@ This is not a replacement for a vendor portal, and it does not try to be.
 - The data comes from SolaX Cloud: the collector reads its API once a minute, so we depend on it, and if it fails we have no readings.
 - No alerts, no fault analysis, no device control, no forecasts, no tariffs and no money figures.
 - One plant only.
-- Building services keep using the SolaX portal for operation; our numbers are checked against it (#127).
+- The SolaX portal stays the reference: our numbers are compared against it (#127).
 
 ## Sources
 
