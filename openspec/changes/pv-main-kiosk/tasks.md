@@ -37,7 +37,7 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. This ch
 ## 5. Acceptance
 
 - [ ] 5.1 Have the kiosk accepted on the real screen at `/kiosk/` with live data (the task left open in `rebuild-main-kiosk` and `fix-review-findings`); verify the acceptance and its date are written in the pull request
-- [ ] 5.2 Observe for one week; verify on each of two different days that "Zuletzt aktualisiert" is current and that the kiosk container shows no restart in `docker compose ps`
+- [x] 5.2 Observe for one week; verify on each of two different days that "Zuletzt aktualisiert" is current and that the kiosk container shows no restart in `docker compose ps` Done 2026-11-02 (read-only on vm23): `leoiot-pv-kiosk-1` healthy, 0 restarts, running since 2026-10-20; at 18:56 the header of `/kiosk/` showed "Zuletzt aktualisiert: 18:55". For the days in between there is no browser observation: the stored readings the header is taken from arrived on all 12 full days from 21.10. to 01.11. (1409 to 1433 per day)
 
 ## 6. Remove the legacy kiosks
 

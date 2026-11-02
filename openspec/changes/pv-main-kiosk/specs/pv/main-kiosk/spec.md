@@ -35,6 +35,26 @@ The kiosk SHALL show, without scrolling, a header and below it a grid of four pa
 - **WHEN** the kiosk is opened on a screen of 3840 × 2160 pixels
 - **THEN** the grid fills the screen and text and charts are proportionally larger
 
+### Requirement: Four panels with one question each
+Each of the four panels SHALL answer one question for a stated audience, without anyone operating the kiosk:
+
+| Panel | Question | For whom |
+|---|---|---|
+| Heute | How much has the school used today, how much has the system produced, and where did that energy come from and go to? | visitors, students and teachers passing the screen |
+| Wochenübersicht | How does today compare with the six days before? | students and teachers passing the screen, building services checking that the days look normal |
+| Leistung | How have production and consumption run through today so far? | students and teachers, teachers in class, building services checking that the system ran through the day |
+| Energiefluss | What is happening right now: how much is produced and used, and is the grid or the battery giving or taking power? | visitors, students and teachers passing the screen, building services checking that the system runs |
+
+Looking things up in other periods is the job of the dashboard specified in `pv/dashboard`, not of the kiosk.
+
+#### Scenario: A panel answers its question alone
+- **WHEN** someone reads only the panel "Heute"
+- **THEN** the day's consumption, the day's production and their shares are readable without looking at another panel
+
+#### Scenario: Nobody operates the screen
+- **WHEN** a visitor stands in front of the screen and touches nothing
+- **THEN** all four panels show their answer at the same time, with no tab, menu or page change
+
 ### Requirement: Display below Full HD
 The kiosk SHALL also be displayed without scrolling and without overlapping content on screens between 1280 × 720 and 1920 × 1080 pixels. The number in the middle of a ring in the panel "Heute" SHALL lie completely inside the opening of the ring at every screen size.
 
