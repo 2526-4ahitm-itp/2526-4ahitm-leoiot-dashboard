@@ -4,17 +4,7 @@ const INFLUXDB_TOKEN = 'ih3lGQ2dVqXG7ec0Ai-flUi5ZWTqp3AChtwI0fu4014-cn5h0MRE6-Rc
 const INFLUXDB_ORG = 'leoiot';
 const INFLUXDB_BUCKET = 'server_data';
 
-// Solax Configuration
-const SOLAX_HOST = '/solax/';
-const SOLAX_CLIENT_ID = 'b6d55e642b304989be96a3e0f0ce1793';
-const SOLAX_CLIENT_SECRET = 'HCRctfp7_ezVhnIWlNrzO3--U_wFSjscVEhdQd5RpUI';
-const SOLAX_USERNAME = 'm.remake';
-const SOLAX_PASSWORD = 'Uniformed-Auction-Lanky1';
-const SOLAX_PLANT_ID = '508819503377442';
-
 // State
-let currentView = 'sensors';
-let solaxToken = null;
 let selectedSensor = '1Aula';
 let availableRooms = [];
 let currentTimeRange = '6h';
@@ -35,31 +25,14 @@ const TRANSLATIONS = {
 		tempHistory: 'Temperaturverlauf', co2History: 'CO₂-Verlauf',
 		tempPlaceholder: 'Wähle einen Raum um den Temperaturverlauf anzuzeigen',
 		co2Placeholder: 'Wähle einen Raum um den CO₂-Verlauf anzuzeigen',
-		axisTime: 'Uhrzeit', axisTempUnit: 'Temperatur (°C)', axisCo2Unit: 'CO₂ (ppm)', axisEnergy: 'Energie (kWh)',
+		axisTime: 'Uhrzeit', axisTempUnit: 'Temperatur (°C)', axisCo2Unit: 'CO₂ (ppm)',
 		allSensors: 'Alle Sensoren', colRoom: 'Raum', colTemp: 'Temperatur',
 		colLastUpdate: 'Letztes Update', colStatus: 'Status', showMore: 'Mehr anzeigen',
 		noRooms: 'Keine Räume gefunden',
 		justNow: 'Gerade eben', minAgo: 'vor {n} Min.', hoursAgo: 'vor {n} Std.',
 		liveMqtt: 'Live MQTT-Stream', historicalData: '📅 Historische Daten ({date})',
 		statusAlert: '⚠️ Alarm', statusMedium: '⚡ Mittel', statusOk: '✅ OK',
-		solarPowerToday: 'Solarertrag heute', lifetimeTotal: 'Gesamtertrag',
-		totalGenerated: 'Gesamte Erzeugung', batteryUsage: 'Batterienutzung',
-		gridUsage: 'Netznutzung', importedExported: 'Bezug / Einspeisung',
-		batteryActivity: 'Heutige Aktivität',
-		updatedInit: 'Aktualisiert: --',
-		updatedAt: 'Aktualisiert: {time}',
-		chargingNet: 'Laden (netto)', dischargingNet: 'Entladen (netto)',
-		buyingNet: 'Bezug (netto)', sellingNet: 'Einspeisung (netto)',
-		pvSolarChartTitle: 'Solarertrag (kWh, kumuliert)',
-		pvConsumptionChartTitle: 'Gebäudeverbrauch (kWh, kumuliert)',
-		pvSolarSubtitle: 'Vom Solarpanel erzeugte Energie',
-		pvConsumptionSubtitle: 'Vom Gebäude verbrauchte Energie',
-		pvDetailedStats: 'Detailstatistiken', pvDailyBreakdown: 'Tagesübersicht',
-		savedInBattery: 'In Batterie gespeichert:', takenFromBattery: 'Aus Batterie entnommen:',
-		boughtFromGrid: 'Aus Netz bezogen:', soldToGrid: 'Ins Netz eingespeist:',
-		datasetSolar: 'Solarertrag kumuliert (kWh)', datasetConsumption: 'Verbrauch kumuliert (kWh)',
-		sensorDashTitle: '🏢 LeoIOT Sensor Dashboard', pvDashTitle: '☀️ LeoIOT PV Dashboard',
-		solarPowerOn: 'Solarertrag am {date}',
+		sensorDashTitle: '🏢 LeoIOT Sensor Dashboard',
 	},
 	en: {
 		loading: 'Loading Dashboard',
@@ -73,31 +46,14 @@ const TRANSLATIONS = {
 		tempHistory: 'Temperature History', co2History: 'CO₂ History',
 		tempPlaceholder: 'Select a specific room to view its temperature history',
 		co2Placeholder: 'Select a specific room to view its CO₂ history',
-		axisTime: 'Time', axisTempUnit: 'Temperature (°C)', axisCo2Unit: 'CO₂ (ppm)', axisEnergy: 'Energy (kWh)',
+		axisTime: 'Time', axisTempUnit: 'Temperature (°C)', axisCo2Unit: 'CO₂ (ppm)',
 		allSensors: 'All Sensors Overview', colRoom: 'Room', colTemp: 'Temperature',
 		colLastUpdate: 'Last Update', colStatus: 'Status', showMore: 'Show More',
 		noRooms: 'No rooms found',
 		justNow: 'Just now', minAgo: '{n} min ago', hoursAgo: '{n} hours ago',
 		liveMqtt: 'Live MQTT Stream', historicalData: '📅 Historical Data ({date})',
 		statusAlert: '⚠️ Alert', statusMedium: '⚡ Medium', statusOk: '✅ OK',
-		solarPowerToday: 'Solar Power Today', lifetimeTotal: 'Lifetime Total',
-		totalGenerated: 'Total Generated', batteryUsage: 'Battery Usage',
-		gridUsage: 'Grid Usage', importedExported: 'Imported / Exported',
-		batteryActivity: "Today's Activity",
-		updatedInit: 'Updated: --',
-		updatedAt: 'Updated: {time}',
-		chargingNet: 'Charging (Net)', dischargingNet: 'Discharging (Net)',
-		buyingNet: 'Buying (Net)', sellingNet: 'Selling (Net)',
-		pvSolarChartTitle: 'Solar Yield (kWh, cumulative)',
-		pvConsumptionChartTitle: 'Building Consumption (kWh, cumulative)',
-		pvSolarSubtitle: 'Energy produced by solar panels',
-		pvConsumptionSubtitle: 'Energy used by the building',
-		pvDetailedStats: 'Detailed Statistics', pvDailyBreakdown: 'Daily totals breakdown',
-		savedInBattery: 'Saved in Battery:', takenFromBattery: 'Taken from Battery:',
-		boughtFromGrid: 'Bought from Grid:', soldToGrid: 'Sold to Grid:',
-		datasetSolar: 'Cumulative yield (kWh)', datasetConsumption: 'Cumulative consumption (kWh)',
-		sensorDashTitle: '🏢 LeoIOT Sensor Dashboard', pvDashTitle: '☀️ LeoIOT PV Dashboard',
-		solarPowerOn: 'Solar Power on {date}',
+		sensorDashTitle: '🏢 LeoIOT Sensor Dashboard',
 	}
 };
 
@@ -139,9 +95,8 @@ let displayedRoomsCount = 10;
 const ROOMS_PER_PAGE = 15;
 
 // Chart instances
-let tempChart, co2Chart, pvSolarChart, pvConsumptionChart;
+let tempChart, co2Chart;
 let ws;
-let pvInterval;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
@@ -442,36 +397,6 @@ function initCharts() {
 		options: co2Options
 	});
 	document.getElementById('co2Chart').addEventListener('dblclick', () => co2Chart.resetZoom());
-
-	// PV Solar Chart
-	const solarCtx = document.getElementById('pvSolarChart').getContext('2d');
-	pvSolarChart = new Chart(solarCtx, {
-		type: 'line',
-		data: { labels: [], datasets: [] },
-		options: {
-			...baseOptions,
-			scales: {
-				...baseOptions.scales,
-				y: { ...baseOptions.scales.y, suggestedMin: 0, title: { display: true, text: t('axisEnergy'), color: axisLabelColor, font: { size: 12 } } }
-			}
-		}
-	});
-	document.getElementById('pvSolarChart').addEventListener('dblclick', () => pvSolarChart.resetZoom());
-
-	// PV Consumption Chart
-	const consumptionCtx = document.getElementById('pvConsumptionChart').getContext('2d');
-	pvConsumptionChart = new Chart(consumptionCtx, {
-		type: 'line',
-		data: { labels: [], datasets: [] },
-		options: {
-			...baseOptions,
-			scales: {
-				...baseOptions.scales,
-				y: { ...baseOptions.scales.y, suggestedMin: 0, title: { display: true, text: t('axisEnergy'), color: axisLabelColor, font: { size: 12 } } }
-			}
-		}
-	});
-	document.getElementById('pvConsumptionChart').addEventListener('dblclick', () => pvConsumptionChart.resetZoom());
 }
 
 // Set time range
@@ -487,14 +412,6 @@ window.setTimeRange = async (range) => {
 	const dateBtn = document.getElementById('btnDatePicker');
 	if (dateBtn) dateBtn.textContent = '🗓️';
 	
-	// Reset titles
-	const solarTitle = document.getElementById('pvSolarPowerTitle');
-	if (solarTitle) solarTitle.textContent = t('solarPowerToday');
-	const chartTitle1 = document.getElementById('pvSolarChartTitle');
-	if (chartTitle1) chartTitle1.textContent = t('pvSolarChartTitle');
-	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
-	if (chartTitle2) chartTitle2.textContent = t('pvConsumptionChartTitle');
-
 	updateNextDayBtn();
 	await refreshAllData();
 };
@@ -522,15 +439,6 @@ window.setSpecificDate = async (dateStr) => {
 		}
 	}
 	
-	// Update titles
-	const formattedDate = dateBtn ? dateBtn.textContent.replace('🗓️ ', '') : dateStr;
-	const solarTitle = document.getElementById('pvSolarPowerTitle');
-	if (solarTitle) solarTitle.textContent = isTodaySelected() ? t('solarPowerToday') : t('solarPowerOn', { date: formattedDate });
-	const chartTitle1 = document.getElementById('pvSolarChartTitle');
-	if (chartTitle1) chartTitle1.textContent = isTodaySelected() ? t('pvSolarChartTitle') : `${t('pvSolarChartTitle')} – ${formattedDate}`;
-	const chartTitle2 = document.getElementById('pvConsumptionChartTitle');
-	if (chartTitle2) chartTitle2.textContent = isTodaySelected() ? t('pvConsumptionChartTitle') : `${t('pvConsumptionChartTitle')} – ${formattedDate}`;
-
 	updateNextDayBtn();
 	await refreshAllData();
 };
@@ -663,52 +571,6 @@ function applyTranslations() {
 	const showMoreText = document.getElementById('showMoreText');
 	if (showMoreText) showMoreText.textContent = t('showMore');
 
-	// PV cards
-	const pvSolarTitle = document.getElementById('pvSolarPowerTitle');
-	if (pvSolarTitle) pvSolarTitle.textContent = customDate && !isTodaySelected()
-		? t('solarPowerOn', { date: customDate.split('-').reverse().join('.') })
-		: t('solarPowerToday');
-	const pvLifetime = document.getElementById('pvLifetimeTotalTitle');
-	if (pvLifetime) pvLifetime.textContent = t('lifetimeTotal');
-	const pvTotalGenLabel = document.getElementById('pvTotalGeneratedLabel');
-	if (pvTotalGenLabel) pvTotalGenLabel.textContent = t('totalGenerated');
-	const pvBattTitle = document.getElementById('pvBatteryUsageTitle');
-	if (pvBattTitle) pvBattTitle.textContent = t('batteryUsage');
-	const pvGridTitle = document.getElementById('pvGridUsageTitle');
-	if (pvGridTitle) pvGridTitle.textContent = t('gridUsage');
-
-	// PV sublabels — set initial/fallback values; refreshAllData() overwrites with live data
-	const pvBattStatus = document.getElementById('pvBatteryStatus');
-	if (pvBattStatus) pvBattStatus.textContent = t('batteryActivity');
-	const pvGridStatus = document.getElementById('pvGridStatus');
-	if (pvGridStatus) pvGridStatus.textContent = t('importedExported');
-	const pvTimeLabel = document.getElementById('pvTimeLabel');
-	if (pvTimeLabel) pvTimeLabel.textContent = t('updatedInit');
-
-	// PV chart titles & subtitles
-	const pvSolarChart = document.getElementById('pvSolarChartTitle');
-	if (pvSolarChart) pvSolarChart.textContent = t('pvSolarChartTitle');
-	const pvConsChart = document.getElementById('pvConsumptionChartTitle');
-	if (pvConsChart) pvConsChart.textContent = t('pvConsumptionChartTitle');
-	const pvSolarSub = document.getElementById('pvSolarSubtitle');
-	if (pvSolarSub) pvSolarSub.textContent = t('pvSolarSubtitle');
-	const pvConsSub = document.getElementById('pvConsumptionSubtitle');
-	if (pvConsSub) pvConsSub.textContent = t('pvConsumptionSubtitle');
-	const pvStatsTitle = document.getElementById('pvDetailedStatsTitle');
-	if (pvStatsTitle) pvStatsTitle.textContent = t('pvDetailedStats');
-	const pvStatsSub = document.getElementById('pvDailyBreakdownSubtitle');
-	if (pvStatsSub) pvStatsSub.textContent = t('pvDailyBreakdown');
-
-	// PV detail labels
-	const lblCharged = document.getElementById('pvLabelCharged');
-	if (lblCharged) lblCharged.textContent = t('savedInBattery');
-	const lblDischarged = document.getElementById('pvLabelDischarged');
-	if (lblDischarged) lblDischarged.textContent = t('takenFromBattery');
-	const lblImported = document.getElementById('pvLabelImported');
-	if (lblImported) lblImported.textContent = t('boughtFromGrid');
-	const lblExported = document.getElementById('pvLabelExported');
-	if (lblExported) lblExported.textContent = t('soldToGrid');
-
 	// Chart axis labels
 	if (tempChart) {
 		tempChart.options.scales.x.title.text = t('axisTime');
@@ -719,16 +581,6 @@ function applyTranslations() {
 		co2Chart.options.scales.x.title.text = t('axisTime');
 		co2Chart.options.scales.y.title.text = t('axisCo2Unit');
 		co2Chart.update('none');
-	}
-	if (pvSolarChart) {
-		pvSolarChart.options.scales.x.title.text = t('axisTime');
-		pvSolarChart.options.scales.y.title.text = t('axisEnergy');
-		pvSolarChart.update('none');
-	}
-	if (pvConsumptionChart) {
-		pvConsumptionChart.options.scales.x.title.text = t('axisTime');
-		pvConsumptionChart.options.scales.y.title.text = t('axisEnergy');
-		pvConsumptionChart.update('none');
 	}
 
 	// Rebuild room dropdown with translated labels
@@ -776,245 +628,6 @@ function buildDayTimeline(dateStr, dataPoints) {
 	}
 	return { labels, tooltipLabels, values };
 }
-// Switch between Sensors and PV view
-window.switchView = async (view) => {
-	if (currentView === view) return;
-	currentView = view;
-
-	const sensorsView = document.getElementById('sensorsView');
-	const pvView = document.getElementById('pvView');
-	const btnSensors = document.getElementById('btnSensors');
-	const btnPV = document.getElementById('btnPV');
-	const title = document.getElementById('dashboardTitle');
-
-	if (view === 'sensors') {
-		sensorsView.style.display = 'block';
-		pvView.style.display = 'none';
-		btnSensors.classList.add('active');
-		btnPV.classList.remove('active');
-		btnSensors.setAttribute('aria-selected', 'true');
-		btnPV.setAttribute('aria-selected', 'false');
-		title.textContent = t('sensorDashTitle');
-
-		// Stop PV polling
-		if (pvInterval) {
-			clearInterval(pvInterval);
-			pvInterval = null;
-		}
-	} else {
-		sensorsView.style.display = 'none';
-		pvView.style.display = 'block';
-		btnSensors.classList.remove('active');
-		btnPV.classList.add('active');
-		btnSensors.setAttribute('aria-selected', 'false');
-		btnPV.setAttribute('aria-selected', 'true');
-		title.textContent = t('pvDashTitle');
-
-		// Start PV polling (every 30s)
-		await refreshPVData();
-		pvInterval = setInterval(refreshPVData, 30000);
-	}
-
-	triggerRoomAnimation();
-};
-async function getSolaxToken() {
-	if (solaxToken) return solaxToken;
-	
-	try {
-		const url = `${SOLAX_HOST}openapi/auth/get_token`;
-		console.log(`[Solax] Fetching token from: ${url}`);
-		const response = await fetch(url, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				client_id: SOLAX_CLIENT_ID,
-				client_secret: SOLAX_CLIENT_SECRET,
-				grant_type: 'CICS',
-				username: SOLAX_USERNAME,
-				password: SOLAX_PASSWORD
-			})
-		});
-		
-		if (!response.ok) {
-			const text = await response.text();
-			console.error(`Solax token request failed with status ${response.status}: ${text}`);
-			return null;
-		}
-
-		const data = await response.json();
-		if (data.code === 0) {
-			solaxToken = data.result.access_token;
-			return solaxToken;
-		} else {
-			console.error('[Solax] Token API error:', data);
-			solaxToken = null;
-		}
-	} catch (error) {
-		console.error('Error fetching Solax token:', error);
-		solaxToken = null;
-	}
-	return null;
-}
-
-async function refreshPVData() {
-	if (currentTimeRange === 'custom' && !isTodaySelected()) {
-		await fetchPVHistoryData();
-		return;
-	}
-
-	const token = await getSolaxToken();
-	if (!token) return;
-
-	try {
-		// 1. Fetch Real-time Snapshot
-		const url = `${SOLAX_HOST}openapi/v2/plant/realtime_data?plantId=${SOLAX_PLANT_ID}&businessType=4`;
-		const response = await fetch(url, {
-			method: 'GET',
-			headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			}
-		});
-		
-		const data = await response.json();
-		if (data.code === 10000) {
-			updatePVDashboard(data.result);
-		} else if (data.code === 10401 || data.code === 10402) {
-			console.log('[Solax] Token expired or invalid, clearing...');
-			solaxToken = null;
-		}
-
-		// 2. Fetch History from InfluxDB for the Charts
-		await fetchPVHistoryData();
-
-	} catch (error) {
-		console.error('Error fetching Solax real-time data:', error);
-	}
-}
-
-async function fetchPVHistoryData() {
-	const query = `from(bucket: "${INFLUXDB_BUCKET}")
-       ${getRangeQuery()}
-       |> filter(fn: (r) => r._measurement == "solax_stats")
-       |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
-       |> yield(name: "mean")`;
-
-	try {
-		const csvData = await fetchInfluxDB(query);
-		const dataByField = parsePVHistoryResponse(csvData);
-		
-		updatePVCharts(dataByField);
-
-		if (currentTimeRange === 'custom' && !isTodaySelected()) {
-			const getLast = (arr) => arr && arr.length > 0 ? arr[arr.length - 1].value : 0;
-			const mockData = {
-				dailyYield: getLast(dataByField.daily_yield),
-				totalYield: getLast(dataByField.total_yield),
-				dailyCharged: getLast(dataByField.daily_charged),
-				dailyDischarged: getLast(dataByField.daily_discharged),
-				dailyImported: getLast(dataByField.daily_imported),
-				dailyExported: getLast(dataByField.daily_exported),
-				plantLocalTime: `${customDate} (End of Day)`
-			};
-			updatePVDashboard(mockData);
-		}
-	} catch (error) {
-		console.error('Error fetching PV history from InfluxDB:', error);
-	}
-}
-
-function parsePVHistoryResponse(csvData) {
-	const lines = csvData.trim().split('\n');
-	if (lines.length < 2) return {};
-
-	const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-	const valueIndex = headers.indexOf('_value');
-	const timeIndex = headers.indexOf('_time');
-	const fieldIndex = headers.indexOf('_field');
-
-	const dataByField = { 
-		daily_yield: [], 
-		consumption: [],
-		total_yield: [],
-		daily_charged: [],
-		daily_discharged: [],
-		daily_imported: [],
-		daily_exported: []
-	};
-
-	for (let i = 1; i < lines.length; i++) {
-		const columns = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
-		if (!columns[valueIndex] || !columns[timeIndex] || !columns[fieldIndex]) continue;
-
-		const field = columns[fieldIndex];
-		const value = parseFloat(columns[valueIndex]);
-		const time = new Date(columns[timeIndex]);
-
-		if (dataByField[field] !== undefined) {
-			dataByField[field].push({ time, value });
-		}
-	}
-
-	return dataByField;
-}
-
-function updatePVCharts(dataByField) {
-	if (dataByField.daily_yield && dataByField.daily_yield.length > 0) {
-		const yieldData = dataByField.daily_yield.sort((a, b) => a.time - b.time);
-		pvSolarChart.data.labels = yieldData.map(({ time }) => formatTime(time));
-		pvSolarChart.data.tooltipLabels = yieldData.map(({ time }) => formatTooltipTime(time));
-		pvSolarChart.data.datasets = [{
-			label: t('datasetSolar'),
-			data: yieldData.map(({ value }) => value),
-			borderColor: '#f59e0b',
-			backgroundColor: 'rgba(245, 158, 11, 0.1)',
-			fill: true,
-			tension: 0.4
-		}];
-		pvSolarChart.update();
-	}
-	setChartNoData('pvSolarChart', dataByField.daily_yield?.length > 0);
-
-	if (dataByField.consumption && dataByField.consumption.length > 0) {
-		const consumptionData = dataByField.consumption.sort((a, b) => a.time - b.time);
-		pvConsumptionChart.data.labels = consumptionData.map(({ time }) => formatTime(time));
-		pvConsumptionChart.data.tooltipLabels = consumptionData.map(({ time }) => formatTooltipTime(time));
-		pvConsumptionChart.data.datasets = [{
-			label: t('datasetConsumption'),
-			data: consumptionData.map(({ value }) => value),
-			borderColor: '#3b82f6',
-			backgroundColor: 'rgba(59, 130, 246, 0.1)',
-			fill: true,
-			tension: 0.4
-		}];
-		pvConsumptionChart.update();
-	}
-	setChartNoData('pvConsumptionChart', dataByField.consumption?.length > 0);
-}
-
-function updatePVDashboard(data) {
-	document.getElementById('pvDailyYield').textContent = `${data.dailyYield.toFixed(1)} kWh`;
-	document.getElementById('pvTotalYield').textContent = `${data.totalYield.toFixed(1)} kWh`;
-	
-	// Battery Usage (Charged - Discharged)
-	const batteryFlow = data.dailyCharged - data.dailyDischarged;
-	document.getElementById('pvBatteryFlow').textContent = `${Math.abs(batteryFlow).toFixed(1)} kWh`;
-	document.getElementById('pvBatteryStatus').textContent = batteryFlow >= 0 ? t('chargingNet') : t('dischargingNet');
-	
-	// Grid Usage (Imported - Exported)
-	const gridFlow = data.dailyImported - data.dailyExported;
-	document.getElementById('pvGridFlow').textContent = `${Math.abs(gridFlow).toFixed(1)} kWh`;
-	document.getElementById('pvGridStatus').textContent = gridFlow >= 0 ? t('buyingNet') : t('sellingNet');
-	
-	document.getElementById('pvTimeLabel').textContent = t('updatedAt', { time: data.plantLocalTime });
-	
-	// Details
-	document.getElementById('pvDailyCharged').textContent = `${data.dailyCharged.toFixed(1)} kWh`;
-	document.getElementById('pvDailyDischarged').textContent = `${data.dailyDischarged.toFixed(1)} kWh`;
-	document.getElementById('pvDailyImported').textContent = `${data.dailyImported.toFixed(1)} kWh`;
-	document.getElementById('pvDailyExported').textContent = `${data.dailyExported.toFixed(1)} kWh`;
-}
-
 
 // Filter by floor
 window.filterByFloor = async (floor) => {
@@ -1126,11 +739,6 @@ window.showMoreRooms = () => {
 
 // Refresh all data
 window.refreshAllData = async () => {
-	if (currentView === 'pv') {
-		await refreshPVData();
-		return;
-	}
-
 	const [tempData, co2Data, allRoomData, room105CO2, room105Temp] = await Promise.all([
 		fetchTemperatureData(),
 		fetchCO2Data(),

@@ -175,6 +175,7 @@ body {
 }
 
 .view-btn {
+	text-decoration: none;
 	background: transparent;
 	border: none;
 	color: rgba(255, 255, 255, 0.6);
@@ -682,48 +683,6 @@ tbody td.status-medium {
 	margin-left: 4px;
 }
 
-/* PV Dashboard Specifics */
-.pv-placeholder {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	height: 100%;
-	padding: 2rem;
-	text-align: center;
-}
-
-.pv-details-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 1.5rem;
-	width: 100%;
-	margin-top: 2rem;
-}
-
-.pv-detail-item {
-	background: rgba(255, 255, 255, 0.03);
-	padding: 1.5rem;
-	border-radius: 12px;
-	border: 1px solid rgba(255, 255, 255, 0.05);
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-.pv-detail-item .label {
-	font-size: 0.85rem;
-	color: rgba(255, 255, 255, 0.5);
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-}
-
-.pv-detail-item .value {
-	font-size: 1.5rem;
-	font-weight: 600;
-	color: #fbbf24;
-}
-
 /* No-data overlay on charts */
 .chart-container {
 	position: relative;
@@ -914,25 +873,6 @@ tbody td.status-medium {
 		font-size: 14px;
 	}
 
-	.pv-details-grid {
-		grid-template-columns: repeat(2, 1fr);
-		gap: 8px;
-		margin-top: 12px;
-	}
-
-	.pv-detail-item {
-		padding: 10px 12px;
-		gap: 3px;
-	}
-
-	.pv-detail-item .label {
-		font-size: 0.7rem;
-	}
-
-	.pv-detail-item .value {
-		font-size: 1rem;
-	}
-
 	.table-card {
 		overflow: hidden;
 	}
@@ -1115,9 +1055,6 @@ tbody td.status-medium {
 		height: 180px;
 	}
 
-	.pv-details-grid {
-		grid-template-columns: repeat(4, 1fr);
-	}
 }
 
 /* Safe-area insets for notch / Dynamic Island / home bar */

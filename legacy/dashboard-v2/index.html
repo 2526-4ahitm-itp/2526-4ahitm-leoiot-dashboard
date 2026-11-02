@@ -21,10 +21,10 @@
 		<header class="dashboard-header">
 			<div class="header-left">
 				<h1 id="dashboardTitle">🏢 LeoIOT Sensor Dashboard</h1>
-				<div class="dashboard-toggle" role="tablist" aria-label="Dashboard views">
-					<button onclick="switchView('sensors')" id="btnSensors" class="view-btn active" role="tab" aria-selected="true" aria-controls="sensorsView">Sensoren</button>
-					<button onclick="switchView('pv')" id="btnPV" class="view-btn" role="tab" aria-selected="false" aria-controls="pvView">PV System</button>
-				</div>
+				<nav class="dashboard-toggle" aria-label="Dashboard views">
+					<button id="btnSensors" class="view-btn active" aria-current="page">Sensoren</button>
+					<a href="/pv/" id="btnPV" class="view-btn">PV System</a>
+				</nav>
 			</div>
 			<div class="header-right">
 				<div class="time-range-selector" role="group" aria-label="Time range selector">
@@ -177,93 +177,6 @@
 						<button id="showMoreBtn" class="show-more-btn" onclick="showMoreRooms()">
 							<span id="showMoreText">Mehr anzeigen</span> <span id="showMoreCount">(10/117)</span>
 						</button>
-					</div>
-				</section>
-			</div>
-
-			<!-- PV View -->
-			<div id="pvView" style="display: none;">
-				<section class="summary-cards">
-					<div class="card summary-card">
-						<div class="card-icon">☀️</div>
-						<div class="card-content">
-							<h3 id="pvSolarPowerTitle">Solarertrag heute</h3>
-							<div class="value" id="pvDailyYield">-- kWh</div>
-							<div class="sensor-label" id="pvTimeLabel">Aktualisiert: --</div>
-						</div>
-					</div>
-					<div class="card summary-card">
-						<div class="card-icon">🌍</div>
-						<div class="card-content">
-							<h3 id="pvLifetimeTotalTitle">Gesamtertrag</h3>
-							<div class="value" id="pvTotalYield">-- kWh</div>
-							<div class="sensor-label" id="pvTotalGeneratedLabel">Gesamte Erzeugung</div>
-						</div>
-					</div>
-					<div class="card summary-card">
-						<div class="card-icon">🔋</div>
-						<div class="card-content">
-							<h3 id="pvBatteryUsageTitle">Batterienutzung</h3>
-							<div class="value" id="pvBatteryFlow">-- kWh</div>
-							<div class="sensor-label" id="pvBatteryStatus">Heutige Aktivität</div>
-						</div>
-					</div>
-					<div class="card summary-card">
-						<div class="card-icon">⚡</div>
-						<div class="card-content">
-							<h3 id="pvGridUsageTitle">Netznutzung</h3>
-							<div class="value" id="pvGridFlow">-- kWh</div>
-							<div class="sensor-label" id="pvGridStatus">Bezug / Einspeisung</div>
-						</div>
-					</div>
-				</section>
-
-				<section class="charts-grid">
-					<div class="chart-card full-width">
-						<div class="chart-header">
-							<h2 id="pvSolarChartTitle">Solarertrag (kWh, kumuliert)</h2>
-							<span class="chart-subtitle" id="pvSolarSubtitle">Vom Solarpanel erzeugte Energie</span>
-						</div>
-						<div class="chart-container">
-							<canvas id="pvSolarChart"></canvas>
-						</div>
-					</div>
-
-					<div class="chart-card full-width">
-						<div class="chart-header">
-							<h2 id="pvConsumptionChartTitle">Gebäudeverbrauch (kWh, kumuliert)</h2>
-							<span class="chart-subtitle" id="pvConsumptionSubtitle">Vom Gebäude verbrauchte Energie</span>
-						</div>
-						<div class="chart-container">
-							<canvas id="pvConsumptionChart"></canvas>
-						</div>
-					</div>
-
-					<div class="chart-card full-width">
-						<div class="chart-header">
-							<h2 id="pvDetailedStatsTitle">Detailstatistiken</h2>
-							<span class="chart-subtitle" id="pvDailyBreakdownSubtitle">Tagesübersicht</span>
-						</div>
-						<div class="chart-container" style="height: auto;">
-							<div class="pv-details-grid">
-								<div class="pv-detail-item">
-									<span class="label" id="pvLabelCharged">In Batterie gespeichert:</span>
-									<span id="pvDailyCharged" class="value">-- kWh</span>
-								</div>
-								<div class="pv-detail-item">
-									<span class="label" id="pvLabelDischarged">Aus Batterie entnommen:</span>
-									<span id="pvDailyDischarged" class="value">-- kWh</span>
-								</div>
-								<div class="pv-detail-item">
-									<span class="label" id="pvLabelImported">Aus Netz bezogen:</span>
-									<span id="pvDailyImported" class="value">-- kWh</span>
-								</div>
-								<div class="pv-detail-item">
-									<span class="label" id="pvLabelExported">Ins Netz eingespeist:</span>
-									<span id="pvDailyExported" class="value">-- kWh</span>
-								</div>
-							</div>
-						</div>
 					</div>
 				</section>
 			</div>
