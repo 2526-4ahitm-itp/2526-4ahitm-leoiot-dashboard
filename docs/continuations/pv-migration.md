@@ -1,69 +1,58 @@
-# Continuation: PV-Neuaufbau abschließen (Stand 2026-11-02)
+# Continuation: PV-Neuaufbau, offener Rest (Stand 2026-11-02, abends)
 
-Du setzt die Arbeit an der PV-Migration von LeoIoT für Daniel Lettner fort. Antworte auf Deutsch. Vorwissen aus früheren Chats hast du nicht; alles Nötige steht hier, im Repo und in den genannten Issues.
-
-## Auftrag
-
-**Erledige selbständig so viel wie möglich von der Liste „Allein machbar“.** Frag nur, wenn du wirklich nicht weiterkommst. Was Daniel, Stefan oder der Lehrer tun müssen, bereitest du so weit vor, dass nur noch ihr Schritt fehlt, und sammelst es für den Abschlussbericht. Den **zweiten, kreativen Kiosk (#123) fängst du nicht an**: Den macht Daniel danach gemeinsam mit dir in einem eigenen Durchgang.
+Du setzt die Arbeit an der PV-Migration von LeoIoT für Daniel Lettner fort. Antworte auf Deutsch. Vorwissen aus früheren Chats hast du nicht; alles Nötige steht hier, im Repo und in den genannten Issues und PRs.
 
 ## Stand
 
-Change-Übersicht: `openspec list` im Repo. User Stories: #55 (PV gesamt) und #64 (Dashboard), jeweils mit Unter-Issues und einem Stand-Kommentar vom 2026-11-02.
+Change-Übersicht: `openspec list`. User Stories: #55 (PV gesamt), #64 (Dashboard).
 
-- Live auf vm23: Collector (`leoiot-pv/collector`), Hauptkiosk `/kiosk/`, PV-Dashboard `/pv/`, gemeinsames Paket `leoiot-pv/shared`. `main` und `release` waren am 2026-11-02 gleich.
-- Das alte Dashboard `/dashboard/` (`legacy/dashboard-v2`) hat noch seinen PV-Tab und liefert das SolaX-Login an den Browser, bis #128 erledigt ist.
+Erledigt, liegt grün in PRs. **Prüfe zuerst mit `gh pr view`, ob sie gemergt sind.** Merge-Befehle führt Daniel aus; die Berechtigungsprüfung lehnt `gh pr merge` für den Agenten ab, das nicht umgehen.
 
-## Allein machbar, in dieser Reihenfolge
+| PR | Inhalt | Danach |
+|---|---|---|
+| #131 | `Closes #122`: Kiosk-Panels begründet, Tasks Dashboard 5.5 und Kiosk 5.2 abgehakt | Worktree `leoiot-pv-kiosk-why` weg |
+| #132 | `Closes #121`: `leoiot-pv/docs/market-analysis.md` | Worktree `leoiot-pv-market` weg, Link in #55 von „in review“ auf die Datei ändern |
+| #133 | `Refs #129`: `/pv/` auf Doku-Seite und im README, Diagramm siehe unten | Worktree `leoiot-pv-docs` erst nach den SVGs weg |
+| #135 | `Closes #134`: Rücksprung-Regel im Datenvertrag, `platform-pv-counter-stepback` archiviert | Worktree `leoiot-pv-stepback` weg |
+| #136 | **Entwurf**, `Refs #128`: PV-Tab wird Link, SolaX-Login und `/solax/` raus | nicht mergen, siehe unten |
 
-1. **Abhaken:** `pv-dashboard` Task 5.5 (ausgeliefert mit #93, #95) und `pv-main-kiosk` Task 5.2 (auf vm23 am 2026-11-02: Neustarts 0, healthy, seit 2026-10-20). Vorher lesend bestätigen.
-2. **#122 Kiosk-Ansichten begründen:** Im Spec-Delta von `pv-main-kiosk` für Heute, Wochenübersicht, Leistung und Energiefluss je Frage und Zielgruppe ergänzen, wie im Requirement „Four views with one question each“ von `pv-dashboard`. Zielgruppen und Abgrenzung stehen in `leoiot-pv/PRODUCT.md`. `openspec validate pv-main-kiosk --strict`.
-3. **#121 Marktanalyse:** Mindestens drei bestehende PV-Dashboards vergleichen (zum Beispiel SolaX Cloud, SMA Sunny Portal, Fronius Solar.web), was sie zeigen und für wen, und benennen, was unseres anders macht. Quellen belegen, nichts erfinden. Ablage: `leoiot-pv/docs/market-analysis.md`, englisch, kurz; in #55 verlinken.
-4. **#129 Doku, erster Teil:** `pv-dashboard` Task 8.1: `/pv/` auf der Doku-Seite (`architecture`, `setup`, `operations`, `interfaces`, `project`, je DE und EN, Architekturdiagramm) und in `leoiot-pv/README.md` nennen; der Abschnitt „Still in the previous system“ dort ist veraltet. Der Dashboard-Abschnitt nennt `/pv/` als aktuelle Adresse; dass der alte PV-Tab noch existiert, bleibt bis #128 erwähnt. `npm ci && npm run build` an der Wurzel. Die übrigen Punkte von #129 warten auf #128.
-5. **#119 Broker-Zugang, Diagnose:** Seit 2026-10-22 meldet der Collector `Connection refused: Not authorized`. Lesend klären: Broker-Log von `leoiot-platform-mosquitto-1`, welche Benutzernamen `leoiot-platform/broker` erwartet (Doku und Compose, keine Passwörter), und welcher **Name** der Variablen in `leoiot-pv/.env` gesetzt ist, nie ihr Wert. Ergebnis als Kommentar in #119 mit der genauen Anweisung für Daniel. `.env` nicht ändern. Das Archiv `platform-broker` enthält die Übergabe, Task 5.5 dort ist abgehakt, obwohl der Collector nicht verbunden ist.
-6. **`platform-pv-counter-stepback`:** Tasks 1.1, 1.2, 2.1 umsetzen. Für 1.1 nicht den Lesetoken anfassen, sondern lesend über den Kiosk-Proxy abfragen (siehe „vm23“). Spec nach `openspec/specs/platform/data-contract/spec.md` übernehmen, archivieren.
-7. **#128 vorbereiten, nicht ausliefern:** `pv-dashboard` Gruppe 7 als **Entwurfs-PR** (`gh pr create --draft`) bauen: PV-Tab in `legacy/dashboard-v2` wird Link auf `/pv/`, PV-Ansicht samt SolaX-Login raus, `/solax/` aus `leoiot-platform/proxy/nginx.conf` raus (die nginx-Datei liegt seit `platform-broker` dort, `legacy/deploy/nginx.conf` ist nicht mehr die Quelle; die Tasks 5.1, 7.4 nennen noch den alten Pfad, korrigieren). Sensor-Ansicht vorher und nachher vergleichen (Task 7.1). **Nicht mergen:** Das wartet auf die Abnahme #127, und das Sensoren-Team wird vorher informiert (Task 7.3).
+Der alte lokale Branch `docs/platform-pv-counter-stepback` ist ein Rest und hat nichts mit #135 zu tun.
 
-Nach jedem Punkt: geprüft, PR, grünes CI, mergen, Issue-Haken setzen, Worktree weg.
+## Offen, in dieser Reihenfolge
 
-## Nicht allein machbar: nur vorbereiten und berichten
+1. **Merges prüfen,** Worktrees und Branches aufräumen, Issue-Haken setzen.
+2. **Diagramm (#133):** Die vier `src/assets/diagrams/architecture*.svg` sind nicht neu gerendert, die `.puml`-Quellen enthalten das Dashboard schon. Heruntergeladenes PlantUML auszuführen wurde dem Agenten verweigert, und auf dem Laptop fehlen Graphviz und ein laufendes Docker. Daniel rendert, oder er erlaubt es dem Agenten. Die SVGs sind vor dem Merge von #133 am besten im selben PR; sonst ein eigener. Erst danach `pv-dashboard` Task 8.1 abhaken.
+3. **#119 Collector:** Diagnose steht in #119. Ursache ist wahrscheinlich nicht `.env`: Der Client gab nach einer Ablehnung durch den alten Broker am 2026-10-22 um 08:04:38 endgültig auf. Daniel führt den Neustart aus dem Issue aus. Danach einen Tag ohne Broker-Fehler abwarten, Collector-Task 5.3 abhaken, `pv-solax-collector` Task 6.4 übernehmen und archivieren. Eigenes Issue mit zwei Punkten vorschlagen: `reconnectOnConnackError: true` in `leoiot-pv/collector/src/adapters/broker.ts`, Hinweis auf falsch abgehakte Task 5.5 im Archiv `platform-broker`.
+4. **#127 Abnahme** mit dem SolaX-Portal: Daniel und Stefan.
+5. **#128 fertigstellen:** nach #127 das Sensoren-Team informieren und den Link in #136 eintragen (Task 7.3). `nginx -t` nachholen (Task 7.4); lokal gibt es weder nginx noch Docker. PR aus dem Entwurf nehmen, mergen, Release nach Ansage, Daniel installiert die nginx-Datei, dann Task 7.5 prüfen. Der Fehler aus #136 läuft bis dahin live weiter: `/dashboard/` lädt beim Start keine Daten.
+6. **#129 Rest:** Nach #128 aus der Doku `/solax/` und die Hinweise auf den alten PV-Tab entfernen (`operations`, `architecture`, `project`, DE und EN, `leoiot-pv/README.md`). Spec nach `openspec/specs/pv/dashboard/spec.md` übernehmen, `pv-dashboard` archivieren, #64 mit Kommentar schließen.
+7. **#120 Kiosk am Bildschirm:** Gespräch mit dem Lehrer; danach Kiosk-Task 5.1 und 6.5.
+8. **#123 zweiter, kreativer Kiosk: der nächste große Schritt,** gemeinsam mit Daniel: `openspec-explore`, drei klickbare Vorschauen auf localhost, er wählt. Vorgaben: konservativ-klar statt experimentell, keine dichten Seitenleisten, Inhalte der entfernten Kiosks als Vorlage (Wetter, vermiedenes CO₂, Gesamtertrag, Batterie des Tages), am TV aus der Distanz lesbar.
 
-- #119 Zugangsdaten setzen: Daniel, auf vm23. Danach Collector-Task 5.3 abhaken, `pv-solax-collector` Task 6.4 übernehmen und archivieren.
-- #127 Abnahme mit dem SolaX-Portal: Daniel und Stefan.
-- #120 Kiosk am Bildschirm: Gespräch mit dem Lehrer; danach Kiosk 6.5.
-- Stefans SSH-Zugang: Daniel gibt seine `.pub`-Datei; nach Ja an `~/.ssh/authorized_keys` von `solmqadmin` anhängen.
-- Kubernetes (#55 Kriterium 5): wartet auf den Lehrer und #54. Kein eigenes Issue nötig, bis der Cluster feststeht.
-- `platform-ci-build-context` 3.2: wartet auf das Archiv von `platform-cicd-pipeline` (Task 9.1, Sache des Plattform-Teams).
+Warten auf andere: Stefans SSH-Zugang (Daniel gibt die `.pub`-Datei; nach Ja an `~/.ssh/authorized_keys` von `solmqadmin` anhängen). Kubernetes (#55 Kriterium 5) wartet auf den Lehrer und #54. `platform-ci-build-context` 3.2 wartet auf das Archiv von `platform-cicd-pipeline`.
 
 ## Grenzen
 
-- **Release nur nach Ansage:** Vor jedem PR `main` → `release` sagst du Daniel, was ausgeliefert wird, und wartest auf sein Ja. Änderungen nur an Doku-Seite und Specs brauchen keinen Release; die Doku-Seite geht beim Push auf `main` raus.
-- `legacy/` bleibt eingefroren. Einzige Ausnahme ist der Entwurfs-PR für #128.
-- vm23 nur lesen. sudo macht Daniel: fertige Zeile mit `ssh -t solmqadmin@vm23.htl-leonding.ac.at '…'` hinschreiben.
-- Zugangsdaten nie ausgeben, nie in Repo, Issue, Commit. `.env` nie lesen. `legacy/dashboard-v2/dashboard.js` enthält Zugangsdaten im Klartext: nicht ins Terminal ausgeben (kein `head` auf die Datei), gezielt `grep -c` oder `sed` mit Zeilenfiltern nutzen.
-- Teile anderer Teams nur ändern, wenn danach alles gleich funktioniert; vorher und nachher prüfen. Elias muss PV-Änderungen nicht freigeben, bei Dateien anderer Teams wird er informiert.
+- **Release nur nach Ansage:** Vor jedem PR `main` → `release` sagst du Daniel, was ausgeliefert wird, und wartest auf sein Ja.
+- `legacy/` bleibt eingefroren; einzige Ausnahme ist #136.
+- vm23 nur lesen. sudo macht Daniel: fertige Zeile mit `ssh -t solmqadmin@vm23.htl-leonding.ac.at '…'`.
+- Zugangsdaten nie ausgeben, nie in Repo, Issue, Commit. `.env` nie lesen. `legacy/dashboard-v2/dashboard.js` enthält auf `main` noch Zugangsdaten im Klartext: nur maskiert oder mit gezieltem `grep -c` lesen.
+- Teile anderer Teams nur ändern, wenn danach alles gleich funktioniert; vorher und nachher prüfen.
 - Der Haupt-Checkout steht auf `feat/kiosk-rebuild` mit uncommitteten Änderungen: nicht anfassen.
 
 ## Arbeitsweise
 
-- Zuerst `AGENTS.md`, `openspec/config.yaml`, `openspec/specs/README.md` lesen. Vor der Arbeit der passende OpenSpec-Skill: `openspec-apply-change`, `openspec-propose`, `openspec-update-change`.
-- Eigener Worktree je Aufgabe von `origin/main`, nach dem Merge entfernen. Branches `feat/`, `fix/`, `docs/`, `ci/`, `chore/`.
-- **Jede Arbeit hängt an einem Issue:** Fehlt eines, zuerst anlegen (Format wie #127: User Story, Akzeptanzkriterien, Labels `User Story`, `leoiot-pv`, `Size: …`, als Unter-Issue von #55 oder #64 über `POST /repos/…/issues/<n>/sub_issues`). Commits enden mit `Refs #n`, PRs enthalten `Closes #n`, Release-PRs `Part of #n`.
-- Commits als `DLettner`, Conventional Commits, keine Co-Author-Zeile, nur gezielt `git add <Pfad>`. PR-Beschreibung endet mit „Generated with Claude Code“. Merge: `gh pr merge --merge`.
-- Vor dem Push: `.github/ci/affected.sh origin/main HEAD` und die dort genannten Prüfungen. Größere Code-Arbeit über Sonnet-Subagents nach genauem Plan, Diffs und Screenshots selbst prüfen.
-- Fragen an Daniel über das Menü `AskUserQuestion`, nicht als Text.
+- Zuerst `AGENTS.md`, `openspec/config.yaml`, `openspec/specs/README.md`. Vor der Arbeit der passende OpenSpec-Skill.
+- Eigener Worktree je Aufgabe von `origin/main`. Branches `feat/`, `fix/`, `docs/`, `ci/`, `chore/`.
+- Jede Arbeit hängt an einem Issue (Format wie #134, Unter-Issue über `POST /repos/…/issues/<n>/sub_issues`). Commits enden mit `Refs #n`, PRs enthalten `Closes #n`, Release-PRs `Part of #n`.
+- Commits als `DLettner`, Conventional Commits, keine Co-Author-Zeile, nur gezielt `git add <Pfad>`. PR-Beschreibung endet mit „Generated with Claude Code“.
+- Vor dem Push: `.github/ci/affected.sh origin/main HEAD` und die dort genannten Prüfungen.
+- Fragen an Daniel über das Menü `AskUserQuestion`.
 - Berichte ehrlich: Was nicht geprüft wurde, wird so genannt.
 
-## vm23
+## vm23 und Prüfwerkzeuge
 
-- `ssh solmqadmin@vm23.htl-leonding.ac.at -o BatchMode=yes '…'`, Optionen hinter dem Hostnamen. Checkout `~/2526-4ahitm-leoiot-dashboard`, Deploy-Marke `~/.leoiot-deployed-sha`.
-- Datenbank lesen ohne Token: Flux per `curl -s -X POST -H "Content-Type: application/vnd.flux" --data-binary @- http://127.0.0.1:8088/kiosk/api/query` auf vm23; der nginx des Kiosks hängt den Lesetoken selbst an. Auf vm23 gibt es kein Node.
-- Screenshots: `playwright-core` in einem Scratch-Ordner installieren, `chromium.launch({ executablePath })` mit `~/.cache/ms-playwright/chromium_headless_shell-1248/*/chrome-headless-shell`. Feste Uhr per `page.clock`, weil die Abfragen ihre Zeitspanne aus dem Browser nehmen.
-- Für lokale Tests eine Wegwerf-InfluxDB: Testdaten erzeugt `leoiot-pv/shared/tests/fixtures/generate-line-protocol.mjs`, Container danach entfernen.
-
-## Abschluss
-
-Wenn alles Machbare erledigt ist:
-
-1. Diese Datei ersetzen: nur noch den offenen Rest und den Stand. `#123` wird dort als nächster Schritt genannt.
-2. Daniel kurz berichten: was erledigt ist, was er selbst tun muss (mit fertigen Befehlen), was als Entwurf wartet, ob ein Release nötig ist und was er enthielte.
-3. Danach kommt mit Daniel der kreative zweite Kiosk (#123): `openspec-explore`, drei klickbare Vorschauen auf localhost, er wählt. Vorgaben: konservativ-klar statt experimentell, keine dichten Seitenleisten, Inhalte der entfernten Kiosks als Vorlage (Wetter, vermiedenes CO₂, Gesamtertrag, Batterie des Tages), am TV aus der Distanz lesbar.
+- `ssh solmqadmin@vm23.htl-leonding.ac.at -o BatchMode=yes '…'`, Optionen hinter dem Hostnamen. Checkout `~/2526-4ahitm-leoiot-dashboard`.
+- Datenbank lesen ohne Token: Flux per `curl -s -X POST -H "Content-Type: application/vnd.flux" --data-binary @- http://127.0.0.1:8088/kiosk/api/query` auf vm23. Zeiten über die Zeitumstellung immer nach UTC sortieren.
+- Screenshots: `playwright-core` in einem Scratch-Ordner, `chromium.launch({ executablePath })` mit `~/.cache/ms-playwright/chromium_headless_shell-1248/*/chrome-headless-shell`. Feste Uhr per `page.clock`; dann Chart-Animationen ausschalten, sonst bleiben die Diagramme leer.
+- Der Docker-Daemon läuft auf dem Laptop nicht; `docker compose config` geht trotzdem.
