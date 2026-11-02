@@ -5,12 +5,17 @@ import {
   AmbientLight,
   Box3,
   Color,
+  CurvePath,
   DirectionalLight,
+  LineCurve3,
+  Mesh,
+  MeshBasicMaterial,
   type Object3D,
   PCFSoftShadowMap,
   PerspectiveCamera,
   Raycaster,
   Scene,
+  TubeGeometry,
   Vector2,
   Vector3,
   WebGLRenderer,
@@ -18,11 +23,16 @@ import {
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { roomOf } from './names';
+import type { WorldPoint } from '../nav/route';
 
 // Start camera relative to the centre of the whole building (legacy: (100, 80, 100))
 const START_OFFSET = new Vector3(100, 80, 100);
 // A pointer that moved further than this between down and up was a drag, not a click
 const CLICK_TOLERANCE_PX = 5;
+// Lifts the drawn route clear of the floor slab it's drawn on, to avoid z-fighting.
+const ROUTE_Y_OFFSET = 0.2;
+const ROUTE_RADIUS = 0.25;
+const ROUTE_COLOUR = '#2ecc71';
 // Room meshes are flat patches lying almost on the floor slab (checked
 // 2026-10-30: often 0.15–0.5 units apart). Hits this close to the nearest one
 // count as the same surface, so the room wins over the slab under it.
@@ -43,6 +53,7 @@ export class Viewer {
   private readonly startTarget = new Vector3();
   private current: Object3D | null = null;
   private labels: CSS2DObject[] = [];
+  private route: Mesh | null = null;
 
   /** Called with the room id of a clicked room, or null for a click elsewhere. */
   onPick: (room: string | null) => void = () => undefined;
@@ -112,6 +123,31 @@ export class Viewer {
       this.scene.add(obj);
       return obj;
     });
+  }
+
+  /** Draws a navigation route as a tube along the given points (spec model3d/room-navigation). */
+  showRoute(points: WorldPoint[]): void {
+    this.clearRoute();
+    if (points.length < 2) return;
+    // Straight segments between waypoints, not a smoothed spline: a smoothed
+    // curve looks vague and can bow away from the corridor it's meant to
+    // follow, especially at a sharp turn.
+    const lifted = points.map((p) => new Vector3(p.x, p.y + ROUTE_Y_OFFSET, p.z));
+    const curve = new CurvePath<Vector3>();
+    for (let i = 1; i < lifted.length; i++) curve.add(new LineCurve3(lifted[i - 1], lifted[i]));
+    const geometry = new TubeGeometry(curve, Math.max(points.length * 2, 4), ROUTE_RADIUS, 8, false);
+    const material = new MeshBasicMaterial({ color: ROUTE_COLOUR });
+    this.route = new Mesh(geometry, material);
+    this.scene.add(this.route);
+  }
+
+  /** Removes a route drawn by {@link showRoute}, if any. */
+  clearRoute(): void {
+    if (!this.route) return;
+    this.scene.remove(this.route);
+    this.route.geometry.dispose();
+    (this.route.material as MeshBasicMaterial).dispose();
+    this.route = null;
   }
 
   /**

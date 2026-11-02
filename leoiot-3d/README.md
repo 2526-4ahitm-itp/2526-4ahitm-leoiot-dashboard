@@ -29,11 +29,13 @@ leoiot-3d/
 ├── temporary-simulator/  TEMPORARY stopgap for room-climate data, delete it later
 └── explorer/             the 3D building explorer (Vite, TypeScript, three.js, mqtt.js)
     ├── models/           the building models (glTF)
+    ├── scripts/          dev tools, e.g. generate-room-positions.mjs (see Navigation below)
     ├── dev/publish.mjs   development publisher of simulated room-climate readings
     ├── src/core/         pure logic, unit-tested
     ├── src/live/         broker connection
+    ├── src/nav/          corridor waypoints/segments and pathfinding (model3d/room-navigation)
     ├── src/scene/        three.js scene
-    ├── src/ui/           buttons, panel, texts (ui/strings.ts)
+    ├── src/ui/           buttons, panel, navigation search, texts (ui/strings.ts)
     └── tests/
 ```
 
@@ -42,6 +44,17 @@ leoiot-3d/
 The explorer reads the room-climate live data of `platform/data-contract` from `/mqtt` of the host that served the page, without credentials. It has no token and no configuration. On vm23 every room shows "No data for room" until the sensors collector or simulator publishes.
 
 **Temporary:** `temporary-simulator/` generates made-up room-climate values so that the explorer has something to display until the sensors team publishes. It is off unless the host switches it on, and it gets deleted then; see its README.
+
+## Navigation
+
+The navigation control (top-left toggle, spec `model3d/room-navigation`) searches for a room and draws a route to it, matching legacy's own navigation behaviour: a greedy walk from waypoint to waypoint that always gets closer to the destination, starting from the Aula (ground floor) or the gym entrance, crossing floors via the stairs waypoint where needed. `src/nav/legacyData.ts` re-types legacy's own hand-placed waypoints and hallway segments (`legacy/frontend/waypoints.gltf`, `waypoints_t.gltf`, the `segments` array in `legacy/frontend/logic.js` — read-only reference, never imported) as plain data; `src/nav/route.ts` is a fresh implementation of the pathfinding, not copied code. `scripts/generate-room-positions.mjs` reads every room's real-world centre and each floor's walking height from the models and writes `src/nav/room-positions.generated.ts`. Re-run it whenever a file under `models/*.gltf` changes:
+
+```bash
+cd explorer
+node scripts/generate-room-positions.mjs
+```
+
+Known gap, inherited from legacy: `T12` in the gym never reaches its own door — it's the one gym room legacy's own logic never names in any of its per-intersection rules, so the walk runs out of places to go. `tests/nav-graph.test.ts` and `tests/route.test.ts` cover the data and the pathfinder.
 
 ## Develop and test
 

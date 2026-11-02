@@ -105,6 +105,82 @@ body,
   outline-offset: 2px;
 }
 
+/* Navigation: a toggle always visible top-left (FR-11), opening a search panel */
+.nav {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+}
+
+.nav-panel[hidden] {
+  display: none;
+}
+
+.nav-panel {
+  margin-top: 8px;
+  width: min(260px, calc(100vw - 32px));
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.nav-input {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+}
+
+.nav-suggestions {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.nav-suggestions:empty {
+  margin: 0;
+}
+
+.nav-suggestion {
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.nav-suggestion:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.nav-error[hidden] {
+  display: none;
+}
+
+.nav-error {
+  margin: 8px 0 0;
+  color: var(--warn);
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .nav {
+    top: 8px;
+    left: 8px;
+  }
+}
+
 /* Info panel */
 .panel {
   position: fixed;
