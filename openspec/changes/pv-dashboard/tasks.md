@@ -59,5 +59,5 @@ Tasks marked **(human, vm23)** need a shell on the host as `solmqadmin`. This ch
 
 ## 8. Documentation and spec
 
-- [ ] 8.1 Name `/pv/` on the documentation site (`architecture`, `setup`, `operations`, `interfaces`, `project` in both languages, architecture diagram) and in `leoiot-pv/README.md`, and remove the dashboard from "still in legacy"; verify `npm run build` at the root exits 0 and a search of `src/` for "PV" next to `/dashboard/` finds only statements about the link
+- [x] 8.1 Name `/pv/` on the documentation site (`architecture`, `setup`, `operations`, `interfaces`, `project` in both languages, architecture diagram) and in `leoiot-pv/README.md`, and remove the dashboard from "still in legacy"; verify `npm run build` at the root exits 0 and a search of `src/` for "PV" next to `/dashboard/` finds only statements about the link Done 2026-11-02: build passes; the search finds only statements about the old view staying until #128 and about the link. The four architecture SVGs are rendered with the dashboard. The old view stays named until #128, as #129 says
 - [ ] 8.2 Sync the spec to `openspec/specs/pv/dashboard/spec.md` and archive the change; verify `openspec list --specs` shows `pv/dashboard` and issue #64 is closed with a comment linking the pull requests
