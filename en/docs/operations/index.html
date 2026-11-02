@@ -170,12 +170,24 @@
 <td><code dir="auto">127.0.0.1:8088</code> (main kiosk from <code dir="auto">leoiot-pv/</code>)</td>
 </tr>
 <tr>
+<td><code dir="auto">/pv/</code></td>
+<td><code dir="auto">127.0.0.1:8089</code> (PV dashboard from <code dir="auto">leoiot-pv/</code>)</td>
+</tr>
+<tr>
 <td><code dir="auto">/3d/</code></td>
 <td><code dir="auto">127.0.0.1:8091</code> (3D building explorer from <code dir="auto">leoiot-3d/</code>, prefix kept)</td>
 </tr>
 <tr>
 <td><code dir="auto">/kiosk/ws</code></td>
 <td><code dir="auto">127.0.0.1:8088</code> (WebSocket to the bridge, via the main kiosk’s own nginx)</td>
+</tr>
+<tr>
+<td><code dir="auto">/pv/ws</code></td>
+<td><code dir="auto">127.0.0.1:8089</code> (WebSocket to the bridge, via the PV dashboard’s own nginx)</td>
+</tr>
+<tr>
+<td><code dir="auto">/dashboard/pv</code>, <code dir="auto">/dashboard/pv/…</code></td>
+<td>301 redirect to <code dir="auto">/pv/</code></td>
 </tr>
 <tr>
 <td><code dir="auto">/leogreen/</code>, <code dir="auto">/kiosk2/</code>, <code dir="auto">/kiosk3/</code>, <code dir="auto">/kiosk4/</code> (also without <code dir="auto">/</code>)</td>

@@ -175,6 +175,7 @@
 <li>Measurements, die im Code verwendet werden: <code dir="auto">mqtt_consumer</code> (Tag <code dir="auto">topic</code>, Feld <code dir="auto">value</code>), <code dir="auto">room_temperature</code> (Tag <code dir="auto">room</code>, Feld <code dir="auto">temperature</code>), <code dir="auto">solax_stats</code> (siehe oben).</li>
 <li>Die Frontends des alten Stacks fragen InfluxDB über den Pfad <code dir="auto">/influx</code> ab (<code dir="auto">/api/v2/query</code>). Flux ist die Abfragesprache von InfluxDB.</li>
 <li>Der Hauptkiosk fragt über <code dir="auto">POST /kiosk/api/query</code> ab. Sein nginx leitet die Anfrage an InfluxDB weiter und setzt dabei einen reinen Lese-Token aus der Umgebungsvariable <code dir="auto">KIOSK_INFLUX_TOKEN</code>; der Token bleibt auf dem Server, der Browser bekommt ihn nie.</li>
+<li>Das PV-Dashboard fragt genauso über <code dir="auto">POST /pv/api/query</code> ab, sein nginx setzt denselben Lese-Token.</li>
 <li>Für <code dir="auto">server_data</code> gibt es neben dem Admin-Token einen reinen Lese-Token und einen reinen Schreib-Token (für das PV-Team). Die Werte stehen nicht in der Dokumentation.</li>
 </ul>
 <p>Das folgende Beispiel holt den CO₂-Verlauf eines Sensors der letzten 24 Stunden als 10-Minuten-Mittelwerte (Token als Platzhalter):</p>
@@ -222,7 +223,7 @@
 <li><code dir="auto">legacy/backend/sensor-data-generator/src/main/resources/application.properties</code></li>
 <li><code dir="auto">legacy/grafana/provisioning/</code>, <code dir="auto">legacy/grafana/dashboards/main-dashboard.json</code></li>
 <li><code dir="auto">leoiot-platform/proxy/nginx.conf</code></li>
-<li><code dir="auto">leoiot-pv/kiosk/</code></li>
+<li><code dir="auto">leoiot-pv/kiosk/</code>, <code dir="auto">leoiot-pv/dashboard/</code></li>
 <li><code dir="auto">legacy/frontend/logic.js</code>, <code dir="auto">legacy/dashboard-v2/dashboard.js</code></li>
 <li><code dir="auto">legacy/sensorbox/nili-ldr/nili-ldr.yaml</code>, <code dir="auto">legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml</code></li>
 <li><code dir="auto">docs/functional-specification.md</code></li>

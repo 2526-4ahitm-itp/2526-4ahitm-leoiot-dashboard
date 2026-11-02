@@ -175,6 +175,7 @@
 <li>Measurements used in the code: <code dir="auto">mqtt_consumer</code> (tag <code dir="auto">topic</code>, field <code dir="auto">value</code>), <code dir="auto">room_temperature</code> (tag <code dir="auto">room</code>, field <code dir="auto">temperature</code>), <code dir="auto">solax_stats</code> (see above).</li>
 <li>The frontends of the old stack query InfluxDB through the path <code dir="auto">/influx</code> (<code dir="auto">/api/v2/query</code>). Flux is InfluxDB’s query language.</li>
 <li>The main kiosk queries via <code dir="auto">POST /kiosk/api/query</code>. Its nginx passes the request on to InfluxDB and adds a read-only token from the environment variable <code dir="auto">KIOSK_INFLUX_TOKEN</code>; the token stays on the server and the browser never receives it.</li>
+<li>The PV dashboard queries the same way via <code dir="auto">POST /pv/api/query</code>; its nginx adds the same read-only token.</li>
 <li>For <code dir="auto">server_data</code> there is, besides the admin token, a read-only token and a write-only token (for the PV team). The values are not part of the documentation.</li>
 </ul>
 <p>The example below fetches the CO₂ history of one sensor for the last 24 hours as 10-minute averages (token is a placeholder):</p>
@@ -222,7 +223,7 @@
 <li><code dir="auto">legacy/backend/sensor-data-generator/src/main/resources/application.properties</code></li>
 <li><code dir="auto">legacy/grafana/provisioning/</code>, <code dir="auto">legacy/grafana/dashboards/main-dashboard.json</code></li>
 <li><code dir="auto">leoiot-platform/proxy/nginx.conf</code></li>
-<li><code dir="auto">leoiot-pv/kiosk/</code></li>
+<li><code dir="auto">leoiot-pv/kiosk/</code>, <code dir="auto">leoiot-pv/dashboard/</code></li>
 <li><code dir="auto">legacy/frontend/logic.js</code>, <code dir="auto">legacy/dashboard-v2/dashboard.js</code></li>
 <li><code dir="auto">legacy/sensorbox/nili-ldr/nili-ldr.yaml</code>, <code dir="auto">legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml</code></li>
 <li><code dir="auto">docs/functional-specification.md</code></li>
