@@ -109,7 +109,7 @@ describe('live messages and fallback', () => {
     expect(liveTopic('E10')).toBe('leoiot/room-climate/E10');
     expect(() => liveTopic('#')).toThrow();
     expect(liveUrl({ protocol: 'https:', host: 'h.example' })).toBe('wss://h.example/mqtt');
-    expect(liveUrl({ protocol: 'http:', host: 'localhost:8091' })).toBe('ws://localhost:8091/mqtt');
+    expect(liveUrl({ protocol: 'http:', host: 'localhost:8092' })).toBe('ws://localhost:8092/mqtt');
   });
   it('polls once a minute while the channel is down and stops when it is back', async () => {
     const mqtt = new FakeMqtt();
