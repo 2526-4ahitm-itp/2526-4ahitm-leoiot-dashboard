@@ -5,7 +5,7 @@ New sensor ingestion and room-climate views (CO₂, temperature and humidity per
 | | |
 |---|---|
 | **Owning team** | Sensoren — Elias Pointinger (project lead) |
-| **Status** | In progress (change `sensors-room-climate`): the collector is written and tested; the dashboard, the `/sensors/` route and the deployment on vm23 are still to come |
+| **Status** | In progress (change `sensors-room-climate`): collector and dashboard run on vm23 at `/sensors/` with the readings of the box `nili3` in room 105; the design review and the next release are still open |
 | **Spec group** | `openspec/specs/sensors/` |
 
 ## Layout
@@ -95,6 +95,46 @@ npm run stack:down
 ```
 
 `npm run stack:up` writes the test values (token `test-token-not-secret`, generated passwords) to `collector/.dev-stack/`, which Git ignores. The browser listener of the stack answers at `ws://127.0.0.1:<port>`; the port is in `.dev-stack/stack.json`.
+
+## Run the dashboard locally
+
+`npm run dev` in `leoiot-sensors/dashboard` serves the page at `http://localhost:8092/sensors/` (port 8092 is fixed; Vite exits when it is taken). `vite.config.ts` forwards `POST /sensors/api/query` to the database (adding the token, as the nginx of the image does later) and the WebSocket `/mqtt` to the broker. Three variables of the shell choose the target:
+
+| Variable | Default |
+|---|---|
+| `SENSORS_DEV_INFLUX_URL` | `http://localhost:8086` |
+| `SENSORS_DEV_INFLUX_TOKEN` | none: the database then answers 401 |
+| `SENSORS_DEV_MQTT_WS_URL` | `ws://localhost:9001` |
+
+Against the local stack of the collector (see "Run the collector locally": stack up, collector running, `npm run stack:publish` run at least once), in a fourth terminal in `leoiot-sensors/dashboard`:
+
+```
+npm ci
+stack=../collector/.dev-stack/stack.json
+export SENSORS_DEV_INFLUX_URL="http://127.0.0.1:$(node -p "require('$stack').influxPort")"
+export SENSORS_DEV_INFLUX_TOKEN="$(node -p "require('$stack').influxToken")"
+export SENSORS_DEV_MQTT_WS_URL="ws://127.0.0.1:$(node -p "require('$stack').wsPort")"
+npm run dev
+```
+
+Open `http://localhost:8092/sensors/`: room 105 shows the values of the last round of `stack:publish`. Stop the dev server with Ctrl-C.
+
+Read-only against vm23, through an SSH tunnel. On vm23, InfluxDB answers on port 8086 of the host (`/influx/` of `leoiot-platform/proxy/nginx.conf`) and the browser listener of the broker on `127.0.0.1:9001` (`leoiot-platform/compose.yaml`). Forward them to free local ports, so that they do not clash with a local stack:
+
+```
+ssh -N -L 18086:127.0.0.1:8086 -L 19001:127.0.0.1:9001 <user>@vm23.htl-leonding.ac.at
+```
+
+In a second terminal, in `leoiot-sensors/dashboard`:
+
+```
+export SENSORS_DEV_INFLUX_URL=http://127.0.0.1:18086
+export SENSORS_DEV_MQTT_WS_URL=ws://127.0.0.1:19001
+read -rs SENSORS_DEV_INFLUX_TOKEN && export SENSORS_DEV_INFLUX_TOKEN
+npm run dev
+```
+
+The token must be a read-only token of the database, typed or supplied from the environment of your shell; never write it into a file of the repository, and never use a write token. The browser listener of the broker is read-only by its access rules (`leoiot-platform/broker/acl-websocket`).
 
 ## Collector variables
 

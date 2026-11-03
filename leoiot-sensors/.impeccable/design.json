@@ -1,0 +1,481 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-03T12:00:00Z",
+  "title": "Design System: LeoIoT Raumklima",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Housing Grey",
+        "cssVar": "--ground",
+        "dark": "#0f1215",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#242527",
+          "#404244",
+          "#606164",
+          "#818285",
+          "#a3a5a8",
+          "#c7c9cc",
+          "#edeff2"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel White",
+        "cssVar": "--panel",
+        "dark": "#171b20",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Near-Black Ink",
+        "cssVar": "--ink",
+        "dark": "#eef1f4",
+        "tonalRamp": [
+          "#080b10",
+          "#21252b",
+          "#3e4248",
+          "#5d6268",
+          "#7e8389",
+          "#a0a6ac",
+          "#c4cad1",
+          "#e9eff6"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "cssVar": "--ink-2",
+        "dark": "#b9c1ca",
+        "tonalRamp": [
+          "#060c13",
+          "#1e262f",
+          "#3b434d",
+          "#5a626d",
+          "#7a838e",
+          "#9da6b2",
+          "#c1cad6",
+          "#e6f0fc"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Muted Slate",
+        "cssVar": "--ink-3",
+        "dark": "#98a1ad",
+        "tonalRamp": [
+          "#060c14",
+          "#1e262f",
+          "#3a434d",
+          "#59626d",
+          "#7a838f",
+          "#9ca6b2",
+          "#c0cad7",
+          "#e5f0fd"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "cssVar": "--line",
+        "dark": "#2a3038",
+        "tonalRamp": [
+          "#090b0f",
+          "#222529",
+          "#3f4246",
+          "#5e6266",
+          "#7f8387",
+          "#a2a5aa",
+          "#c6c9ce",
+          "#ebeff4"
+        ]
+      },
+      "line-ctl": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "cssVar": "--line-ctl",
+        "dark": "#6f7884",
+        "tonalRamp": [
+          "#060b14",
+          "#1e262f",
+          "#3b434d",
+          "#59626d",
+          "#7a838f",
+          "#9da6b2",
+          "#c0cad7",
+          "#e5effd"
+        ]
+      },
+      "housing": {
+        "role": "neutral",
+        "displayName": "Lamp Housing",
+        "cssVar": "--housing",
+        "dark": "#08090b",
+        "tonalRamp": [
+          "#070c11",
+          "#21262b",
+          "#3d4349",
+          "#5c6269",
+          "#7d838a",
+          "#9fa6ad",
+          "#c3cad2",
+          "#e8eff7"
+        ]
+      },
+      "lamp-off": {
+        "role": "neutral",
+        "displayName": "Unlit Lamp",
+        "cssVar": "--lamp-off",
+        "dark": "#262b31",
+        "tonalRamp": [
+          "#070c11",
+          "#20262c",
+          "#3d434a",
+          "#5b6269",
+          "#7c838b",
+          "#9fa6ae",
+          "#c3cad3",
+          "#e8eff8"
+        ]
+      },
+      "lamp-green": {
+        "role": "primary",
+        "displayName": "Lamp Green",
+        "cssVar": "--g",
+        "dark": "#34c172",
+        "tonalRamp": [
+          "#001004",
+          "#022e14",
+          "#075027",
+          "#00753a",
+          "#1b9b53",
+          "#4cbf75",
+          "#74e598",
+          "#c6ffd4"
+        ]
+      },
+      "lamp-amber": {
+        "role": "primary",
+        "displayName": "Lamp Amber",
+        "cssVar": "--y",
+        "dark": "#f2b524",
+        "tonalRamp": [
+          "#120900",
+          "#332102",
+          "#583c05",
+          "#7f590d",
+          "#ab7700",
+          "#d79810",
+          "#fdbc49",
+          "#ffeccf"
+        ]
+      },
+      "lamp-red": {
+        "role": "primary",
+        "displayName": "Lamp Red",
+        "cssVar": "--r",
+        "dark": "#f0594a",
+        "tonalRamp": [
+          "#1f0000",
+          "#4d0101",
+          "#800303",
+          "#b70a08",
+          "#e04134",
+          "#fd7565",
+          "#fdb4a9",
+          "#fee9e5"
+        ]
+      },
+      "green-ink": {
+        "role": "primary",
+        "displayName": "Green Ink",
+        "cssVar": "--g-ink",
+        "dark": "#4fd189",
+        "tonalRamp": [
+          "#001004",
+          "#012e14",
+          "#035027",
+          "#09753c",
+          "#3c975c",
+          "#61bb7e",
+          "#86e1a1",
+          "#c7ffd5"
+        ]
+      },
+      "amber-ink": {
+        "role": "primary",
+        "displayName": "Amber Ink",
+        "cssVar": "--y-ink",
+        "dark": "#f5c242",
+        "tonalRamp": [
+          "#120900",
+          "#332101",
+          "#583c02",
+          "#805907",
+          "#a47a2f",
+          "#c99d54",
+          "#efc178",
+          "#ffecce"
+        ]
+      },
+      "red-ink": {
+        "role": "primary",
+        "displayName": "Red Ink",
+        "cssVar": "--r-ink",
+        "dark": "#ff7b6b",
+        "tonalRamp": [
+          "#1e0000",
+          "#4c0201",
+          "#7f0603",
+          "#af251a",
+          "#d74d3e",
+          "#fc7665",
+          "#ffb3a7",
+          "#fee9e5"
+        ]
+      },
+      "humidity": {
+        "role": "secondary",
+        "displayName": "Muted Steel Blue",
+        "cssVar": "--hum",
+        "dark": "#8fb0d1",
+        "tonalRamp": [
+          "#000c1c",
+          "#052644",
+          "#244464",
+          "#436486",
+          "#6386a9",
+          "#85a9ce",
+          "#a8cdf3",
+          "#e3f0fe"
+        ]
+      },
+      "selection": {
+        "role": "neutral",
+        "displayName": "Selection Tint",
+        "cssVar": "--sel",
+        "dark": "#2c3e52",
+        "tonalRamp": [
+          "#040c15",
+          "#1c2630",
+          "#38434f",
+          "#57636f",
+          "#778491",
+          "#9aa7b4",
+          "#bdcbd9",
+          "#e2f0ff"
+        ]
+      },
+      "band-good": {
+        "role": "primary",
+        "displayName": "Good Band",
+        "cssVar": "--g-band",
+        "dark": "rgba(52, 193, 114, 0.1)"
+      },
+      "band-soon": {
+        "role": "primary",
+        "displayName": "Soon Band",
+        "cssVar": "--y-band",
+        "dark": "rgba(242, 181, 36, 0.13)"
+      },
+      "band-bad": {
+        "role": "primary",
+        "displayName": "Bad Band",
+        "cssVar": "--r-band",
+        "dark": "rgba(240, 89, 74, 0.13)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The room id, as on the door sign. 84px below 640px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The status sentence. 32px below 640px."
+      },
+      "value": {
+        "displayName": "Value",
+        "purpose": "The three value cells. 24px below 640px."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Chart panel headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "The reason under the status, max 62ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Identity line, freshness line, chart window, notes."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Value cell labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lamp-halo",
+        "value": "0 0 0 5px color-mix(in srgb, var(--g) 28%, transparent)",
+        "purpose": "Only on the one lit lamp, in its own colour (--g, --y or --r)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "dur",
+        "value": "180ms",
+        "purpose": "Lamp colour and halo, control hover and pressed state."
+      },
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Easing for every transition."
+      },
+      {
+        "name": "chart-draw",
+        "value": "300ms",
+        "purpose": "ECharts animationDuration when a chart is drawn."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "prefers-reduced-motion: reduce turns off all transitions and animations."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "640px"
+      },
+      {
+        "name": "stack",
+        "value": "1100px"
+      },
+      {
+        "name": "max-content",
+        "value": "1520px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Lamp housing",
+      "kind": "custom",
+      "refersTo": "lamp-housing",
+      "description": "The traffic light: three lamps, one lit for the current air state.",
+      "html": "<div class=\"ds-light\" role=\"img\" aria-label=\"Ampel gelb\"><div class=\"ds-lamp\"></div><div class=\"ds-lamp ds-lit-y\"></div><div class=\"ds-lamp\"></div></div>",
+      "css": ".ds-light { background: var(--housing, #262b31); border-radius: 38px; padding: 14px; display: inline-grid; gap: 12px; justify-items: center; } .ds-lamp { width: 44px; height: 44px; border-radius: 50%; background: var(--lamp-off, #3b4148); transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-lit-y { background: var(--y, #e3a008); box-shadow: 0 0 0 5px color-mix(in srgb, var(--y, #e3a008) 28%, transparent); }"
+    },
+    {
+      "name": "Segment control",
+      "kind": "button",
+      "refersTo": "segment-control",
+      "description": "Range and language switch; neutral, the pressed segment is ink.",
+      "html": "<div class=\"ds-seg\" role=\"group\" aria-label=\"Zeitraum\"><button type=\"button\" aria-pressed=\"true\">24 h</button><button type=\"button\" aria-pressed=\"false\">7 Tage</button></div>",
+      "css": ".ds-seg { display: inline-flex; height: 36px; border: 1px solid var(--line-ctl, #7d8692); border-radius: 9px; background: var(--panel, #fff); overflow: hidden; font-family: Lexend, system-ui, sans-serif; } .ds-seg button { font: inherit; color: var(--ink, #14181d); border: 0; background: none; padding: 0 14px; cursor: pointer; transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-seg button + button { border-left: 1px solid var(--line-ctl, #7d8692); } .ds-seg button:hover { background: var(--ground, #eceef1); } .ds-seg button[aria-pressed='true'] { background: var(--ink, #14181d); color: var(--panel, #fff); } .ds-seg button:focus-visible { outline: 2px solid var(--ink, #14181d); outline-offset: -4px; } .ds-seg button[aria-pressed='true']:focus-visible { outline-color: var(--panel, #fff); }"
+    },
+    {
+      "name": "Theme button",
+      "kind": "button",
+      "refersTo": "icon-button",
+      "description": "36px square control with a line icon; switches the colour scheme.",
+      "html": "<button type=\"button\" class=\"ds-icon-btn\" aria-label=\"Dunkles Design einschalten\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z\"/></svg></button>",
+      "css": ".ds-icon-btn { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; cursor: pointer; color: var(--ink, #14181d); background: var(--panel, #fff); border: 1px solid var(--line-ctl, #7d8692); border-radius: 9px; } .ds-icon-btn:hover { background: var(--ground, #eceef1); } .ds-icon-btn:focus-visible { outline: 2px solid var(--ink, #14181d); outline-offset: 3px; } .ds-icon-btn svg { width: 18px; height: 18px; }"
+    },
+    {
+      "name": "Value cells",
+      "kind": "custom",
+      "refersTo": "value-cell",
+      "description": "Three fixed cells; the CO2 value takes the ink form of the lamp colour.",
+      "html": "<dl class=\"ds-cells\"><div><dt>CO₂</dt><dd><span class=\"ds-v ds-soon\">912</span><span class=\"ds-u\">ppm</span></dd></div><div><dt>Temperatur</dt><dd><span class=\"ds-v\">22,4</span><span class=\"ds-u\">°C</span></dd></div><div><dt>Luftfeuchte</dt><dd><span class=\"ds-v\">41</span><span class=\"ds-u\">%</span></dd></div></dl>",
+      "css": ".ds-cells { display: grid; grid-template-columns: repeat(3, minmax(170px, 210px)); border-top: 1px solid var(--line, #dde1e6); margin: 0; font-family: Lexend, system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--ink, #14181d); } .ds-cells > div { padding-top: 14px; } .ds-cells dt { font-size: 13px; color: var(--ink-3, #5c6570); } .ds-cells dd { margin: 0; } .ds-v { font-size: 34px; font-weight: 700; } .ds-u { font-size: 16px; color: var(--ink-3, #5c6570); margin-left: 4px; } .ds-soon { color: var(--y-ink, #855c00); }"
+    },
+    {
+      "name": "Freshness line",
+      "kind": "custom",
+      "description": "Age of the readings; a neutral dot when live, an amber-ink triangle when outdated.",
+      "html": "<p class=\"ds-fresh\"><span class=\"ds-dot\" aria-hidden=\"true\"></span><span>Stand 10:42 · vor 12 s</span></p><p class=\"ds-fresh ds-stale\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" role=\"img\" aria-label=\"Warnung\"><path d=\"M12 3.5 2.5 20h19L12 3.5z\"/><path d=\"M12 10v4.5\"/><path d=\"M12 17.5h.01\"/></svg><span>Zuletzt 10:42</span></p>",
+      "css": ".ds-fresh { font-family: Lexend, system-ui, sans-serif; font-size: 14px; color: var(--ink-3, #5c6570); display: flex; align-items: center; gap: 8px; min-height: 20px; margin: 12px 0 0; } .ds-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3, #5c6570); flex: none; } .ds-stale { color: var(--ink, #14181d); } .ds-stale svg { width: 16px; height: 16px; color: var(--y-ink, #855c00); flex: none; }"
+    },
+    {
+      "name": "Simulated tag",
+      "kind": "chip",
+      "description": "Identity line; the source word gets a dashed pill when readings are simulated.",
+      "html": "<p class=\"ds-ident\"><span>Gerät sim-105</span><span aria-hidden=\"true\">·</span><span class=\"ds-tag\">simuliert</span></p>",
+      "css": ".ds-ident { font-family: Lexend, system-ui, sans-serif; font-size: 14px; color: var(--ink-3, #5c6570); display: flex; gap: 8px; flex-wrap: wrap; margin: 0; } .ds-tag { color: var(--ink, #14181d); border: 1px dashed var(--line-ctl, #7d8692); border-radius: 99px; padding: 0 8px; }"
+    },
+    {
+      "name": "Chart panel",
+      "kind": "card",
+      "refersTo": "chart-panel",
+      "description": "White panel with title, time window and a 340px ECharts canvas.",
+      "html": "<section class=\"ds-panel\"><h2><span>Temperatur</span><span class=\"ds-win\">2. Nov., 10:42 – 3. Nov., 10:42</span></h2><div class=\"ds-chart\"></div></section>",
+      "css": ".ds-panel { background: var(--panel, #fff); border-radius: 14px; padding: 22px 26px 12px; font-family: Lexend, system-ui, sans-serif; color: var(--ink, #14181d); } .ds-panel h2 { font-size: 17px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin: 0; } .ds-win { font-weight: 400; color: var(--ink-3, #5c6570); font-size: 14px; } .ds-chart { height: 340px; margin-top: 8px; background: linear-gradient(to top, var(--g-band, rgba(31,157,85,0.08)) 40%, var(--y-band, rgba(227,160,8,0.14)) 40% 60%, var(--r-band, rgba(217,58,46,0.1)) 60%); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Classroom Air Light",
+    "overview": "A room's air state is a lit lamp, not a number to read. A dark housing holds three round lamps (red, amber, green). One lamp is lit, and one sentence next to it says what to do: \"Luft gut\", \"Bald lüften\", \"Jetzt lüften\". The charts carry the same lamps as background bands.\n\nEverything else is matte and neutral: a cool grey ground, white panels, near-black ink. Colour means air state and nothing else. Controls stay grey. The page is dense but calm: one large room id, one status line, three fixed value cells, a freshness line, and two chart panels.\n\nThe layout refuses a wall of KPI tiles with sparklines. Values sit in fixed cells that keep their place and their width; only the content changes.",
+    "keyCharacteristics": [
+      "One lit lamp per room; unlit lamps stay dark grey.",
+      "Colour only for air state; controls, text and the temperature line are ink.",
+      "Lexend throughout, tabular numerals everywhere.",
+      "Flat panels on a grey ground; no drop shadows.",
+      "Simulated data is dashed, never hidden."
+    ],
+    "rules": [
+      {
+        "name": "The Lamp-Only Colour Rule",
+        "body": "Green, amber and red appear only as the current air state: the lit lamp, the CO₂ value, and the chart bands. The freshness dot, the controls and the other values stay neutral. The one exception in the build is the warning triangle of an outdated reading, drawn in amber ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Schemes Rule",
+        "body": "Every colour exists in a light and a dark form with the same name. Light is the default; the system scheme applies until the visitor picks one with the theme button.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Every number is set in tabular figures. A value that changes keeps its width.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight Pair Rule",
+        "body": "The build uses 400 and 700 only. Do not add a third weight for emphasis.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Panel Rule",
+        "body": "Panels and controls have no shadow. Separation is tone (ground against panel) and hairlines.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do show the air state as exactly one lit lamp plus one sentence from the fixed vocabulary (Luft gut, Bald lüften, Jetzt lüften / Air is fine, Air the room soon, Air the room now).",
+      "Do use the CO₂ limits 800 and 1000 ppm everywhere a state colour appears.",
+      "Do set every number in tabular Lexend and keep value cells at a fixed width.",
+      "Do dash simulated data: the source tag outline and every chart line.",
+      "Do show how current every value is, and mark outdated values in muted slate with the warning triangle.",
+      "Do read chart colours from the CSS variables, so both schemes apply."
+    ],
+    "donts": [
+      "Don't use green, amber or red for anything other than the air state: not for controls, links, the freshness dot or decoration.",
+      "Don't add shadows to panels or controls; the lamp halo is the only shadow.",
+      "Don't replace the lamp with a KPI tile, a gauge or a sparkline.",
+      "Don't show a missing value as zero; show an en dash and a gap in the chart.",
+      "Don't add a font weight beyond 400 and 700, or a second typeface."
+    ]
+  }
+}
