@@ -92,4 +92,13 @@ describe('Ablauf des Films', () => {
     expect(states.some((st) => st.gap !== null)).toBe(true);
     expect(s.miles.length).toBeGreaterThan(0);
   });
+
+  it('lässt nichts öfter als dreimal pro Sekunde aufblinken', () => {
+    const states = loop(fixtureSchedule());
+    const flags: ((st: (typeof states)[number]) => boolean)[] = [(st) => !!st.pen?.on, (st) => st.tag !== null, (st) => st.mile !== null, (st) => !!st.best?.on, (st) => st.gap !== null, (st) => st.moment !== null];
+    for (const f of flags) {
+      const changes = states.map((st, i) => (i > 0 && f(st) !== f(states[i - 1]) ? i * step : -1)).filter((x) => x >= 0);
+      for (let i = 0; i + 6 < changes.length; i++) expect(changes[i + 6] - changes[i]).toBeGreaterThan(1); // 3 mal an und aus
+    }
+  });
 });

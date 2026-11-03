@@ -62,8 +62,10 @@ try {
 }
 const overlay = createOverlay(scene.camera);
 const quality = createQuality((d) => scene.setDetail(d.pixelRatio, d.shadows));
-addEventListener('resize', () => scene.resize());
-document.addEventListener('fullscreenchange', () => scene.resize());
+// Vollbild und jede andere Größenänderung: sofort neu zeichnen, auch ein Standbild
+const onResize = () => { scene.resize(); if (fixedT !== null && current) frame(fixedT); };
+addEventListener('resize', onResize);
+document.addEventListener('fullscreenchange', onResize);
 
 // Ein geladenes Jahr wird zum Ablauf; neue Daten gelten erst ab dem nächsten Durchlauf, damit nichts springt
 interface Film { year: Year; sched: Schedule; cum: Float64Array; total: number | null }

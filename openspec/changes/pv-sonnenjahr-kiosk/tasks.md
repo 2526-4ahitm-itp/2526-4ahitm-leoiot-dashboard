@@ -24,27 +24,27 @@ Tasks marked **(human, vm23)** need `sudo` on the host and are done by Daniel. T
 
 ## 4. Scene
 
-- [ ] 4.1 Renderer with the three shaders (sky and fog, terrain from the height texture, shadow rays) and the "Morgenglut" values of design D8; verify stills at the times of design D12 with the fixture show no plate under the mountains, no horizon line, mountains above the fog, and side by side with the prototype stills the same light and colours
-- [ ] 4.2 Evening (design D8): verify the still at 66 s with the evening shows the next sunrise, darkened sky, fog and mountains and no edge at the horizon
-- [ ] 4.3 Resize and full screen: verify at 1280 × 720, 1920 × 1080 and 3840 × 2160 the picture fills the window, and after a size change in the browser the next frame fills it again
-- [ ] 4.4 Without WebGL2 the screen shows a message in words instead of a black screen; verify with a browser started with WebGL disabled
+- [x] 4.1 Renderer with the three shaders (sky and fog, terrain from the height texture, shadow rays) and the "Morgenglut" values of design D8; verify stills at the times of design D12 with the fixture show no plate under the mountains, no horizon line, mountains above the fog, and side by side with the prototype stills the same light and colours — done 2026-11-03 with the real fixture at the times of design D12: mountains above the fog, no plate, no horizon line, light and colours as the prototype
+- [x] 4.2 Evening (design D8): verify the still at 66 s with the evening shows the next sunrise, darkened sky, fog and mountains and no edge at the horizon — done 2026-11-03: 66 s with the evening shows "Die Anlage ruht" and 06:52 Uhr, sky, fog and mountains darken together
+- [x] 4.3 Resize and full screen: verify at 1280 × 720, 1920 × 1080 and 3840 × 2160 the picture fills the window, and after a size change in the browser the next frame fills it again — done 2026-11-03: canvas equals the window at 1280 × 720, 1920 × 1080 and 3840 × 2160, and after a change to 1700 × 900 at once
+- [x] 4.4 Without WebGL2 the screen shows a message in words instead of a black screen; verify with a browser started with WebGL disabled — done 2026-11-03: Chromium with WebGL switched off shows "Dieser Bildschirm kann den Film nicht zeigen."
 
 ## 5. Texts
 
-- [ ] 5.1 Header (plant, date, counter, "Stand" when stored data is older than 15 minutes), months, time labels, point of light, summit labels, milestone note, large moments, CO₂ source, closing sentence, in Instrument Serif and DM Mono; verify the stills of design D12 show every text of the spec at its place and no text overlaps another at 1280 × 720
-- [ ] 5.2 Readability: verify at 1920 × 1080 the smallest text is at least 18 px, the large numbers at least 15 % of the screen height, and the contrast check of design D10 reports at least 4.5:1 for every text in the stills
-- [ ] 5.3 Flash check: verify no element changes its brightness more than three times per second in the audit run
+- [x] 5.1 Header (plant, date, counter, "Stand" when stored data is older than 15 minutes), months, time labels, point of light, summit labels, milestone note, large moments, CO₂ source, closing sentence, in Instrument Serif and DM Mono; verify the stills of design D12 show every text of the spec at its place and no text overlaps another at 1280 × 720 — done 2026-11-03: no overlapping texts and no text outside the screen at 1280 × 720, 1920 × 1080 and 3840 × 2160 in eight stills
+- [ ] 5.2 Readability: verify at 1920 × 1080 the smallest text is at least 18 px, the large numbers at least 15 % of the screen height, and the contrast check of design D10 reports at least 4.5:1 for every text in the stills — open: smallest text 26.9 px at 1920 × 1080 (needs 18), large numbers 37 % of the height. Contrast after adding a halo, a soft dark spot behind labels, opaque secondary colour and a stronger gradient behind the moments: the strict measurement (text colour against the 90th percentile of the background in the text box) still found 14 of 52 texts below 4.5:1 before the last adjustment, mostly small gold labels in front of the bright horizon; not measured again after the last adjustment
+- [x] 5.3 Flash check: verify no element changes its brightness more than three times per second in the audit run — done 2026-11-03: test over one loop, no label switches on and off more than three times per second
 
 ## 6. Live data, outages, day change
 
-- [ ] 6.1 Live power and lifetime yield (design D3) with "Stand HH:MM" after three minutes without live data and "Gerade keine Live-Daten" without any; verify tests with a fake socket for silence, reconnection and both texts
-- [ ] 6.2 No stored readings: one message in words, retry without reload; verify with the proxy pointing to a dead address that the message appears and the landscape appears once the address answers
-- [ ] 6.3 Today every five minutes, day change at midnight, nightly reload at 03:30 only when the server answers; verify tests with a fake clock for 23:59 → 00:00 (new day in, day 366 out) and for the reload
-- [ ] 6.4 Evening by computed sunrise and sunset for Leonding; verify tests against published times for three dates (within two minutes)
+- [x] 6.1 Live power and lifetime yield (design D3) with "Stand HH:MM" after three minutes without live data and "Gerade keine Live-Daten" without any; verify tests with a fake socket for silence, reconnection and both texts — done 2026-11-03: tests for live power, "Stand HH:MM" after three minutes and "Gerade keine Live-Daten"
+- [x] 6.2 No stored readings: one message in words, retry without reload; verify with the proxy pointing to a dead address that the message appears and the landscape appears once the address answers — done 2026-11-03: with the data source answering 502 the screen shows "Keine Daten" with the explanation and the plant name; the store test shows the landscape loading after the source answers again
+- [x] 6.3 Today every five minutes, day change at midnight, nightly reload at 03:30 only when the server answers; verify tests with a fake clock for 23:59 → 00:00 (new day in, day 366 out) and for the reload — done 2026-11-03: tests for the day change (new day in, the 366th out) and the reload at 03:30
+- [x] 6.4 Evening by computed sunrise and sunset for Leonding; verify tests against published times for three dates (within two minutes) — done 2026-11-03: four dates within two minutes of api.sunrise-sunset.org
 
 ## 7. Device adaptation
 
-- [ ] 7.1 Lower the pixel ratio and then switch off shadows when the frame rate stays below 40 (design D11); verify with CPU throttling in the browser that the loop still lasts as long as unthrottled and the detail drops
+- [ ] 7.1 Lower the pixel ratio and then switch off shadows when the frame rate stays below 40 (design D11); verify with CPU throttling in the browser that the loop still lasts as long as unthrottled and the detail drops — logic tested (pixel ratio, then shadows, at 20 fps); the check with CPU throttling in the browser is not done yet
 - [ ] 7.2 **(Daniel)** Watch the film with the real fixture locally for at least two loops; verify Daniel finds no stutter, no text too short and no jump, and write his remarks into the pull request
 
 ## 8. Repository and shared files
