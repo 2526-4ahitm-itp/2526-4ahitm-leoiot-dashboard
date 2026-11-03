@@ -5,7 +5,7 @@ New sensor ingestion and room-climate views (CO₂, temperature and humidity per
 | | |
 |---|---|
 | **Owning team** | Sensoren — Elias Pointinger (project lead) |
-| **Status** | In progress (change `sensors-room-climate`): collector and dashboard run on vm23 at `/sensors/` with the readings of the box `nili3` in room 105; the design review and the next release are still open |
+| **Status** | Collector and room-climate dashboard live on vm23 at `/sensors/` (box `nili3`, room 105); specs in `openspec/specs/sensors/` |
 | **Spec group** | `openspec/specs/sensors/` |
 
 ## Layout

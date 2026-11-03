@@ -3,13 +3,15 @@
 
 import { REJUDGE_EVERY_MS } from './core/age';
 import { cell, HEATMAP_FLOORS, heatmapRooms, type HeatmapKind } from './core/heatmap';
-import type { FloorId } from './core/rooms';
+import { floorOf, type FloorId } from './core/rooms';
 import type { RoomStore } from './core/store';
+import { knownRooms, routeTo } from './nav/route';
 import { HIGHLIGHT_COLOUR, ROOM_BASE_COLOUR } from './scene/materials';
 import type { Model, ViewId } from './scene/models';
 import type { Label, Viewer } from './scene/viewer';
 import type { Controls } from './ui/controls';
 import { el } from './ui/dom';
+import type { Navigation } from './ui/navigation';
 import { InfoPanel, statusBadge } from './ui/panel';
 import { strings } from './ui/strings';
 import type { MeshStandardMaterial } from 'three';
@@ -30,12 +32,16 @@ export class App {
     private readonly store: RoomStore,
     private readonly controls: Controls,
     private readonly panel: InfoPanel,
+    private readonly navigation: Navigation,
   ) {
     viewer.onPick = (room) => (room === null ? this.deselect() : this.select(room));
     panel.onClose = () => this.deselect();
     controls.onView = (v) => this.setView(v);
     controls.onReset = () => this.reset();
     controls.onHeatmap = (k) => this.toggleHeatmap(k);
+    navigation.setRooms(knownRooms());
+    navigation.onNavigate = (room) => this.navigate(room);
+    navigation.onClear = () => this.clearRoute();
     store.subscribe(() => this.schedule());
     // Values turn stale without a new message
     setInterval(() => this.schedule(), REJUDGE_EVERY_MS);
@@ -81,6 +87,22 @@ export class App {
     if (this.selected === null) return;
     this.selected = null;
     this.render();
+  }
+
+  /** Starts a navigation route to a room (spec model3d/room-navigation). */
+  navigate(room: string): void {
+    const result = routeTo(room);
+    if (!result.ok) {
+      this.navigation.showError(strings.navigation.notFound);
+      return;
+    }
+    const floor = floorOf(room);
+    if (floor && this.models.has(floor)) this.setView(floor);
+    this.viewer.showRoute(result.points);
+  }
+
+  clearRoute(): void {
+    this.viewer.clearRoute();
   }
 
   /** Renders at most once per frame, however many messages arrive. */
