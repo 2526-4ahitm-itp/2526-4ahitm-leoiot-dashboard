@@ -18,11 +18,6 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
       },
-      '/solax': {
-        target: 'https://openapi-eu.solaxcloud.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/solax/, ''),
-      },
     },
   },
 })

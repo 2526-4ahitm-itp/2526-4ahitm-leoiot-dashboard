@@ -1,0 +1,61 @@
+# Template for the nginx of the dashboard container. At start the nginx image
+# fills in ${SENSORS_DASHBOARD_INFLUX_TOKEN} from the environment; the token lives
+# only in this configuration, never in the files served to browsers.
+
+server {
+    listen 8092;
+    server_name _;
+    server_tokens off;
+    absolute_redirect off;
+
+    # Resolve names per request (Docker DNS), so the container starts without InfluxDB
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
+    root /usr/share/nginx/html;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location = /sensors {
+        return 301 /sensors/;
+    }
+
+    # Flux query: POST only, fixed target, token added here
+    location = /sensors/api/query {
+        if ($request_method != POST) {
+            return 405;
+        }
+        client_max_body_size 64k;
+        set $influx http://influxdb:8086;
+        proxy_pass $influx/api/v2/query?org=leoiot;
+        proxy_http_version 1.1;
+        proxy_set_header Host influxdb:8086;
+        proxy_set_header Connection "";
+        proxy_set_header Authorization "Token ${SENSORS_DASHBOARD_INFLUX_TOKEN}";
+        proxy_set_header Cookie "";
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+
+    # Files with a hash in their name may stay in the cache for long
+    location /sensors/assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
+        try_files $uri =404;
+    }
+
+    # The page itself is always fetched again, so that a deployment arrives
+    location /sensors/ {
+        index index.html;
+        add_header Cache-Control "no-cache";
+        add_header X-Content-Type-Options "nosniff" always;
+        try_files $uri $uri/ =404;
+    }
+
+    location / {
+        return 404;
+    }
+}

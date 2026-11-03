@@ -1,0 +1,9 @@
+# Impeccable working files: previews, mocks and decision pages stay local
+.impeccable/previews/
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/hook.cache.json
+
+node_modules/
+dist/
+.env

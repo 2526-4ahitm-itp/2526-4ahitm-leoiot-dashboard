@@ -1,11 +1,11 @@
 ---
 title: Setup
-description: Prerequisites, starting the platform unit in leoiot-platform/, the old stack in legacy/ and the main kiosk in leoiot-pv/ with Docker Compose, ports, required files and local development.
+description: Prerequisites, starting the platform unit in leoiot-platform/, the old stack in legacy/ and the main kiosk and PV dashboard in leoiot-pv/ with Docker Compose, ports, required files and local development.
 sidebar:
   order: 30
 ---
 
-This page describes how to start the platform unit in `leoiot-platform/` (broker and shared network), the old stack in `legacy/` and, in addition, the main kiosk in `leoiot-pv/` locally. Docker Compose (a tool for starting several containers together) starts the services of a stack with one command.
+This page describes how to start the platform unit in `leoiot-platform/` (broker and shared network), the old stack in `legacy/` and, in addition, the main kiosk and the PV dashboard in `leoiot-pv/` locally. Docker Compose (a tool for starting several containers together) starts the services of a stack with one command.
 
 ## Prerequisites
 
@@ -50,6 +50,7 @@ The platform unit (`leoiot-platform/compose.yaml`) starts the broker `mosquitto`
 | 8080 | `frontend` (3D explorer) |
 | 8081 | `dashboard-v2` |
 | 8088 | Main kiosk (`leoiot-pv/`, on `127.0.0.1` only) |
+| 8089 | PV dashboard (`leoiot-pv/`, on `127.0.0.1` only) |
 | 8090 | `mqtt-ws-bridge` (WebSocket) |
 
 `quarkus-app`, `telegraf` and `fake-sensors` publish no ports.
@@ -65,7 +66,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Afterwards the kiosk is reachable at `http://localhost:8088/kiosk/`. The read token stays in the kiosk's nginx; the browser does not receive it.
+Afterwards the kiosk is reachable at `http://localhost:8088/kiosk/` and the PV dashboard at `http://localhost:8089/pv/`. Both use the same read token; it stays in their nginx and the browser does not receive it.
 
 For development (Node 20 or newer):
 
@@ -75,7 +76,7 @@ npm ci
 npm run dev
 ```
 
-The tests run with `npm test`. How to start the kiosk with sample data and no data source (mock mode, `KIOSK_MOCK`) is described in `leoiot-pv/kiosk/README.md`.
+The tests run with `npm test`. How to start the kiosk with sample data and no data source (mock mode, `KIOSK_MOCK`) is described in `leoiot-pv/kiosk/README.md`. The PV dashboard in `leoiot-pv/dashboard/` is developed and tested the same way.
 
 ## Required files and variables
 
@@ -156,4 +157,4 @@ npm run dev
 - `legacy/fake-sensors/index.js`
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/frontend/package.json`, `legacy/dashboard-v2/package.json`
-- `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`, `leoiot-pv/kiosk/package.json`, `leoiot-pv/kiosk/README.md`
+- `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`, `leoiot-pv/kiosk/package.json`, `leoiot-pv/kiosk/README.md`, `leoiot-pv/dashboard/package.json`

@@ -1,0 +1,5 @@
+,result,table,_time,_value,_field,device,source
+,_result,0,2026-11-03T06:36:08Z,1070,co2,nili3,sensor
+,_result,1,2026-11-03T06:36:08.002Z,35,humidity,nili3,sensor
+,_result,2,2026-11-03T06:36:08.001Z,21.5,temperature,nili3,sensor
+
