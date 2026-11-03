@@ -72,7 +72,7 @@ State of the slides ([to the slides, German only](../../../slides/)) dated 5 Oct
 - Deployment on the school VM with HTTPS
 - Continuous deployment and database backups
 
-Three points differ from this state today: the application is deployed to the school VM via a pull request from `main` to `release` (see [Operations](../operations/)); the documentation site is published automatically and the database backups remain in place, and there is one main kiosk at `/kiosk/` from `leoiot-pv/` instead of several kiosk displays. The former kiosk addresses (`/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/`) redirect there permanently (301). The PV dashboard has been at `/pv/` since 2026-10-20 (views day, week, month and year); the old PV view of Dashboard v2 at `/dashboard/` stays until a link to `/pv/` replaces it (issue #128).
+Three points differ from this state today: the application is deployed to the school VM via a pull request from `main` to `release` (see [Operations](../operations/)); the documentation site is published automatically and the database backups remain in place, and there is one main kiosk at `/kiosk/` from `leoiot-pv/` instead of several kiosk displays. The former kiosk addresses (`/leogreen/`, `/kiosk3/`, `/kiosk4/`) redirect there permanently (301); `/kiosk2/` shows the second kiosk "Unser Sonnenjahr". The PV dashboard has been at `/pv/` since 2026-10-20 (views day, week, month and year); the old PV view of Dashboard v2 at `/dashboard/` stays until a link to `/pv/` replaces it (issue #128).
 
 ## Milestones
 

@@ -39,6 +39,7 @@ Ports as published in `leoiot-platform/compose.yaml` (broker), `legacy/docker-co
 | `frontend` | 8080 | 3D explorer (Vite dev server) |
 | `dashboard-v2` | 8081 | Dashboard v2 (Vite dev server) |
 | `kiosk` (project `leoiot-pv`) | 8088 | Main kiosk (PV display) at `/kiosk/`, nginx image, listens on `127.0.0.1` only |
+| `kiosk2` (project `leoiot-pv`) | 8093 | Second kiosk, the film "Unser Sonnenjahr", at `/kiosk2/`, nginx image, listens on `127.0.0.1` only |
 | `dashboard` (project `leoiot-pv`) | 8089 | PV dashboard at `/pv/`, nginx image, listens on `127.0.0.1` only |
 | `collector` (project `leoiot-pv`) | – | Fetches PV data from the Solax cloud, writes to InfluxDB and MQTT; starts only with the Compose profile `collector` |
 | `mqtt-ws-bridge` | 8090 | Bridge between MQTT and browser (WebSocket server); passes on live readings |
@@ -66,7 +67,7 @@ Ports as published in `leoiot-platform/compose.yaml` (broker), `legacy/docker-co
 | Main kiosk | `leoiot-pv/kiosk/` (Vite, TypeScript, Vitest) | PV display at `/kiosk/`: queries via `POST /kiosk/api/query` to InfluxDB (the kiosk's nginx adds a read-only token, the browser gets none) and live values via WebSocket `/kiosk/ws`, then `/ws` |
 | PV dashboard | `leoiot-pv/dashboard/` (Vite, TypeScript, Vitest) | PV views day, week, month and year at `/pv/`: queries via `POST /pv/api/query` to InfluxDB (the dashboard's nginx adds a read-only token, the browser gets none) and live values via WebSocket `/pv/ws` |
 
-The 3D explorer (`frontend`) and Dashboard v2 display the room climate. Dashboard v2 also contains a room table with status. The PV data is at `/pv/` in the PV dashboard from `leoiot-pv/dashboard/`; the old PV view in Dashboard v2 still exists until a link to `/pv/` replaces it (issue #128). The main kiosk from `leoiot-pv/kiosk/` at `/kiosk/` is the one shown in production. The main kiosk and the PV dashboard attach to the network of the old stack, which therefore has to be running. The former addresses `/leogreen/`, `/kiosk2/`, `/kiosk3/` and `/kiosk4/` redirect there permanently (301). The five former kiosks (`kiosk` to `kiosk4` and `leogreenKiosk`) were removed from `legacy/` on 2026-10-19 (a kiosk is a full-screen display without interaction).
+The 3D explorer (`frontend`) and Dashboard v2 display the room climate. Dashboard v2 also contains a room table with status. The PV data is at `/pv/` in the PV dashboard from `leoiot-pv/dashboard/`; the old PV view in Dashboard v2 still exists until a link to `/pv/` replaces it (issue #128). The main kiosk from `leoiot-pv/kiosk/` at `/kiosk/` is the one shown in production. The main kiosk and the PV dashboard attach to the network of the old stack, which therefore has to be running. The former addresses `/leogreen/`, `/kiosk3/` and `/kiosk4/` redirect there permanently (301); `/kiosk2/` shows the second kiosk from `leoiot-pv/kiosk2/` since the change `pv-sonnenjahr-kiosk`. The five former kiosks (`kiosk` to `kiosk4` and `leogreenKiosk`) were removed from `legacy/` on 2026-10-19 (a kiosk is a full-screen display without interaction).
 
 :::note[Operation]
 The frontends of the old stack run as Vite dev servers (`npm run dev`) in `node:20-alpine` containers; the main kiosk and the PV dashboard run as built images. Deployment and further limitations are described on the [Operations](../operations/) page.
@@ -87,5 +88,5 @@ The repository contains credentials and an InfluxDB token as default values in s
 - `legacy/backend/sensor-data-generator/src/main/resources/application.properties`
 - `legacy/grafana/provisioning/`, `legacy/grafana/dashboards/main-dashboard.json`
 - `leoiot-platform/proxy/nginx.conf`
-- `leoiot-pv/kiosk/`, `leoiot-pv/dashboard/`, `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`
+- `leoiot-pv/kiosk/`, `leoiot-pv/kiosk2/`, `leoiot-pv/dashboard/`, `leoiot-pv/compose.yaml`, `leoiot-pv/.env.example`
 - `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`

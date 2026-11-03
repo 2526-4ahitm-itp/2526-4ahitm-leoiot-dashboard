@@ -98,9 +98,10 @@ As long as the runner and the `release` branch are missing, the manual route rem
 | `/pv/` | `127.0.0.1:8089` (PV dashboard from `leoiot-pv/`) |
 | `/3d/` | `127.0.0.1:8091` (3D building explorer from `leoiot-3d/`, prefix kept) |
 | `/kiosk/ws` | `127.0.0.1:8088` (WebSocket to the bridge, via the main kiosk's own nginx) |
+| `/kiosk2/`, `/kiosk2/ws` | `127.0.0.1:8093` (second kiosk "Unser Sonnenjahr" from `leoiot-pv/`) |
 | `/pv/ws` | `127.0.0.1:8089` (WebSocket to the bridge, via the PV dashboard's own nginx) |
 | `/dashboard/pv`, `/dashboard/pv/…` | 301 redirect to `/pv/` |
-| `/leogreen/`, `/kiosk2/`, `/kiosk3/`, `/kiosk4/` (also without `/`) | permanent 301 redirect to `/kiosk/`, the query is kept |
+| `/leogreen/`, `/kiosk3/`, `/kiosk4/` (also without `/`) | permanent 301 redirect to `/kiosk/`, the query is kept |
 | `/grafana/` | `127.0.0.1:3000` (with `X-Forwarded-Proto`) |
 | `/influx/` | `127.0.0.1:8086/` (InfluxDB, prefix stripped) |
 | `/ws` | `127.0.0.1:8090` (WebSocket upgrade, `mqtt-ws-bridge`) |
