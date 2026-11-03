@@ -254,21 +254,27 @@ function shortestPathToDoor(startName: string, doorPoint: { x: number; z: number
   return names.map((n) => nodes.get(n)!);
 }
 
-function routeOnMainFloors(floor: FloorId, endCenter: { x: number; z: number }, doorPoint: { x: number; z: number }): WorldPoint[] {
+function routeOnMainFloors(floor: FloorId, endCenter: { x: number; z: number }): WorldPoint[] {
   const startName = FLOOR_WAYPOINTS.E!.start.name;
-  const path = shortestPathToDoor(startName, doorPoint, floor);
+  // Snap directly onto the room's own centre, not `doorPointFor`'s point on
+  // legacy's hand-picked SEGMENTS list — that list has no line near the
+  // corridor spur serving rooms like 228-231 (z ≈ -22.7), so it projected
+  // them onto the ring corridor instead, right next to a *different* room's
+  // own door (the reported defect: route to 231 visited 228's door first,
+  // and 230 visited 229's). shortestPathToDoor's own edge-projection against
+  // the real CORRIDOR_ADJACENCY graph already finds the correct nearby
+  // corridor point; routing to the room's centre directly lets it do that
+  // instead of first visiting a wrong, pre-computed point.
+  const path = shortestPathToDoor(startName, endCenter, floor);
   if (!path) {
     // Shouldn't happen — the graph is fully connected — but never draw nothing.
     const start = FLOOR_WAYPOINTS.E!.start;
     return [
       { x: start.x, y: FLOOR_Y.E, z: start.z },
-      { x: doorPoint.x, y: FLOOR_Y[floor], z: doorPoint.z },
       { x: endCenter.x, y: FLOOR_Y[floor], z: endCenter.z },
     ];
   }
-  const points = path.map((n): WorldPoint => ({ x: n.x, y: FLOOR_Y[n.floor], z: n.z }));
-  points.push({ x: endCenter.x, y: FLOOR_Y[floor], z: endCenter.z });
-  return points;
+  return path.map((n): WorldPoint => ({ x: n.x, y: FLOOR_Y[n.floor], z: n.z }));
 }
 
 // Legacy's hand-tuned gym routing: which intersections are even considered
@@ -344,8 +350,10 @@ export function routeTo(room: string): RouteResult {
   if (!pos) return { ok: false, reason: 'unknown-room' };
   const floor = floorOf(room) ?? pos.floor;
   const endCenter = { x: pos.x, z: pos.z };
-  const doorPoint = doorPointFor(floor, endCenter);
 
-  if (floor === 'T') return { ok: true, points: routeInGym(room, endCenter, doorPoint, FLOOR_Y.T) };
-  return { ok: true, points: routeOnMainFloors(floor, endCenter, doorPoint) };
+  // The gym still uses legacy's own hand-tuned, SEGMENTS-based door point and
+  // greedy walk (intentionally out of scope for this fix — see route.ts top
+  // comment); the main floors route straight to the room's centre instead.
+  if (floor === 'T') return { ok: true, points: routeInGym(room, endCenter, doorPointFor(floor, endCenter), FLOOR_Y.T) };
+  return { ok: true, points: routeOnMainFloors(floor, endCenter) };
 }

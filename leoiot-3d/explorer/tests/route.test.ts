@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { FLOOR_WAYPOINTS, GYM_ENTRANCE } from '../src/nav/legacyData';
 import { routeTo } from '../src/nav/route';
-import { FLOOR_Y } from '../src/nav/room-positions.generated';
+import { FLOOR_Y, ROOM_POSITIONS } from '../src/nav/room-positions.generated';
+
+function visits(points: { x: number; z: number }[], target: { x: number; z: number }, tolerance = 0.5): boolean {
+  return points.some((p) => Math.abs(p.x - target.x) < tolerance && Math.abs(p.z - target.z) < tolerance);
+}
 
 describe('routeTo: ground floor', () => {
   it('passes through the Aula start point before reaching the room', () => {
@@ -74,6 +78,50 @@ describe('routeTo: real corridor adjacency (model3d-room-navigation design.md D7
       expect(result.ok, room).toBe(true);
       if (!result.ok) continue;
       expect(result.points.some((p) => Math.abs(p.x - three.x) < 1e-6 && Math.abs(p.z - three.z) < 1e-6), room).toBe(true);
+    }
+  });
+});
+
+describe('routeTo: floor 2, reported defect (231/228 and 230/229)', () => {
+  // 228-231 are two "rows" of rooms east of the ring: 227/228/229 open onto
+  // the ring corridor (z ≈ -13.9), 230/231 sit directly behind 228/229 on a
+  // separate corridor spur (z ≈ -22.7) the SEGMENTS list never had a line
+  // for. Routing via that list's "nearest hallway centreline" projected
+  // 230/231's door onto the ring instead — almost exactly on top of
+  // 229/228's own door — so the path visited that door before doubling back
+  // to the real room. Fixed by routing to each room's own centre and letting
+  // the real corridor-adjacency graph find its door, rather than first
+  // routing to a point computed from the incomplete SEGMENTS list.
+  it('route to 231 does not visit 228, and route to 230 does not visit 229', () => {
+    const r231 = routeTo('231');
+    const r230 = routeTo('230');
+    expect(r231.ok).toBe(true);
+    expect(r230.ok).toBe(true);
+    if (!r231.ok || !r230.ok) return;
+    expect(visits(r231.points, ROOM_POSITIONS['228'])).toBe(false);
+    expect(visits(r230.points, ROOM_POSITIONS['229'])).toBe(false);
+  });
+
+  it('route to 228 does not visit 231, and route to 229 does not visit 230', () => {
+    const r228 = routeTo('228');
+    const r229 = routeTo('229');
+    expect(r228.ok).toBe(true);
+    expect(r229.ok).toBe(true);
+    if (!r228.ok || !r229.ok) return;
+    expect(visits(r228.points, ROOM_POSITIONS['231'])).toBe(false);
+    expect(visits(r229.points, ROOM_POSITIONS['230'])).toBe(false);
+  });
+
+  it('231 and 230 end at their own centre, reached from the real z ≈ -22.7 corridor spur', () => {
+    for (const room of ['230', '231']) {
+      const result = routeTo(room);
+      expect(result.ok, room).toBe(true);
+      if (!result.ok) continue;
+      const last = result.points[result.points.length - 1];
+      expect(last.x, room).toBeCloseTo(ROOM_POSITIONS[room].x);
+      expect(last.z, room).toBeCloseTo(ROOM_POSITIONS[room].z);
+      const approach = result.points[result.points.length - 2];
+      expect(approach.z, room).toBeCloseTo(-22.729476928710938, 1);
     }
   });
 });
