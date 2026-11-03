@@ -4,6 +4,11 @@ services:
   explorer:
     build: ./explorer
     restart: unless-stopped
+    # Docker's standard bridge instead of a network of its own: Compose would
+    # otherwise create "leoiot-3d_default", and on vm23 Docker gave it
+    # 172.18.0.0/16, which covers the IoT Wi-Fi (172.18.200.0/24) and cut the
+    # sensor boxes off from the broker on 2026-11-02.
+    network_mode: bridge
     ports:
       # Local only; the host nginx forwards /3d/ to this port. The browser
       # reaches the broker through the host's /mqtt, so no network is joined.
