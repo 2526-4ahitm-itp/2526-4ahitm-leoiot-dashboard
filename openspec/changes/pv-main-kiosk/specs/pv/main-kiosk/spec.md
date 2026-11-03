@@ -14,7 +14,7 @@ The main kiosk SHALL be served at the address `/kiosk/` of the LeoIoT host.
 - **THEN** it shows the main kiosk
 
 ### Requirement: Former kiosk addresses lead to the kiosk
-The addresses `/leogreen/`, `/kiosk2/`, `/kiosk3/` and `/kiosk4/` SHALL redirect to `/kiosk/` and keep a `theme` parameter if one was given.
+The addresses `/leogreen/`, `/kiosk3/` and `/kiosk4/` SHALL redirect to `/kiosk/` and keep a `theme` parameter if one was given.
 
 #### Scenario: Screen with an old bookmark
 - **WHEN** a screen opens `/leogreen/?theme=dark`

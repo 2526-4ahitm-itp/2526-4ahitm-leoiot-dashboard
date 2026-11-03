@@ -42,7 +42,7 @@ The look depends on three custom shaders the prototype proved: the sky with the 
 - Lifetime: last `total_yield` once a minute; between those the live channel's `totalYield` of the daily totals message.
 - Live power: `pv_power_kw` from `/kiosk2/ws` through `createLiveClient` in `shared`.
 
-Power per window = increase of the day's highest value so far, divided by the window length; the day-change and step-back rules are the ones in `shared/influx.ts` (`monotoneRows`, `validRows`) and are reused, not rewritten. A window without a point is missing (spec "Missing readings"); a day without any point is a gap.
+Power per window = increase of the stored production over the 30 minutes around the window, divided by half an hour (the cloud writes `daily_yield` only about every 20 minutes, found in the real data on 2026-11-03); a reading below the day's highest value so far is skipped; the day-change and step-back rules are the ones in `shared/influx.ts` (`monotoneRows`, `validRows`) and are reused, not rewritten. A window without a point is missing (spec "Missing readings"); a day without any point is a gap. The film starts with the first day that has a day curve (production above 0.5 kWh and readings for at least half of the windows), because the point of light explains the landscape on that day.
 
 *Alternative*: 5-minute windows (105 000 points). Rejected after estimating the CSV size (about 8 MB); 10 minutes is finer than one pixel column at 1080p across the 1000 minutes of daylight shown.
 
