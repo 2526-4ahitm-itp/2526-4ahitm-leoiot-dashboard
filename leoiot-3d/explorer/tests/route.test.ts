@@ -126,6 +126,47 @@ describe('routeTo: floor 2, reported defect (231/228 and 230/229)', () => {
   });
 });
 
+describe('routeTo: south wing (E71/213-218/251-254)', () => {
+  // The south wing (legacy SEGMENTS "South1", x ≈ -11.15, z 5.1 to 70) had no
+  // node in CORRIDOR_ADJACENCY at all, so every room along it snapped to
+  // whichever real edge was nearest — start--Intersection_one, clamped to
+  // Intersection_one itself — and cut diagonally across open space from
+  // there instead of walking down the actual hallway. Fixed by adding a
+  // south_wing waypoint, connected to Intersection_one, standing in for that
+  // real corridor.
+  it('reaches Intersection_one, then walks down the corridor before turning into the room', () => {
+    for (const [room, floor] of [
+      ['E71', 'E'],
+      ['E73', 'E'],
+      ['213', '2'],
+      ['251', '2'],
+      ['253', '2'],
+    ] as const) {
+      const result = routeTo(room);
+      expect(result.ok, room).toBe(true);
+      if (!result.ok) continue;
+      const one = FLOOR_WAYPOINTS[floor]!.intersections[0];
+      const oneIdx = result.points.findIndex((p) => Math.abs(p.x - one.x) < 1e-6 && Math.abs(p.z - one.z) < 1e-6);
+      expect(oneIdx, room).toBeGreaterThanOrEqual(0);
+      // The point right after Intersection_one is further down the same
+      // corridor (same x as Intersection_one, not a diagonal jump to the room).
+      const afterOne = result.points[oneIdx + 1];
+      expect(afterOne.x, room).toBeCloseTo(one.x);
+      expect(afterOne.z, room).not.toBeCloseTo(one.z);
+    }
+  });
+
+  it('two rooms further apart along the wing do not pass through each other', () => {
+    const r71 = routeTo('E71');
+    const r73 = routeTo('E73');
+    expect(r71.ok).toBe(true);
+    expect(r73.ok).toBe(true);
+    if (!r71.ok || !r73.ok) return;
+    expect(visits(r71.points, ROOM_POSITIONS['E73'])).toBe(false);
+    expect(visits(r73.points, ROOM_POSITIONS['E71'])).toBe(false);
+  });
+});
+
 describe('routeTo: gym', () => {
   it('starts at the gym entrance for every gym room', () => {
     for (const room of ['T1', 'T2', 'T3', 'T4', 'T6', 'T19']) {

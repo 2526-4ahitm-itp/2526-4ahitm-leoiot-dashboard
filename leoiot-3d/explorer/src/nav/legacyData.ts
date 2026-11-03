@@ -37,6 +37,15 @@ const U: FloorWaypoints = {
   ],
 };
 
+// `south_wing` on E/1/2 is not from waypoints.gltf — there is no named node
+// there. It stands in for legacy's own SEGMENTS "South1" wing (x ≈ -11.15,
+// z 5.1 to 70), which CORRIDOR_ADJACENCY never had a node for at all. Rooms
+// along it (e.g. E71/213-218/251-254, x ≈ -2 to -22, z ≈ 14 to 64) had no
+// real edge to snap onto, so the nearest one (start--Intersection_one)
+// clamped them straight onto Intersection_one and cut diagonally across open
+// space from there — the reported defect. Placed at Intersection_one's own
+// x (straight down the real corridor) and z = 68, past the southmost known
+// room (152/252 at z ≈ 63.9), measured against the copied models.
 const E: FloorWaypoints = {
   start: { name: 'E_start', x: 3.4782865047454834, z: -7.978066444396973 },
   stairs: { name: 'E_stairs', x: -1.8453720808029175, z: -13.099599838256836 },
@@ -46,6 +55,7 @@ const E: FloorWaypoints = {
     { name: 'E_intersection_three', x: 27.582738876342773, z: -22.729476928710938 },
     { name: 'E_intersection_four', x: 38.71512985229492, z: -22.729476928710938 },
     { name: 'E_intersection_five', x: 52.764888763427734, z: -22.729476928710938 },
+    { name: 'E_south_wing', x: -11.736422538757324, z: 68 },
   ],
 };
 
@@ -58,6 +68,7 @@ const F1: FloorWaypoints = {
     { name: '1_intersection_three', x: 27.582738876342773, z: -22.729476928710938 },
     { name: '1_intersection_four', x: 38.71512985229492, z: -22.729476928710938 },
     { name: '1_intersection_five', x: 52.764888763427734, z: -22.729476928710938 },
+    { name: '1_south_wing', x: -11.535295486450195, z: 68 },
   ],
 };
 
@@ -70,6 +81,7 @@ const F2: FloorWaypoints = {
     { name: '2_intersection_three', x: 27.582738876342773, z: -22.729476928710938 },
     { name: '2_intersection_four', x: 38.71512985229492, z: -22.729476928710938 },
     { name: '2_intersection_five', x: 52.764888763427734, z: -22.729476928710938 },
+    { name: '2_south_wing', x: -11.535295486450195, z: 68 },
   ],
 };
 
@@ -101,6 +113,7 @@ export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
   [E.intersections[1].name, E.intersections[2].name],
   [E.intersections[2].name, E.intersections[3].name],
   [E.intersections[3].name, E.intersections[4].name],
+  [E.intersections[0].name, E.intersections[5].name], // one -- south_wing
   // Floor 1
   [F1.stairs.name, F1.start.name],
   [F1.start.name, F1.intersections[0].name],
@@ -108,6 +121,7 @@ export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
   [F1.intersections[1].name, F1.intersections[2].name],
   [F1.intersections[2].name, F1.intersections[3].name],
   [F1.intersections[3].name, F1.intersections[4].name],
+  [F1.intersections[0].name, F1.intersections[5].name], // one -- south_wing
   // Floor 2
   [F2.stairs.name, F2.start.name],
   [F2.start.name, F2.intersections[0].name],
@@ -115,6 +129,7 @@ export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
   [F2.intersections[1].name, F2.intersections[2].name],
   [F2.intersections[2].name, F2.intersections[3].name],
   [F2.intersections[3].name, F2.intersections[4].name],
+  [F2.intersections[0].name, F2.intersections[5].name], // one -- south_wing
 ];
 
 /** Cross-floor stairway connections: the same (x, z) on every floor, only the height differs. */
