@@ -14,6 +14,6 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx/05-dashboard-env.envsh /docker-entrypoint.d/05-dashboard-env.envsh
 COPY nginx/dashboard.conf.template /etc/nginx/templates/dashboard.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html/sensors
-EXPOSE 8091
+EXPOSE 8092
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O /dev/null http://127.0.0.1:8091/healthz || exit 1
+  CMD wget -q -O /dev/null http://127.0.0.1:8092/healthz || exit 1

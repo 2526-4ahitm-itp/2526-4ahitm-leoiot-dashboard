@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-// Development: the page is served by Vite at http://localhost:8091/sensors/ and reaches the
+// Development: the page is served by Vite at http://localhost:8092/sensors/ and reaches the
 // database and the broker of a local stack, the way the nginx of the image and of the host do later.
 //   SENSORS_DEV_INFLUX_URL   database, default http://localhost:8086
 //   SENSORS_DEV_INFLUX_TOKEN read token of that database (from the environment only, never a file)
@@ -24,8 +24,8 @@ const proxy = {
 
 export default defineConfig({
   base: '/sensors/',
-  server: { port: 8091, strictPort: true, proxy },
-  preview: { port: 8091, strictPort: true, proxy },
+  server: { port: 8092, strictPort: true, proxy },
+  preview: { port: 8092, strictPort: true, proxy },
   // ECharts (SVG renderer, line chart) alone is about 550 kB minified; it and the MQTT client are
   // loaded as separate files after the first paint.
   build: { outDir: 'dist', target: 'es2022', chunkSizeWarningLimit: 700 },

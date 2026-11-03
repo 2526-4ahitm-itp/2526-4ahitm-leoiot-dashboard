@@ -63,7 +63,7 @@ Like the PV collector, the process writes the times of its last broker connectio
 
 ### D9. The dashboard is a static build behind its own nginx
 
-As in `leoiot-pv/dashboard/`: the image serves the build under `/sensors/` and offers `POST /sensors/api/query`, which forwards Flux queries to `influxdb:8086` with the read token added by nginx, so the browser never sees a token. Live values come straight from the platform route `/mqtt` (MQTT over WebSocket, anonymous, read-only), so the dashboard needs no WebSocket proxy of its own. The container listens on `127.0.0.1:${SENSORS_DASHBOARD_PORT:-8091}`; the host route `/sensors/` in `leoiot-platform/proxy/nginx.conf` forwards there. *Alternative:* query InfluxDB through a small Node API (rejected: one more service for a fixed set of queries).
+As in `leoiot-pv/dashboard/`: the image serves the build under `/sensors/` and offers `POST /sensors/api/query`, which forwards Flux queries to `influxdb:8086` with the read token added by nginx, so the browser never sees a token. Live values come straight from the platform route `/mqtt` (MQTT over WebSocket, anonymous, read-only), so the dashboard needs no WebSocket proxy of its own. The container listens on `127.0.0.1:${SENSORS_DASHBOARD_PORT:-8092}`; the host route `/sensors/` in `leoiot-platform/proxy/nginx.conf` forwards there. *Alternative:* query InfluxDB through a small Node API (rejected: one more service for a fixed set of queries).
 
 ### D10. Queries
 
