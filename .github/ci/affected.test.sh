@@ -129,7 +129,7 @@ LICENSE
   ""
 
 expect_exact "sub-project folder without anything to verify" \
-  "leoiot-sensors/README.md" \
+  "leoiot-example/README.md" \
   ""
 
 expect_exact "compose file of legacy" \
