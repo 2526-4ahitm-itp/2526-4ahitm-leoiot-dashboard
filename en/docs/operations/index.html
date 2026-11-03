@@ -182,6 +182,10 @@
 <td><code dir="auto">127.0.0.1:8088</code> (WebSocket to the bridge, via the main kiosk’s own nginx)</td>
 </tr>
 <tr>
+<td><code dir="auto">/kiosk2/</code>, <code dir="auto">/kiosk2/ws</code></td>
+<td><code dir="auto">127.0.0.1:8093</code> (second kiosk “Unser Sonnenjahr” from <code dir="auto">leoiot-pv/</code>)</td>
+</tr>
+<tr>
 <td><code dir="auto">/pv/ws</code></td>
 <td><code dir="auto">127.0.0.1:8089</code> (WebSocket to the bridge, via the PV dashboard’s own nginx)</td>
 </tr>
@@ -190,7 +194,7 @@
 <td>301 redirect to <code dir="auto">/pv/</code></td>
 </tr>
 <tr>
-<td><code dir="auto">/leogreen/</code>, <code dir="auto">/kiosk2/</code>, <code dir="auto">/kiosk3/</code>, <code dir="auto">/kiosk4/</code> (also without <code dir="auto">/</code>)</td>
+<td><code dir="auto">/leogreen/</code>, <code dir="auto">/kiosk3/</code>, <code dir="auto">/kiosk4/</code> (also without <code dir="auto">/</code>)</td>
 <td>permanent 301 redirect to <code dir="auto">/kiosk/</code>, the query is kept</td>
 </tr>
 <tr>
