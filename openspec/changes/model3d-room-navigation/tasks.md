@@ -32,3 +32,9 @@ Three approaches were attempted before this one (see `design.md` D1); this list 
 ## 6. Documentation
 
 - [x] 6.1 Updated `leoiot-3d/README.md`'s Navigation section and layout diagram to describe the final approach (`legacyData.ts`, `route.ts`, `generate-room-positions.mjs`) and the known `T12` gap, in place of the earlier geometry-derived-grid description.
+
+## 7. Real adjacency for U/E/1/2 (design.md D7)
+
+- [x] 7.1 Project owner reported `U84` skipping `U_Intersection_one` and jumping straight to `U_Intersection_two`; traced to D1's greedy walk having no concept of waypoint adjacency at all (it compares every waypoint by raw distance). A scoring-only fix (D6) was tried, reverted once it turned out to have the symptom backwards, and confirmed by hand-computed distances that scoring can't fix a missing-adjacency problem.
+- [x] 7.2 Project owner described every direct waypoint connection on `U`/`E`/`1`/`2` from `waypoints.gltf` directly, added as `CORRIDOR_ADJACENCY`/`STAIR_ADJACENCY` in `src/nav/legacyData.ts`.
+- [x] 7.3 Replaced the greedy walk with Dijkstra over that explicit graph for `U`/`E`/`1`/`2` (`src/nav/route.ts`, `routeOnMainFloors`/`shortestPathToDoor`); a room's door snaps onto the nearest real graph *edge* (not the nearest node by raw distance — the first version of this still connected a door straight to `U_stairs` by raw proximity, reproducing the same class of bug at the last hop). Gym (`T`) left unchanged, out of scope per the project owner. Verified by `tests/route.test.ts` ("reaches Intersection_two only after Intersection_one" for `U05`/`U08`; `U84` still reaches the east wing via `Intersection_four`) and the full-room-set reachability check in `tests/nav-graph.test.ts`, unmodified and still passing.

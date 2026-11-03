@@ -13,14 +13,16 @@ A navigation route SHALL start at the building's main entrance waypoint (the gro
 - **WHEN** a user starts navigation to a room while viewing or having selected an unrelated room
 - **THEN** the displayed path begins at the building entrance (or the gym entrance, for a gym room) and ends at the chosen destination room
 
-### Requirement: Path follows the hand-placed corridor waypoints
-The system SHALL compute a navigation path by walking the building's hand-placed corridor waypoints and hallway segments (`src/nav/legacyData.ts`), always moving to the reachable waypoint that most reduces the remaining distance to the destination, matching legacy's own navigation behaviour.
+### Requirement: Path follows the building's real corridor connections
+On floors `U`, `E`, `1` and `2`, the system SHALL compute the shortest navigation path over the explicit waypoint adjacency the project owner described from `waypoints.gltf` (`CORRIDOR_ADJACENCY`/`STAIR_ADJACENCY` in `src/nav/legacyData.ts`), never stepping between two waypoints that aren't directly connected in that data.
 
-#### Scenario: Every destination room with a resolvable route reaches its door
-- **WHEN** a user navigates to a room whose destination waypoints are reachable by this walk
-- **THEN** the system renders a path ending at that room's door and the room itself
+#### Scenario: Every destination room on U/E/1/2 reaches its door
+- **WHEN** a user navigates to a room on floor `U`, `E`, `1` or `2`
+- **THEN** the system renders the shortest path, over only the described connections, ending at that room's door and the room itself
 
-Known limitation, inherited unchanged from legacy: this greedy walk neither guarantees the shortest route nor guarantees staying clear of every wall — the same data and the same algorithm legacy used, including that for some destinations (for example gym room `T12`, never named in legacy's own per-room intersection rules) the walk does not reach the room's door at all.
+In the gym (`T`), the system SHALL instead walk waypoint to waypoint, always moving to the reachable waypoint that most reduces the remaining distance to the destination, matching legacy's own navigation behaviour — out of scope for the real-adjacency rework above (see `design.md` D7).
+
+Known limitation of the gym's walk, inherited unchanged from legacy: it neither guarantees the shortest route nor guarantees staying clear of every wall, including that for some destinations (gym room `T12`, never named in legacy's own per-room intersection rules) the walk does not reach the room's door at all.
 
 ### Requirement: Multi-floor navigation crosses at a stairway
 When the destination room is on a different floor than the current view, the system SHALL route the path through the stairs waypoint that connects the two floors, and SHALL switch the displayed floor to the destination's floor as soon as navigation starts.

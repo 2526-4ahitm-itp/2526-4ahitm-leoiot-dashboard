@@ -1,16 +1,21 @@
-// Corridor navigation (spec model3d/room-navigation), re-implemented to match
-// legacy's own behaviour: a greedy walk from waypoint to waypoint that always
-// gets closer to the destination, snapping to the nearest hallway centreline
-// for the room's door, over legacy's own hand-placed waypoints and segments
-// (src/nav/legacyData.ts — read-only reference re-typed as data, never
-// imported; the pathfinding itself is written fresh here, not copied).
+// Corridor navigation (spec model3d/room-navigation). The gym (T) still
+// matches legacy's own greedy-walk behaviour (src/nav/legacyData.ts —
+// read-only reference re-typed as data, never imported). The main floors
+// (U/E/1/2) instead do a real shortest-path search over an explicit
+// waypoint adjacency graph described directly by the project owner from
+// `waypoints.gltf` — two earlier attempts to *infer* which waypoints
+// connect (nearest-unconstrained-waypoint, then proximity-to-hallway-segment)
+// each produced at least one real connection wrong, including routes that
+// skipped a real intermediate waypoint entirely.
 
 import { floorOf, type FloorId } from '../core/rooms';
 import {
+  CORRIDOR_ADJACENCY,
   FLOOR_WAYPOINTS,
   GYM_ENTRANCE,
   GYM_INTERSECTIONS,
   SEGMENTS,
+  STAIR_ADJACENCY,
   type Segment,
   type Waypoint,
 } from './legacyData';
@@ -92,18 +97,6 @@ function pickNext(
   return best;
 }
 
-const PRIORITY_NAMES = ['Intersection_one', 'Intersection_two', 'intersection_three', 'intersection_four', 'intersection_five'];
-
-/** The first hop from a start point: whichever priority intersection gets closer to the destination, if any. */
-function firstHop(intersections: Waypoint[], start: { x: number; z: number }, dest: { x: number; z: number }): Waypoint | null {
-  const priority = intersections.filter((i) => PRIORITY_NAMES.some((p) => i.name.includes(p)));
-  const currentToDest = dist(start, dest);
-  for (const i of priority) {
-    if (dist(i, dest) < currentToDest) return i;
-  }
-  return null;
-}
-
 function buildFloorWaypoints(
   start: Waypoint | undefined,
   stairs: Waypoint | undefined,
@@ -121,37 +114,139 @@ function buildFloorWaypoints(
   return out;
 }
 
-function routeOnGroundFloor(endCenter: { x: number; z: number }, doorPoint: { x: number; z: number }, y: number): WorldPoint[] {
-  const floor = FLOOR_WAYPOINTS.E!;
-  const start = { x: floor.start.x, y, z: floor.start.z };
-  const waypoints = buildFloorWaypoints(floor.start, floor.stairs, floor.intersections, y, doorPoint, 'door_ground', true);
+// --- Main floors (U/E/1/2): real shortest-path search over the explicit ---
+// --- waypoint adjacency graph (CORRIDOR_ADJACENCY/STAIR_ADJACENCY). -------
 
-  const points: WorldPoint[] = [start];
-  const visited = new Set<string>();
-  const hop = firstHop(floor.intersections, floor.start, doorPoint);
-  let current: { x: number; z: number } = floor.start;
-  if (hop) {
-    points.push({ x: hop.x, y, z: hop.z });
-    visited.add(hop.name);
-    current = hop;
+const CLIMB_COST = 8;
+
+interface GraphNode {
+  floor: FloorId;
+  name: string;
+  x: number;
+  z: number;
+}
+
+const MAIN_FLOORS: FloorId[] = ['U', 'E', '1', '2'];
+
+function buildGraph(): { nodes: Map<string, GraphNode>; edges: Map<string, Map<string, number>> } {
+  const nodes = new Map<string, GraphNode>();
+  for (const floor of MAIN_FLOORS) {
+    const fw = FLOOR_WAYPOINTS[floor]!;
+    for (const wp of [fw.start, fw.stairs, ...fw.intersections]) nodes.set(wp.name, { floor, name: wp.name, x: wp.x, z: wp.z });
   }
+  const edges = new Map<string, Map<string, number>>();
+  function addEdge(a: string, b: string, cost: number): void {
+    if (!nodes.has(a) || !nodes.has(b)) return;
+    if (!edges.has(a)) edges.set(a, new Map());
+    if (!edges.has(b)) edges.set(b, new Map());
+    edges.get(a)!.set(b, cost);
+    edges.get(b)!.set(a, cost);
+  }
+  for (const [a, b] of CORRIDOR_ADJACENCY) addEdge(a, b, dist(nodes.get(a)!, nodes.get(b)!));
+  for (const [lo, hi] of STAIR_ADJACENCY) {
+    const a = FLOOR_WAYPOINTS[lo]!.stairs, b = FLOOR_WAYPOINTS[hi]!.stairs;
+    addEdge(a.name, b.name, dist(a, b) + CLIMB_COST);
+  }
+  return { nodes, edges };
+}
 
-  for (;;) {
-    const next = pickNext(waypoints, visited, current, doorPoint);
-    if (!next) break;
-    visited.add(next.name);
-    current = next;
-    points.push({ x: next.x, y, z: next.z });
-    if (next.isDoor) {
-      points.push({ x: endCenter.x, y, z: endCenter.z });
-      break;
+const GRAPH = buildGraph();
+const DOOR_NODE = '__door__';
+
+/** Dijkstra from a named graph node to a room's door, snapped onto its two nearest graph nodes on its own floor. */
+/** Nearest point on the segment a-b to p, clamped to the segment, with its distance. */
+function projectOntoLine(p: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }): number {
+  const dx = b.x - a.x, dz = b.z - a.z;
+  const len2 = dx * dx + dz * dz || 1;
+  let t = ((p.x - a.x) * dx + (p.z - a.z) * dz) / len2;
+  t = Math.max(0, Math.min(1, t));
+  return dist(p, { x: a.x + t * dx, z: a.z + t * dz });
+}
+
+function shortestPathToDoor(startName: string, doorPoint: { x: number; z: number }, doorFloor: FloorId): GraphNode[] | null {
+  const nodes = new Map(GRAPH.nodes);
+  nodes.set(DOOR_NODE, { floor: doorFloor, name: DOOR_NODE, x: doorPoint.x, z: doorPoint.z });
+  const edges = new Map<string, Map<string, number>>();
+  for (const [k, m] of GRAPH.edges) edges.set(k, new Map(m));
+
+  // Snap the door onto the nearest *real* corridor edge on its floor (not the nearest
+  // node by raw distance — that previously let a door connect straight to something
+  // like the stairs just because it happened to be close as the crow flies, skipping
+  // the actual corridor chain entirely).
+  let nearestEdge: [GraphNode, GraphNode] | null = null;
+  let nearestEdgeDist = Infinity;
+  const seen = new Set<string>();
+  for (const [a, neighbours] of GRAPH.edges) {
+    const nodeA = nodes.get(a);
+    if (!nodeA || nodeA.floor !== doorFloor) continue;
+    for (const b of neighbours.keys()) {
+      const pairKey = [a, b].sort().join('|');
+      if (seen.has(pairKey)) continue;
+      seen.add(pairKey);
+      const nodeB = nodes.get(b);
+      if (!nodeB || nodeB.floor !== doorFloor) continue;
+      const d = projectOntoLine(doorPoint, nodeA, nodeB);
+      if (d < nearestEdgeDist) {
+        nearestEdgeDist = d;
+        nearestEdge = [nodeA, nodeB];
+      }
     }
   }
 
-  if (points.length === 1) {
-    points.push({ x: doorPoint.x, y, z: doorPoint.z });
-    points.push({ x: endCenter.x, y, z: endCenter.z });
+  edges.set(DOOR_NODE, new Map());
+  const endpoints = nearestEdge ?? [...nodes.values()].filter((n) => n.floor === doorFloor).sort((a, b) => dist(doorPoint, a) - dist(doorPoint, b)).slice(0, 2);
+  for (const n of endpoints) {
+    const d = dist(doorPoint, n);
+    edges.get(DOOR_NODE)!.set(n.name, d);
+    if (!edges.has(n.name)) edges.set(n.name, new Map());
+    edges.get(n.name)!.set(DOOR_NODE, d);
   }
+
+  const distTo = new Map<string, number>([[startName, 0]]);
+  const prev = new Map<string, string>();
+  const visited = new Set<string>();
+  for (;;) {
+    let u: string | null = null, best = Infinity;
+    for (const [name, d] of distTo) {
+      if (!visited.has(name) && d < best) { best = d; u = name; }
+    }
+    if (u === null || u === DOOR_NODE) break;
+    visited.add(u);
+    for (const [v, cost] of edges.get(u) ?? []) {
+      const alt = best + cost;
+      if (alt < (distTo.get(v) ?? Infinity)) {
+        distTo.set(v, alt);
+        prev.set(v, u);
+      }
+    }
+  }
+  if (!distTo.has(DOOR_NODE)) return null;
+  const names: string[] = [DOOR_NODE];
+  let cur = DOOR_NODE;
+  while (cur !== startName) {
+    const p = prev.get(cur);
+    if (!p) return null;
+    names.push(p);
+    cur = p;
+  }
+  names.reverse();
+  return names.map((n) => nodes.get(n)!);
+}
+
+function routeOnMainFloors(floor: FloorId, endCenter: { x: number; z: number }, doorPoint: { x: number; z: number }): WorldPoint[] {
+  const startName = FLOOR_WAYPOINTS.E!.start.name;
+  const path = shortestPathToDoor(startName, doorPoint, floor);
+  if (!path) {
+    // Shouldn't happen — the graph is fully connected — but never draw nothing.
+    const start = FLOOR_WAYPOINTS.E!.start;
+    return [
+      { x: start.x, y: FLOOR_Y.E, z: start.z },
+      { x: doorPoint.x, y: FLOOR_Y[floor], z: doorPoint.z },
+      { x: endCenter.x, y: FLOOR_Y[floor], z: endCenter.z },
+    ];
+  }
+  const points = path.map((n): WorldPoint => ({ x: n.x, y: FLOOR_Y[n.floor], z: n.z }));
+  points.push({ x: endCenter.x, y: FLOOR_Y[floor], z: endCenter.z });
   return points;
 }
 
@@ -217,79 +312,19 @@ function routeInGym(room: string, endCenter: { x: number; z: number }, doorPoint
   return points;
 }
 
-function routeAcrossFloors(
-  targetFloor: FloorId,
-  endCenter: { x: number; z: number },
-  doorPoint: { x: number; z: number },
-  groundY: number,
-  targetFloorY: number,
-): WorldPoint[] {
-  const ground = FLOOR_WAYPOINTS.E!;
-  const target = FLOOR_WAYPOINTS[targetFloor]!;
-  const points: WorldPoint[] = [{ x: ground.start.x, y: groundY, z: ground.start.z }];
-
-  // Phase 1: ground floor, greedy toward the stairs.
-  const groundWaypoints = buildFloorWaypoints(ground.start, ground.stairs, ground.intersections, groundY, doorPoint, 'door_ground', true);
-  const visited1 = new Set<string>();
-  let current: { x: number; z: number } = ground.start;
-  while (dist(current, ground.stairs) > 0.1) {
-    const next = pickNext(groundWaypoints, visited1, current, ground.stairs);
-    if (!next) break;
-    visited1.add(next.name);
-    current = next;
-    points.push({ x: next.x, y: groundY, z: next.z });
-  }
-
-  // Climb.
-  points.push({ x: ground.stairs.x, y: groundY, z: ground.stairs.z });
-  points.push({ x: target.stairs.x, y: targetFloorY, z: target.stairs.z });
-
-  // Phase 2: target floor, always via its start point, then greedy toward the door.
-  points.push({ x: target.start.x, y: targetFloorY, z: target.start.z });
-  const targetWaypoints = buildFloorWaypoints(target.start, undefined, target.intersections, targetFloorY, doorPoint, 'door_target', true);
-  const visited2 = new Set<string>([target.start.name]);
-  current = target.start;
-  const hop = firstHop(target.intersections, target.start, doorPoint);
-  if (hop) {
-    points.push({ x: hop.x, y: targetFloorY, z: hop.z });
-    visited2.add(hop.name);
-    current = hop;
-  }
-
-  const beforeLoop = points.length;
-  for (;;) {
-    const next = pickNext(targetWaypoints, visited2, current, doorPoint);
-    if (!next) break;
-    visited2.add(next.name);
-    current = next;
-    points.push({ x: next.x, y: targetFloorY, z: next.z });
-    if (next.isDoor) {
-      points.push({ x: endCenter.x, y: targetFloorY, z: endCenter.z });
-      break;
-    }
-  }
-  if (points.length === beforeLoop) {
-    points.push({ x: doorPoint.x, y: targetFloorY, z: doorPoint.z });
-    points.push({ x: endCenter.x, y: targetFloorY, z: endCenter.z });
-  }
-  return points;
-}
-
 /** Every room id a navigation route can be drawn to. */
 export function knownRooms(): string[] {
   return Object.keys(ROOM_POSITIONS);
 }
 
-/** The corridor route from the building entrance to a room, matching legacy's own navigation behaviour. */
+/** The corridor route from the building entrance to a room. */
 export function routeTo(room: string): RouteResult {
   const pos = ROOM_POSITIONS[room];
   if (!pos) return { ok: false, reason: 'unknown-room' };
   const floor = floorOf(room) ?? pos.floor;
   const endCenter = { x: pos.x, z: pos.z };
   const doorPoint = doorPointFor(floor, endCenter);
-  const groundY = FLOOR_Y.E;
 
-  if (floor === 'E') return { ok: true, points: routeOnGroundFloor(endCenter, doorPoint, groundY) };
   if (floor === 'T') return { ok: true, points: routeInGym(room, endCenter, doorPoint, FLOOR_Y.T) };
-  return { ok: true, points: routeAcrossFloors(floor, endCenter, doorPoint, groundY, FLOOR_Y[floor]) };
+  return { ok: true, points: routeOnMainFloors(floor, endCenter, doorPoint) };
 }

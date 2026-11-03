@@ -75,6 +75,55 @@ const F2: FloorWaypoints = {
 
 export const FLOOR_WAYPOINTS: Partial<Record<FloorId, FloorWaypoints>> = { U, E, '1': F1, '2': F2 };
 
+/**
+ * Which waypoints directly connect to which, within a floor — described
+ * explicitly by the project owner from inspecting `waypoints.gltf` directly,
+ * after two earlier attempts to infer this (nearest-unconstrained-waypoint,
+ * then proximity-to-hallway-segment) each got at least one real connection
+ * wrong. Every pair is walkable both directions. U's intersections form a
+ * full ring (`start` branches to both ends); E/1/2 have `start` branching to
+ * `Intersection_one` and `Intersection_two` separately, with `two` then
+ * chaining on to `three`/`four`/`five`.
+ */
+export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
+  // U (basement)
+  [U.intersections[0].name, U.intersections[1].name],
+  [U.intersections[0].name, U.start.name],
+  [U.intersections[1].name, U.intersections[2].name],
+  [U.intersections[2].name, U.intersections[3].name],
+  [U.intersections[3].name, U.intersections[4].name],
+  [U.intersections[4].name, U.start.name],
+  [U.start.name, U.stairs.name],
+  // E (ground floor)
+  [E.stairs.name, E.start.name],
+  [E.start.name, E.intersections[0].name],
+  [E.start.name, E.intersections[1].name],
+  [E.intersections[1].name, E.intersections[2].name],
+  [E.intersections[2].name, E.intersections[3].name],
+  [E.intersections[3].name, E.intersections[4].name],
+  // Floor 1
+  [F1.stairs.name, F1.start.name],
+  [F1.start.name, F1.intersections[0].name],
+  [F1.start.name, F1.intersections[1].name],
+  [F1.intersections[1].name, F1.intersections[2].name],
+  [F1.intersections[2].name, F1.intersections[3].name],
+  [F1.intersections[3].name, F1.intersections[4].name],
+  // Floor 2
+  [F2.stairs.name, F2.start.name],
+  [F2.start.name, F2.intersections[0].name],
+  [F2.start.name, F2.intersections[1].name],
+  [F2.intersections[1].name, F2.intersections[2].name],
+  [F2.intersections[2].name, F2.intersections[3].name],
+  [F2.intersections[3].name, F2.intersections[4].name],
+];
+
+/** Cross-floor stairway connections: the same (x, z) on every floor, only the height differs. */
+export const STAIR_ADJACENCY: Array<[FloorId, FloorId]> = [
+  ['U', 'E'],
+  ['E', '1'],
+  ['1', '2'],
+];
+
 export const GYM_ENTRANCE: Waypoint = { name: 'T_entrance', x: -41.442623138427734, z: 3.064432382583618 };
 export const GYM_INTERSECTIONS: Waypoint[] = [
   { name: 'T_intersection_one', x: -27.68085479736328, z: 3.064432382583618 },

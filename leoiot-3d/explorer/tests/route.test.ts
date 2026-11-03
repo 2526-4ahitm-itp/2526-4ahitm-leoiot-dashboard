@@ -33,6 +33,34 @@ describe('routeTo: multi-floor', () => {
   });
 });
 
+describe('routeTo: real corridor adjacency (model3d-room-navigation design.md D7)', () => {
+  // U05/U08 are near the west wing: the only way there is via Intersection_one
+  // then Intersection_two, per CORRIDOR_ADJACENCY. A route that reaches Two
+  // without visiting One first would mean it jumped a connection that isn't
+  // real — exactly the bug this adjacency graph replaced.
+  it('reaches Intersection_two only after Intersection_one', () => {
+    for (const room of ['U05', 'U08']) {
+      const result = routeTo(room);
+      expect(result.ok, room).toBe(true);
+      if (!result.ok) continue;
+      const one = FLOOR_WAYPOINTS.U!.intersections[0];
+      const two = FLOOR_WAYPOINTS.U!.intersections[1];
+      const oneIdx = result.points.findIndex((p) => Math.abs(p.x - one.x) < 1e-6 && Math.abs(p.z - one.z) < 1e-6);
+      const twoIdx = result.points.findIndex((p) => Math.abs(p.x - two.x) < 1e-6 && Math.abs(p.z - two.z) < 1e-6);
+      expect(oneIdx, room).toBeGreaterThanOrEqual(0);
+      expect(twoIdx, room).toBeGreaterThan(oneIdx);
+    }
+  });
+
+  it('a room near the east wing reaches it via Intersection_five/four without needing one/two', () => {
+    const result = routeTo('U84');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const four = FLOOR_WAYPOINTS.U!.intersections[3];
+    expect(result.points.some((p) => Math.abs(p.x - four.x) < 1e-6 && Math.abs(p.z - four.z) < 1e-6)).toBe(true);
+  });
+});
+
 describe('routeTo: gym', () => {
   it('starts at the gym entrance for every gym room', () => {
     for (const room of ['T1', 'T2', 'T3', 'T4', 'T6', 'T19']) {
