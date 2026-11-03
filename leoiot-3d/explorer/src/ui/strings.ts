@@ -39,4 +39,12 @@ export const strings = {
     yellow: 'Elevated',
     red: 'High',
   } satisfies Record<Co2Status, string>,
+  navigation: {
+    toggle: 'Navigate to a room',
+    close: 'Close navigation',
+    searchPlaceholder: 'Search room (e.g. 105)…',
+    go: 'Go',
+    clear: 'Clear',
+    notFound: 'Room not found.',
+  },
 };
