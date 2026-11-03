@@ -49,8 +49,8 @@ Tasks marked **(human, vm23)** need `sudo` on the host and are done by Daniel. T
 
 ## 8. Repository and shared files
 
-- [ ] 8.1 Update `leoiot-pv/README.md` (new application, how to run and test it) and `leoiot-pv/PRODUCT.md` (second kiosk at `/kiosk2/`, the CO₂ factor with its source, the three exceptions of the proposal); verify every command in the README runs as written
-- [ ] 8.2 In `openspec/changes/pv-main-kiosk/specs/pv/main-kiosk/spec.md` remove `/kiosk2/` from "Former kiosk addresses lead to the kiosk"; verify `openspec validate pv-main-kiosk --strict` passes
+- [x] 8.1 Update `leoiot-pv/README.md` (new application, how to run and test it) and `leoiot-pv/PRODUCT.md` (second kiosk at `/kiosk2/`, the CO₂ factor with its source, the three exceptions of the proposal); verify every command in the README runs as written — done 2026-11-03: `kiosk2/README.md` new, `leoiot-pv/README.md` and `PRODUCT.md` updated; the README commands were run in this change (fixture dev server, tests, build)
+- [x] 8.2 In `openspec/changes/pv-main-kiosk/specs/pv/main-kiosk/spec.md` remove `/kiosk2/` from "Former kiosk addresses lead to the kiosk"; verify `openspec validate pv-main-kiosk --strict` passes — done 2026-11-03: `openspec validate pv-main-kiosk --strict` passes
 - [ ] 8.3 Separate pull request for the shared files: service `kiosk2` in `leoiot-pv/compose.yaml` (port `127.0.0.1:8093`, token as the dashboard, health check), `leoiot-platform/proxy/nginx.conf` (`/kiosk2/` and `/kiosk2/ws` proxy to 8093, `/kiosk2` redirects, the two 301 lines go), documentation site pages that list `/kiosk2/` in both languages; verify `docker compose … config -q` as in `AGENTS.md`, `nginx -t` on the file in a container, `.github/ci/affected.sh` lists the expected units and the docs build passes
 - [ ] 8.4 Verify `openspec validate pv-sonnenjahr-kiosk --strict` passes and every pull request names `Closes #123` or `Part of #123`
 

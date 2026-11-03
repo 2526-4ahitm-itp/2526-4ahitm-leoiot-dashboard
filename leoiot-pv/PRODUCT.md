@@ -2,7 +2,7 @@
 
 <!-- impeccable:product-schema 1 -->
 
-Scope: the PV part of LeoIoT (`leoiot-pv/`): the main kiosk, the PV dashboard and the planned second kiosk. Confirmed by Daniel Lettner on 2026-10-19.
+Scope: the PV part of LeoIoT (`leoiot-pv/`): the main kiosk, the PV dashboard and the second kiosk "Unser Sonnenjahr" at `/kiosk2/`. Confirmed by Daniel Lettner on 2026-10-19.
 
 ## Platform
 
@@ -48,7 +48,7 @@ The data come from the school's own plant, collected every minute, and are prese
 ## Evidence on Hand
 
 - Real readings in InfluxDB on vm23; sample readings and checks in `/home/daniel/leoiot/contract-samples/` (outside the repository).
-- No testimonials, savings figures or CO₂ factors exist; do not invent them.
+- No testimonials or savings figures exist; do not invent them. The one CO₂ factor in use is 169 g CO₂-equivalent per kWh: Austrian electricity supply 209 g minus photovoltaic upstream emissions 40 g, Umweltbundesamt REP-0948 (Wien 2025), table 4; it assumes PV replaces the average mix and is shown as "rund" with its source (second kiosk only).
 
 ## Product Principles
 
@@ -56,6 +56,14 @@ The data come from the school's own plant, collected every minute, and are prese
 2. Honest about gaps: unknown is shown as unknown, old data as old.
 3. Each view answers one stated question for a stated audience.
 4. Readable first, attractive second, never at the cost of the numbers.
+
+## Exceptions for the second kiosk
+
+Decided by Daniel Lettner on 2026-11-02 and 2026-11-03 for `/kiosk2/` only (change `pv-sonnenjahr-kiosk`):
+
+- It is a film for visitors, not a dashboard: astonish first, but every number shown is true and stays readable from a distance (principle 4 reversed in order, not in substance).
+- Own typefaces, Instrument Serif and DM Mono, bundled with the application, instead of the system font stack.
+- Own colours from one light ("Morgenglut") instead of the data colours `--c-pv` and the others; the film shows only production.
 
 ## Accessibility & Inclusion
 
