@@ -17,12 +17,14 @@ Open: URL path, room selection once more rooms have real data, the sensor overvi
 
 THESIS: The room's air state is a lit lamp, not a number to interpret: one of three lamps is lit and one sentence says what to do; the charts carry the same lamp bands. Refuses the KPI-tile wall with sparklines.
 
-OWN-WORLD: Cool matte housing grey ground, white panels, near-black ink; a dark lamp housing with three round lamps (green, amber, red), unlit lamps dark grey; Atkinson Hyperlegible Next, tabular numerals; colour appears only as air state; controls neutral.
+OWN-WORLD: Cool matte housing grey ground, white panels, near-black ink; a dark lamp housing with three round lamps (green, amber, red), unlit lamps dark grey; Lexend 400/500/700 (self-hosted, @fontsource/lexend), tabular numerals (Atkinson Hyperlegible Next dropped: its slashed zero changes room ids); colour appears only as air state; controls neutral.
 
 STORY: A visitor opens room 105, reads the lit lamp and the status line (Luft gut, Bald lüften, Jetzt lüften), checks the values and their age, then reads the day or week in the charts, where the bands show when the air crossed 800 and 1000 ppm.
 
+COMP: `.impeccable/previews/room-105/index.html` (sample data, not in Git) is the reference the build follows.
+
 FIRST VIEWPORT: Top bar (brand, room, 24 h / 7 Tage, DE/EN, theme). Room panel: room id at about 128px, lamp housing, status line at about 44px, three fixed value cells, freshness line. Below, two chart panels side by side: temperature; CO₂ above humidity.
 
-FORM: Classroom CO₂ traffic light with raises: fixed cells that change in place (split-flap), colour only for state (warm app), one message per line (terminal yellow), strict state vocabulary (acetate manual), fixed identity furniture (character catalog), exact time windows (j-card). Position 7 on my ordered list; seed:b4dbcad7698bbcf1
+FORM: Classroom CO₂ traffic light with raises: fixed cells that change in place (split-flap), colour only for state (warm app), one message per line (terminal yellow), strict state vocabulary (acetate manual), fixed identity furniture (character catalog), exact time windows (j-card). Position 7 on my ordered list; seed:b4dbcad7698bbcf1 (not corroborated on this machine on 2026-11-03)
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

@@ -56,9 +56,10 @@ The previous stack (`legacy/docker-compose.yaml`) must be running, because Influ
 
 ## What is live
 
-- Main kiosk at `https://vm23.htl-leonding.ac.at/kiosk/` since 2026-10-13. The former kiosk addresses `/leogreen/`, `/kiosk3/` and `/kiosk4/` redirect permanently to it (`/kiosk2/` is the second kiosk once its routing is installed on vm23); the five old kiosks are removed from `legacy/`.
+- Main kiosk at `https://vm23.htl-leonding.ac.at/kiosk/` since 2026-10-13. The former kiosk addresses `/leogreen/`, `/kiosk3/` and `/kiosk4/` redirect permanently to it; the five old kiosks are removed from `legacy/`.
 - Collector writing to `server_data` since 2026-10-14.
 - PV dashboard at `https://vm23.htl-leonding.ac.at/pv/` since 2026-10-20.
+- Second kiosk "Unser Sonnenjahr" at `https://vm23.htl-leonding.ac.at/kiosk2/` since 2026-11-03 (release #149).
 
 ## Still in the previous system
 
@@ -66,4 +67,4 @@ The previous stack (`legacy/docker-compose.yaml`) must be running, because Influ
 
 ## Planned
 
-The second kiosk `kiosk2/` is being built (change `pv-sonnenjahr-kiosk`, issue #123). It shows avoided CO₂ and the lifetime yield of the removed kiosks; weather and the battery of the day were left out on 2026-11-02.
+Acceptance of the second kiosk on the real screen, together with the main kiosk (#120, #123).

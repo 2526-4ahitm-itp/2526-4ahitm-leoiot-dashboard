@@ -65,13 +65,13 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 .cell { padding-top: 14px; }
 .cell dt { font-size: 13px; color: var(--ink-3); }
 .cell dd { margin: 0; }
-.cell .v { font-size: 34px; font-weight: 700; display: inline-block; min-width: 3.2ch; }
+.cell .v { font-size: 34px; font-weight: 700; display: inline-block; min-width: 0; }
 .cell .u { font-size: 16px; color: var(--ink-3); margin-left: 4px; }
 [data-air='soon'] .cell.co2 .v { color: var(--y-ink); }
 [data-air='bad'] .cell.co2 .v { color: var(--r-ink); }
 [data-air='good'] .cell.co2 .v { color: var(--g-ink); }
 .fresh { font-size: 14px; color: var(--ink-3); margin-top: 12px; display: flex; align-items: center; gap: 8px; min-height: 20px; }
-.fresh .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g); flex: none; }
+.fresh .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
 .fresh .warn { width: 16px; height: 16px; display: none; color: var(--y-ink); flex: none; }
 [data-fresh='stale'] .fresh .dot { display: none; }
 [data-fresh='stale'] .fresh .warn { display: block; }
