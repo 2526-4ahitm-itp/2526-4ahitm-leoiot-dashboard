@@ -37,15 +37,22 @@ const U: FloorWaypoints = {
   ],
 };
 
-// `south_wing` on E/1/2 is not from waypoints.gltf — there is no named node
-// there. It stands in for legacy's own SEGMENTS "South1" wing (x ≈ -11.15,
-// z 5.1 to 70), which CORRIDOR_ADJACENCY never had a node for at all. Rooms
-// along it (e.g. E71/213-218/251-254, x ≈ -2 to -22, z ≈ 14 to 64) had no
-// real edge to snap onto, so the nearest one (start--Intersection_one)
-// clamped them straight onto Intersection_one and cut diagonally across open
-// space from there — the reported defect. Placed at Intersection_one's own
-// x (straight down the real corridor) and z = 68, past the southmost known
-// room (152/252 at z ≈ 63.9), measured against the copied models.
+// `south_wing` and `west_wing` on E/1/2 are not from waypoints.gltf — there
+// are no named nodes there. They stand in for legacy's own SEGMENTS "South1"
+// (x ≈ -11.15, z 5.1 to 70) and "WestW" (x -70 to -11.15, z 5.1) wings,
+// which CORRIDOR_ADJACENCY never had a node for at all. Rooms along them
+// (south: E71/213-218/251-254, x ≈ -2 to -22, z ≈ 14 to 64; west: a double
+// row either side of the corridor — E07-09/104-107 at z ≈ -3.6 and
+// E10-11/108-109 at z ≈ 13.8, x ≈ -20 to -53) had no real edge to snap onto,
+// so the nearest one (start--Intersection_one) clamped them straight onto
+// Intersection_one and cut diagonally across open space from there — the
+// reported defect. `south_wing` is placed at Intersection_one's own x
+// (straight down the real corridor) and z = 68, past the southmost known
+// room (152/252 at z ≈ 63.9). `west_wing` is placed at Intersection_one's
+// own z (straight along the real corridor — both room rows sit close to
+// symmetrically either side of it, as a normal double-loaded corridor would)
+// and x = -65, past the westmost known room (E09/107 at x ≈ -51 to -53).
+// Both measured against the copied models.
 const E: FloorWaypoints = {
   start: { name: 'E_start', x: 3.4782865047454834, z: -7.978066444396973 },
   stairs: { name: 'E_stairs', x: -1.8453720808029175, z: -13.099599838256836 },
@@ -56,6 +63,7 @@ const E: FloorWaypoints = {
     { name: 'E_intersection_four', x: 38.71512985229492, z: -22.729476928710938 },
     { name: 'E_intersection_five', x: 52.764888763427734, z: -22.729476928710938 },
     { name: 'E_south_wing', x: -11.736422538757324, z: 68 },
+    { name: 'E_west_wing', x: -65, z: 5.304161071777344 },
   ],
 };
 
@@ -69,6 +77,7 @@ const F1: FloorWaypoints = {
     { name: '1_intersection_four', x: 38.71512985229492, z: -22.729476928710938 },
     { name: '1_intersection_five', x: 52.764888763427734, z: -22.729476928710938 },
     { name: '1_south_wing', x: -11.535295486450195, z: 68 },
+    { name: '1_west_wing', x: -65, z: 5.304161071777344 },
   ],
 };
 
@@ -82,6 +91,7 @@ const F2: FloorWaypoints = {
     { name: '2_intersection_four', x: 38.71512985229492, z: -22.729476928710938 },
     { name: '2_intersection_five', x: 52.764888763427734, z: -22.729476928710938 },
     { name: '2_south_wing', x: -11.535295486450195, z: 68 },
+    { name: '2_west_wing', x: -65, z: 5.304161071777344 },
   ],
 };
 
@@ -114,6 +124,7 @@ export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
   [E.intersections[2].name, E.intersections[3].name],
   [E.intersections[3].name, E.intersections[4].name],
   [E.intersections[0].name, E.intersections[5].name], // one -- south_wing
+  [E.intersections[0].name, E.intersections[6].name], // one -- west_wing
   // Floor 1
   [F1.stairs.name, F1.start.name],
   [F1.start.name, F1.intersections[0].name],
@@ -122,6 +133,7 @@ export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
   [F1.intersections[2].name, F1.intersections[3].name],
   [F1.intersections[3].name, F1.intersections[4].name],
   [F1.intersections[0].name, F1.intersections[5].name], // one -- south_wing
+  [F1.intersections[0].name, F1.intersections[6].name], // one -- west_wing
   // Floor 2
   [F2.stairs.name, F2.start.name],
   [F2.start.name, F2.intersections[0].name],
@@ -130,6 +142,7 @@ export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
   [F2.intersections[2].name, F2.intersections[3].name],
   [F2.intersections[3].name, F2.intersections[4].name],
   [F2.intersections[0].name, F2.intersections[5].name], // one -- south_wing
+  [F2.intersections[0].name, F2.intersections[6].name], // one -- west_wing
 ];
 
 /** Cross-floor stairway connections: the same (x, z) on every floor, only the height differs. */
