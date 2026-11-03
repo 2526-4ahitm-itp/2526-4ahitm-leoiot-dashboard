@@ -56,6 +56,6 @@ Tasks marked **(human, vm23)** need `sudo` on the host and are done by Daniel. T
 
 ## 9. Shipping and acceptance
 
-- [ ] 9.1 Release pull request `main` → `release` only when Daniel says so; verify the deployment workflow is green and `docker compose ps` on vm23 (read only) shows `kiosk2` healthy
-- [ ] 9.2 **(human, vm23)** Daniel installs the proxy file and reloads nginx; verify `https://vm23.htl-leonding.ac.at/kiosk2/` shows the film with live data, `/kiosk/` still shows the main kiosk and the smoke routes pass
+- [x] 9.1 Release pull request `main` → `release` only when Daniel says so; verify the deployment workflow is green and `docker compose ps` on vm23 (read only) shows `kiosk2` healthy — done 2026-11-03: release #149, deployment run green, `leoiot-pv-kiosk2-1` healthy on vm23, all 12 smoke routes 200
+- [x] 9.2 **(human, vm23)** Daniel installs the proxy file and reloads nginx; verify `https://vm23.htl-leonding.ac.at/kiosk2/` shows the film with live data, `/kiosk/` still shows the main kiosk and the smoke routes pass — done 2026-11-03: Daniel installed the proxy file and reloaded nginx; `https://vm23.htl-leonding.ac.at/kiosk2/` answers 200 with the film, the container reads live data (lifetime yield 125 918.7 kWh)
 - [ ] 9.3 **(Daniel)** Acceptance on the real screen in the school, together with #120; verify the date and any device limitation are written in #123
