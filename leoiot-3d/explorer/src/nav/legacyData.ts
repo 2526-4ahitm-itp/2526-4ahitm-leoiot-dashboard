@@ -67,6 +67,17 @@ const E: FloorWaypoints = {
   ],
 };
 
+// `north_wing` (floors 1 and 2 only — ground floor has no room there) is,
+// again, not from waypoints.gltf. It stands in for a corridor the same shape
+// as U's own north extension, but legacy's SEGMENTS list never named for the
+// upper floors either: a line straight north from Intersection_two, with
+// rooms on both sides (142/143 at x ≈ 24.8 east of it, 144-148 at x ≈ 5-7.6
+// west — almost exactly symmetric around Intersection_two's own x ≈ 16.2-16.5,
+// a double-loaded corridor like west_wing). Without it, 142-148 and their
+// floor-2 equivalents (237/239/241) snapped straight onto Intersection_two
+// and cut diagonally from there. Placed at Intersection_two's own x and
+// z = -70 (matching legacy's own NorthW segment's far end), past the
+// northmost known room (144 at z ≈ -63.8).
 const F1: FloorWaypoints = {
   start: { name: '1_start', x: 3.4782865047454834, z: -7.978066444396973 },
   stairs: { name: '1_stairs', x: -1.8453720808029175, z: -13.099599838256836 },
@@ -78,6 +89,7 @@ const F1: FloorWaypoints = {
     { name: '1_intersection_five', x: 52.764888763427734, z: -22.729476928710938 },
     { name: '1_south_wing', x: -11.535295486450195, z: 68 },
     { name: '1_west_wing', x: -65, z: 5.304161071777344 },
+    { name: '1_north_wing', x: 16.477096557617188, z: -70 },
   ],
 };
 
@@ -92,6 +104,7 @@ const F2: FloorWaypoints = {
     { name: '2_intersection_five', x: 52.764888763427734, z: -22.729476928710938 },
     { name: '2_south_wing', x: -11.535295486450195, z: 68 },
     { name: '2_west_wing', x: -65, z: 5.304161071777344 },
+    { name: '2_north_wing', x: 16.477096557617188, z: -70 },
   ],
 };
 
@@ -134,6 +147,7 @@ export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
   [F1.intersections[3].name, F1.intersections[4].name],
   [F1.intersections[0].name, F1.intersections[5].name], // one -- south_wing
   [F1.intersections[0].name, F1.intersections[6].name], // one -- west_wing
+  [F1.intersections[1].name, F1.intersections[7].name], // two -- north_wing
   // Floor 2
   [F2.stairs.name, F2.start.name],
   [F2.start.name, F2.intersections[0].name],
@@ -143,6 +157,7 @@ export const CORRIDOR_ADJACENCY: Array<[string, string]> = [
   [F2.intersections[3].name, F2.intersections[4].name],
   [F2.intersections[0].name, F2.intersections[5].name], // one -- south_wing
   [F2.intersections[0].name, F2.intersections[6].name], // one -- west_wing
+  [F2.intersections[1].name, F2.intersections[7].name], // two -- north_wing
 ];
 
 /** Cross-floor stairway connections: the same (x, z) on every floor, only the height differs. */

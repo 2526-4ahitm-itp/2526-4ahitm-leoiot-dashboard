@@ -208,6 +208,46 @@ describe('routeTo: west wing (E07-11/104-109), double-loaded corridor', () => {
   });
 });
 
+describe('routeTo: north wing (142-148, floor 1 only; 237/239/241, floor 2), double-loaded corridor', () => {
+  // A corridor the same shape as U's own north extension, but never named in
+  // CORRIDOR_ADJACENCY for the upper floors: straight north from
+  // Intersection_two, with rooms on both sides (142/143 at x ≈ 24.8 east,
+  // 144-148 at x ≈ 5-7.6 west — almost symmetric around Intersection_two's
+  // own x). Without it these rooms snapped straight onto Intersection_two and
+  // cut diagonally from there, same as the south/west wing defects.
+  it('reaches Intersection_two, then walks north up the corridor before turning into the room', () => {
+    for (const [room, floor] of [
+      ['142', '1'],
+      ['144', '1'],
+      ['146', '1'],
+      ['237', '2'],
+      ['239', '2'],
+    ] as const) {
+      const result = routeTo(room);
+      expect(result.ok, room).toBe(true);
+      if (!result.ok) continue;
+      const two = FLOOR_WAYPOINTS[floor]!.intersections[1];
+      const twoIdx = result.points.findIndex((p) => Math.abs(p.x - two.x) < 1e-6 && Math.abs(p.z - two.z) < 1e-6);
+      expect(twoIdx, room).toBeGreaterThanOrEqual(0);
+      // The point right after Intersection_two is further north along the
+      // same corridor (same x as Intersection_two, not a diagonal jump).
+      const afterTwo = result.points[twoIdx + 1];
+      expect(afterTwo.x, room).toBeCloseTo(two.x);
+      expect(afterTwo.z, room).not.toBeCloseTo(two.z);
+    }
+  });
+
+  it('rooms on opposite sides of the corridor do not pass through each other', () => {
+    const r142 = routeTo('142');
+    const r145 = routeTo('145');
+    expect(r142.ok).toBe(true);
+    expect(r145.ok).toBe(true);
+    if (!r142.ok || !r145.ok) return;
+    expect(visits(r142.points, ROOM_POSITIONS['145'])).toBe(false);
+    expect(visits(r145.points, ROOM_POSITIONS['142'])).toBe(false);
+  });
+});
+
 describe('routeTo: gym', () => {
   it('starts at the gym entrance for every gym room', () => {
     for (const room of ['T1', 'T2', 'T3', 'T4', 'T6', 'T19']) {
