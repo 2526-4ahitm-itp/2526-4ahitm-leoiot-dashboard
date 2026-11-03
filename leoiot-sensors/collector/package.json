@@ -1,0 +1,26 @@
+{
+  "name": "leoiot-sensors-collector",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Turns the readings of mapped room-climate devices into room_climate points and live messages",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc --noEmit",
+    "stack:up": "node scripts/stack.mjs up",
+    "stack:down": "node scripts/stack.mjs down",
+    "stack:publish": "node scripts/publish-nili3.mjs"
+  },
+  "dependencies": {
+    "mqtt": "^5.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}
