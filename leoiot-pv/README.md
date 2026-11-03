@@ -14,6 +14,7 @@ New PV data collection, PV dashboard and kiosk displays.
 - `.env.example`: template for the local `.env`
 - `shared/`: code the kiosk and the dashboard share (energy quantities, Vienna time, database query, number format, live channel), TypeScript sources with their tests
 - `kiosk/`: the main kiosk
+- `kiosk2/`: the second kiosk, the film "Unser Sonnenjahr" at `/kiosk2/` (change `pv-sonnenjahr-kiosk`, see `kiosk2/README.md`)
 - `dashboard/`: the PV dashboard at `/pv/` (change `pv-dashboard`)
 - `collector/`: the PV collector for the SolaX cloud (Node, TypeScript, Vitest)
 
@@ -30,10 +31,11 @@ Tests and build:
 ```
 cd leoiot-pv/shared && npm ci && npm test && npm run build
 cd ../kiosk && npm ci && npm test && npm run build
+cd ../kiosk2 && npm ci && npm test && npm run build
 cd ../dashboard && npm ci && npm test && npm run build
 ```
 
-Image as CI builds it, from the repository root: `.github/ci/image-build.sh leoiot-pv/kiosk` (or `leoiot-pv/dashboard`).
+Image as CI builds it, from the repository root: `.github/ci/image-build.sh leoiot-pv/kiosk` (or `leoiot-pv/kiosk2`, `leoiot-pv/dashboard`).
 
 Container:
 
@@ -54,7 +56,7 @@ The previous stack (`legacy/docker-compose.yaml`) must be running, because Influ
 
 ## What is live
 
-- Main kiosk at `https://vm23.htl-leonding.ac.at/kiosk/` since 2026-10-13. The former kiosk addresses `/leogreen/`, `/kiosk2/`, `/kiosk3/` and `/kiosk4/` redirect permanently to it; the five old kiosks are removed from `legacy/`.
+- Main kiosk at `https://vm23.htl-leonding.ac.at/kiosk/` since 2026-10-13. The former kiosk addresses `/leogreen/`, `/kiosk3/` and `/kiosk4/` redirect permanently to it (`/kiosk2/` is the second kiosk once its routing is installed on vm23); the five old kiosks are removed from `legacy/`.
 - Collector writing to `server_data` since 2026-10-14.
 - PV dashboard at `https://vm23.htl-leonding.ac.at/pv/` since 2026-10-20.
 
@@ -64,4 +66,4 @@ The previous stack (`legacy/docker-compose.yaml`) must be running, because Influ
 
 ## Planned
 
-After the migration is finished, a second, more eye-catching kiosk at its own address. It should take over the content that only the removed kiosks of the previous system showed: weather, avoided CO₂, total yield over the lifetime, and the battery charge of the day.
+The second kiosk `kiosk2/` is being built (change `pv-sonnenjahr-kiosk`, issue #123). It shows avoided CO₂ and the lifetime yield of the removed kiosks; weather and the battery of the day were left out on 2026-11-02.
