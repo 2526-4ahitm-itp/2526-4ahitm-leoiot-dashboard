@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unser Sonnenjahr – Solaranlage der HTL Leonding</title>
+</head>
+<body>
+<canvas id="scene" aria-hidden="true"></canvas>
+<header class="hud">
+  <p class="who">Solaranlage der HTL Leonding</p>
+  <div class="run">
+    <p class="date"></p>
+    <div class="right">
+      <p class="count"><span class="kwh"></span> <span class="tag">kWh erzeugt</span></p>
+      <p class="stand" hidden></p>
+    </div>
+  </div>
+</header>
+<p class="milestone"></p>
+<div class="months"></div>
+<div class="axis"><span>6 Uhr</span><span>12 Uhr</span><span>18 Uhr</span></div>
+<div class="pen"><b></b><p><span class="kw"></span><small class="clock"></small></p></div>
+<div class="flag flag--day"><i></i><b></b><div><p class="v"></p><p class="l">an diesem Tag</p></div></div>
+<div class="flag flag--best"><i></i><b></b><div><p class="l">Bester Tag</p><p class="d"></p><p class="v"></p></div></div>
+<p class="gap"></p>
+<section class="moment" aria-live="polite"><p class="kicker"></p><p class="figure"><span class="value"></span><span class="unit"></span></p><p class="caption"></p><p class="source"></p></section>
+<div class="notice" role="status" hidden><b></b><span></span></div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
