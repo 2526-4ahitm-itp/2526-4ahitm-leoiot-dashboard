@@ -1,0 +1,29 @@
+{
+  "name": "leoiot-sensors-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Room-climate dashboard: air state, current values and history of one room",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/lexend": "^5.2.0",
+    "echarts": "^6.1.0",
+    "mqtt": "^5.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "happy-dom": "^21.0.4",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}

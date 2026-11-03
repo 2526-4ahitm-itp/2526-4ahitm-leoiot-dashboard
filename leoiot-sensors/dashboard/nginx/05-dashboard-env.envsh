@@ -1,0 +1,3 @@
+#!/bin/sh
+# Read by the nginx image's start script before the template is filled.
+export SENSORS_DASHBOARD_INFLUX_TOKEN="${SENSORS_DASHBOARD_INFLUX_TOKEN:-}"

@@ -1,0 +1,4 @@
+,result,table,_time,_value,_field,device,source
+,_result,0,2026-11-03T06:35:38Z,713,co2,sim-e10,simulated
+,_result,1,2026-11-03T06:35:38.001Z,20.5,temperature,sim-e10,simulated
+

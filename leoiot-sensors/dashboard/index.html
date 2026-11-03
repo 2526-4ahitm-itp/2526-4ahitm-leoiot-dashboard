@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Raum 105 · LeoIoT Raumklima</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script>
+// Keeps the saved theme and language from flashing; the page's own code reads the same keys.
+try {
+  var theme = localStorage.getItem('leoiot-sensors.theme');
+  if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+  if (localStorage.getItem('leoiot-sensors.lang') === 'en') document.documentElement.lang = 'en';
+} catch (e) {}
+</script>
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><span id="brand">LeoIoT</span> <span id="brandSub">Raumklima</span></div>
+  <div class="crumb" id="crumb">Raum 105</div>
+  <div class="ctl seg" role="group" id="rangeGroup" aria-label="Zeitraum">
+    <button type="button" data-range="24h" aria-pressed="true">24 h</button>
+    <button type="button" data-range="7d" aria-pressed="false">7 Tage</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="ctl seg" role="group" id="langGroup" aria-label="Sprache">
+    <button type="button" data-lang="de" lang="de" aria-pressed="true">DE</button>
+    <button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
+  </div>
+  <button type="button" class="ctl icon-btn" id="theme" aria-label="Dunkles Design einschalten">
+    <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
+  </button>
+</header>
+
+<main id="app" data-state="loading" data-air="off" data-fresh="live" data-source="sensor">
+  <section class="room" id="roomPanel">
+    <div class="identity">
+      <h1 class="room-id"><span class="sr-only" id="roomWord">Raum </span><span id="roomId">105</span></h1>
+      <p class="ident" id="ident"></p>
+    </div>
+    <div class="light" role="img" id="light" aria-label="Ampel aus">
+      <div class="lamp r"></div><div class="lamp y"></div><div class="lamp g"></div>
+    </div>
+    <div class="state">
+      <div aria-live="polite" aria-atomic="true">
+        <p class="status" id="status"></p>
+        <p class="why" id="why"></p>
+      </div>
+      <dl class="cells">
+        <div class="cell co2"><dt class="k" id="kCo2">CO₂</dt><dd><span class="v" id="vCo2">–</span><span class="u">ppm</span><span class="sr-only" id="uCo2"></span></dd></div>
+        <div class="cell"><dt class="k" id="kTemp">Temperatur</dt><dd><span class="v" id="vTemp">–</span><span class="u">°C</span><span class="sr-only" id="uTemp"></span></dd></div>
+        <div class="cell"><dt class="k" id="kHum">Luftfeuchte</dt><dd><span class="v" id="vHum">–</span><span class="u">%</span><span class="sr-only" id="uHum"></span></dd></div>
+      </dl>
+      <p class="fresh">
+        <span class="dot" aria-hidden="true"></span>
+        <svg class="warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" id="warnIcon" aria-label="Warnung"><path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5"/><path d="M12 17.5h.01"/></svg>
+        <span id="fresh"></span>
+      </p>
+    </div>
+  </section>
+
+  <div class="charts" id="charts">
+    <section class="panel" aria-labelledby="hTemp">
+      <h2><span class="h" id="hTemp">Temperatur</span><span class="win" id="winA"></span></h2>
+      <div class="chart" id="chartTemp" role="img"></div>
+      <p class="note" id="noteA" hidden></p>
+    </section>
+    <section class="panel" aria-labelledby="hAir">
+      <h2><span class="h" id="hAir">CO₂ und Luftfeuchte</span><span class="win" id="winB"></span></h2>
+      <div class="chart" id="chartAir" role="img"></div>
+      <p class="note" id="noteB" hidden></p>
+    </section>
+  </div>
+
+  <section class="empty" id="empty">
+    <h2 id="emptyTitle"></h2>
+    <p id="emptyText"></p>
+  </section>
+</main>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -21,6 +21,24 @@ services:
     networks:
       - platform
 
+  dashboard:
+    build: ./dashboard
+    restart: unless-stopped
+    ports:
+      # Local only; the host nginx forwards /sensors/ to this port.
+      - "127.0.0.1:${SENSORS_DASHBOARD_PORT:-8091}:8091"
+    environment:
+      # Read-only InfluxDB token, added by nginx to the queries; the browser never sees it.
+      SENSORS_DASHBOARD_INFLUX_TOKEN: ${SENSORS_DASHBOARD_INFLUX_TOKEN:?SENSORS_DASHBOARD_INFLUX_TOKEN is not set; copy leoiot-sensors/.env.example to leoiot-sensors/.env and fill it in}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8091/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - platform
+
 networks:
   # The broker and InfluxDB run on the shared network of the platform unit
   # (platform/broker), which this unit joins as an external network.
