@@ -59,6 +59,23 @@ describe('routeTo: real corridor adjacency (model3d-room-navigation design.md D7
     const four = FLOOR_WAYPOINTS.U!.intersections[3];
     expect(result.points.some((p) => Math.abs(p.x - four.x) < 1e-6 && Math.abs(p.z - four.z) < 1e-6)).toBe(true);
   });
+
+  // U85/U86 sit on the spur that meets the main corridor at Intersection_three
+  // (x ≈ -50.6). The door used to connect straight to whichever real graph
+  // node was raw-distance-nearest to it — for these two that was
+  // Intersection_two, far across open space, skipping Intersection_three even
+  // though it is the real corner. Fixed by snapping the door to the projected
+  // point on the nearest edge, connected to that edge's own endpoints at
+  // their real sub-segment distance, instead of to both endpoints directly.
+  it('U85 and U86 reach their door via Intersection_three, not straight from Intersection_two', () => {
+    const three = FLOOR_WAYPOINTS.U!.intersections[2];
+    for (const room of ['U85', 'U86']) {
+      const result = routeTo(room);
+      expect(result.ok, room).toBe(true);
+      if (!result.ok) continue;
+      expect(result.points.some((p) => Math.abs(p.x - three.x) < 1e-6 && Math.abs(p.z - three.z) < 1e-6), room).toBe(true);
+    }
+  });
 });
 
 describe('routeTo: gym', () => {

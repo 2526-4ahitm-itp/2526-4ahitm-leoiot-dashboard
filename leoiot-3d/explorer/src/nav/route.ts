@@ -154,13 +154,18 @@ const GRAPH = buildGraph();
 const DOOR_NODE = '__door__';
 
 /** Dijkstra from a named graph node to a room's door, snapped onto its two nearest graph nodes on its own floor. */
-/** Nearest point on the segment a-b to p, clamped to the segment, with its distance. */
-function projectOntoLine(p: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }): number {
+/** Nearest point on the segment a-b to p, clamped to the segment, with that point and its distance. */
+function projectOntoLine(
+  p: { x: number; z: number },
+  a: { x: number; z: number },
+  b: { x: number; z: number },
+): { point: { x: number; z: number }; distance: number } {
   const dx = b.x - a.x, dz = b.z - a.z;
   const len2 = dx * dx + dz * dz || 1;
   let t = ((p.x - a.x) * dx + (p.z - a.z) * dz) / len2;
   t = Math.max(0, Math.min(1, t));
-  return dist(p, { x: a.x + t * dx, z: a.z + t * dz });
+  const point = { x: a.x + t * dx, z: a.z + t * dz };
+  return { point, distance: dist(p, point) };
 }
 
 function shortestPathToDoor(startName: string, doorPoint: { x: number; z: number }, doorFloor: FloorId): GraphNode[] | null {
@@ -169,12 +174,17 @@ function shortestPathToDoor(startName: string, doorPoint: { x: number; z: number
   const edges = new Map<string, Map<string, number>>();
   for (const [k, m] of GRAPH.edges) edges.set(k, new Map(m));
 
-  // Snap the door onto the nearest *real* corridor edge on its floor (not the nearest
-  // node by raw distance — that previously let a door connect straight to something
-  // like the stairs just because it happened to be close as the crow flies, skipping
-  // the actual corridor chain entirely).
+  // Snap the door onto the nearest *real* corridor edge on its floor, at the point where
+  // it actually meets that edge — not by connecting it directly to both of the edge's
+  // endpoints at their raw straight-line distance. That previously left a shortcut: going
+  // straight from an endpoint to the door is always at least as short as going the long
+  // way around via the other endpoint first (triangle inequality), so Dijkstra could skip
+  // the real intermediate waypoint entirely and cut across open space to reach it (the
+  // U85/U86 defect — the door connected straight to Intersection_two, skipping
+  // Intersection_three, even though Intersection_three was "the nearer edge endpoint").
   let nearestEdge: [GraphNode, GraphNode] | null = null;
   let nearestEdgeDist = Infinity;
+  let nearestProjection: { x: number; z: number } | null = null;
   const seen = new Set<string>();
   for (const [a, neighbours] of GRAPH.edges) {
     const nodeA = nodes.get(a);
@@ -185,21 +195,32 @@ function shortestPathToDoor(startName: string, doorPoint: { x: number; z: number
       seen.add(pairKey);
       const nodeB = nodes.get(b);
       if (!nodeB || nodeB.floor !== doorFloor) continue;
-      const d = projectOntoLine(doorPoint, nodeA, nodeB);
-      if (d < nearestEdgeDist) {
-        nearestEdgeDist = d;
+      const { point, distance } = projectOntoLine(doorPoint, nodeA, nodeB);
+      if (distance < nearestEdgeDist) {
+        nearestEdgeDist = distance;
         nearestEdge = [nodeA, nodeB];
+        nearestProjection = point;
       }
     }
   }
 
   edges.set(DOOR_NODE, new Map());
-  const endpoints = nearestEdge ?? [...nodes.values()].filter((n) => n.floor === doorFloor).sort((a, b) => dist(doorPoint, a) - dist(doorPoint, b)).slice(0, 2);
-  for (const n of endpoints) {
-    const d = dist(doorPoint, n);
-    edges.get(DOOR_NODE)!.set(n.name, d);
-    if (!edges.has(n.name)) edges.set(n.name, new Map());
-    edges.get(n.name)!.set(DOOR_NODE, d);
+  function connect(a: string, b: string, cost: number): void {
+    if (!edges.has(a)) edges.set(a, new Map());
+    if (!edges.has(b)) edges.set(b, new Map());
+    edges.get(a)!.set(b, cost);
+    edges.get(b)!.set(a, cost);
+  }
+  if (nearestEdge && nearestProjection) {
+    const [a, b] = nearestEdge;
+    const APPROACH_NODE = '__approach__';
+    nodes.set(APPROACH_NODE, { floor: doorFloor, name: APPROACH_NODE, x: nearestProjection.x, z: nearestProjection.z });
+    connect(APPROACH_NODE, a.name, dist(nearestProjection, a));
+    connect(APPROACH_NODE, b.name, dist(nearestProjection, b));
+    connect(APPROACH_NODE, DOOR_NODE, nearestEdgeDist);
+  } else {
+    const endpoints = [...nodes.values()].filter((n) => n.floor === doorFloor).sort((x, y) => dist(doorPoint, x) - dist(doorPoint, y)).slice(0, 2);
+    for (const n of endpoints) connect(DOOR_NODE, n.name, dist(doorPoint, n));
   }
 
   const distTo = new Map<string, number>([[startName, 0]]);
