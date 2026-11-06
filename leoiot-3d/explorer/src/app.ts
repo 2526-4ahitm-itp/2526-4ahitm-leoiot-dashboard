@@ -9,7 +9,7 @@ import { knownRooms, routeTo } from './nav/route';
 import { HIGHLIGHT_COLOUR, ROOM_BASE_COLOUR } from './scene/materials';
 import type { Model, ViewId } from './scene/models';
 import type { Label, Viewer } from './scene/viewer';
-import type { Controls } from './ui/controls';
+import { FLOOR_BUTTONS, type Controls } from './ui/controls';
 import { el } from './ui/dom';
 import type { Navigation } from './ui/navigation';
 import { InfoPanel, statusBadge } from './ui/panel';
@@ -42,6 +42,7 @@ export class App {
     navigation.setRooms(knownRooms());
     navigation.onNavigate = (room) => this.navigate(room);
     navigation.onClear = () => this.clearRoute();
+    window.addEventListener('keydown', (e) => this.handleKey(e));
     store.subscribe(() => this.schedule());
     // Values turn stale without a new message
     setInterval(() => this.schedule(), REJUDGE_EVERY_MS);
@@ -61,6 +62,28 @@ export class App {
     if (!heatmapAllowed(view)) this.heatmap = null;
     if (this.selected !== null && !this.model(view).rooms.has(this.selected)) this.selected = null;
     this.render();
+  }
+
+  /**
+   * ↑/↓ move one floor up/down (top to bottom as in the building). The whole
+   * building sits conceptually one step above the top floor, so ArrowDown
+   * from it enters Floor 2; ArrowUp there is a no-op, same as at Floor 2
+   * itself. No-op off the floor stack entirely (the gym) or past the bottom.
+   */
+  private handleKey(e: KeyboardEvent): void {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    const target = e.target as HTMLElement | null;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+    let index: number;
+    if (this.view === 'full') index = -1;
+    else {
+      index = (FLOOR_BUTTONS as readonly string[]).indexOf(this.view);
+      if (index === -1) return;
+    }
+    const next = index + (e.key === 'ArrowUp' ? -1 : 1);
+    if (next < 0 || next >= FLOOR_BUTTONS.length) return;
+    e.preventDefault();
+    this.setView(FLOOR_BUTTONS[next]);
   }
 
   reset(): void {

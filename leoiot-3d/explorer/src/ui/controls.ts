@@ -6,7 +6,7 @@ import { el } from './dom';
 import { strings } from './strings';
 
 // Top to bottom as in the building
-const FLOOR_BUTTONS = ['2', '1', 'E', 'U'] as const;
+export const FLOOR_BUTTONS = ['2', '1', 'E', 'U'] as const;
 
 export class Controls {
   readonly element = el('nav', 'bar');

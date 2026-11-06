@@ -61,6 +61,29 @@ The explorer SHALL offer always visible buttons for the views basement (`U`), gr
 - **WHEN** the user selects "Basement"
 - **THEN** only the basement is shown
 
+### Requirement: Arrow keys move one floor up or down
+The explorer SHALL move to the floor above or below the one currently shown when the user presses the up or down arrow key, in the same top-to-bottom order as the floor buttons (floor 2, floor 1, ground floor, basement). From the whole-building view, the down arrow key SHALL show floor 2 (the top floor). The up arrow key at floor 2, or at the whole-building view, and the down arrow key at the basement, SHALL do nothing (there is no floor further in that direction). While the gym is shown, or while a text input has focus, the arrow keys SHALL NOT change the view.
+
+#### Scenario: Moving down from floor 2
+- **WHEN** floor 2 is shown and the user presses the down arrow key
+- **THEN** floor 1 is shown and marked as selected
+
+#### Scenario: Entering the top floor from the whole building
+- **WHEN** the whole building is shown and the user presses the down arrow key
+- **THEN** floor 2 is shown and marked as selected
+
+#### Scenario: No floor above floor 2
+- **WHEN** floor 2 is shown and the user presses the up arrow key
+- **THEN** floor 2 stays shown
+
+#### Scenario: No floor below the basement
+- **WHEN** the basement is shown and the user presses the down arrow key
+- **THEN** the basement stays shown
+
+#### Scenario: Arrow keys do nothing in the gym
+- **WHEN** the gym is shown and the user presses an arrow key
+- **THEN** the gym stays shown
+
 ### Requirement: The gym is shown on its own
 The explorer SHALL offer an always visible button "Gym" that shows the gym building alone, without the school building.
 
