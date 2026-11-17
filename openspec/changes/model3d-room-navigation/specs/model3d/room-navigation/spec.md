@@ -39,18 +39,18 @@ Starting navigation SHALL show the floor the route itself starts on (the ground 
 - **THEN** the view switches to the ground floor — the floor the route starts on — not to floor 2
 
 ### Requirement: A multi-floor route reveals one floor at a time
-For a route that crosses more than one floor, the system SHALL show only the portion of the route on floors already shown — the current floor and everything beneath it, the same stacking rule the floor views themselves follow — and SHALL offer a visible control to advance to the route's next floor. Once the floor shown is the last floor the route crosses, that control SHALL NOT be shown.
+For a route that crosses more than one floor, the system SHALL show only the portion of the route on floors already shown — the current floor and everything beneath it, the same stacking rule the floor views themselves follow — and SHALL offer a visible control to advance to the route's next floor. Once the floor shown is the last floor the route crosses, that control SHALL NOT be shown. The newly-revealed portion SHALL draw in with a smooth, brief animation rather than appearing instantly; the portion already shown before advancing SHALL NOT be affected by that animation.
 
 #### Scenario: Advancing through a multi-floor route
 - **WHEN** a user activates the "next floor" control while the active route continues onto a floor not yet shown
-- **THEN** the view advances to that floor and the route's segment on it becomes visible
+- **THEN** the view advances to that floor and the route's segment on it draws itself in, without the already-shown portion changing
 
 #### Scenario: No further floor to advance to
 - **WHEN** the floor currently shown is the last floor the active route crosses
 - **THEN** the "next floor" control is not shown
 
 ### Requirement: Turn and stairs markers show the way along the route
-Wherever the displayed portion of a route bends by more than a small threshold within one floor, the system SHALL show a marker indicating whether to turn left or right. Wherever the displayed portion crosses from one floor to another, the system SHALL show a marker indicating whether to go up or down and naming the floor the stairs lead to. Each marker SHALL be shown at its own exact point on the route. Each marker's own colour SHALL match a legend entry naming what it means, distinguishing one marker from another by colour even when their points are close together.
+Wherever the displayed portion of a route bends by more than a small threshold within one floor, the system SHALL show a marker indicating whether to turn left or right. Wherever the displayed portion crosses from one floor to another, the system SHALL show a marker indicating whether to go up or down and naming the floor the stairs lead to. Each marker SHALL be shown as a single, fully coloured dot at its own exact point on the route. Each marker's own colour SHALL match an entry in a legend naming what it means, distinguishing one marker from another by colour even when their points are close together. The legend SHALL group entries into one section per floor, so entries for a floor already shown remain visible, in their own section, as further floors are revealed.
 
 #### Scenario: A turn along the corridor
 - **WHEN** the displayed route bends by more than a small threshold within one floor
@@ -63,6 +63,10 @@ Wherever the displayed portion of a route bends by more than a small threshold w
 #### Scenario: Two markers close together are still distinguishable
 - **WHEN** two or more markers' points are close enough on screen to be hard to tell apart on their own
 - **THEN** each keeps its own distinct colour, matching its own legend entry
+
+#### Scenario: The legend keeps earlier floors in their own section
+- **WHEN** a multi-floor route has revealed more than one floor so far
+- **THEN** the legend shows one section per revealed floor, each still listing the markers for that floor
 
 ### Requirement: Visible controls to start and clear navigation
 The explorer SHALL provide a visible, non-hidden control to choose a destination room and start navigation to it, and a visible control to clear the active route, consistent with providing clear navigation/actions without hidden primary controls.

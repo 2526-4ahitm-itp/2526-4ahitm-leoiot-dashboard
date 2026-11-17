@@ -14,7 +14,7 @@ import type { Controls } from './ui/controls';
 import { el } from './ui/dom';
 import type { Navigation } from './ui/navigation';
 import { InfoPanel, statusBadge } from './ui/panel';
-import type { RouteLegend } from './ui/routeLegend';
+import type { LegendSection, RouteLegend } from './ui/routeLegend';
 import { strings } from './ui/strings';
 import { type MeshStandardMaterial, Vector3 } from 'three';
 
@@ -189,7 +189,7 @@ export class App {
           element: this.markerDot(colour),
         });
       }
-      this.routeLegend.update(visible.map(({ marker, colour }) => ({ colour, text: this.markerText(marker) })));
+      this.routeLegend.update(this.routeLegendSections(visible));
       const index = (this.routeFloorSequence as readonly string[]).indexOf(this.view);
       this.navigation.setNextFloorAvailable(index !== -1 && index < this.routeFloorSequence.length - 1);
     } else {
@@ -216,11 +216,24 @@ export class App {
       .filter(({ marker }) => isFloorVisible(marker.point.floor, this.view));
   }
 
-  /** A small coloured dot marking a marker's exact point on the route. */
+  /** A small, fully coloured dot marking a marker's exact point on the route. */
   private markerDot(colour: string): HTMLElement {
     const dot = el('span', 'route-dot');
     dot.style.backgroundColor = colour;
     return dot;
+  }
+
+  /** Groups the given markers into one legend section per floor, in the order the route visits them. */
+  private routeLegendSections(visible: { marker: RouteMarker; colour: string }[]): LegendSection[] {
+    const byFloor = new Map<FloorId, { colour: string; text: string }[]>();
+    for (const { marker, colour } of visible) {
+      const entries = byFloor.get(marker.point.floor) ?? [];
+      entries.push({ colour, text: this.markerText(marker) });
+      byFloor.set(marker.point.floor, entries);
+    }
+    return this.routeFloorSequence
+      .filter((floor) => byFloor.has(floor))
+      .map((floor) => ({ title: strings.views[floor], entries: byFloor.get(floor)! }));
   }
 
   private markerText(marker: RouteMarker): string {

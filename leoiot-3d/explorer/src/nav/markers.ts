@@ -1,7 +1,7 @@
 // Visual cues along a route: a left/right marker where the corridor bends
 // enough to matter, and an up/down marker where the route crosses to another
 // floor via the stairs (spec model3d/room-navigation). Each marker is shown
-// as a small coloured dot on the route itself, with the same-coloured
+// as a small, fully coloured dot on the route itself, with the same-coloured
 // explanation in a side legend — `pointIndex` orders them along the route so
 // the legend lists them, and colours them, in the order you'd walk past them.
 

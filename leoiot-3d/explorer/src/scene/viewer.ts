@@ -22,6 +22,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { polylineLength, polylinePrefix } from '../core/polyline';
 import { roomOf } from './names';
 import type { WorldPoint } from '../nav/route';
 
@@ -33,14 +34,29 @@ const CLICK_TOLERANCE_PX = 5;
 const ROUTE_Y_OFFSET = 0.2;
 const ROUTE_RADIUS = 0.25;
 const ROUTE_COLOUR = '#2ecc71';
+// How long a newly-revealed stretch of the route (model3d/room-navigation,
+// advancing to the next floor) takes to draw itself in.
+const ROUTE_GROW_DURATION_MS = 600;
 // Room meshes are flat patches lying almost on the floor slab (checked
 // 2026-10-30: often 0.15–0.5 units apart). Hits this close to the nearest one
 // count as the same surface, so the room wins over the slab under it.
 const SAME_SURFACE = 0.5;
 
+/** Smoother finish than a linear draw-in. */
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
 export interface Label {
   position: Vector3;
   element: HTMLElement;
+}
+
+interface RouteGrow {
+  /** The full newly-revealed tail, starting at the end of the already-drawn portion. */
+  tailFull: WorldPoint[];
+  tailLength: number;
+  start: number;
 }
 
 export class Viewer {
@@ -54,6 +70,9 @@ export class Viewer {
   private current: Object3D | null = null;
   private labels: CSS2DObject[] = [];
   private route: Mesh | null = null;
+  private routePoints: WorldPoint[] = [];
+  private routeGrow: RouteGrow | null = null;
+  private growMesh: Mesh | null = null;
 
   /** Called with the room id of a clicked room, or null for a click elsewhere. */
   onPick: (room: string | null) => void = () => undefined;
@@ -88,6 +107,7 @@ export class Viewer {
     this.resize();
     this.renderer.setAnimationLoop(() => {
       this.controls.update();
+      this.updateGrow();
       this.renderer.render(this.scene, this.camera);
       this.labelRenderer.render(this.scene, this.camera);
     });
@@ -125,29 +145,89 @@ export class Viewer {
     });
   }
 
-  /** Draws a navigation route as a tube along the given points (spec model3d/room-navigation). */
+  /**
+   * Draws a navigation route as a tube along the given points (spec
+   * model3d/room-navigation). When `points` simply extends what was already
+   * drawn (advancing to the next floor reveals more of the same route), the
+   * already-drawn portion is left exactly as it was and only the new tail
+   * grows in, over {@link ROUTE_GROW_DURATION_MS}; anything else (a new
+   * route, or fewer points than before) redraws instantly.
+   */
   showRoute(points: WorldPoint[]): void {
-    this.clearRoute();
-    if (points.length < 2) return;
-    // Straight segments between waypoints, not a smoothed spline: a smoothed
-    // curve looks vague and can bow away from the corridor it's meant to
-    // follow, especially at a sharp turn.
-    const lifted = points.map((p) => new Vector3(p.x, p.y + ROUTE_Y_OFFSET, p.z));
-    const curve = new CurvePath<Vector3>();
-    for (let i = 1; i < lifted.length; i++) curve.add(new LineCurve3(lifted[i - 1], lifted[i]));
-    const geometry = new TubeGeometry(curve, Math.max(points.length * 2, 4), ROUTE_RADIUS, 8, false);
-    const material = new MeshBasicMaterial({ color: ROUTE_COLOUR });
-    this.route = new Mesh(geometry, material);
-    this.scene.add(this.route);
+    const previous = this.routePoints;
+    const isGrowth = previous.length > 0 && points.length > previous.length && previous.every((p, i) => p === points[i]);
+    this.routePoints = points;
+    if (isGrowth) this.startGrow(previous, points);
+    else {
+      this.cancelGrow();
+      this.rebuildRoute(points);
+    }
   }
 
   /** Removes a route drawn by {@link showRoute}, if any. */
   clearRoute(): void {
+    this.cancelGrow();
+    this.routePoints = [];
+    this.disposeRoute();
+  }
+
+  /** A tube mesh along straight segments between `points`, not a smoothed spline: a smoothed curve looks vague and can bow away from the corridor it's meant to follow, especially at a sharp turn. */
+  private buildTube(points: WorldPoint[]): Mesh {
+    const lifted = points.map((p) => new Vector3(p.x, p.y + ROUTE_Y_OFFSET, p.z));
+    const curve = new CurvePath<Vector3>();
+    for (let i = 1; i < lifted.length; i++) curve.add(new LineCurve3(lifted[i - 1], lifted[i]));
+    const geometry = new TubeGeometry(curve, Math.max(points.length * 2, 4), ROUTE_RADIUS, 8, false);
+    return new Mesh(geometry, new MeshBasicMaterial({ color: ROUTE_COLOUR }));
+  }
+
+  private rebuildRoute(points: WorldPoint[]): void {
+    this.disposeRoute();
+    if (points.length < 2) return;
+    this.route = this.buildTube(points);
+    this.scene.add(this.route);
+  }
+
+  private disposeRoute(): void {
     if (!this.route) return;
     this.scene.remove(this.route);
     this.route.geometry.dispose();
     (this.route.material as MeshBasicMaterial).dispose();
     this.route = null;
+  }
+
+  /** Starts growing `newPoints`' tail in from the end of `oldPoints`, which stays exactly as already drawn. */
+  private startGrow(oldPoints: WorldPoint[], newPoints: WorldPoint[]): void {
+    this.cancelGrow();
+    if (!this.route) this.route = this.buildTube(oldPoints); // shouldn't happen — oldPoints was already drawn — but never leave nothing showing
+    const tailFull = [oldPoints[oldPoints.length - 1], ...newPoints.slice(oldPoints.length)];
+    this.routeGrow = { tailFull, tailLength: polylineLength(tailFull), start: performance.now() };
+  }
+
+  private cancelGrow(): void {
+    this.routeGrow = null;
+    if (!this.growMesh) return;
+    this.scene.remove(this.growMesh);
+    this.growMesh.geometry.dispose();
+    (this.growMesh.material as MeshBasicMaterial).dispose();
+    this.growMesh = null;
+  }
+
+  private updateGrow(): void {
+    if (!this.routeGrow) return;
+    const { tailFull, tailLength, start } = this.routeGrow;
+    const t = Math.min(1, (performance.now() - start) / ROUTE_GROW_DURATION_MS);
+    const prefix = polylinePrefix(tailFull, tailLength * easeOutCubic(t));
+    if (this.growMesh) {
+      this.scene.remove(this.growMesh);
+      this.growMesh.geometry.dispose();
+      (this.growMesh.material as MeshBasicMaterial).dispose();
+      this.growMesh = null;
+    }
+    if (prefix.length >= 2) {
+      this.growMesh = this.buildTube(prefix);
+      this.scene.add(this.growMesh);
+    }
+    if (t >= 1) this.routeGrow = null; // finished — the drawn tail stays exactly as it is until the next showRoute call
   }
 
   /**
