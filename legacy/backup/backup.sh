@@ -16,6 +16,10 @@ docker exec influxdb influx backup \
 
 docker cp "influxdb:/backups/$DATE" "$BACKUP_DIR/$DATE"
 
+# The copy in the container is only a staging area. Remove it, or the
+# influxdb_backups volume grows by one full backup every week.
+docker exec influxdb rm -rf "/backups/$DATE"
+
 # Prune old backups, keep last KEEP_WEEKS
 ls -dt "$BACKUP_DIR"/*/  | tail -n +$((KEEP_WEEKS + 1)) | xargs -r rm -rf
 
