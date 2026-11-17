@@ -15,6 +15,7 @@ import {
   PerspectiveCamera,
   Raycaster,
   Scene,
+  SphereGeometry,
   TubeGeometry,
   Vector2,
   Vector3,
@@ -34,6 +35,10 @@ const CLICK_TOLERANCE_PX = 5;
 const ROUTE_Y_OFFSET = 0.2;
 const ROUTE_RADIUS = 0.25;
 const ROUTE_COLOUR = '#2ecc71';
+// A turn/stairs marker, drawn as a real mesh (not a CSS2DObject like the heatmap
+// labels) so it's depth-tested against the building the same way the route tube
+// already is, instead of always drawing on top of walls regardless of distance.
+const ROUTE_MARKER_RADIUS = 0.3;
 // How long a newly-revealed stretch of the route (model3d/room-navigation,
 // advancing to the next floor) takes to draw itself in.
 const ROUTE_GROW_DURATION_MS = 600;
@@ -50,6 +55,11 @@ function easeOutCubic(t: number): number {
 export interface Label {
   position: Vector3;
   element: HTMLElement;
+}
+
+export interface RouteMarkerDot {
+  position: Vector3;
+  colour: string;
 }
 
 interface RouteGrow {
@@ -73,6 +83,7 @@ export class Viewer {
   private routePoints: WorldPoint[] = [];
   private routeGrow: RouteGrow | null = null;
   private growMesh: Mesh | null = null;
+  private routeMarkers: Mesh[] = [];
 
   /** Called with the room id of a clicked room, or null for a click elsewhere. */
   onPick: (room: string | null) => void = () => undefined;
@@ -164,11 +175,27 @@ export class Viewer {
     }
   }
 
-  /** Removes a route drawn by {@link showRoute}, if any. */
+  /** Removes a route drawn by {@link showRoute}, if any, and any markers drawn by {@link setRouteMarkers}. */
   clearRoute(): void {
     this.cancelGrow();
     this.routePoints = [];
     this.disposeRoute();
+    this.setRouteMarkers([]);
+  }
+
+  /** Replaces the shown turn/stairs markers with one small, fully coloured sphere per marker, at its exact point. A real mesh, not a CSS2DObject, so it's hidden behind a wall the same way the route tube is. */
+  setRouteMarkers(markers: readonly RouteMarkerDot[]): void {
+    for (const mesh of this.routeMarkers) {
+      this.scene.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as MeshBasicMaterial).dispose();
+    }
+    this.routeMarkers = markers.map(({ position, colour }) => {
+      const mesh = new Mesh(new SphereGeometry(ROUTE_MARKER_RADIUS, 16, 16), new MeshBasicMaterial({ color: colour }));
+      mesh.position.copy(position);
+      this.scene.add(mesh);
+      return mesh;
+    });
   }
 
   /** A tube mesh along straight segments between `points`, not a smoothed spline: a smoothed curve looks vague and can bow away from the corridor it's meant to follow, especially at a sharp turn. */

@@ -50,7 +50,7 @@ For a route that crosses more than one floor, the system SHALL show only the por
 - **THEN** the "next floor" control is not shown
 
 ### Requirement: Turn and stairs markers show the way along the route
-Wherever the displayed portion of a route bends by more than a small threshold within one floor, the system SHALL show a marker indicating whether to turn left or right. Wherever the displayed portion crosses from one floor to another, the system SHALL show a marker indicating whether to go up or down and naming the floor the stairs lead to. Each marker SHALL be shown as a single, fully coloured dot at its own exact point on the route. Each marker's own colour SHALL match an entry in a legend naming what it means, distinguishing one marker from another by colour even when their points are close together. The legend SHALL group entries into one section per floor, so entries for a floor already shown remain visible, in their own section, as further floors are revealed. Sections SHALL appear in the building's own top-to-bottom floor order (the same order as the floor buttons), not the order the route visits them, so a higher floor's section is never shown below a lower floor's.
+Wherever the displayed portion of a route bends by more than a small threshold within one floor, the system SHALL show a marker indicating whether to turn left or right. Wherever the displayed portion crosses from one floor to another, the system SHALL show a marker indicating whether to go up or down and naming the floor the stairs lead to. Each marker SHALL be shown as a single, fully coloured dot at its own exact point on the route, hidden behind a wall or other opaque part of the building the same way the route line itself is, rather than always drawing on top of it. Each marker's own colour SHALL match an entry in a legend naming what it means, distinguishing one marker from another by colour even when their points are close together. The legend SHALL group entries into one section per floor, so entries for a floor already shown remain visible, in their own section, as further floors are revealed. Sections SHALL appear in the building's own top-to-bottom floor order (the same order as the floor buttons), not the order the route visits them, so a higher floor's section is never shown below a lower floor's.
 
 #### Scenario: A turn along the corridor
 - **WHEN** the displayed route bends by more than a small threshold within one floor
@@ -71,6 +71,10 @@ Wherever the displayed portion of a route bends by more than a small threshold w
 #### Scenario: Legend sections follow the building, not the route
 - **WHEN** a multi-floor route starts on a lower floor and is revealed upward floor by floor
 - **THEN** the legend lists the higher floor's section above the lower floor's, even though the lower floor was revealed first
+
+#### Scenario: A marker behind a wall
+- **WHEN** a marker's point lies behind a wall or other opaque part of the building from the camera's current position, the same as a point on the route line itself would
+- **THEN** the marker is hidden the same way that point on the route line is, not visible through the wall
 
 ### Requirement: Visible controls to start and clear navigation
 The explorer SHALL provide a visible, non-hidden control to choose a destination room and start navigation to it, and a visible control to clear the active route, consistent with providing clear navigation/actions without hidden primary controls.

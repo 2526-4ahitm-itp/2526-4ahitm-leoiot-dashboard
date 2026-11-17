@@ -9,7 +9,7 @@ import { markerColour, routeMarkers, type RouteMarker } from './nav/markers';
 import { isFloorVisible, knownRooms, routeFloors, routeTo, visibleRoutePoints, type RoutePoint } from './nav/route';
 import { HIGHLIGHT_COLOUR, ROOM_BASE_COLOUR } from './scene/materials';
 import type { Model, ViewId } from './scene/models';
-import type { Label, Viewer } from './scene/viewer';
+import type { Label, RouteMarkerDot, Viewer } from './scene/viewer';
 import type { Controls } from './ui/controls';
 import { el } from './ui/dom';
 import type { Navigation } from './ui/navigation';
@@ -183,12 +183,7 @@ export class App {
     if (this.activeRoute) {
       this.viewer.showRoute(visibleRoutePoints(this.activeRoute, this.view));
       const visible = this.visibleRouteMarkers();
-      for (const { marker, colour } of visible) {
-        labels.push({
-          position: new Vector3(marker.point.x, marker.point.y + MARKER_Y_OFFSET, marker.point.z),
-          element: this.markerDot(colour),
-        });
-      }
+      this.viewer.setRouteMarkers(this.routeMarkerDots(visible));
       this.routeLegend.update(this.routeLegendSections(visible));
       const index = (this.routeFloorSequence as readonly string[]).indexOf(this.view);
       this.navigation.setNextFloorAvailable(index !== -1 && index < this.routeFloorSequence.length - 1);
@@ -216,11 +211,12 @@ export class App {
       .filter(({ marker }) => isFloorVisible(marker.point.floor, this.view));
   }
 
-  /** A small, fully coloured dot marking a marker's exact point on the route. */
-  private markerDot(colour: string): HTMLElement {
-    const dot = el('span', 'route-dot');
-    dot.style.backgroundColor = colour;
-    return dot;
+  /** Each visible marker's sphere position (lifted clear of the route tube) and colour, for {@link Viewer.setRouteMarkers}. */
+  private routeMarkerDots(visible: { marker: RouteMarker; colour: string }[]): RouteMarkerDot[] {
+    return visible.map(({ marker, colour }) => ({
+      position: new Vector3(marker.point.x, marker.point.y + MARKER_Y_OFFSET, marker.point.z),
+      colour,
+    }));
   }
 
   /** Groups the given markers into one legend section per floor, top-to-bottom in the building's own order (same as the floor buttons), not the order the route visits them. */

@@ -320,14 +320,6 @@ body,
   color: var(--warn);
 }
 
-/* Route markers: a small, fully coloured dot on the route itself, matched to the same-coloured row in the legend */
-.route-dot {
-  display: block;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-}
-
 /* Route legend: fixed on the right, one section per floor, one row per marker within it, colour-matched to its dot on the route */
 .route-legend {
   position: fixed;
