@@ -1,12 +1,12 @@
 // Always visible buttons: views, reset and heatmaps (FSD FR-11).
 
+import { FLOOR_ORDER } from '../core/rooms';
 import type { HeatmapKind } from '../core/heatmap';
 import type { ViewId } from '../scene/models';
 import { el } from './dom';
 import { strings } from './strings';
 
-// Top to bottom as in the building
-export const FLOOR_BUTTONS = ['2', '1', 'E', 'U'] as const;
+const FLOOR_BUTTONS = FLOOR_ORDER;
 
 export class Controls {
   readonly element = el('nav', 'bar');

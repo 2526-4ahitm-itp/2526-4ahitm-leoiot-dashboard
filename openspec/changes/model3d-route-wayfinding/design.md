@@ -1,0 +1,42 @@
+# Design
+
+## Context
+
+Floor views already stack cumulatively: selecting floor `N` shows `N` and every floor beneath it, never above (spec `model3d/building-viewer`, "Floor views show a floor with the floors beneath it"). `Viewer.showRoute(points)` draws the *entire* route as one tube regardless of which floor is currently shown — so a multi-floor route's upper segments are drawn floating in space above whatever floor happens to be on screen, even though the floor they actually belong to isn't part of the current view at all. `App.navigate(room)` previously jumped straight to the destination's floor via `floorOf(room)`.
+
+See `proposal.md` for the motivation.
+
+## Goals / Non-Goals
+
+**Goals:**
+- Start navigation on the floor the route begins on, and reveal the rest one floor at a time as the user moves up/down — by the floor buttons, the arrow keys, or a new "next floor" control — reusing the same stacking rule the floor views already use, so a route segment is never drawn for a floor that isn't actually on screen.
+- Give a way to know where to go without being able to see the drawn route itself (the premise of this change, given the structure is opaque again): a small coloured dot exactly where the route turns or crosses to another floor, and a same-coloured explanation in a fixed legend on the right, so which legend row explains which dot is never ambiguous even when several markers land close together.
+
+**Non-Goals:**
+- Not touching the corridor waypoint graph, the route tube's own geometry/colour, or the structure's opacity (that was tried and reverted).
+- Not adding dot collision avoidance — at the default camera angle, dots at the same stairwell can sit close together or touch (confirmed in testing: four markers near one central stairwell). Colour-coding each one against its own legend row is the mitigation here, not spacing them apart.
+- Not changing anything about single-floor routes' own correctness (the corridor-adjacency fixes already on this branch stay as they are).
+
+## Decisions
+
+- **Where "which floor" lives**: `FLOOR_ORDER` (the floor buttons' top-to-bottom order, `['2','1','E','U']`) moves from a private constant in `ui/controls.ts` into `core/rooms.ts`, as the one shared source of truth. `app.ts` already needed this for arrow-key floor stepping (`model3d-floor-arrow-keys`); this change needs it again for `nav/route.ts`'s floor-visibility logic, and `nav/` sitting below `ui/` architecturally meant it couldn't keep importing from `ui/controls.ts` the way `app.ts` did.
+- **Tagging route points with a floor**: `RoutePoint extends WorldPoint` adds a `floor: FloorId`. `routeOnMainFloors` already had this per-node (via its internal `GraphNode.floor`) and just needed to carry it through; `routeInGym` doesn't track per-point floor internally (it's all `T`), so `routeTo` tags its result afterward instead of touching that function's body. Verified this doesn't break any existing test: none of `route.test.ts`/`nav-graph.test.ts` compare a full point via strict equality, only individual `x`/`y`/`z` fields or `.toMatchObject`, so an added field is invisible to them.
+- **Filtering, not re-slicing**: `visibleRoutePoints(points, view)` filters the full point list down to points whose floor `isFloorVisible` for the current view, rather than finding a cut index. Since a route's floor only ever changes forward (Dijkstra/the gym walk never revisit a floor once left), filtering produces the same contiguous prefix a cut would, with simpler code and no assumption that needs to be kept in sync separately.
+- **Where filtering happens**: inside `App.render()`, which already runs on every `setView` call regardless of *how* the view changed (floor button, arrow key, or the new "next floor" button) — so route display and markers can't drift out of sync with whatever's actually on screen, without each caller having to remember to refresh them.
+- **Marker direction, derived not guessed**: "left"/"right" is relative to the walker, not the screen (a camera-relative label would flip meaning as the user orbits). With `in`/`out` the incoming/outgoing direction and `up = +Y`, the walker's own right-hand direction is `in × up`; `out` has turned right exactly when `dot(out, in × up) > 0`, which reduces to `inX·outZ − inZ·outX > 0`. Verified against a from-scratch sanity case before wiring it up (walking `+X` then turning to walk `+Z`, with `+Y` up, is a 90° right turn by that same cross-product check) and locked in with a unit test, rather than trusting the sign by inspection.
+- **Turn detection threshold**: 25°. Below that, a bend is a dogleg in the waypoint graph, not something worth calling out; confirmed by running the real app in a headless browser against actual routes (e.g. room `203`) rather than only against synthetic test points.
+- **Stairs marker placement**: at the point on the *departing* floor (not the arriving one), so the marker is visible as soon as that floor is shown, before the user has advanced further — confirmed in the headless check: navigating to `203` (`E → 1 → 2`) shows "Stairs to Floor 1" immediately on the ground floor.
+- **Markers are a dot on the route plus a legend row, not a floating text label** (revised twice: the first pass put a text badge directly on the route point; the second tried offsetting that badge sideways in 3D space — the project owner clarified "on the side" meant the side of the *screen*, a fixed 2D panel, not a 3D offset). `nav/markers.ts` drops the `sideOffset` geometry entirely: each marker keeps its exact `point`, plus a `pointIndex` (its position in the route's own point list) used only to order and colour markers consistently — `routeMarkers(points)` merges and sorts turns and stairs crossings by `pointIndex`, and `markerColour(i)` cycles a small fixed palette (chosen to exclude the route's own green, `#2ecc71`, so a marker is never confused with the path itself). `App` assigns colours from the *full*, unfiltered route before filtering by floor, so a marker keeps the same colour as more of the route is revealed, rather than every colour reshuffling as markers are added.
+- **The legend lives in its own `RouteLegend` UI class**, not built ad hoc in `App`, matching the existing pattern (`Controls`, `Navigation`, `InfoPanel` are each their own class with an `element` and an `update`/equivalent method) — `main.ts` wires it in next to the others and passes it into `App`'s constructor the same way.
+- **"Next floor" is its own fixed, bottom-centre control** (revised after the first pass, which put it in the navigation panel next to "Clear") — bigger and semi-transparent, so it reads as a persistent "keep going" prompt rather than a third small button buried in a form. Appended directly to `Navigation.element`, not inside the collapsible `nav-panel`, so it stays usable even with the search panel closed. Still hidden (not just disabled) when there's no active route or no further floor to reveal.
+
+## Risks / Trade-offs
+
+- **Marker dots use `CSS2DObject`, like the existing heatmap labels** — no depth test against the 3D scene, so they're never occluded by geometry, which is exactly the point here (they're meant to be readable even though the structure itself blocks the route). The trade-off is the same one heatmap labels already accept: they can overlap each other when multiple land close together on screen (see Non-Goals) — mitigated, not eliminated, by colour.
+- **A route's markers are recomputed from scratch on every `render()`** (`routeMarkers` re-runs `turnMarkers`/`stairMarkers` over the full point list, then filtered) rather than cached — accepted: route point lists are short (tens of points, not thousands), and `render()` already rebuilds the heatmap label list the same way on every call.
+- **A small, fixed palette means colours repeat on a route with enough markers** (8 colours, cycling) — accepted: no real route in this building has anywhere near 8 turns and crossings together on screen at once (confirmed: the richest case tested, room `203`, has 4).
+- **The "next floor" control only ever moves toward the destination**, never backward past the route's own starting floor — the floor buttons and arrow keys remain the way to go back down/up past that point; this was not asked for and adding it would be scope beyond what's needed here.
+
+## Migration Plan
+
+None: a self-contained addition to `leoiot-3d/explorer`, shipped the normal way (`main` → `release` promotion). No data, config or deploy-target changes.

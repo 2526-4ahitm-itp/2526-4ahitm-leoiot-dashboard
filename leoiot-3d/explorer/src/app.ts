@@ -3,18 +3,23 @@
 
 import { REJUDGE_EVERY_MS } from './core/age';
 import { cell, HEATMAP_FLOORS, heatmapRooms, type HeatmapKind } from './core/heatmap';
-import { floorOf, type FloorId } from './core/rooms';
+import { FLOOR_ORDER, type FloorId } from './core/rooms';
 import type { RoomStore } from './core/store';
-import { knownRooms, routeTo } from './nav/route';
+import { markerColour, routeMarkers, type RouteMarker } from './nav/markers';
+import { isFloorVisible, knownRooms, routeFloors, routeTo, visibleRoutePoints, type RoutePoint } from './nav/route';
 import { HIGHLIGHT_COLOUR, ROOM_BASE_COLOUR } from './scene/materials';
 import type { Model, ViewId } from './scene/models';
 import type { Label, Viewer } from './scene/viewer';
-import { FLOOR_BUTTONS, type Controls } from './ui/controls';
+import type { Controls } from './ui/controls';
 import { el } from './ui/dom';
 import type { Navigation } from './ui/navigation';
 import { InfoPanel, statusBadge } from './ui/panel';
+import type { RouteLegend } from './ui/routeLegend';
 import { strings } from './ui/strings';
-import type { MeshStandardMaterial } from 'three';
+import { type MeshStandardMaterial, Vector3 } from 'three';
+
+// Lifts a route marker's dot clear of the drawn route tube (radius 0.25), so it sits just above it.
+const MARKER_Y_OFFSET = 0.4;
 
 function heatmapAllowed(view: ViewId): view is FloorId {
   return (HEATMAP_FLOORS as readonly string[]).includes(view);
@@ -25,6 +30,11 @@ export class App {
   private heatmap: HeatmapKind | null = null;
   private selected: string | null = null;
   private scheduled = false;
+  // The route currently shown, if any, and the floors it crosses in order
+  // (e.g. ['E', '1', '2']) — used to start on the right floor, to reveal the
+  // route one floor at a time as the user moves up/down, and to drive "Next floor".
+  private activeRoute: RoutePoint[] | null = null;
+  private routeFloorSequence: FloorId[] = [];
 
   constructor(
     private readonly viewer: Viewer,
@@ -33,6 +43,7 @@ export class App {
     private readonly controls: Controls,
     private readonly panel: InfoPanel,
     private readonly navigation: Navigation,
+    private readonly routeLegend: RouteLegend,
   ) {
     viewer.onPick = (room) => (room === null ? this.deselect() : this.select(room));
     panel.onClose = () => this.deselect();
@@ -42,6 +53,7 @@ export class App {
     navigation.setRooms(knownRooms());
     navigation.onNavigate = (room) => this.navigate(room);
     navigation.onClear = () => this.clearRoute();
+    navigation.onNextFloor = () => this.nextFloor();
     window.addEventListener('keydown', (e) => this.handleKey(e));
     store.subscribe(() => this.schedule());
     // Values turn stale without a new message
@@ -77,13 +89,13 @@ export class App {
     let index: number;
     if (this.view === 'full') index = -1;
     else {
-      index = (FLOOR_BUTTONS as readonly string[]).indexOf(this.view);
+      index = (FLOOR_ORDER as readonly string[]).indexOf(this.view);
       if (index === -1) return;
     }
     const next = index + (e.key === 'ArrowUp' ? -1 : 1);
-    if (next < 0 || next >= FLOOR_BUTTONS.length) return;
+    if (next < 0 || next >= FLOOR_ORDER.length) return;
     e.preventDefault();
-    this.setView(FLOOR_BUTTONS[next]);
+    this.setView(FLOOR_ORDER[next]);
   }
 
   reset(): void {
@@ -112,20 +124,30 @@ export class App {
     this.render();
   }
 
-  /** Starts a navigation route to a room (spec model3d/room-navigation). */
+  /** Starts a navigation route to a room, from the floor the route itself starts on (spec model3d/room-navigation). */
   navigate(room: string): void {
     const result = routeTo(room);
     if (!result.ok) {
       this.navigation.showError(strings.navigation.notFound);
       return;
     }
-    const floor = floorOf(room);
-    if (floor && this.models.has(floor)) this.setView(floor);
-    this.viewer.showRoute(result.points);
+    this.activeRoute = result.points;
+    this.routeFloorSequence = routeFloors(result.points);
+    this.setView(this.routeFloorSequence[0]);
   }
 
   clearRoute(): void {
-    this.viewer.clearRoute();
+    this.activeRoute = null;
+    this.routeFloorSequence = [];
+    this.render();
+  }
+
+  /** Advances to the next floor the active route crosses, revealing that floor's segment (spec model3d/room-navigation). */
+  nextFloor(): void {
+    if (!this.activeRoute) return;
+    const index = (this.routeFloorSequence as readonly string[]).indexOf(this.view);
+    if (index === -1 || index >= this.routeFloorSequence.length - 1) return;
+    this.setView(this.routeFloorSequence[index + 1]);
   }
 
   /** Renders at most once per frame, however many messages arrive. */
@@ -157,10 +179,54 @@ export class App {
       const colour = room === this.selected ? HIGHLIGHT_COLOUR : coloured.get(room) ?? ROOM_BASE_COLOUR;
       for (const p of parts) (p.material as MeshStandardMaterial).color.set(colour);
     }
+
+    if (this.activeRoute) {
+      this.viewer.showRoute(visibleRoutePoints(this.activeRoute, this.view));
+      const visible = this.visibleRouteMarkers();
+      for (const { marker, colour } of visible) {
+        labels.push({
+          position: new Vector3(marker.point.x, marker.point.y + MARKER_Y_OFFSET, marker.point.z),
+          element: this.markerDot(colour),
+        });
+      }
+      this.routeLegend.update(visible.map(({ marker, colour }) => ({ colour, text: this.markerText(marker) })));
+      const index = (this.routeFloorSequence as readonly string[]).indexOf(this.view);
+      this.navigation.setNextFloorAvailable(index !== -1 && index < this.routeFloorSequence.length - 1);
+    } else {
+      this.viewer.clearRoute();
+      this.routeLegend.update([]);
+      this.navigation.setNextFloorAvailable(false);
+    }
     this.viewer.setLabels(labels);
 
     if (this.selected === null) this.panel.hide();
     else this.panel.show(this.selected, this.store.get(this.selected), now);
+  }
+
+  /**
+   * The active route's markers currently on screen, each paired with its
+   * colour. Colours are assigned from the *full* route (before filtering by
+   * floor), so a marker keeps the same colour as more of the route is
+   * revealed, instead of every marker reshuffling colours each time.
+   */
+  private visibleRouteMarkers(): { marker: RouteMarker; colour: string }[] {
+    if (!this.activeRoute) return [];
+    return routeMarkers(this.activeRoute)
+      .map((marker, i) => ({ marker, colour: markerColour(i) }))
+      .filter(({ marker }) => isFloorVisible(marker.point.floor, this.view));
+  }
+
+  /** A small coloured dot marking a marker's exact point on the route. */
+  private markerDot(colour: string): HTMLElement {
+    const dot = el('span', 'route-dot');
+    dot.style.backgroundColor = colour;
+    return dot;
+  }
+
+  private markerText(marker: RouteMarker): string {
+    if (marker.kind === 'turn') return marker.direction === 'left' ? strings.routeMarker.turnLeft : strings.routeMarker.turnRight;
+    const floorName = strings.views[marker.toFloor];
+    return marker.direction === 'up' ? strings.routeMarker.stairsUp(floorName) : strings.routeMarker.stairsDown(floorName);
   }
 
   private label(c: ReturnType<typeof cell>): HTMLElement {

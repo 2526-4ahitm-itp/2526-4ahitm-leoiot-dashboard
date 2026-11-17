@@ -9,6 +9,7 @@ import { el } from './ui/dom';
 import { LoadingScreen } from './ui/loading';
 import { Navigation } from './ui/navigation';
 import { InfoPanel } from './ui/panel';
+import { RouteLegend } from './ui/routeLegend';
 import { strings } from './ui/strings';
 
 document.title = strings.title;
@@ -17,8 +18,9 @@ const stage = el('main', 'stage');
 const controls = new Controls();
 const panel = new InfoPanel();
 const navigation = new Navigation();
+const routeLegend = new RouteLegend();
 const loading = new LoadingScreen();
-root.append(stage, panel.element, controls.element, navigation.element, loading.element);
+root.append(stage, panel.element, controls.element, navigation.element, routeLegend.element, loading.element);
 
 const viewer = new Viewer(stage);
 const store = new RoomStore();
@@ -37,7 +39,7 @@ async function load(): Promise<void> {
     return;
   }
   loading.hide();
-  new App(viewer, models, store, controls, panel, navigation);
+  new App(viewer, models, store, controls, panel, navigation, routeLegend);
 }
 
 loading.onRetry = () => void load();

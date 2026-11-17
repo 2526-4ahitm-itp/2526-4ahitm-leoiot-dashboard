@@ -45,6 +45,13 @@ export const strings = {
     searchPlaceholder: 'Search room (e.g. 105)…',
     go: 'Go',
     clear: 'Clear',
+    nextFloor: 'Next floor ↑',
     notFound: 'Room not found.',
+  },
+  routeMarker: {
+    turnLeft: '↰ Left',
+    turnRight: '↱ Right',
+    stairsUp: (floor: string) => `⬆ Stairs to ${floor}`,
+    stairsDown: (floor: string) => `⬇ Stairs to ${floor}`,
   },
 };

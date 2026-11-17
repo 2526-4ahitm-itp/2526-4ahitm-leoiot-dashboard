@@ -25,11 +25,44 @@ In the gym (`T`), the system SHALL instead walk waypoint to waypoint, always mov
 Known limitation of the gym's walk, inherited unchanged from legacy: it neither guarantees the shortest route nor guarantees staying clear of every wall, including that for some destinations (gym room `T12`, never named in legacy's own per-room intersection rules) the walk does not reach the room's door at all.
 
 ### Requirement: Multi-floor navigation crosses at a stairway
-When the destination room is on a different floor than the current view, the system SHALL route the path through the stairs waypoint that connects the two floors, and SHALL switch the displayed floor to the destination's floor as soon as navigation starts.
+When a route crosses from one floor to another, the system SHALL route the path through the stairs waypoint that connects that pair of floors.
 
-#### Scenario: Navigating to a room on another floor
-- **WHEN** a user starts navigation to a room on a floor different from the one currently shown
-- **THEN** the view switches to the destination room's floor immediately, and the displayed path passes through the connecting stairs waypoint
+#### Scenario: Crossing floors
+- **WHEN** a route goes from one floor to another
+- **THEN** the displayed path passes through the connecting stairs waypoint between them
+
+### Requirement: Navigation starts on the floor the route begins on
+Starting navigation SHALL show the floor the route itself starts on (the ground floor for a room on `U`, `E`, `1` or `2`; the gym for a gym room), independent of which floor or view was shown beforehand and independent of the destination room's own floor.
+
+#### Scenario: Starting navigation to a room on another floor
+- **WHEN** a user starts navigation to a room on floor 2 while the whole building, or any other floor, is shown
+- **THEN** the view switches to the ground floor — the floor the route starts on — not to floor 2
+
+### Requirement: A multi-floor route reveals one floor at a time
+For a route that crosses more than one floor, the system SHALL show only the portion of the route on floors already shown — the current floor and everything beneath it, the same stacking rule the floor views themselves follow — and SHALL offer a visible control to advance to the route's next floor. Once the floor shown is the last floor the route crosses, that control SHALL NOT be shown.
+
+#### Scenario: Advancing through a multi-floor route
+- **WHEN** a user activates the "next floor" control while the active route continues onto a floor not yet shown
+- **THEN** the view advances to that floor and the route's segment on it becomes visible
+
+#### Scenario: No further floor to advance to
+- **WHEN** the floor currently shown is the last floor the active route crosses
+- **THEN** the "next floor" control is not shown
+
+### Requirement: Turn and stairs markers show the way along the route
+Wherever the displayed portion of a route bends by more than a small threshold within one floor, the system SHALL show a marker indicating whether to turn left or right. Wherever the displayed portion crosses from one floor to another, the system SHALL show a marker indicating whether to go up or down and naming the floor the stairs lead to. Each marker SHALL be shown at its own exact point on the route. Each marker's own colour SHALL match a legend entry naming what it means, distinguishing one marker from another by colour even when their points are close together.
+
+#### Scenario: A turn along the corridor
+- **WHEN** the displayed route bends by more than a small threshold within one floor
+- **THEN** a marker at that exact point shows which way to turn, and a legend entry of the same colour names it
+
+#### Scenario: A stairway crossing
+- **WHEN** the displayed route crosses from the current floor to another
+- **THEN** a marker at that exact point shows whether to go up or down and names the floor the stairs lead to, and a legend entry of the same colour names it
+
+#### Scenario: Two markers close together are still distinguishable
+- **WHEN** two or more markers' points are close enough on screen to be hard to tell apart on their own
+- **THEN** each keeps its own distinct colour, matching its own legend entry
 
 ### Requirement: Visible controls to start and clear navigation
 The explorer SHALL provide a visible, non-hidden control to choose a destination room and start navigation to it, and a visible control to clear the active route, consistent with providing clear navigation/actions without hidden primary controls.
