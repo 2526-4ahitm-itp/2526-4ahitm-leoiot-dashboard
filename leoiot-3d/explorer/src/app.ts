@@ -223,7 +223,7 @@ export class App {
     return dot;
   }
 
-  /** Groups the given markers into one legend section per floor, in the order the route visits them. */
+  /** Groups the given markers into one legend section per floor, top-to-bottom in the building's own order (same as the floor buttons), not the order the route visits them. */
   private routeLegendSections(visible: { marker: RouteMarker; colour: string }[]): LegendSection[] {
     const byFloor = new Map<FloorId, { colour: string; text: string }[]>();
     for (const { marker, colour } of visible) {
@@ -231,9 +231,10 @@ export class App {
       entries.push({ colour, text: this.markerText(marker) });
       byFloor.set(marker.point.floor, entries);
     }
-    return this.routeFloorSequence
-      .filter((floor) => byFloor.has(floor))
-      .map((floor) => ({ title: strings.views[floor], entries: byFloor.get(floor)! }));
+    return FLOOR_ORDER.filter((floor) => byFloor.has(floor)).map((floor) => ({
+      title: strings.views[floor],
+      entries: byFloor.get(floor)!,
+    }));
   }
 
   private markerText(marker: RouteMarker): string {
