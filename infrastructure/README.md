@@ -76,7 +76,7 @@ The data contract requires room-climate readings to be kept for at least 13 mont
 | | Minimum | **Recommended** | Why |
 |---|---|---|---|
 | CPU | 2 vCPU | **2–4 vCPU** | Normal load is tiny (all containers on vm23 together use < 2 % of a core). The peaks come from image builds during deployment and from long-range queries in the dashboards. |
-| RAM | 4 GB | **8 GB** | Everything on vm23 used 768 MiB together (2026-10-20). InfluxDB needs more while it compacts data and answers long queries, and image builds need room too. |
+| RAM | 4 GB | **8 GB** | Everything on vm23 used 768 MiB together (2026-10-20), but InfluxDB alone peaked at 1.7 GB (shown in the shutdown log of 2026-11-06). It needs more while it compacts data and answers long queries, and image builds need room too. |
 | Disk | 40 GB SSD | **80 GB SSD** | See below. Use an SSD, not an HDD: InfluxDB reads and writes many small blocks. |
 | Backup | 30 GB elsewhere | **30–50 GB elsewhere** | Not on the same disk as the database. |
 | Network | school LAN | school LAN with HTTPS | 50 boxes send about 15 points a second, which is negligible. |
@@ -103,14 +103,14 @@ Keep the disk below 70 % full. InfluxDB needs free space for a short time while 
 
 ## Operations: lessons from vm23
 
-The problems on vm23 were caused by operations, not by lack of capacity. Status on 2026-11-17:
+The problems on vm23 were caused by operations, not by lack of capacity. Found on 2026-11-17:
 
 | Finding on vm23 | What the new server needs |
 |---|---|
-| The VM rebooted for a kernel update on 2026-11-06. `influxdb` has `restart=no` and has been down since then; the broker `leoiot-platform-mosquitto-1` did not come back either. | Every container runs with `restart: unless-stopped`. After a reboot, someone checks that all services are up. |
+| The VM rebooted for a kernel update on 2026-11-06. No service in `legacy/docker-compose.yaml` had a restart policy, so `influxdb` and the other legacy services stayed down. The broker `leoiot-platform-mosquitto-1` did not come back either, although it has `unless-stopped`; the cause is not confirmed. Nothing was stored for 11 days, until both were started by hand on 2026-11-17. PR #160 adds the restart policies. | Every container runs with `restart: unless-stopped`. After a reboot, someone checks that all services are up. |
 | The disk is 98 % full (98 GB, 1.9 GB free). | Monitoring with an alert at 80 % disk usage. |
 | The `influxdb_backups` Docker volume holds 38 GB. `legacy/backup/backup.sh` prunes only the copies in `~/influxdb-backups` (19 GB), never the originals in `/backups` inside the container. | Backups are pruned where they are stored, and they are stored off the server. |
-| Both collectors have reported `unhealthy` for 11 days without anyone noticing. | Health checks that someone sees, for example a notification on failure. |
+| Both collectors reported `unhealthy` for 11 days without anyone noticing. | Health checks that someone sees, for example a notification on failure. |
 
 ## Open points
 
@@ -118,4 +118,4 @@ The problems on vm23 were caused by operations, not by lack of capacity. Status 
 - **Legacy history.** Copy it over completely, copy only `room_climate` and `solax_stats`, or start fresh.
 - **Retention.** Decide on a retention limit or downsampling (a `platform-…` change to the data contract).
 - **Send interval.** Confirm the send interval of the boxes (10 s today).
-- **Kubernetes.** If the system moves to a Kubernetes cluster instead of a VM, the requests and limits in D2 of `openspec/changes/platform-k8s-resources/design.md` still apply. Only the database volume changes: 6–12 GB instead of 25 GiB.
+- **Kubernetes.** If the system moves to a Kubernetes cluster instead of a VM, the requests and limits in D2 of `openspec/changes/platform-k8s-resources/design.md` still apply, with two changes: the database volume is 6–12 GB instead of 25 GiB, and InfluxDB's memory limit must be at least 2 GiB instead of 1 GiB, because it peaked at 1.7 GB on vm23.
