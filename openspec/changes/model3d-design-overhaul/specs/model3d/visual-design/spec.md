@@ -74,6 +74,17 @@ When a room is selected, the explorer SHALL show that room's number as very larg
 - **WHEN** a user deselects the room (closing the info panel, clicking elsewhere, or switching to a heatmap)
 - **THEN** the watermark fades out and is no longer shown
 
+### Requirement: The watermark fits room ids of any length on screen
+A room id too long to show at the watermark's usual size SHALL be shrunk just enough to stay fully within the screen width, rather than overflowing off-screen or being cut off.
+
+#### Scenario: Selecting a room with a long id
+- **WHEN** a user selects a room whose id is long enough that the watermark's usual size would run off the edges of the screen
+- **THEN** the watermark's text size is reduced so the whole id stays on screen, still legible
+
+#### Scenario: Selecting a room with a short id
+- **WHEN** a user selects a room whose id is short
+- **THEN** the watermark keeps its usual full size, not shrunk unnecessarily
+
 #### Scenario: The model's own appearance is unaffected
 - **WHEN** the watermark is shown or hidden
 - **THEN** the building model's materials, textures and lighting are unchanged, consistent with "The 3D building model's appearance is unchanged"

@@ -49,7 +49,10 @@ body,
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
   font-size: min(100vh, 54vw);
   font-weight: 900;
-  -webkit-text-stroke: 1.4vh var(--watermark);
+  /* em, not vh: a fixed-width stroke wouldn't shrink proportionally with
+     font-size, which breaks RoomWatermark's fit-to-width scaling (it
+     measures scrollWidth at one size and scales linearly from it). */
+  -webkit-text-stroke: 0.016em var(--watermark);
   letter-spacing: -0.02em;
   line-height: 1;
   color: var(--watermark);
