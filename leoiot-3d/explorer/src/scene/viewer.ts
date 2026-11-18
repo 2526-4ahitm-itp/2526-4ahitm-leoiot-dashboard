@@ -23,7 +23,6 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
-import { polylineLength, polylinePrefix } from '../core/polyline';
 import { roomOf } from './names';
 import type { WorldPoint } from '../nav/route';
 
@@ -62,11 +61,10 @@ export interface RouteMarkerDot {
   colour: string;
 }
 
-interface RouteGrow {
-  /** The full newly-revealed tail, starting at the end of the already-drawn portion. */
-  tailFull: WorldPoint[];
-  tailLength: number;
-  start: number;
+interface Growing {
+  readonly mesh: Mesh;
+  readonly totalIndexCount: number;
+  readonly start: number;
 }
 
 export class Viewer {
@@ -79,10 +77,11 @@ export class Viewer {
   private readonly startTarget = new Vector3();
   private current: Object3D | null = null;
   private labels: CSS2DObject[] = [];
-  private route: Mesh | null = null;
+  // One mesh per revealed stretch of the active route (the initial segment, plus
+  // one more per "next floor"/floor-button reveal); never rebuilt once drawn, see showRoute.
+  private segments: Mesh[] = [];
   private routePoints: WorldPoint[] = [];
-  private routeGrow: RouteGrow | null = null;
-  private growMesh: Mesh | null = null;
+  private growing: Growing | null = null;
   private routeMarkers: Mesh[] = [];
 
   /** Called with the room id of a clicked room, or null for a click elsewhere. */
@@ -160,26 +159,23 @@ export class Viewer {
    * Draws a navigation route as a tube along the given points (spec
    * model3d/room-navigation). When `points` simply extends what was already
    * drawn (advancing to the next floor reveals more of the same route), the
-   * already-drawn portion is left exactly as it was and only the new tail
-   * grows in, over {@link ROUTE_GROW_DURATION_MS}; anything else (a new
-   * route, or fewer points than before) redraws instantly.
+   * already-drawn portion is left exactly as it was, as its own segment, and
+   * only the new tail grows in, over {@link ROUTE_GROW_DURATION_MS}; anything
+   * else (a new route, or fewer points than before) redraws instantly.
    */
   showRoute(points: WorldPoint[]): void {
     const previous = this.routePoints;
     const isGrowth = previous.length > 0 && points.length > previous.length && previous.every((p, i) => p === points[i]);
     this.routePoints = points;
     if (isGrowth) this.startGrow(previous, points);
-    else {
-      this.cancelGrow();
-      this.rebuildRoute(points);
-    }
+    else this.rebuildRoute(points);
   }
 
-  /** Removes a route drawn by {@link showRoute}, if any, and any markers drawn by {@link setRouteMarkers}. */
+  /** Removes every segment drawn by {@link showRoute}, if any, and any markers drawn by {@link setRouteMarkers}. */
   clearRoute(): void {
-    this.cancelGrow();
+    this.growing = null;
     this.routePoints = [];
-    this.disposeRoute();
+    this.disposeSegments();
     this.setRouteMarkers([]);
   }
 
@@ -208,53 +204,61 @@ export class Viewer {
   }
 
   private rebuildRoute(points: WorldPoint[]): void {
-    this.disposeRoute();
+    this.growing = null;
+    this.disposeSegments();
     if (points.length < 2) return;
-    this.route = this.buildTube(points);
-    this.scene.add(this.route);
+    const mesh = this.buildTube(points);
+    this.scene.add(mesh);
+    this.segments.push(mesh);
   }
 
-  private disposeRoute(): void {
-    if (!this.route) return;
-    this.scene.remove(this.route);
-    this.route.geometry.dispose();
-    (this.route.material as MeshBasicMaterial).dispose();
-    this.route = null;
+  private disposeSegments(): void {
+    for (const mesh of this.segments) {
+      this.scene.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as MeshBasicMaterial).dispose();
+    }
+    this.segments = [];
   }
 
-  /** Starts growing `newPoints`' tail in from the end of `oldPoints`, which stays exactly as already drawn. */
+  /**
+   * Starts growing `newPoints`' tail in from the end of `oldPoints`, which
+   * stays exactly as already drawn, as its own segment, never touched again.
+   * The tail's own geometry (and the Frenet frames `buildTube` derives it
+   * from) is built once, up front, at its final, full length — only its
+   * `drawRange` changes per animation frame — rather than being rebuilt from
+   * a changing, partial point list on every frame, which is what used to
+   * make the tube visibly twist and wobble while it grew in (three.js
+   * recomputes frames fresh each time, and that's numerically unstable for a
+   * straight-segment path with sharp corners).
+   */
   private startGrow(oldPoints: WorldPoint[], newPoints: WorldPoint[]): void {
-    this.cancelGrow();
-    if (!this.route) this.route = this.buildTube(oldPoints); // shouldn't happen — oldPoints was already drawn — but never leave nothing showing
+    this.settleGrowing();
     const tailFull = [oldPoints[oldPoints.length - 1], ...newPoints.slice(oldPoints.length)];
-    this.routeGrow = { tailFull, tailLength: polylineLength(tailFull), start: performance.now() };
+    if (tailFull.length < 2) return;
+    const mesh = this.buildTube(tailFull);
+    const totalIndexCount = mesh.geometry.getIndex()?.count ?? 0;
+    mesh.geometry.setDrawRange(0, 0);
+    this.scene.add(mesh);
+    this.segments.push(mesh);
+    this.growing = { mesh, totalIndexCount, start: performance.now() };
   }
 
-  private cancelGrow(): void {
-    this.routeGrow = null;
-    if (!this.growMesh) return;
-    this.scene.remove(this.growMesh);
-    this.growMesh.geometry.dispose();
-    (this.growMesh.material as MeshBasicMaterial).dispose();
-    this.growMesh = null;
+  /** Snaps an in-flight reveal to fully drawn and stops animating it, so starting another grow (or clearing the route) leaves it exactly as it is instead of cutting it off mid-way. */
+  private settleGrowing(): void {
+    if (!this.growing) return;
+    this.growing.mesh.geometry.setDrawRange(0, this.growing.totalIndexCount);
+    this.growing = null;
   }
 
   private updateGrow(): void {
-    if (!this.routeGrow) return;
-    const { tailFull, tailLength, start } = this.routeGrow;
+    if (!this.growing) return;
+    const { mesh, totalIndexCount, start } = this.growing;
     const t = Math.min(1, (performance.now() - start) / ROUTE_GROW_DURATION_MS);
-    const prefix = polylinePrefix(tailFull, tailLength * easeOutCubic(t));
-    if (this.growMesh) {
-      this.scene.remove(this.growMesh);
-      this.growMesh.geometry.dispose();
-      (this.growMesh.material as MeshBasicMaterial).dispose();
-      this.growMesh = null;
-    }
-    if (prefix.length >= 2) {
-      this.growMesh = this.buildTube(prefix);
-      this.scene.add(this.growMesh);
-    }
-    if (t >= 1) this.routeGrow = null; // finished — the drawn tail stays exactly as it is until the next showRoute call
+    // Reveal whole rings' worth of triangles (6 indices each), matching how buildTube indexes the tube.
+    const revealedIndexCount = Math.round((totalIndexCount / 6) * easeOutCubic(t)) * 6;
+    mesh.geometry.setDrawRange(0, revealedIndexCount);
+    if (t >= 1) this.growing = null; // finished — stays exactly as drawn until the next showRoute call
   }
 
   /**

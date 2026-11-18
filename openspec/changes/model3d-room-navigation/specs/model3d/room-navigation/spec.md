@@ -39,7 +39,7 @@ Starting navigation SHALL show the floor the route itself starts on (the ground 
 - **THEN** the view switches to the ground floor — the floor the route starts on — not to floor 2
 
 ### Requirement: A multi-floor route reveals one floor at a time
-For a route that crosses more than one floor, the system SHALL show only the portion of the route on floors already shown — the current floor and everything beneath it, the same stacking rule the floor views themselves follow — and SHALL offer a visible control to advance to the route's next floor. Once the floor shown is the last floor the route crosses, that control SHALL NOT be shown. The newly-revealed portion SHALL draw in with a smooth, brief animation rather than appearing instantly; the portion already shown before advancing SHALL NOT be affected by that animation.
+For a route that crosses more than one floor, the system SHALL show only the portion of the route on floors already shown — the current floor and everything beneath it, the same stacking rule the floor views themselves follow — and SHALL offer a visible control to advance to the route's next floor. Once the floor shown is the last floor the route crosses, that control SHALL NOT be shown. The newly-revealed portion SHALL draw in with a smooth, brief animation rather than appearing instantly, growing steadily along the route's own shape rather than visibly twisting or wobbling before settling; the portion already shown before advancing SHALL NOT be affected by that animation.
 
 #### Scenario: Advancing through a multi-floor route
 - **WHEN** a user activates the "next floor" control while the active route continues onto a floor not yet shown
@@ -48,6 +48,10 @@ For a route that crosses more than one floor, the system SHALL show only the por
 #### Scenario: No further floor to advance to
 - **WHEN** the floor currently shown is the last floor the active route crosses
 - **THEN** the "next floor" control is not shown
+
+#### Scenario: The reveal animation doesn't distort the route
+- **WHEN** the newly-revealed portion is drawing itself in
+- **THEN** it keeps the route's own straight-segment shape throughout the animation, reaching its final shape without visibly twisting or wobbling first
 
 ### Requirement: Turn and stairs markers show the way along the route
 Wherever the displayed portion of a route bends by more than a small threshold within one floor, the system SHALL show a marker indicating whether to turn left or right. Wherever the displayed portion crosses from one floor to another, the system SHALL show a marker indicating whether to go up or down and naming the floor the stairs lead to. Each marker SHALL be shown as a single, fully coloured dot at its own exact point on the route, hidden behind a wall or other opaque part of the building the same way the route line itself is, rather than always drawing on top of it. Each marker's own colour SHALL match an entry in a legend naming what it means, distinguishing one marker from another by colour even when their points are close together. The legend SHALL group entries into one section per floor, so entries for a floor already shown remain visible, in their own section, as further floors are revealed. Sections SHALL appear in the building's own top-to-bottom floor order (the same order as the floor buttons), not the order the route visits them, so a higher floor's section is never shown below a lower floor's.
