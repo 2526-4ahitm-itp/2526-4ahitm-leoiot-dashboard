@@ -5,20 +5,22 @@
 
 import { el } from './dom';
 
+const VISIBLE = 'room-watermark--visible';
+
 export class RoomWatermark {
   readonly element = el('div', 'room-watermark');
 
   constructor() {
-    this.element.hidden = true;
     this.element.setAttribute('aria-hidden', 'true');
   }
 
+  /** Not `hidden`/`display:none`: this stays in the normal flow so the opacity change fades in/out. */
   show(room: string): void {
     this.element.textContent = room;
-    this.element.hidden = false;
+    this.element.classList.add(VISIBLE);
   }
 
   hide(): void {
-    this.element.hidden = true;
+    this.element.classList.remove(VISIBLE);
   }
 }

@@ -40,3 +40,10 @@
 - [x] 7.3 Style `.room-watermark` in `styles.css`: fixed, centred, `font-size: 85vh`, bold, using a new `--highlight` token matching `scene/materials.ts`' `HIGHLIGHT_COLOUR`; verify by selecting a room with a browser automation tool and confirming the room's number renders huge, behind the model (occluded where the model is opaque, visible around it), and matches the model's own highlight colour.
 - [x] 7.4 Verify the watermark hides on deselect (closing the panel) and when a heatmap is toggled (which clears selection), with a browser automation tool checking the element's `hidden` state in both cases.
 - [x] 7.5 Run the full regression pass (tests, `tsc --noEmit`, production build) and confirm no existing behaviour changed.
+
+## 8. Watermark refinement: tonal colour, fade, bigger
+
+- [x] 8.1 Replace the `--highlight` token with `--watermark`, a shade barely lighter than `--bg`, and apply it to `.room-watermark`; verify by selecting a room with a browser automation tool and reading `getComputedStyle(...).color`.
+- [x] 8.2 Increase `.room-watermark` to `font-size: 95vh` and `font-weight: 900`; verify the same way, reading `fontSize`/`fontWeight`.
+- [x] 8.3 Switch `RoomWatermark.show()`/`hide()` from toggling the `hidden` attribute to toggling a `--visible` class, and give `.room-watermark` a `transition: opacity`, base `opacity: 0`; verify with a browser automation tool that a screenshot taken shortly after selecting a room shows the watermark mid-fade (partially visible), not at full opacity, and that `getComputedStyle(...).opacity` reaches `1` once the transition settles.
+- [x] 8.4 Run the full regression pass (tests, `tsc --noEmit`, production build) and confirm no existing behaviour changed.

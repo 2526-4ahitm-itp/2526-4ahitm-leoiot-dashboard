@@ -12,7 +12,7 @@
   --shadow-bold: 0 8px 28px rgba(0, 0, 0, 0.6); /* strong elevation under floating chrome panels */
   --weight-bold: 800; /* heavy type weight for chrome labels and values */
   --tracking-bold: 0.02em; /* slight letter-spacing to carry the heavier weight */
-  --highlight: #f1c40f; /* matches scene/materials.ts HIGHLIGHT_COLOUR, for the selected-room watermark */
+  --watermark: #4a4d52; /* selected-room watermark: a shade barely lighter than --bg, so it reads as an embossed/tonal mark rather than a loud colour */
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
 }
@@ -39,19 +39,20 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 85vh;
-  font-weight: var(--weight-bold);
-  letter-spacing: -0.02em;
+  font-size: 95vh;
+  font-weight: 900;
+  letter-spacing: -0.03em;
   line-height: 1;
-  color: var(--highlight);
-  opacity: 0.5;
+  color: var(--watermark);
+  opacity: 0;
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
+  transition: opacity 600ms ease;
 }
 
-.room-watermark[hidden] {
-  display: none;
+.room-watermark--visible {
+  opacity: 1;
 }
 
 .stage {

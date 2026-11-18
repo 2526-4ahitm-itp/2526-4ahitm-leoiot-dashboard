@@ -13,7 +13,7 @@ The 3D building explorer's UI chrome (panels, buttons, overlays, loading screen,
 - The 3D building model itself (materials, textures, camera, lighting) is **not** restyled; it keeps its current appearance.
 - The semantic data colours already specified for the temperature heatmap, the CO₂ heatmap and the route legend markers are **not** changed; only the chrome around them (panel backgrounds, borders, button states, typography) is restyled.
 - No feature is removed, hidden or renamed; every button, panel and interaction that exists today keeps working exactly as before — including the visible, non-hidden search control required by `model3d/room-navigation` ("Visible controls to start and clear navigation"): the dock's Search toggle and its popover are always reachable, never a hidden gesture.
-- Selecting a room now also shows its number as a giant watermark behind the 3D model, nearly the height of the screen: visible around the building's silhouette, occluded by the building itself where it's solid, so it reads as sitting behind the model rather than on top of it. Hidden whenever nothing is selected (deselecting, switching to a heatmap, or changing floor away from the room).
+- Selecting a room now also shows its number as a giant, bold watermark behind the 3D model, close to the full height of the screen: visible around the building's silhouette, occluded by the building itself where it's solid, so it reads as sitting behind the model rather than on top of it. It fades in on selection and fades out when deselected (closing the panel, switching to a heatmap, or changing floor away from the room), in a shade close to the page background so it reads as a tonal mark rather than a loud colour.
 
 ## Capabilities
 
