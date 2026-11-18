@@ -40,22 +40,26 @@ body,
   align-items: center;
   justify-content: center;
   /* A monospace stack for square, blocky digit shapes (a proportional
-     sans narrows digits like "1"); font-weight tops out at 900, so a
-     text-stroke thickens the glyph edges further for a bolder look.
-     Calibrated against actual rendered glyph metrics (font metrics and
-     the stroke make the ink a different size than the font-size value
-     itself), so a typical 3-character room id both nearly touches the
-     top/bottom of the screen and stays fully on-screen horizontally. */
+     sans narrows digits like "1"); so a typical 3-character room id both
+     nearly touches the top/bottom of the screen and stays fully
+     on-screen horizontally. */
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
   font-size: min(100vh, 54vw);
   font-weight: 900;
-  /* em, not vh: a fixed-width stroke wouldn't shrink proportionally with
-     font-size, which breaks RoomWatermark's fit-to-width scaling (it
-     measures scrollWidth at one size and scales linearly from it). */
-  -webkit-text-stroke: 0.016em var(--watermark);
   letter-spacing: -0.02em;
   line-height: 1;
-  color: var(--watermark);
+  /* Split left/right by temperature/CO2 colour (set from JS as these two
+     custom properties, per selected room). The gradient is painted on this
+     element's own full-viewport box (`inset: 0` above), so its 50% stop is
+     the screen's actual horizontal centre, not the centre of the rendered
+     text — the split stays screen-centred regardless of the room id's
+     length or how `RoomWatermark.refit()` scales/centres it. Falls back to
+     the plain --watermark tone (both sides the same) before JS sets either
+     custom property. */
+  background: linear-gradient(to right, var(--watermark-temp, var(--watermark)) 50%, var(--watermark-co2, var(--watermark)) 50%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
   opacity: 0;
   white-space: nowrap;
   pointer-events: none;

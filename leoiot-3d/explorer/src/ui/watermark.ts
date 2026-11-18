@@ -19,10 +19,20 @@ export class RoomWatermark {
     window.addEventListener('resize', () => this.refit());
   }
 
-  /** Not `hidden`/`display:none`: this stays in the normal flow so the opacity change fades in/out. */
-  show(room: string): void {
+  /**
+   * Not `hidden`/`display:none`: this stays in the normal flow so the
+   * opacity change fades in/out. `temperatureColour`/`co2Colour` are the
+   * already-resolved colours for the left/right halves (a heatmap-scale
+   * colour, or the caller's generic fallback for no/stale data) — this
+   * component only paints them, it has no notion of readings or staleness.
+   * Called on every render while a room stays selected, not just once on
+   * selection, so a live reading change repaints without reselecting.
+   */
+  show(room: string, temperatureColour: string, co2Colour: string): void {
     this.current = room;
     this.element.textContent = room;
+    this.element.style.setProperty('--watermark-temp', temperatureColour);
+    this.element.style.setProperty('--watermark-co2', co2Colour);
     this.element.classList.add(VISIBLE);
     this.refit();
   }

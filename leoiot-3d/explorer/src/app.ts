@@ -2,6 +2,7 @@
 // actions and live data change them (specs model3d/*; design D6, D11).
 
 import { REJUDGE_EVERY_MS } from './core/age';
+import { STATUS_COLOUR } from './core/colours';
 import { cell, HEATMAP_FLOORS, heatmapRooms, type HeatmapKind } from './core/heatmap';
 import { FLOOR_ORDER, type FloorId } from './core/rooms';
 import type { RoomStore } from './core/store';
@@ -215,8 +216,18 @@ export class App {
       this.panel.hide();
       this.watermark.hide();
     } else {
-      this.panel.show(this.selected, this.store.get(this.selected), now);
-      this.watermark.show(this.selected);
+      const reading = this.store.get(this.selected);
+      this.panel.show(this.selected, reading, now);
+      // The watermark's split, independent of whether a heatmap overlay is on:
+      // the same scale colour the heatmap would use for a current reading,
+      // or a generic fallback when there is none or it's gone stale (model3d/visual-design).
+      const temperature = cell('temperature', reading, now);
+      const co2 = cell('co2', reading, now);
+      this.watermark.show(
+        this.selected,
+        temperature.kind === 'current' ? temperature.colour : STATUS_COLOUR.green,
+        co2.kind === 'current' ? co2.colour : STATUS_COLOUR.yellow,
+      );
     }
   }
 
