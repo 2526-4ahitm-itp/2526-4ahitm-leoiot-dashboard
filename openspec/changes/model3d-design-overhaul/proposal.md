@@ -8,8 +8,8 @@ The 3D building explorer's UI chrome (panels, buttons, overlays, loading screen,
 
 - Redesign the explorer's UI chrome: the floor/view buttons, the room info panel, the loading screen, the heatmap toggle buttons, and the route legend get a bold, high-contrast visual language (typography, spacing, borders, elevation).
 - Consolidate the heatmap toggles, Reset View and the room search — previously separate floating panels — into one fixed dock with three labelled groups: **View** (Reset View), **Overlays** (temperature/CO₂ toggles) and **Search** (destination search, opening upward as a popover above the dock). Primary target is desktop browser use.
-- Replace the one-button-per-floor list with a floor stepper: an up button and a down button around the current floor's name, moving one floor at a time the same way the existing up/down arrow keys already do, plus a separate Gym button next to it. This floats on its own, not inside the dock.
-- The dock and the floor stepper are aligned to the same (left) edge of the screen, not centred, so they read as one coherent left-side control area.
+- Replace the one-button-per-floor list with two bare buttons, not grouped into a panel: an up arrow near the top of the screen and a down arrow near the bottom, moving one floor at a time the same way the existing up/down arrow keys already do. A separate, also-bare Gym button sits on the right. None of these three are inside the dock or any other panel.
+- The dock (View, Overlays, Search) is left-aligned instead of centred.
 - The room info panel and the route legend remain where they were (top-right and right-middle): they are contextual results, shown only when relevant, not part of the always-visible controls.
 - The "Next floor" control sits just above the dock, on the same left edge.
 - The 3D building model itself (materials, textures, camera, lighting) is **not** restyled; it keeps its current appearance.

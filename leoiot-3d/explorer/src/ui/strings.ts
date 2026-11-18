@@ -22,7 +22,6 @@ export const strings = {
     '1': 'Floor 1',
     '2': 'Floor 2',
     T: 'Gym',
-    full: 'Overview',
     reset: 'Reset View',
   },
   floorStepper: {

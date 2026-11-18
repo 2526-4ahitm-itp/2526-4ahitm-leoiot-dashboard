@@ -38,31 +38,35 @@ Every control, panel, button and interaction present in the explorer before the 
 - **WHEN** a user operates any button, panel or interaction that existed before the redesign
 - **THEN** it is still present and produces the same outcome as before
 
-### Requirement: Floor switching is an up/down stepper with a separate Gym button
-The explorer SHALL offer floor switching as a single stepper: an up button and a down button around the current floor's name, moving one floor at a time in the same order and with the same limits as the up/down arrow keys, rather than one named button per floor. The gym view SHALL be reached through its own, separate button next to the stepper, not through the stepper itself.
+### Requirement: Floor switching is a bare up/down arrow with a separate Gym button
+The explorer SHALL offer floor switching as two bare buttons — an up arrow and a down arrow, each on its own, not grouped into a panel — moving one floor at a time in the same order and with the same limits as the up/down arrow keys, rather than one named button per floor. The gym view SHALL be reached through its own, separate bare Gym button, not through the arrows.
 
 #### Scenario: Stepping down through the floors
-- **WHEN** a user repeatedly activates the stepper's down button from the whole-building view
+- **WHEN** a user repeatedly activates the down arrow from the whole-building view
 - **THEN** each floor is shown one at a time, top to bottom, the same as repeatedly pressing the down arrow key would
 
 #### Scenario: No floor beyond the ends
 - **WHEN** the top floor or the basement is shown
-- **THEN** the stepper's button that would go further in that direction is disabled, not merely ignored when activated
+- **THEN** the arrow that would go further in that direction is disabled, not merely ignored when activated
 
-#### Scenario: The stepper does nothing in the gym
+#### Scenario: The arrows do nothing in the gym
 - **WHEN** the gym is shown
-- **THEN** both of the stepper's buttons are disabled, consistent with the arrow keys not changing the view there either
+- **THEN** both the up and down arrows are disabled, consistent with the arrow keys not changing the view there either
 
 #### Scenario: Going to the gym
 - **WHEN** a user activates the Gym button
 - **THEN** the gym view is shown, the same as choosing it did before this change
 
 ### Requirement: Primary controls are grouped by purpose, not scattered
-The explorer's always-visible primary controls SHALL be grouped by purpose rather than scattered across many separate floating panels: the floor stepper and Gym button float as their own control, and Reset View, the heatmap overlay toggles and room search are grouped together into a single fixed dock, divided into clearly labelled groups (View, Overlays, Search). The dock and the floor stepper SHALL be aligned to the same side of the screen, not one centred and the other not.
+The explorer's always-visible primary controls SHALL be grouped by purpose rather than scattered across many separate floating panels: the up arrow, the down arrow and the Gym button each float on their own, not grouped into a panel together or with anything else; Reset View, the heatmap overlay toggles and room search are grouped together into a single fixed dock, divided into clearly labelled groups (View, Overlays, Search). None of the explorer's always-visible controls SHALL be positioned where a contextual overlay (the room info panel, the route legend) can cover them.
 
-#### Scenario: Viewing the dock
+#### Scenario: Viewing the primary controls
 - **WHEN** a user looks at the explorer's primary controls
-- **THEN** the floor stepper is shown as its own control, and a separate dock is shown containing a View group, an Overlays group and a Search group, each visually distinguished from the others
+- **THEN** the up arrow, the down arrow and the Gym button are each shown bare, with no surrounding panel, and a separate dock is shown containing a View group, an Overlays group and a Search group, each visually distinguished from the others
+
+#### Scenario: An always-visible control stays reachable during a route
+- **WHEN** a route is active and its legend is shown
+- **THEN** the Gym button remains fully visible and clickable, not covered by the legend
 
 ### Requirement: Contextual overlays stay separate from the dock
 The room info panel and the route legend — shown only when a room is selected or a route is active — are contextual results, not primary controls, and SHALL remain outside the dock in their own floating positions.
