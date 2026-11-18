@@ -7,11 +7,15 @@ Describes the bold, high-contrast visual language and the grouped control layout
 ## ADDED Requirements
 
 ### Requirement: Chrome uses a bold, high-contrast visual style
-The explorer's UI chrome — the floor stepper, the room info panel, the loading screen, the heatmap toggle buttons and the route legend — SHALL use a bold, high-contrast visual style (strong typography, clear borders or elevation, high-contrast surfaces), applied consistently across all of these elements rather than to only some of them.
+The explorer's panelled UI chrome — the room info panel, the loading screen, the heatmap toggle buttons and the route legend — SHALL use a bold, high-contrast visual style (strong typography, clear borders or elevation, high-contrast surfaces), applied consistently across all of these elements rather than to only some of them. The floor arrows SHALL be bold in weight and size, but bare: no border, background or elevation of their own, consistent with "Floor switching is bare, captioned arrows".
 
 #### Scenario: Viewing any chrome element
-- **WHEN** a user looks at the floor stepper, the room info panel, the loading screen, a heatmap toggle button or the route legend
+- **WHEN** a user looks at the room info panel, the loading screen, a heatmap toggle button or the route legend
 - **THEN** each one shows the same bold, high-contrast visual style
+
+#### Scenario: Viewing a floor arrow
+- **WHEN** a user looks at one of the floor arrows
+- **THEN** it is a bold, simple chevron shape with no surrounding border, background or box
 
 ### Requirement: The 3D building model's appearance is unchanged
 The redesign SHALL NOT change the building model's own rendered appearance: materials, textures, lighting and camera behaviour SHALL look exactly as they did before the redesign.

@@ -142,10 +142,50 @@ body,
   display: none;
 }
 
+/* A single ">" glyph, rotated per direction, not a boxy button: no
+   border, no background/fill — just the chevron itself, like a plain
+   directional cue rather than another control with its own chrome. */
 .floor-arrow {
-  padding: 10px 26px;
-  font-size: 20px;
+  background: none;
+  border: 0;
+  padding: 10px;
+  font: inherit;
+  font-size: 26px;
+  font-weight: 900;
   line-height: 1;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.floor-arrow-up {
+  transform: rotate(-90deg);
+}
+
+.floor-arrow-down {
+  transform: rotate(90deg);
+}
+
+.floor-arrow-left {
+  transform: rotate(180deg);
+}
+
+.floor-arrow:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.floor-arrow:disabled {
+  color: var(--muted);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.floor-arrow[aria-pressed='true'] {
+  color: var(--accent);
+}
+
+.floor-arrow:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .floor-arrow-caption {

@@ -18,13 +18,16 @@ export class FloorStepper {
   /** Only shown while the gym is the current view — there is no other way back to the overview from it. */
   readonly backElement = el('div', 'floor-arrow-group floor-arrow-group-back');
 
-  private readonly upButton = el('button', 'button floor-arrow', '▲');
+  // One simple chevron glyph (a ">" shape), rotated per direction in CSS
+  // rather than four different Unicode arrow glyphs — a consistent shape,
+  // not four slightly-different ones.
+  private readonly upButton = el('button', 'floor-arrow floor-arrow-up', '>');
   private readonly upCaption = el('span', 'floor-arrow-caption');
-  private readonly downButton = el('button', 'button floor-arrow', '▼');
+  private readonly downButton = el('button', 'floor-arrow floor-arrow-down', '>');
   private readonly downCaption = el('span', 'floor-arrow-caption');
-  private readonly gymButton = el('button', 'button floor-arrow', '▶');
+  private readonly gymButton = el('button', 'floor-arrow floor-arrow-right', '>');
   private readonly gymCaption = el('span', 'floor-arrow-caption', strings.views.T);
-  private readonly backButton = el('button', 'button floor-arrow', '◀');
+  private readonly backButton = el('button', 'floor-arrow floor-arrow-left', '>');
   private readonly backCaption = el('span', 'floor-arrow-caption', strings.views.full);
 
   onStep: (direction: 1 | -1) => void = () => undefined;

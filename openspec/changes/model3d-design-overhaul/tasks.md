@@ -107,3 +107,10 @@
 - [x] 15.2 Mitigate rather than silently ship: reorder `main.ts`'s `root.append(...)` so `routeLegend.element` comes before the floor-arrow elements, keeping Gym painted on top of (not hidden under) the legend when they overlap. Re-verify with a browser automation tool that Gym stays visible/clickable; the panels can still visually overlap, which is reported to the user as a known cosmetic trade-off of the requested position, not resolved further.
 - [x] 15.3 Add `FloorStepper.backElement`: a left-pointing arrow (`◀`) captioned "Overview" (`strings.views.full`, reinstated), shown only while `view === 'T'` (`update()` sets `.hidden`), positioned vertically centred on the left (mirroring Gym). `onBack` wired in `app.ts` to `setView('full')` — a plain view change, not `reset()`, so it doesn't clear an unrelated heatmap or route. Verify with a browser automation tool: hidden outside the gym, shown and functional inside it, hidden again after use.
 - [x] 15.4 Run the full regression pass (tests, `tsc --noEmit`, production build) and confirm no existing behaviour changed.
+
+## 16. Simpler chevron arrows, no boxy look
+
+- [x] 16.1 In `floorStepper.ts`, replace the four Unicode glyphs (▲▼▶◀) with one `">"` character per button, dropping the shared `button` class in favour of direction classes (`floor-arrow-up`/`-down`/`-left`/`-right`) plus the base `floor-arrow` class.
+- [x] 16.2 In `styles.css`, rewrite `.floor-arrow` as a minimal, unboxed control (no border/background), add `transform: rotate()` per direction class to turn the one glyph into up/down/left/right, and redefine hover/disabled/`aria-pressed`/focus states through colour (`var(--accent)`/`var(--muted)`) instead of a background fill, since `.button`'s rules no longer apply.
+- [x] 16.3 Verify with a browser automation tool: each arrow renders as a plain rotated chevron with no border or background, Gym's pressed state and the disabled up/down states still read correctly through colour alone.
+- [x] 16.4 Run the full regression pass (tests, `tsc --noEmit`, production build) and confirm no existing behaviour changed.
