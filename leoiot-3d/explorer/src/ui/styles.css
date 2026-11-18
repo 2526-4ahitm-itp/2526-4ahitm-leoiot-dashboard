@@ -83,35 +83,63 @@ body,
   pointer-events: none;
 }
 
-/* Floor switching as three bare buttons, not grouped into a panel (FR-11,
-   always visible): an arrow at the top of the screen, an arrow at the
-   bottom, and Gym on the right. */
-.floor-arrow {
+/* Floor switching as three bare arrow buttons, each captioned with where
+   it leads, not grouped into a panel (FR-11, always visible): an arrow at
+   the top of the screen, an arrow at the bottom, and a right-pointing
+   arrow to the gym on the right. The group wrapper is layout-only (no
+   background, border or shadow) — it positions an arrow with its caption,
+   it isn't "that kind of menu" again. */
+.floor-arrow-group {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 26px;
-  font-size: 20px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.floor-arrow-up {
+.floor-arrow-group-up,
+.floor-arrow-group-down {
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column;
+}
+
+.floor-arrow-group-up {
   top: 16px;
 }
 
-.floor-arrow-down {
+.floor-arrow-group-down {
   bottom: 16px;
 }
 
 /* Bottom-right, not vertically centred on the right edge: that would sit
    exactly where .route-legend floats while a route is active (both
-   right:16px, both centred), fully covering Gym — confirmed by measuring
-   an actual 3-floor route's legend with a browser automation tool before
-   picking this spot; the legend's own height leaves bottom-right clear. */
-.floor-gym {
-  position: fixed;
+   right:16px, both centred), fully covering the gym arrow — confirmed by
+   measuring an actual 3-floor route's legend with a browser automation
+   tool before picking this spot; the legend's own height leaves
+   bottom-right clear. Row layout: the caption reads into the arrow
+   ("GYM ▶"), rather than the arrow pointing away from its own label. */
+.floor-arrow-group-gym {
   right: 16px;
   bottom: 16px;
+  flex-direction: row;
+}
+
+.floor-arrow {
+  padding: 10px 26px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.floor-arrow-caption {
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-bold);
+  text-transform: uppercase;
+  color: var(--text);
+  white-space: nowrap;
+  /* No background chip (these aren't boxed) — a shadow keeps the caption
+     readable over whichever part of the model or sky sits behind it. */
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
 }
 
 /* Bottom dock: "the rest of the menu" (view reset, heatmap overlays,
@@ -578,15 +606,19 @@ body,
     font-size: 17px;
   }
 
-  .floor-arrow-up {
+  .floor-arrow-caption {
+    font-size: 11px;
+  }
+
+  .floor-arrow-group-up {
     top: 8px;
   }
 
-  .floor-arrow-down {
+  .floor-arrow-group-down {
     bottom: 8px;
   }
 
-  .floor-gym {
+  .floor-arrow-group-gym {
     right: 8px;
     bottom: 8px;
   }

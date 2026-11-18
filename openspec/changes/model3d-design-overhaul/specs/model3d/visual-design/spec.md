@@ -38,23 +38,27 @@ Every control, panel, button and interaction present in the explorer before the 
 - **WHEN** a user operates any button, panel or interaction that existed before the redesign
 - **THEN** it is still present and produces the same outcome as before
 
-### Requirement: Floor switching is a bare up/down arrow with a separate Gym button
-The explorer SHALL offer floor switching as two bare buttons — an up arrow and a down arrow, each on its own, not grouped into a panel — moving one floor at a time in the same order and with the same limits as the up/down arrow keys, rather than one named button per floor. The gym view SHALL be reached through its own, separate bare Gym button, not through the arrows.
+### Requirement: Floor switching is three bare, captioned arrows
+The explorer SHALL offer floor switching as three bare arrow buttons — up, down, and a right-pointing arrow to the gym — each on its own, not grouped into a panel, moving one floor at a time in the same order and with the same limits as the up/down arrow keys, rather than one named button per floor. Each arrow SHALL be captioned with the name of the floor or view it leads to; an arrow with no valid destination (disabled) SHALL NOT show a caption naming one.
 
 #### Scenario: Stepping down through the floors
 - **WHEN** a user repeatedly activates the down arrow from the whole-building view
 - **THEN** each floor is shown one at a time, top to bottom, the same as repeatedly pressing the down arrow key would
 
+#### Scenario: An arrow's caption names its destination
+- **WHEN** a floor is shown and the down arrow would lead to another floor
+- **THEN** the down arrow's caption names that floor, not the floor currently shown
+
 #### Scenario: No floor beyond the ends
 - **WHEN** the top floor or the basement is shown
-- **THEN** the arrow that would go further in that direction is disabled, not merely ignored when activated
+- **THEN** the arrow that would go further in that direction is disabled, not merely ignored when activated, and shows no destination caption
 
 #### Scenario: The arrows do nothing in the gym
 - **WHEN** the gym is shown
 - **THEN** both the up and down arrows are disabled, consistent with the arrow keys not changing the view there either
 
 #### Scenario: Going to the gym
-- **WHEN** a user activates the Gym button
+- **WHEN** a user activates the gym arrow (captioned "Gym")
 - **THEN** the gym view is shown, the same as choosing it did before this change
 
 ### Requirement: Primary controls are grouped by purpose, not scattered

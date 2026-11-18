@@ -27,6 +27,7 @@ export const strings = {
   floorStepper: {
     up: 'Floor up',
     down: 'Floor down',
+    gym: 'Go to the gym',
   },
   heatmap: {
     temperature: 'Temperature',
