@@ -101,6 +101,8 @@ export class App {
 
   reset(): void {
     this.heatmap = null;
+    this.activeRoute = null;
+    this.routeFloorSequence = [];
     this.setView('full');
     this.viewer.resetCamera();
   }

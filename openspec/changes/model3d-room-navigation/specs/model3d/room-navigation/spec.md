@@ -91,6 +91,13 @@ The explorer SHALL provide a visible, non-hidden control to choose a destination
 - **WHEN** a user activates the clear/cancel control while a route is displayed
 - **THEN** the system removes the displayed path and returns to the unguided view
 
+### Requirement: Reset View also clears the active route
+Activating "Reset View" (`model3d/building-viewer`, "Reset View returns to the start") SHALL also clear any active navigation route, the same as the dedicated clear control, consistent with Reset View returning the explorer to its unguided start state.
+
+#### Scenario: Resetting while a route is active
+- **WHEN** a user activates "Reset View" while a navigation route is displayed
+- **THEN** the route, its markers and the legend are cleared, in addition to the whole building being shown from the start camera position
+
 ### Requirement: Invalid destination does not start navigation
 If a user selects or searches for a room that does not exist, the system SHALL NOT start or display a navigation path, and SHALL show a message that the room cannot be found.
 
