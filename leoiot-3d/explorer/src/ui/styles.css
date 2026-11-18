@@ -1,11 +1,17 @@
 :root {
   --bg: #3a3d42;
-  --surface: rgba(28, 30, 34, 0.92);
-  --border: rgba(255, 255, 255, 0.14);
+  --surface: rgba(16, 17, 20, 0.97);
+  --border: rgba(255, 255, 255, 0.38);
   --text: #f2f2f2;
   --muted: #b5b9bf;
   --accent: #8fd694;
   --warn: #ffb300;
+  /* Bold chrome tokens (model3d/visual-design) — chrome-only, do not feed heatmap/legend colours */
+  --border-width: 2px; /* thicker outline for every chrome surface and control */
+  --radius: 4px; /* sharper corners than the previous 10px, for a bolder silhouette */
+  --shadow-bold: 0 8px 28px rgba(0, 0, 0, 0.6); /* strong elevation under floating chrome panels */
+  --weight-bold: 800; /* heavy type weight for chrome labels and values */
+  --tracking-bold: 0.02em; /* slight letter-spacing to carry the heavier weight */
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
 }
@@ -50,10 +56,11 @@ body,
   gap: 16px;
   max-height: calc(100vh - 32px);
   overflow-y: auto;
-  padding: 8px;
+  padding: 10px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-bold);
 }
 
 .bar-group {
@@ -65,17 +72,20 @@ body,
 .button {
   font: inherit;
   font-size: 14px;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-bold);
+  text-transform: uppercase;
   color: var(--text);
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
   padding: 7px 12px;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .button-reset {
@@ -101,7 +111,7 @@ body,
 
 .button:focus-visible,
 .panel-close:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -121,8 +131,9 @@ body,
   width: min(260px, calc(100vw - 32px));
   padding: 10px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-bold);
 }
 
 .nav-input {
@@ -131,8 +142,8 @@ body,
   font-size: 14px;
   color: var(--text);
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
   padding: 7px 10px;
 }
 
@@ -150,12 +161,12 @@ body,
 
 .nav-suggestion {
   padding: 6px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   cursor: pointer;
 }
 
 .nav-suggestion:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .nav-actions {
@@ -172,6 +183,7 @@ body,
   margin: 8px 0 0;
   color: var(--warn);
   font-size: 13px;
+  font-weight: var(--weight-bold);
 }
 
 /* "Next floor": its own fixed, bottom-centre control — bigger and
@@ -184,12 +196,15 @@ body,
   transform: translateX(-50%);
   padding: 14px 30px;
   font-size: 17px;
-  font-weight: 600;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-bold);
+  text-transform: uppercase;
   color: #0a2e18;
   background: rgba(46, 204, 113, 0.55);
+  border-width: var(--border-width);
   border-color: rgba(46, 204, 113, 0.8);
   backdrop-filter: blur(4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-bold);
 }
 
 .next-floor:hover:not(:disabled) {
@@ -221,8 +236,9 @@ body,
   width: min(300px, calc(100vw - 32px));
   padding: 12px 16px 14px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-bold);
 }
 
 .panel-is-stale {
@@ -237,7 +253,9 @@ body,
 
 .panel-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-bold);
 }
 
 .panel-close {
@@ -265,11 +283,13 @@ body,
 
 .panel-label {
   min-width: 96px;
+  font-weight: var(--weight-bold);
   color: var(--muted);
 }
 
 .panel-value {
-  font-size: 18px;
+  font-size: 19px;
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
 }
 
@@ -282,6 +302,7 @@ body,
   margin: 10px 0 0;
   color: var(--warn);
   font-size: 14px;
+  font-weight: var(--weight-bold);
 }
 
 .panel-time {
@@ -301,7 +322,7 @@ body,
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(0, 0, 0, 0.45);
 }
 
 /* Heatmap labels */
@@ -311,10 +332,11 @@ body,
   gap: 4px;
   padding: 2px 6px;
   font-size: 12px;
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
   color: #fff;
-  background: rgba(20, 22, 26, 0.78);
-  border-radius: 4px;
+  background: rgba(14, 15, 18, 0.88);
+  border-radius: var(--radius);
   white-space: nowrap;
 }
 
@@ -339,8 +361,9 @@ body,
   overflow-y: auto;
   padding: 10px 14px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-bold);
 }
 
 .route-legend[hidden] {
@@ -355,12 +378,12 @@ body,
 
 .route-legend-title {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: var(--muted);
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--border-width) solid var(--border);
 }
 
 .route-legend-row {
@@ -368,6 +391,7 @@ body,
   align-items: center;
   gap: 8px;
   font-size: 13px;
+  font-weight: var(--weight-bold);
   white-space: nowrap;
 }
 
@@ -376,7 +400,7 @@ body,
   height: 12px;
   border-radius: 50%;
   flex: 0 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.5);
 }
 
 @media (max-width: 600px) {
@@ -406,7 +430,10 @@ body,
 
 .overlay-title {
   margin: 0 0 8px;
-  font-size: 28px;
+  font-size: 32px;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-bold);
+  text-transform: uppercase;
 }
 
 .overlay-message {
@@ -421,6 +448,7 @@ body,
 
 .overlay-error .overlay-message {
   color: var(--warn);
+  font-weight: var(--weight-bold);
 }
 
 @media (max-width: 600px) {
