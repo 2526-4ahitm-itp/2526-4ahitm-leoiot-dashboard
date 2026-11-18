@@ -56,6 +56,7 @@ export class App {
     controls.onHeatmap = (k) => this.toggleHeatmap(k);
     floorStepper.onStep = (direction) => this.step(direction);
     floorStepper.onGym = () => this.setView('T');
+    floorStepper.onBack = () => this.setView('full');
     navigation.setRooms(knownRooms());
     navigation.onNavigate = (room) => this.navigate(room);
     navigation.onClear = () => this.clearRoute();

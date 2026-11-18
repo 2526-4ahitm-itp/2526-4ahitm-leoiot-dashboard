@@ -38,8 +38,8 @@ Every control, panel, button and interaction present in the explorer before the 
 - **WHEN** a user operates any button, panel or interaction that existed before the redesign
 - **THEN** it is still present and produces the same outcome as before
 
-### Requirement: Floor switching is three bare, captioned arrows
-The explorer SHALL offer floor switching as three bare arrow buttons — up, down, and a right-pointing arrow to the gym — each on its own, not grouped into a panel, moving one floor at a time in the same order and with the same limits as the up/down arrow keys, rather than one named button per floor. Each arrow SHALL be captioned with the name of the floor or view it leads to; an arrow with no valid destination (disabled) SHALL NOT show a caption naming one.
+### Requirement: Floor switching is bare, captioned arrows
+The explorer SHALL offer floor switching as bare arrow buttons — up, down, and a right-pointing arrow to the gym — each on its own, not grouped into a panel, moving one floor at a time in the same order and with the same limits as the up/down arrow keys, rather than one named button per floor. Each arrow SHALL be captioned with the name of the floor or view it leads to; an arrow with no valid destination (disabled) SHALL NOT show a caption naming one. While the gym is the current view, a left-pointing arrow captioned with the overview SHALL also be shown, as the way back to it; it SHALL NOT be shown otherwise.
 
 #### Scenario: Stepping down through the floors
 - **WHEN** a user repeatedly activates the down arrow from the whole-building view
@@ -61,6 +61,14 @@ The explorer SHALL offer floor switching as three bare arrow buttons — up, dow
 - **WHEN** a user activates the gym arrow (captioned "Gym")
 - **THEN** the gym view is shown, the same as choosing it did before this change
 
+#### Scenario: Going back from the gym
+- **WHEN** the gym is shown and a user activates the left-pointing arrow
+- **THEN** the whole-building view is shown
+
+#### Scenario: The back arrow only appears in the gym
+- **WHEN** any view other than the gym is shown
+- **THEN** no left-pointing back arrow is shown
+
 ### Requirement: Primary controls are grouped by purpose, not scattered
 The explorer's always-visible primary controls SHALL be grouped by purpose rather than scattered across many separate floating panels: the up arrow, the down arrow and the Gym button each float on their own, not grouped into a panel together or with anything else; Reset View, the heatmap overlay toggles and room search are grouped together into a single fixed dock, divided into clearly labelled groups (View, Overlays, Search). None of the explorer's always-visible controls SHALL be positioned where a contextual overlay (the room info panel, the route legend) can cover them.
 
@@ -69,8 +77,8 @@ The explorer's always-visible primary controls SHALL be grouped by purpose rathe
 - **THEN** the up arrow, the down arrow and the Gym button are each shown bare, with no surrounding panel, and a separate dock is shown containing a View group, an Overlays group and a Search group, each visually distinguished from the others
 
 #### Scenario: An always-visible control stays reachable during a route
-- **WHEN** a route is active and its legend is shown
-- **THEN** the Gym button remains fully visible and clickable, not covered by the legend
+- **WHEN** a route is active and its legend is shown, and the gym arrow's position coincides with the legend's
+- **THEN** the gym arrow remains fully visible and clickable, drawn on top of the legend rather than hidden beneath it
 
 ### Requirement: Contextual overlays stay separate from the dock
 The room info panel and the route legend — shown only when a room is selected or a route is active — are contextual results, not primary controls, and SHALL remain outside the dock in their own floating positions.

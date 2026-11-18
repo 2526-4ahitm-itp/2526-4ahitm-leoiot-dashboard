@@ -22,12 +22,14 @@ export const strings = {
     '1': 'Floor 1',
     '2': 'Floor 2',
     T: 'Gym',
+    full: 'Overview',
     reset: 'Reset View',
   },
   floorStepper: {
     up: 'Floor up',
     down: 'Floor down',
     gym: 'Go to the gym',
+    back: 'Back to the overview',
   },
   heatmap: {
     temperature: 'Temperature',

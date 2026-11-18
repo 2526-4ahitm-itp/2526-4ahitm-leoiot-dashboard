@@ -83,12 +83,13 @@ body,
   pointer-events: none;
 }
 
-/* Floor switching as three bare arrow buttons, each captioned with where
-   it leads, not grouped into a panel (FR-11, always visible): an arrow at
-   the top of the screen, an arrow at the bottom, and a right-pointing
-   arrow to the gym on the right. The group wrapper is layout-only (no
-   background, border or shadow) — it positions an arrow with its caption,
-   it isn't "that kind of menu" again. */
+/* Floor switching as bare arrow buttons, each captioned with where it
+   leads, not grouped into a panel (FR-11, always visible): an arrow at
+   the top of the screen, an arrow at the bottom, a right-pointing arrow
+   to the gym on the right, and (only while the gym is shown) a
+   left-pointing arrow back to the overview. The group wrapper is
+   layout-only (no background, border or shadow) — it positions an arrow
+   with its caption, it isn't "that kind of menu" again. */
 .floor-arrow-group {
   position: fixed;
   display: flex;
@@ -111,17 +112,34 @@ body,
   bottom: 16px;
 }
 
-/* Bottom-right, not vertically centred on the right edge: that would sit
-   exactly where .route-legend floats while a route is active (both
-   right:16px, both centred), fully covering the gym arrow — confirmed by
-   measuring an actual 3-floor route's legend with a browser automation
-   tool before picking this spot; the legend's own height leaves
-   bottom-right clear. Row layout: the caption reads into the arrow
+.floor-arrow-group-gym,
+.floor-arrow-group-back {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Vertically centred on the right, level with .floor-arrow-group-back on
+   the left. NOTE: this is the same anchor .route-legend uses (right:16px,
+   also centred) — while a route is active, the legend can cover this
+   arrow; moving it to the bottom-right avoided that, but was moved back
+   to the middle on request. Row layout: the caption reads into the arrow
    ("GYM ▶"), rather than the arrow pointing away from its own label. */
 .floor-arrow-group-gym {
   right: 16px;
-  bottom: 16px;
   flex-direction: row;
+}
+
+/* Left-pointing, mirroring Gym on the opposite edge: only the gym view
+   has no other way back to the overview, so this only shows then. Row
+   layout, arrow before caption ("◀ OVERVIEW"), the mirror image of Gym's
+   caption-then-arrow. */
+.floor-arrow-group-back {
+  left: 16px;
+  flex-direction: row;
+}
+
+.floor-arrow-group-back[hidden] {
+  display: none;
 }
 
 .floor-arrow {
@@ -620,7 +638,10 @@ body,
 
   .floor-arrow-group-gym {
     right: 8px;
-    bottom: 8px;
+  }
+
+  .floor-arrow-group-back {
+    left: 8px;
   }
 
   /* Too narrow for every group in one row: the dock keeps its single-row

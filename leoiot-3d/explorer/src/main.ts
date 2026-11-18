@@ -34,12 +34,17 @@ root.append(
   watermark.element,
   stage,
   panel.element,
+  routeLegend.element,
+  // The gym arrow sits at the same vertical centre as .route-legend (on
+  // request), so it can overlap the legend during a route; appending it
+  // (and the other floor arrows) after the legend keeps it painted on
+  // top, so it stays visible and clickable rather than hidden underneath.
   floorStepper.upElement,
   floorStepper.downElement,
   floorStepper.gymElement,
+  floorStepper.backElement,
   dock,
   navigation.nextFloorElement,
-  routeLegend.element,
   loading.element,
 );
 
