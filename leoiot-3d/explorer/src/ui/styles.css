@@ -39,18 +39,18 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Font-weight tops out at 900; the em box also has more headroom than a
-     digit's own ink, so the size goes well past 100vh and a text-stroke
-     thickens the glyph edges further, to actually reach the top/bottom
-     of the screen and read as heavier than 900 alone. */
-  /* Calibrated against actual rendered glyph metrics (the stroke and font
-     metrics make the ink noticeably taller than the font-size itself), so a
-     typical 3-character room id both nearly touches the top/bottom of the
-     screen and stays fully on-screen horizontally. */
-  font-size: min(82vh, 55vw);
+  /* A monospace stack for square, blocky digit shapes (a proportional
+     sans narrows digits like "1"); font-weight tops out at 900, so a
+     text-stroke thickens the glyph edges further for a bolder look.
+     Calibrated against actual rendered glyph metrics (font metrics and
+     the stroke make the ink a different size than the font-size value
+     itself), so a typical 3-character room id both nearly touches the
+     top/bottom of the screen and stays fully on-screen horizontally. */
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: min(100vh, 54vw);
   font-weight: 900;
-  -webkit-text-stroke: 1.2vh var(--watermark);
-  letter-spacing: -0.04em;
+  -webkit-text-stroke: 1.4vh var(--watermark);
+  letter-spacing: -0.02em;
   line-height: 1;
   color: var(--watermark);
   opacity: 0;

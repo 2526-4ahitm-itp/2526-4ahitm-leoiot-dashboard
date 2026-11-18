@@ -54,3 +54,9 @@
 - [x] 9.2 Add `-webkit-text-stroke` (same colour as the fill) to `.room-watermark`, since `font-weight` tops out at 900 and the stroke is the only further way to thicken the glyph edges for a bolder look.
 - [x] 9.3 Set `font-size: min(82vh, 55vw)` (replacing a plain `vh` value), calibrated from the 9.1 measurement so a typical 3-character room id both nearly touches the top and bottom of the screen and stays fully on-screen horizontally — a plain large `vh` value pushed a 3-digit id off both edges, which was verified and rejected before landing this value. Verify by selecting a room with a browser automation tool, reading the text's bounding rect, and confirming it's both ≥90% of the viewport height and ≤95% of the viewport width.
 - [x] 9.4 Run the full regression pass (tests, `tsc --noEmit`, production build) and confirm no existing behaviour changed.
+
+## 10. Watermark: taller still, a squarer font
+
+- [x] 10.1 Switch `.room-watermark`'s `font-family` to a system monospace stack (`ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace`), for squarer, blockier digit shapes than the page's proportional sans; no external font load, so no new network dependency for a kiosk-style app.
+- [x] 10.2 Re-measure the rendered glyph box the same way as 9.1 (the width/height-per-`font-size` ratios change with the font) and recalibrate `font-size` to `min(100vh, 54vw)`, loosening both caps from 9.3 so the text reaches, and now even just overflows, the top/bottom edge (clipped by the pre-existing `overflow: hidden` on `body`/`#app`) while staying within ~95% of the viewport width. Verify the same way as 9.3.
+- [x] 10.3 Run the full regression pass (tests, `tsc --noEmit`, production build) and confirm no existing behaviour changed.
