@@ -137,6 +137,7 @@ export class App {
     this.activeRoute = result.points;
     this.routeFloorSequence = routeFloors(result.points);
     this.setView(this.routeFloorSequence[0]);
+    this.navigation.closeOnRouteStarted();
   }
 
   clearRoute(): void {

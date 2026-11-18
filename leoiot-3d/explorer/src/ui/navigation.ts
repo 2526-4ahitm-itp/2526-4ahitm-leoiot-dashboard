@@ -6,16 +6,20 @@ import { el } from './dom';
 import { strings } from './strings';
 
 export class Navigation {
-  readonly element = el('div', 'nav');
+  /** The "Search" dock group: a toggle that opens a popover above the dock. */
+  readonly element = el('div', 'dock-group dock-group-search');
+  /**
+   * Its own fixed control above the dock, not tucked into the collapsible
+   * search popover: it stays usable while advancing through a route even
+   * with the popover closed.
+   */
+  readonly nextFloorElement = el('button', 'button next-floor', strings.navigation.nextFloor);
   private readonly toggle = el('button', 'button nav-toggle', strings.navigation.toggle);
   private readonly panel = el('div', 'nav-panel');
   private readonly input = el('input', 'nav-input') as HTMLInputElement;
   private readonly suggestions = el('ul', 'nav-suggestions');
   private readonly goButton = el('button', 'button', strings.navigation.go);
   private readonly clearButton = el('button', 'button', strings.navigation.clear);
-  // Its own fixed, bottom-centre control, not tucked into the collapsible search
-  // panel: it stays usable while advancing through a route even with the panel closed.
-  private readonly nextFloorButton = el('button', 'button next-floor', strings.navigation.nextFloor);
   private readonly error = el('p', 'nav-error');
   private rooms: readonly string[] = [];
 
@@ -29,7 +33,7 @@ export class Navigation {
     this.input.autocomplete = 'off';
     this.error.hidden = true;
     this.panel.hidden = true;
-    this.nextFloorButton.hidden = true;
+    this.nextFloorElement.hidden = true;
 
     this.toggle.setAttribute('aria-expanded', 'false');
     this.toggle.addEventListener('click', () => this.setOpen(this.panel.hidden));
@@ -39,12 +43,12 @@ export class Navigation {
       this.hideError();
       this.onClear();
     });
-    this.nextFloorButton.addEventListener('click', () => this.onNextFloor());
+    this.nextFloorElement.addEventListener('click', () => this.onNextFloor());
 
     const actions = el('div', 'nav-actions');
     actions.append(this.goButton, this.clearButton);
     this.panel.append(this.input, this.suggestions, actions, this.error);
-    this.element.append(this.toggle, this.panel, this.nextFloorButton);
+    this.element.append(el('span', 'dock-group-label', strings.dock.search), this.toggle, this.panel);
   }
 
   /** The room ids a search can match; set once the models are loaded. */
@@ -64,7 +68,17 @@ export class Navigation {
 
   /** Shows or hides "Next floor" — visible only while an active route continues onto a floor not yet shown. */
   setNextFloorAvailable(available: boolean): void {
-    this.nextFloorButton.hidden = !available;
+    this.nextFloorElement.hidden = !available;
+  }
+
+  /**
+   * Closes the search popover once a route has actually started, so it
+   * doesn't sit over "Next floor" above the dock. Left open on a rejected
+   * destination, so the error message stays visible (spec "Invalid
+   * destination does not start navigation").
+   */
+  closeOnRouteStarted(): void {
+    this.setOpen(false);
   }
 
   private setOpen(open: boolean): void {

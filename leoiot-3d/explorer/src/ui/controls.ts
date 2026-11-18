@@ -1,4 +1,5 @@
 // Always visible buttons: views, reset and heatmaps (FSD FR-11).
+// Exposes two dock groups ("Floors" and "Overlays") for the bottom dock (model3d/visual-design).
 
 import { FLOOR_ORDER } from '../core/rooms';
 import type { HeatmapKind } from '../core/heatmap';
@@ -9,7 +10,10 @@ import { strings } from './strings';
 const FLOOR_BUTTONS = FLOOR_ORDER;
 
 export class Controls {
-  readonly element = el('nav', 'bar');
+  /** The "Floors" dock group: view switching (floors, gym) and reset. */
+  readonly element = el('nav', 'dock-group');
+  /** The "Overlays" dock group: heatmap toggles. */
+  readonly overlaysElement = el('div', 'dock-group');
   private readonly views = new Map<ViewId, HTMLButtonElement>();
   private readonly heatmaps = new Map<HeatmapKind, HTMLButtonElement>();
   private readonly reset = el('button', 'button', strings.views.reset);
@@ -19,22 +23,21 @@ export class Controls {
   onHeatmap: (kind: HeatmapKind) => void = () => undefined;
 
   constructor() {
-    const actions = el('div', 'bar-group');
+    const floorButtons = el('div', 'dock-group-buttons');
+    floorButtons.append(this.viewButton('T'));
+    for (const v of FLOOR_BUTTONS) floorButtons.append(this.viewButton(v));
+    this.reset.addEventListener('click', () => this.onReset());
+    floorButtons.append(this.reset);
+    this.element.append(el('span', 'dock-group-label', strings.dock.floors), floorButtons);
+
+    const overlayButtons = el('div', 'dock-group-buttons');
     for (const k of ['temperature', 'co2'] as const) {
       const b = el('button', 'button', strings.heatmap[k]);
       b.addEventListener('click', () => this.onHeatmap(k));
       this.heatmaps.set(k, b);
-      actions.append(b);
+      overlayButtons.append(b);
     }
-    this.reset.addEventListener('click', () => this.onReset());
-    actions.append(this.reset);
-
-    const gym = el('div', 'bar-group');
-    gym.append(this.viewButton('T'));
-
-    const floors = el('div', 'bar-group');
-    for (const v of FLOOR_BUTTONS) floors.append(this.viewButton(v));
-    this.element.append(actions, gym, floors);
+    this.overlaysElement.append(el('span', 'dock-group-label', strings.dock.overlays), overlayButtons);
   }
 
   private viewButton(view: (typeof FLOOR_BUTTONS)[number] | 'T'): HTMLButtonElement {

@@ -23,3 +23,12 @@
 
 - [x] 5.1 Run the explorer's existing test suite (`cd leoiot-3d/explorer && npm test --if-present`) and confirm it passes unchanged.
 - [x] 5.2 Manually walk through: whole-building view, each floor view, the gym, both heatmaps, opening a room panel, and a route with its legend — confirm every control from before the redesign is still present and functional, only its look has changed.
+
+## 6. Bottom dock layout
+
+- [x] 6.1 Split `Controls` (`controls.ts`) into two dock-group elements — `element` (Floors: gym, floor buttons, reset) and `overlaysElement` (Overlays: heatmap toggles) — replacing the single `.bar`; verify with `npx tsc --noEmit` and that `Controls`' public API change compiles against its one caller (`main.ts`).
+- [x] 6.2 Turn `Navigation`'s root (`navigation.ts`) into the Search dock-group (toggle + popover) and expose `nextFloorElement` separately from it; verify the same way.
+- [x] 6.3 Assemble `.dock` in `main.ts` from `controls.element`, `controls.overlaysElement` and `navigation.element`, and append `navigation.nextFloorElement` directly to the app root, positioned above the dock; verify by running the dev server and confirming one bottom dock with three labelled groups (Floors, Overlays, Search) replaces the old left-middle bar and top-left search toggle.
+- [x] 6.4 Restyle `.dock`/`.dock-group`/`.dock-group-label`/`.dock-group-buttons` in `styles.css` as a single-row, horizontally-scrolling (not wrapping) bar, and reposition `.nav-panel` to open upward as a `position: fixed` popover above the dock and `.next-floor` to sit above the dock; verify with a browser automation tool (Playwright) that the popover is actually visible when opened — not just that it exists in the DOM — since a `transform` on a centering ancestor can silently clip/mis-anchor a `position: fixed` descendant.
+- [x] 6.5 Add `Navigation.closeOnRouteStarted()` and call it from `App.navigate()` on the success path only (not on a rejected destination); verify by starting a route from the search popover and confirming the popover closes and "Next floor" is fully visible, while a route to an unknown room still shows its error with the popover open.
+- [x] 6.6 Re-run the full regression pass (tests, `tsc --noEmit`, production build, and a live walkthrough of floor switching, heatmap toggles, search → route → legend → next floor, at both a desktop and a narrow viewport) and confirm no behaviour changed, only the layout.

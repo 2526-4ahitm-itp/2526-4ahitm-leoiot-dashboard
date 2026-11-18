@@ -11,6 +11,11 @@ export const strings = {
   loadError: 'The building model could not be loaded.',
   loadErrorDetail: (failed: number, total: number) => `${failed} of ${total} models failed to load.`,
   tryAgain: 'Try again',
+  dock: {
+    floors: 'Floors',
+    overlays: 'Overlays',
+    search: 'Search',
+  },
   views: {
     U: 'Basement',
     E: 'Ground floor',

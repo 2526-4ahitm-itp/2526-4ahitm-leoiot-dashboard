@@ -20,7 +20,9 @@ const panel = new InfoPanel();
 const navigation = new Navigation();
 const routeLegend = new RouteLegend();
 const loading = new LoadingScreen();
-root.append(stage, panel.element, controls.element, navigation.element, routeLegend.element, loading.element);
+const dock = el('div', 'dock');
+dock.append(controls.element, controls.overlaysElement, navigation.element);
+root.append(stage, panel.element, dock, navigation.nextFloorElement, routeLegend.element, loading.element);
 
 const viewer = new Viewer(stage);
 const store = new RoomStore();

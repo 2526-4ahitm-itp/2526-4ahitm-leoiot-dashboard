@@ -2,14 +2,17 @@
 
 ## Why
 
-The 3D building explorer's UI chrome (panels, buttons, overlays, loading screen, legends, typography) is plain and low-contrast, which undersells a public-facing wayfinding and room-climate tool. The explorer needs a bold, high-contrast visual identity for its surrounding chrome without touching the 3D building model's own appearance, without removing any feature, and without changing the semantic colour scales (temperature/CO₂ heatmap, route legend) that other model3d capabilities already define.
+The 3D building explorer's UI chrome (panels, buttons, overlays, loading screen, legends, typography) is plain, low-contrast and scattered across five separate floating panels with no grouping by purpose, which undersells a public-facing wayfinding and room-climate tool and makes the controls harder to scan. The explorer needs a bold, high-contrast visual identity and a more practical control layout, without touching the 3D building model's own appearance, without removing any feature, and without changing the semantic colour scales (temperature/CO₂ heatmap, route legend) that other model3d capabilities already define.
 
 ## What Changes
 
 - Redesign the explorer's UI chrome: the floor/view buttons, the room info panel, the loading screen, the heatmap toggle buttons, and the route legend get a bold, high-contrast visual language (typography, spacing, borders, elevation).
+- Consolidate the floor/view buttons, the heatmap toggles and the room search — previously three separate floating panels (a left-middle bar, a top-left search toggle) — into one fixed bottom dock with three labelled groups: **Floors** (view switching, gym, reset), **Overlays** (temperature/CO₂ toggles) and **Search** (destination search, opening upward as a popover above the dock). Primary target is desktop browser use.
+- The room info panel and the route legend remain where they were (top-right and right-middle): they are contextual results, shown only when relevant, not part of the always-visible control dock.
+- The "Next floor" control moves from the bottom-centre (now occupied by the dock) to its own position just above the dock.
 - The 3D building model itself (materials, textures, camera, lighting) is **not** restyled; it keeps its current appearance.
 - The semantic data colours already specified for the temperature heatmap, the CO₂ heatmap and the route legend markers are **not** changed; only the chrome around them (panel backgrounds, borders, button states, typography) is restyled.
-- No feature is removed, hidden or renamed; every button, panel and interaction that exists today keeps working exactly as before.
+- No feature is removed, hidden or renamed; every button, panel and interaction that exists today keeps working exactly as before — including the visible, non-hidden search control required by `model3d/room-navigation` ("Visible controls to start and clear navigation"): the dock's Search toggle and its popover are always reachable, never a hidden gesture.
 
 ## Capabilities
 
