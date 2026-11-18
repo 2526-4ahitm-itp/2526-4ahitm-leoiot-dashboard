@@ -6,6 +6,7 @@ import { LoadError, loadModels, type Model, type ViewId } from './scene/models';
 import { Viewer } from './scene/viewer';
 import { Controls } from './ui/controls';
 import { el } from './ui/dom';
+import { FloorStepper } from './ui/floorStepper';
 import { LoadingScreen } from './ui/loading';
 import { Navigation } from './ui/navigation';
 import { InfoPanel } from './ui/panel';
@@ -18,16 +19,27 @@ const root = document.getElementById('app')!;
 const watermark = new RoomWatermark();
 const stage = el('main', 'stage');
 const controls = new Controls();
+const floorStepper = new FloorStepper();
 const panel = new InfoPanel();
 const navigation = new Navigation();
 const routeLegend = new RouteLegend();
 const loading = new LoadingScreen();
+// "The rest of the menu" (view reset, overlays, search): one dock, left-aligned.
 const dock = el('div', 'dock');
-dock.append(controls.element, controls.overlaysElement, navigation.element);
+dock.append(controls.resetElement, controls.overlaysElement, navigation.element);
 // watermark comes before stage: the canvas is transparent (see Viewer) where the
 // scene shows no geometry, so the watermark shows through there and is otherwise
 // occluded by the opaque building, painted on top of it in DOM order.
-root.append(watermark.element, stage, panel.element, dock, navigation.nextFloorElement, routeLegend.element, loading.element);
+root.append(
+  watermark.element,
+  stage,
+  panel.element,
+  floorStepper.element,
+  dock,
+  navigation.nextFloorElement,
+  routeLegend.element,
+  loading.element,
+);
 
 const viewer = new Viewer(stage);
 const store = new RoomStore();
@@ -46,7 +58,7 @@ async function load(): Promise<void> {
     return;
   }
   loading.hide();
-  new App(viewer, models, store, controls, panel, navigation, routeLegend, watermark);
+  new App(viewer, models, store, controls, floorStepper, panel, navigation, routeLegend, watermark);
 }
 
 loading.onRetry = () => void load();

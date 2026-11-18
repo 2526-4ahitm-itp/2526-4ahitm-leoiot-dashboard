@@ -83,19 +83,59 @@ body,
   pointer-events: none;
 }
 
-/* Bottom dock: the explorer's always-visible controls (FR-11), grouped by
-   purpose into Floors / Overlays / Search instead of scattered panels. */
-.dock {
-  /* Centred without `transform`: a transformed ancestor becomes the
-     containing block for any `position: fixed` descendant (the search
-     popover), which would trap and clip it instead of letting it escape
-     to the viewport. */
+/* Floor stepper: up/down arrows around the current floor's name, with Gym
+   as its own button to the right — floating on its own (FR-11, always
+   visible), not part of the dock, on the same left edge as it. */
+.floor-stepper {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-bold);
+}
+
+.floor-stepper-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.floor-stepper-arrow {
+  padding: 6px 0;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.floor-stepper-label {
+  min-width: 108px;
+  padding: 4px 0;
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-bold);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Bottom dock: "the rest of the menu" (view reset, heatmap overlays,
+   search) once floor switching moved to its own floor-stepper control —
+   left-aligned, not centred, so it reads as one unit with the stepper
+   above it on the same left edge. */
+.dock {
+  /* No `transform` here (e.g. for centring): a transformed ancestor
+     becomes the containing block for any `position: fixed` descendant
+     (the search popover), which would trap and clip it instead of
+     letting it escape to the viewport. */
+  position: fixed;
+  left: 16px;
   bottom: 16px;
-  width: fit-content;
-  margin: 0 auto;
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-end;
@@ -158,7 +198,11 @@ body,
   white-space: nowrap;
 }
 
-.button:hover:not(:disabled) {
+/* :not([aria-pressed='true']): a bare :hover (specificity 0,3,0) would
+   otherwise beat [aria-pressed='true'] (0,2,0) and visually un-press a
+   selected button the cursor happens to rest on - confirmed by actually
+   hovering a pressed button with a browser automation tool, not assumed. */
+.button:hover:not(:disabled):not([aria-pressed='true']) {
   background: rgba(255, 255, 255, 0.22);
 }
 
@@ -176,6 +220,10 @@ body,
   color: #1c1e22;
   background: var(--accent);
   border-color: var(--accent);
+}
+
+.button[aria-pressed='true']:hover:not(:disabled) {
+  background: #a3e0a8;
 }
 
 .button:disabled {
@@ -204,9 +252,12 @@ body,
 .nav-panel {
   /* Fixed to the viewport, not absolute within .dock-group-search: the dock
      scrolls horizontally on narrow screens (overflow-x), which would clip an
-     absolutely-positioned descendant that escapes its bounds vertically. */
+     absolutely-positioned descendant that escapes its bounds vertically.
+     `left` is set from JS (Navigation.positionPanel) to the Search toggle's
+     own position, since the dock is left-aligned and variable-width, not
+     centred — a fixed 50% would drift away from the toggle that opened it. */
   position: fixed;
-  left: 50%;
+  left: 16px;
   bottom: 96px;
   transform: translateX(-50%);
   width: min(260px, calc(100vw - 32px));
@@ -267,14 +318,14 @@ body,
   font-weight: var(--weight-bold);
 }
 
-/* "Next floor": its own fixed, bottom-centre control — bigger and
-   see-through rather than another small button in the search panel, since
-   it's meant to be noticed and used repeatedly while walking a route. */
+/* "Next floor": its own fixed control above the dock (same left edge) —
+   bigger and see-through rather than another small button in the search
+   panel, since it's meant to be noticed and used repeatedly while walking
+   a route. */
 .next-floor {
   position: fixed;
-  left: 50%;
+  left: 16px;
   bottom: 96px;
-  transform: translateX(-50%);
   padding: 14px 30px;
   font-size: 17px;
   font-weight: var(--weight-bold);
@@ -533,10 +584,14 @@ body,
     right: 8px;
   }
 
-  /* Not enough width for one row of groups: the dock wraps onto its own lines */
+  .floor-stepper {
+    left: 8px;
+  }
+
   /* Too narrow for every group in one row: the dock keeps its single-row
      shape and scrolls horizontally rather than growing tall. */
   .dock {
+    left: 8px;
     bottom: 8px;
     gap: 12px;
     max-width: calc(100vw - 16px);
@@ -546,5 +601,9 @@ body,
   .dock .button {
     padding: 6px 9px;
     font-size: 12px;
+  }
+
+  .next-floor {
+    left: 8px;
   }
 }

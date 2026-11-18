@@ -37,6 +37,9 @@ export class Navigation {
 
     this.toggle.setAttribute('aria-expanded', 'false');
     this.toggle.addEventListener('click', () => this.setOpen(this.panel.hidden));
+    window.addEventListener('resize', () => {
+      if (!this.panel.hidden) this.positionPanel();
+    });
     this.input.addEventListener('input', () => this.renderSuggestions());
     this.goButton.addEventListener('click', () => this.go());
     this.clearButton.addEventListener('click', () => {
@@ -84,7 +87,21 @@ export class Navigation {
   private setOpen(open: boolean): void {
     this.panel.hidden = !open;
     this.toggle.setAttribute('aria-expanded', String(open));
-    if (open) this.input.focus();
+    if (open) {
+      this.positionPanel();
+      this.input.focus();
+    }
+  }
+
+  /**
+   * Centres the popover above the Search toggle itself, not the screen: the
+   * dock (and the toggle within it) moved to the left edge of the screen,
+   * no longer centred, so a fixed `left: 50%` would leave the popover
+   * floating away from the control that opened it.
+   */
+  private positionPanel(): void {
+    const rect = this.toggle.getBoundingClientRect();
+    this.panel.style.left = `${rect.left + rect.width / 2}px`;
   }
 
   private renderSuggestions(): void {

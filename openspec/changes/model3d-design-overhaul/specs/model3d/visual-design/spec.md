@@ -7,10 +7,10 @@ Describes the bold, high-contrast visual language and the grouped control layout
 ## ADDED Requirements
 
 ### Requirement: Chrome uses a bold, high-contrast visual style
-The explorer's UI chrome — the floor/view buttons, the room info panel, the loading screen, the heatmap toggle buttons and the route legend — SHALL use a bold, high-contrast visual style (strong typography, clear borders or elevation, high-contrast surfaces), applied consistently across all of these elements rather than to only some of them.
+The explorer's UI chrome — the floor stepper, the room info panel, the loading screen, the heatmap toggle buttons and the route legend — SHALL use a bold, high-contrast visual style (strong typography, clear borders or elevation, high-contrast surfaces), applied consistently across all of these elements rather than to only some of them.
 
 #### Scenario: Viewing any chrome element
-- **WHEN** a user looks at the floor buttons, the room info panel, the loading screen, a heatmap toggle button or the route legend
+- **WHEN** a user looks at the floor stepper, the room info panel, the loading screen, a heatmap toggle button or the route legend
 - **THEN** each one shows the same bold, high-contrast visual style
 
 ### Requirement: The 3D building model's appearance is unchanged
@@ -38,12 +38,31 @@ Every control, panel, button and interaction present in the explorer before the 
 - **WHEN** a user operates any button, panel or interaction that existed before the redesign
 - **THEN** it is still present and produces the same outcome as before
 
-### Requirement: Primary controls are grouped into one bottom dock
-The explorer's always-visible primary controls — floor/view switching (including the gym view and reset), the heatmap overlay toggles, and room search — SHALL be presented together in a single fixed dock, divided into clearly labelled groups by purpose (Floors, Overlays, Search), rather than scattered across multiple separate floating panels.
+### Requirement: Floor switching is an up/down stepper with a separate Gym button
+The explorer SHALL offer floor switching as a single stepper: an up button and a down button around the current floor's name, moving one floor at a time in the same order and with the same limits as the up/down arrow keys, rather than one named button per floor. The gym view SHALL be reached through its own, separate button next to the stepper, not through the stepper itself.
+
+#### Scenario: Stepping down through the floors
+- **WHEN** a user repeatedly activates the stepper's down button from the whole-building view
+- **THEN** each floor is shown one at a time, top to bottom, the same as repeatedly pressing the down arrow key would
+
+#### Scenario: No floor beyond the ends
+- **WHEN** the top floor or the basement is shown
+- **THEN** the stepper's button that would go further in that direction is disabled, not merely ignored when activated
+
+#### Scenario: The stepper does nothing in the gym
+- **WHEN** the gym is shown
+- **THEN** both of the stepper's buttons are disabled, consistent with the arrow keys not changing the view there either
+
+#### Scenario: Going to the gym
+- **WHEN** a user activates the Gym button
+- **THEN** the gym view is shown, the same as choosing it did before this change
+
+### Requirement: Primary controls are grouped by purpose, not scattered
+The explorer's always-visible primary controls SHALL be grouped by purpose rather than scattered across many separate floating panels: the floor stepper and Gym button float as their own control, and Reset View, the heatmap overlay toggles and room search are grouped together into a single fixed dock, divided into clearly labelled groups (View, Overlays, Search). The dock and the floor stepper SHALL be aligned to the same side of the screen, not one centred and the other not.
 
 #### Scenario: Viewing the dock
 - **WHEN** a user looks at the explorer's primary controls
-- **THEN** one dock is shown containing a Floors group, an Overlays group and a Search group, each visually distinguished from the others
+- **THEN** the floor stepper is shown as its own control, and a separate dock is shown containing a View group, an Overlays group and a Search group, each visually distinguished from the others
 
 ### Requirement: Contextual overlays stay separate from the dock
 The room info panel and the route legend — shown only when a room is selected or a route is active — are contextual results, not primary controls, and SHALL remain outside the dock in their own floating positions.

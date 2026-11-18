@@ -12,6 +12,7 @@ import type { Model, ViewId } from './scene/models';
 import type { Label, RouteMarkerDot, Viewer } from './scene/viewer';
 import type { Controls } from './ui/controls';
 import { el } from './ui/dom';
+import type { FloorStepper } from './ui/floorStepper';
 import type { Navigation } from './ui/navigation';
 import { InfoPanel, statusBadge } from './ui/panel';
 import type { LegendSection, RouteLegend } from './ui/routeLegend';
@@ -42,6 +43,7 @@ export class App {
     private readonly models: Map<ViewId, Model>,
     private readonly store: RoomStore,
     private readonly controls: Controls,
+    private readonly floorStepper: FloorStepper,
     private readonly panel: InfoPanel,
     private readonly navigation: Navigation,
     private readonly routeLegend: RouteLegend,
@@ -50,9 +52,10 @@ export class App {
     viewer.onPick = (room) => (room === null ? this.deselect() : this.select(room));
     panel.onClose = () => this.deselect();
     panel.onNavigate = (room) => this.navigate(room);
-    controls.onView = (v) => this.setView(v);
     controls.onReset = () => this.reset();
     controls.onHeatmap = (k) => this.toggleHeatmap(k);
+    floorStepper.onStep = (direction) => this.step(direction);
+    floorStepper.onGym = () => this.setView('T');
     navigation.setRooms(knownRooms());
     navigation.onNavigate = (room) => this.navigate(room);
     navigation.onClear = () => this.clearRoute();
@@ -79,26 +82,32 @@ export class App {
     this.render();
   }
 
-  /**
-   * ↑/↓ move one floor up/down (top to bottom as in the building). The whole
-   * building sits conceptually one step above the top floor, so ArrowDown
-   * from it enters Floor 2; ArrowUp there is a no-op, same as at Floor 2
-   * itself. No-op off the floor stack entirely (the gym) or past the bottom.
-   */
   private handleKey(e: KeyboardEvent): void {
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     const target = e.target as HTMLElement | null;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+    if (this.step(e.key === 'ArrowUp' ? -1 : 1)) e.preventDefault();
+  }
+
+  /**
+   * Moves one floor up/down (top to bottom as in the building), by the
+   * arrow keys or the floor stepper's up/down buttons — the same move
+   * either way. The whole building sits conceptually one step above the
+   * top floor, so stepping down from it enters Floor 2; stepping up there
+   * is a no-op, same as at Floor 2 itself. No-op off the floor stack
+   * entirely (the gym) or past the bottom. Returns whether it moved.
+   */
+  private step(direction: 1 | -1): boolean {
     let index: number;
     if (this.view === 'full') index = -1;
     else {
       index = (FLOOR_ORDER as readonly string[]).indexOf(this.view);
-      if (index === -1) return;
+      if (index === -1) return false;
     }
-    const next = index + (e.key === 'ArrowUp' ? -1 : 1);
-    if (next < 0 || next >= FLOOR_ORDER.length) return;
-    e.preventDefault();
+    const next = index + direction;
+    if (next < 0 || next >= FLOOR_ORDER.length) return false;
     this.setView(FLOOR_ORDER[next]);
+    return true;
   }
 
   reset(): void {
@@ -171,6 +180,7 @@ export class App {
     const model = this.model(this.view);
     this.viewer.show(model.root);
     this.controls.update(this.view, this.heatmap, heatmapAllowed(this.view));
+    this.floorStepper.update(this.view);
 
     const coloured = new Map<string, string>();
     const labels: Label[] = [];

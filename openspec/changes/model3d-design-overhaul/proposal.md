@@ -7,9 +7,11 @@ The 3D building explorer's UI chrome (panels, buttons, overlays, loading screen,
 ## What Changes
 
 - Redesign the explorer's UI chrome: the floor/view buttons, the room info panel, the loading screen, the heatmap toggle buttons, and the route legend get a bold, high-contrast visual language (typography, spacing, borders, elevation).
-- Consolidate the floor/view buttons, the heatmap toggles and the room search — previously three separate floating panels (a left-middle bar, a top-left search toggle) — into one fixed bottom dock with three labelled groups: **Floors** (view switching, gym, reset), **Overlays** (temperature/CO₂ toggles) and **Search** (destination search, opening upward as a popover above the dock). Primary target is desktop browser use.
-- The room info panel and the route legend remain where they were (top-right and right-middle): they are contextual results, shown only when relevant, not part of the always-visible control dock.
-- The "Next floor" control moves from the bottom-centre (now occupied by the dock) to its own position just above the dock.
+- Consolidate the heatmap toggles, Reset View and the room search — previously separate floating panels — into one fixed dock with three labelled groups: **View** (Reset View), **Overlays** (temperature/CO₂ toggles) and **Search** (destination search, opening upward as a popover above the dock). Primary target is desktop browser use.
+- Replace the one-button-per-floor list with a floor stepper: an up button and a down button around the current floor's name, moving one floor at a time the same way the existing up/down arrow keys already do, plus a separate Gym button next to it. This floats on its own, not inside the dock.
+- The dock and the floor stepper are aligned to the same (left) edge of the screen, not centred, so they read as one coherent left-side control area.
+- The room info panel and the route legend remain where they were (top-right and right-middle): they are contextual results, shown only when relevant, not part of the always-visible controls.
+- The "Next floor" control sits just above the dock, on the same left edge.
 - The 3D building model itself (materials, textures, camera, lighting) is **not** restyled; it keeps its current appearance.
 - The semantic data colours already specified for the temperature heatmap, the CO₂ heatmap and the route legend markers are **not** changed; only the chrome around them (panel backgrounds, borders, button states, typography) is restyled.
 - No feature is removed, hidden or renamed; every button, panel and interaction that exists today keeps working exactly as before — including the visible, non-hidden search control required by `model3d/room-navigation` ("Visible controls to start and clear navigation"): the dock's Search toggle and its popover are always reachable, never a hidden gesture.
@@ -25,6 +27,6 @@ The 3D building explorer's UI chrome (panels, buttons, overlays, loading screen,
 
 ## Impact
 
-- Code: `leoiot-3d/explorer/src/ui/*.ts` (`controls.ts`, `loading.ts`, `navigation.ts`, `panel.ts`, `routeLegend.ts`, `strings.ts`, `dom.ts`, new `watermark.ts`), `leoiot-3d/explorer/src/ui/styles.css`, `leoiot-3d/explorer/src/main.ts`, `leoiot-3d/explorer/src/app.ts`; and `leoiot-3d/explorer/src/scene/viewer.ts` (the renderer now clears to transparent instead of an opaque scene background, so the watermark can show through where the scene draws no geometry).
+- Code: `leoiot-3d/explorer/src/ui/*.ts` (`controls.ts`, `loading.ts`, `navigation.ts`, `panel.ts`, `routeLegend.ts`, `strings.ts`, `dom.ts`, new `watermark.ts`, new `floorStepper.ts`), `leoiot-3d/explorer/src/ui/styles.css`, `leoiot-3d/explorer/src/main.ts`, `leoiot-3d/explorer/src/app.ts`; and `leoiot-3d/explorer/src/scene/viewer.ts` (the renderer now clears to transparent instead of an opaque scene background, so the watermark can show through where the scene draws no geometry).
 - No API, broker, data-contract or backend changes; this is a front-end-only visual change within `leoiot-3d`.
 - Overlaps in the same files with the other in-flight `model3d-*` changes (`model3d-building-explorer`, `model3d-room-navigation`, `model3d-route-wayfinding`, `model3d-floor-arrow-keys`); whichever change merges later should rebase its chrome markup/CSS on the other rather than reverting it.

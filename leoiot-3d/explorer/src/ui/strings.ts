@@ -12,7 +12,7 @@ export const strings = {
   loadErrorDetail: (failed: number, total: number) => `${failed} of ${total} models failed to load.`,
   tryAgain: 'Try again',
   dock: {
-    floors: 'Floors',
+    view: 'View',
     overlays: 'Overlays',
     search: 'Search',
   },
@@ -22,7 +22,12 @@ export const strings = {
     '1': 'Floor 1',
     '2': 'Floor 2',
     T: 'Gym',
+    full: 'Overview',
     reset: 'Reset View',
+  },
+  floorStepper: {
+    up: 'Floor up',
+    down: 'Floor down',
   },
   heatmap: {
     temperature: 'Temperature',
