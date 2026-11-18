@@ -12,9 +12,7 @@ export const strings = {
   loadErrorDetail: (failed: number, total: number) => `${failed} of ${total} models failed to load.`,
   tryAgain: 'Try again',
   dock: {
-    view: 'View',
     overlays: 'Overlays',
-    search: 'Search',
   },
   views: {
     U: 'Basement',

@@ -14,7 +14,7 @@ export class Navigation {
    * with the popover closed.
    */
   readonly nextFloorElement = el('button', 'button next-floor', strings.navigation.nextFloor);
-  private readonly toggle = el('button', 'button nav-toggle', strings.navigation.toggle);
+  private readonly toggle = el('button', 'button nav-toggle dock-control', strings.navigation.toggle);
   private readonly panel = el('div', 'nav-panel');
   private readonly input = el('input', 'nav-input') as HTMLInputElement;
   private readonly suggestions = el('ul', 'nav-suggestions');
@@ -51,7 +51,9 @@ export class Navigation {
     const actions = el('div', 'nav-actions');
     actions.append(this.goButton, this.clearButton);
     this.panel.append(this.input, this.suggestions, actions, this.error);
-    this.element.append(el('span', 'dock-group-label', strings.dock.search), this.toggle, this.panel);
+    // No group label here (just the one toggle, already captioned "Navigate to a room") — unlike
+    // Overlays, which groups two buttons that need the label to read as one group.
+    this.element.append(this.toggle, this.panel);
   }
 
   /** The room ids a search can match; set once the models are loaded. */
@@ -94,14 +96,21 @@ export class Navigation {
   }
 
   /**
-   * Centres the popover above the Search toggle itself, not the screen: the
-   * dock (and the toggle within it) moved to the left edge of the screen,
-   * no longer centred, so a fixed `left: 50%` would leave the popover
-   * floating away from the control that opened it.
+   * Opens level with the Search toggle, just to its right, not centred on
+   * the screen: the side menu is a vertical rail, so the toggle's own
+   * vertical position varies with how many groups sit above it — anchoring
+   * to its own rect (rather than a fixed spot) keeps the popover attached
+   * to the control that opened it wherever that lands. Clamped to the
+   * viewport on both axes so a popover opened from low in a short rail, or
+   * from a narrow window, still stays fully on-screen rather than running
+   * past the right or bottom edge.
    */
   private positionPanel(): void {
     const rect = this.toggle.getBoundingClientRect();
-    this.panel.style.left = `${rect.left + rect.width / 2}px`;
+    const maxLeft = window.innerWidth - 276; // popover width (260px) plus a margin
+    const maxTop = window.innerHeight - 320; // rough popover height with suggestions open
+    this.panel.style.left = `${Math.max(8, Math.min(rect.right + 12, maxLeft))}px`;
+    this.panel.style.top = `${Math.max(8, Math.min(rect.top, maxTop))}px`;
   }
 
   private renderSuggestions(): void {

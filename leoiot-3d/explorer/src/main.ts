@@ -26,7 +26,8 @@ const routeLegend = new RouteLegend();
 const loading = new LoadingScreen();
 // "The rest of the menu" (view reset, overlays, search): one dock, left-aligned.
 const dock = el('div', 'dock');
-dock.append(controls.resetElement, controls.overlaysElement, navigation.element);
+// Largest group first: Overlays (two buttons), then Search, then Reset View (one each).
+dock.append(controls.overlaysElement, navigation.element, controls.resetElement);
 // watermark comes before stage: the canvas is transparent (see Viewer) where the
 // scene shows no geometry, so the watermark shows through there and is otherwise
 // occluded by the opaque building, painted on top of it in DOM order.

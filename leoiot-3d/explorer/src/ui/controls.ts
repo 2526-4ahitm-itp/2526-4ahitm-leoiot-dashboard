@@ -13,7 +13,7 @@ export class Controls {
   /** The "Overlays" dock group: heatmap toggles. */
   readonly overlaysElement = el('div', 'dock-group');
   private readonly heatmaps = new Map<HeatmapKind, HTMLButtonElement>();
-  private readonly reset = el('button', 'button', strings.views.reset);
+  private readonly reset = el('button', 'button dock-control', strings.views.reset);
 
   onReset: () => void = () => undefined;
   onHeatmap: (kind: HeatmapKind) => void = () => undefined;
@@ -22,11 +22,14 @@ export class Controls {
     this.reset.addEventListener('click', () => this.onReset());
     const resetButtons = el('div', 'dock-group-buttons');
     resetButtons.append(this.reset);
-    this.resetElement.append(el('span', 'dock-group-label', strings.dock.view), resetButtons);
+    // No group label here (just the one button, its own text already says what it does) — unlike
+    // Overlays below, which groups two buttons that need the label to read as one group.
+    this.resetElement.append(resetButtons);
 
     const overlayButtons = el('div', 'dock-group-buttons');
     for (const k of ['temperature', 'co2'] as const) {
-      const b = el('button', 'button', strings.heatmap[k]);
+      // Temperature stays a plain rectangle, on request — only this one heatmap toggle.
+      const b = el('button', k === 'temperature' ? 'button dock-control dock-control-rect' : 'button dock-control', strings.heatmap[k]);
       b.addEventListener('click', () => this.onHeatmap(k));
       this.heatmaps.set(k, b);
       overlayButtons.append(b);

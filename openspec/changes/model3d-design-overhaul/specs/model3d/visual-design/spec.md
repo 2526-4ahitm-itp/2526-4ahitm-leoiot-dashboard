@@ -7,11 +7,11 @@ Describes the bold, high-contrast visual language and the grouped control layout
 ## ADDED Requirements
 
 ### Requirement: Chrome uses a bold, high-contrast visual style
-The explorer's panelled UI chrome — the room info panel, the loading screen, the heatmap toggle buttons and the route legend — SHALL use a bold, high-contrast visual style (strong typography, clear borders or elevation, high-contrast surfaces), applied consistently across all of these elements rather than to only some of them. The floor arrows SHALL be bold in weight and size, but bare: no border, background or elevation of their own, consistent with "Floor switching is bare, captioned arrows".
+The explorer's panelled UI chrome — the room info panel, the loading screen, the search popover, the route legend, and the side menu's own buttons (Reset View, the heatmap overlay toggles, the Search toggle) — SHALL use a bold, high-contrast visual style (strong typography, clear borders or elevation, high-contrast surfaces), applied consistently across all of these elements rather than to only some of them. Only the floor arrows SHALL be bold in weight and size, but bare: no border, background or elevation of their own, consistent with "Floor switching is bare, captioned arrows" — they are not buttons in the usual sense, so they do not get the boxed treatment every other control does.
 
 #### Scenario: Viewing any chrome element
-- **WHEN** a user looks at the room info panel, the loading screen, a heatmap toggle button or the route legend
-- **THEN** each one shows the same bold, high-contrast visual style
+- **WHEN** a user looks at the room info panel, the loading screen, the search popover, the route legend, or a side menu button
+- **THEN** each one shows the same bold, high-contrast visual style, including a visible border and background identifying it as a button
 
 #### Scenario: Viewing a floor arrow
 - **WHEN** a user looks at one of the floor arrows
@@ -74,11 +74,11 @@ The explorer SHALL offer floor switching as bare arrow buttons — up, down, and
 - **THEN** no left-pointing back arrow is shown
 
 ### Requirement: Primary controls are grouped by purpose, not scattered
-The explorer's always-visible primary controls SHALL be grouped by purpose rather than scattered across many separate floating panels: the up arrow, the down arrow and the Gym button each float on their own, not grouped into a panel together or with anything else; Reset View, the heatmap overlay toggles and room search are grouped together into a single fixed dock, divided into clearly labelled groups (View, Overlays, Search). None of the explorer's always-visible controls SHALL be positioned where a contextual overlay (the room info panel, the route legend) can cover them.
+The explorer's always-visible primary controls SHALL be grouped by purpose rather than scattered across many separate floating panels: the up arrow, the down arrow and the Gym button each float on their own, not grouped into a panel together or with anything else; Reset View, the heatmap overlay toggles and room search are grouped together into a single side menu along one edge of the screen, divided into clearly labelled groups (View, Overlays, Search), each kept visually separate from the others by spacing alone — the side menu itself has no shared card, border or background grouping its groups together. None of the explorer's always-visible controls SHALL be positioned where a contextual overlay (the room info panel, the route legend) can cover them.
 
 #### Scenario: Viewing the primary controls
 - **WHEN** a user looks at the explorer's primary controls
-- **THEN** the up arrow, the down arrow and the Gym button are each shown bare, with no surrounding panel, and a separate dock is shown containing a View group, an Overlays group and a Search group, each visually distinguished from the others
+- **THEN** the up arrow, the down arrow and the Gym button are each shown bare, with no surrounding panel, and a separate side menu is shown containing a View group, an Overlays group and a Search group, each visually separated from the others by spacing rather than a shared box
 
 #### Scenario: An always-visible control stays reachable during a route
 - **WHEN** a route is active and its legend is shown, and the gym arrow's position coincides with the legend's

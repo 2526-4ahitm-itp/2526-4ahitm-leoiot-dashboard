@@ -114,6 +114,7 @@ export class App {
 
   reset(): void {
     this.heatmap = null;
+    this.selected = null;
     this.activeRoute = null;
     this.routeFloorSequence = [];
     this.setView('full');

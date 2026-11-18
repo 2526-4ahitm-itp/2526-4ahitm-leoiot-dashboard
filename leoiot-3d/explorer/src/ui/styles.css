@@ -152,9 +152,9 @@ body,
 .floor-arrow {
   background: none;
   border: 0;
-  padding: 10px;
+  padding: 14px;
   font: inherit;
-  font-size: 26px;
+  font-size: 38px;
   font-weight: 900;
   line-height: 1;
   color: var(--text);
@@ -204,48 +204,36 @@ body,
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
 }
 
-/* Bottom dock: "the rest of the menu" (view reset, heatmap overlays,
-   search) once floor switching moved to its own bare up/down/Gym buttons —
-   left-aligned, not centred. */
+/* Side menu: "the rest of the menu" (view reset, heatmap overlays, search)
+   once floor switching moved to its own bare up/down/Gym buttons — a
+   vertical rail down the left edge instead of a bottom bar. The menu
+   itself drops the shared card (no background/border/shadow around the
+   whole group); each of the three groups is kept apart from the next by
+   spacing alone, not a divider line. Its individual buttons keep their
+   normal `.button` look (background, border, rounded corners) — removing
+   the box was about the menu's own outer card, not about the buttons no
+   longer reading as buttons. Starts near the top, not vertically centred,
+   so it stays clear of `.floor-arrow-group-back` (left edge, vertically
+   centred, shown only in the gym). No `transform` here: a transformed
+   ancestor becomes the containing block for any `position: fixed`
+   descendant (the search popover), which would trap and clip it instead
+   of letting it escape to the viewport. */
 .dock {
-  /* No `transform` here (e.g. for centring): a transformed ancestor
-     becomes the containing block for any `position: fixed` descendant
-     (the search popover), which would trap and clip it instead of
-     letting it escape to the viewport. */
   position: fixed;
   left: 16px;
-  bottom: 16px;
+  top: 16px;
   display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-end;
-  gap: 16px;
-  max-width: calc(100vw - 32px);
-  overflow-x: auto;
-  padding: 8px 16px;
-  background: var(--surface);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-bold);
-}
-
-.dock .button {
-  padding: 6px 10px;
-  font-size: 13px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
 }
 
 .dock-group {
-  position: relative;
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
-  gap: 5px;
-  padding-left: 16px;
-  border-left: var(--border-width) solid var(--border);
-}
-
-.dock-group:first-child {
-  padding-left: 0;
-  border-left: 0;
+  gap: 6px;
 }
 
 .dock-group-label {
@@ -254,12 +242,109 @@ body,
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
+  /* No card background behind it any more — a shadow keeps it readable
+     over whichever part of the model or sky sits behind it, same as the
+     floor-arrow captions. */
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
 }
 
 .dock-group-buttons {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
+  /* Wide enough that Temperature's plain right edge and CO2's trapezoid
+     left edge don't read as touching, keeping an implied diagonal line
+     running through every trapezoid edge in the side menu, even past a
+     rectangular button breaking the shape. */
+  gap: 68px;
+}
+
+/* Trapezoid shape for the side menu's own buttons (Reset View, the
+   heatmap toggles, the Search toggle), on request: the top-right corner
+   sits further right than the bottom-right, slanting the right edge
+   instead of a plain rectangle. Scoped to `.dock-control`, not `.button`
+   itself, so the room info panel's "Navigate here", the search
+   popover's own Go/Clear, and the loading screen's "Try again" keep
+   their plain rectangular shape.
+
+   `clip-path` alone (on a normal bordered `.button`) clips the already-
+   rendered rectangular border along a diagonal line it doesn't know
+   about, so the border breaks instead of following the slanted edge —
+   confirmed by looking at the running page, not assumed. Fixed with two
+   stacked layers, both clipped to the *same* trapezoid, so the border
+   reads as one continuous outline around the actual shape instead of a
+   rectangle's border cut short: this element's own background becomes
+   the border colour (the full-size trapezoid), and a `::before` inset by
+   `--border-width` on every side (a smaller trapezoid) sits on top of it
+   in a negative stack level — after this element's own background, but
+   before its text — carrying the actual fill colour. Every state that
+   changes the fill (hover, pressed, reset) now targets `::before`
+   instead of the element's own `background`. */
+.button.dock-control {
+  position: relative;
+  /* Without this, `::before`'s negative z-index below has no local
+     stacking context to be contained by: `position: relative` alone
+     (z-index: auto) doesn't create one, so the -1 would resolve against
+     the page's own root stacking context instead — sinking the fill
+     pseudo behind the whole 3D canvas/scene, not just behind this
+     button's own border-colour background. Confirmed by looking at the
+     running page: without `isolation`, the fill disappeared entirely
+     instead of sitting as a ring inside the border colour. */
+  isolation: isolate;
+  background: var(--border);
+  border: 0;
+  padding: 12px 56px 12px 20px;
+  font-size: 18px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 56px) 100%, 0 100%);
+}
+
+.button.dock-control::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: var(--border-width);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 56px) 100%, 0 100%);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Temperature stays a plain rectangle, on request — the two-layer
+   border/fill trick still applies (so it keeps the same bigger size and
+   border colour as its trapezoid siblings), just without the slanted
+   clip on either layer. */
+.button.dock-control-rect,
+.button.dock-control-rect::before {
+  clip-path: none;
+}
+
+.button.dock-control-rect {
+  padding: 12px 20px;
+}
+
+.button.dock-control:hover:not(:disabled):not([aria-pressed='true'])::before {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.button.dock-control.button-reset {
+  background: #e8b87a;
+}
+
+.button.dock-control.button-reset::before {
+  background: #e8b87a;
+}
+
+.button.dock-control.button-reset:hover:not(:disabled)::before {
+  background: #f0c994;
+}
+
+.button.dock-control[aria-pressed='true'] {
+  background: var(--accent);
+}
+
+.button.dock-control[aria-pressed='true']::before {
+  background: var(--accent);
+}
+
+.button.dock-control[aria-pressed='true']:hover:not(:disabled)::before {
+  background: #a3e0a8;
 }
 
 .button {
@@ -316,8 +401,8 @@ body,
   outline-offset: 2px;
 }
 
-/* Navigation: the dock's "Search" group — a toggle that opens a popover
-   upward above the dock (FR-11, always visible; the popover itself is the
+/* Navigation: the side menu's "Search" group — a toggle that opens a
+   popover beside it (FR-11, always visible; the popover itself is the
    non-hidden "visible control to choose a destination" from
    model3d/room-navigation, not a hidden gesture). */
 .dock-group-search {
@@ -329,16 +414,16 @@ body,
 }
 
 .nav-panel {
-  /* Fixed to the viewport, not absolute within .dock-group-search: the dock
-     scrolls horizontally on narrow screens (overflow-x), which would clip an
-     absolutely-positioned descendant that escapes its bounds vertically.
-     `left` is set from JS (Navigation.positionPanel) to the Search toggle's
-     own position, since the dock is left-aligned and variable-width, not
-     centred — a fixed 50% would drift away from the toggle that opened it. */
+  /* Fixed to the viewport, not absolute within .dock-group-search: the
+     dock scrolls vertically on short screens (overflow-y), which would
+     clip an absolutely-positioned descendant that escapes its bounds.
+     `left`/`top` are set from JS (Navigation.positionPanel) to open just
+     to the right of the Search toggle, level with it, since the toggle's
+     own position in the vertical side menu varies with how many groups
+     sit above it — a fixed spot wouldn't track that. */
   position: fixed;
   left: 16px;
-  bottom: 96px;
-  transform: translateX(-50%);
+  top: 16px;
   width: min(260px, calc(100vw - 32px));
   padding: 10px;
   background: var(--surface);
@@ -397,14 +482,15 @@ body,
   font-weight: var(--weight-bold);
 }
 
-/* "Next floor": its own fixed control above the dock (same left edge) —
-   bigger and see-through rather than another small button in the search
-   panel, since it's meant to be noticed and used repeatedly while walking
-   a route. */
+/* "Next floor": its own fixed control, bottom-left — bigger and
+   see-through rather than another small button in the search panel,
+   since it's meant to be noticed and used repeatedly while walking a
+   route. The side menu moved to a vertical rail at the top-left, so the
+   bottom-left corner it used to share with the dock is free again. */
 .next-floor {
   position: fixed;
   left: 16px;
-  bottom: 96px;
+  bottom: 16px;
   padding: 14px 30px;
   font-size: 17px;
   font-weight: var(--weight-bold);
@@ -664,8 +750,8 @@ body,
   }
 
   .floor-arrow {
-    padding: 8px 20px;
-    font-size: 17px;
+    padding: 12px 28px;
+    font-size: 24px;
   }
 
   .floor-arrow-caption {
@@ -688,22 +774,14 @@ body,
     left: 8px;
   }
 
-  /* Too narrow for every group in one row: the dock keeps its single-row
-     shape and scrolls horizontally rather than growing tall. */
   .dock {
     left: 8px;
-    bottom: 8px;
-    gap: 12px;
-    max-width: calc(100vw - 16px);
-    padding: 8px 12px;
-  }
-
-  .dock .button {
-    padding: 6px 9px;
-    font-size: 12px;
+    top: 8px;
+    gap: 20px;
   }
 
   .next-floor {
     left: 8px;
+    bottom: 8px;
   }
 }
