@@ -47,3 +47,10 @@
 - [x] 8.2 Increase `.room-watermark` to `font-size: 95vh` and `font-weight: 900`; verify the same way, reading `fontSize`/`fontWeight`.
 - [x] 8.3 Switch `RoomWatermark.show()`/`hide()` from toggling the `hidden` attribute to toggling a `--visible` class, and give `.room-watermark` a `transition: opacity`, base `opacity: 0`; verify with a browser automation tool that a screenshot taken shortly after selecting a room shows the watermark mid-fade (partially visible), not at full opacity, and that `getComputedStyle(...).opacity` reaches `1` once the transition settles.
 - [x] 8.4 Run the full regression pass (tests, `tsc --noEmit`, production build) and confirm no existing behaviour changed.
+
+## 9. Watermark: fill the screen height, stay legible
+
+- [x] 9.1 Measure the watermark's actual rendered glyph box (not just the `font-size` CSS value) with a browser automation tool — a `Range` bounding rect around the text — since font metrics and the stroke make the ink noticeably taller than `font-size` itself; use that to calibrate, rather than guessing a `vh` number.
+- [x] 9.2 Add `-webkit-text-stroke` (same colour as the fill) to `.room-watermark`, since `font-weight` tops out at 900 and the stroke is the only further way to thicken the glyph edges for a bolder look.
+- [x] 9.3 Set `font-size: min(82vh, 55vw)` (replacing a plain `vh` value), calibrated from the 9.1 measurement so a typical 3-character room id both nearly touches the top and bottom of the screen and stays fully on-screen horizontally — a plain large `vh` value pushed a 3-digit id off both edges, which was verified and rejected before landing this value. Verify by selecting a room with a browser automation tool, reading the text's bounding rect, and confirming it's both ≥90% of the viewport height and ≤95% of the viewport width.
+- [x] 9.4 Run the full regression pass (tests, `tsc --noEmit`, production build) and confirm no existing behaviour changed.
