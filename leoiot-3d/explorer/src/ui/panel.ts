@@ -25,8 +25,10 @@ export class InfoPanel {
   readonly element = el('aside', 'panel');
   private readonly title = el('h2', 'panel-title');
   private readonly body = el('div', 'panel-body');
+  private readonly navigate = el('button', 'button panel-navigate', strings.panel.navigate);
 
   onClose: () => void = () => undefined;
+  onNavigate: (room: string) => void = () => undefined;
 
   constructor() {
     this.element.hidden = true;
@@ -36,7 +38,8 @@ export class InfoPanel {
     close.addEventListener('click', () => this.onClose());
     const head = el('div', 'panel-head');
     head.append(this.title, close);
-    this.element.append(head, this.body);
+    this.navigate.addEventListener('click', () => this.onNavigate(this.title.textContent ?? ''));
+    this.element.append(head, this.navigate, this.body);
   }
 
   hide(): void {

@@ -5,6 +5,9 @@ export type FloorId = 'U' | 'E' | '1' | '2' | 'T';
 
 export const FLOORS: readonly FloorId[] = ['U', 'E', '1', '2', 'T'];
 
+/** The four stacked floors, top to bottom as in the building. The gym (`T`) is a separate wing, not stacked with these. */
+export const FLOOR_ORDER = ['2', '1', 'E', 'U'] as const satisfies readonly FloorId[];
+
 // Room ids of platform/data-contract: letters, digits and dots only
 const ROOM_ID = /^[A-Za-z0-9.]+$/;
 

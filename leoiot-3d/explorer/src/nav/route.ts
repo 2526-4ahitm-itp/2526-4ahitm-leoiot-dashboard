@@ -8,7 +8,7 @@
 // each produced at least one real connection wrong, including routes that
 // skipped a real intermediate waypoint entirely.
 
-import { floorOf, type FloorId } from '../core/rooms';
+import { floorOf, FLOOR_ORDER, type FloorId } from '../core/rooms';
 import {
   CORRIDOR_ADJACENCY,
   FLOOR_WAYPOINTS,
@@ -27,7 +27,40 @@ export interface WorldPoint {
   z: number;
 }
 
-export type RouteResult = { ok: true; points: WorldPoint[] } | { ok: false; reason: 'unknown-room' };
+/** A point of a drawn route, tagged with the floor it's on. */
+export interface RoutePoint extends WorldPoint {
+  floor: FloorId;
+}
+
+export type RouteResult = { ok: true; points: RoutePoint[] } | { ok: false; reason: 'unknown-room' };
+
+/** The floors a route crosses, in the order it crosses them (e.g. `['E', '1', '2']`). */
+export function routeFloors(points: readonly RoutePoint[]): FloorId[] {
+  const floors: FloorId[] = [];
+  for (const p of points) if (floors[floors.length - 1] !== p.floor) floors.push(p.floor);
+  return floors;
+}
+
+/**
+ * Whether `floor` is part of what's on screen when a floor view shows `view`
+ * — following the same "that floor and everything beneath it" stacking rule
+ * the floor views themselves use (spec model3d/building-viewer), so a
+ * route's upper floors reveal themselves one at a time as the user moves up
+ * through the building, instead of a multi-floor route's whole length being
+ * drawn at once regardless of which single floor is actually on screen.
+ */
+export function isFloorVisible(floor: FloorId, view: FloorId | 'full'): boolean {
+  if (view === 'T') return floor === 'T';
+  if (floor === 'T') return false;
+  if (view === 'full') return true;
+  const from = FLOOR_ORDER.indexOf(view);
+  return from !== -1 && FLOOR_ORDER.indexOf(floor) >= from;
+}
+
+/** The portion of a route visible when a floor view shows `view` — see {@link isFloorVisible}. */
+export function visibleRoutePoints(points: readonly RoutePoint[], view: FloorId | 'full'): RoutePoint[] {
+  return points.filter((p) => isFloorVisible(p.floor, view));
+}
 
 interface RouteWaypoint extends Waypoint {
   y: number;
@@ -254,7 +287,7 @@ function shortestPathToDoor(startName: string, doorPoint: { x: number; z: number
   return names.map((n) => nodes.get(n)!);
 }
 
-function routeOnMainFloors(floor: FloorId, endCenter: { x: number; z: number }): WorldPoint[] {
+function routeOnMainFloors(floor: FloorId, endCenter: { x: number; z: number }): RoutePoint[] {
   const startName = FLOOR_WAYPOINTS.E!.start.name;
   // Snap directly onto the room's own centre, not `doorPointFor`'s point on
   // legacy's hand-picked SEGMENTS list — that list has no line near the
@@ -270,11 +303,11 @@ function routeOnMainFloors(floor: FloorId, endCenter: { x: number; z: number }):
     // Shouldn't happen — the graph is fully connected — but never draw nothing.
     const start = FLOOR_WAYPOINTS.E!.start;
     return [
-      { x: start.x, y: FLOOR_Y.E, z: start.z },
-      { x: endCenter.x, y: FLOOR_Y[floor], z: endCenter.z },
+      { x: start.x, y: FLOOR_Y.E, z: start.z, floor: 'E' },
+      { x: endCenter.x, y: FLOOR_Y[floor], z: endCenter.z, floor },
     ];
   }
-  return path.map((n): WorldPoint => ({ x: n.x, y: FLOOR_Y[n.floor], z: n.z }));
+  return path.map((n): RoutePoint => ({ x: n.x, y: FLOOR_Y[n.floor], z: n.z, floor: n.floor }));
 }
 
 // Legacy's hand-tuned gym routing: which intersections are even considered
@@ -354,6 +387,9 @@ export function routeTo(room: string): RouteResult {
   // The gym still uses legacy's own hand-tuned, SEGMENTS-based door point and
   // greedy walk (intentionally out of scope for this fix — see route.ts top
   // comment); the main floors route straight to the room's centre instead.
-  if (floor === 'T') return { ok: true, points: routeInGym(room, endCenter, doorPointFor(floor, endCenter), FLOOR_Y.T) };
+  if (floor === 'T') {
+    const points = routeInGym(room, endCenter, doorPointFor(floor, endCenter), FLOOR_Y.T);
+    return { ok: true, points: points.map((p): RoutePoint => ({ ...p, floor: 'T' })) };
+  }
   return { ok: true, points: routeOnMainFloors(floor, endCenter) };
 }

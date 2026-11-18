@@ -15,6 +15,7 @@ import {
   PerspectiveCamera,
   Raycaster,
   Scene,
+  SphereGeometry,
   TubeGeometry,
   Vector2,
   Vector3,
@@ -33,14 +34,37 @@ const CLICK_TOLERANCE_PX = 5;
 const ROUTE_Y_OFFSET = 0.2;
 const ROUTE_RADIUS = 0.25;
 const ROUTE_COLOUR = '#2ecc71';
+// A turn/stairs marker, drawn as a real mesh (not a CSS2DObject like the heatmap
+// labels) so it's depth-tested against the building the same way the route tube
+// already is, instead of always drawing on top of walls regardless of distance.
+const ROUTE_MARKER_RADIUS = 0.3;
+// How long a newly-revealed stretch of the route (model3d/room-navigation,
+// advancing to the next floor) takes to draw itself in.
+const ROUTE_GROW_DURATION_MS = 600;
 // Room meshes are flat patches lying almost on the floor slab (checked
 // 2026-10-30: often 0.15–0.5 units apart). Hits this close to the nearest one
 // count as the same surface, so the room wins over the slab under it.
 const SAME_SURFACE = 0.5;
 
+/** Smoother finish than a linear draw-in. */
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
 export interface Label {
   position: Vector3;
   element: HTMLElement;
+}
+
+export interface RouteMarkerDot {
+  position: Vector3;
+  colour: string;
+}
+
+interface Growing {
+  readonly mesh: Mesh;
+  readonly totalIndexCount: number;
+  readonly start: number;
 }
 
 export class Viewer {
@@ -53,7 +77,12 @@ export class Viewer {
   private readonly startTarget = new Vector3();
   private current: Object3D | null = null;
   private labels: CSS2DObject[] = [];
-  private route: Mesh | null = null;
+  // One mesh per revealed stretch of the active route (the initial segment, plus
+  // one more per "next floor"/floor-button reveal); never rebuilt once drawn, see showRoute.
+  private segments: Mesh[] = [];
+  private routePoints: WorldPoint[] = [];
+  private growing: Growing | null = null;
+  private routeMarkers: Mesh[] = [];
 
   /** Called with the room id of a clicked room, or null for a click elsewhere. */
   onPick: (room: string | null) => void = () => undefined;
@@ -88,6 +117,7 @@ export class Viewer {
     this.resize();
     this.renderer.setAnimationLoop(() => {
       this.controls.update();
+      this.updateGrow();
       this.renderer.render(this.scene, this.camera);
       this.labelRenderer.render(this.scene, this.camera);
     });
@@ -125,29 +155,110 @@ export class Viewer {
     });
   }
 
-  /** Draws a navigation route as a tube along the given points (spec model3d/room-navigation). */
+  /**
+   * Draws a navigation route as a tube along the given points (spec
+   * model3d/room-navigation). When `points` simply extends what was already
+   * drawn (advancing to the next floor reveals more of the same route), the
+   * already-drawn portion is left exactly as it was, as its own segment, and
+   * only the new tail grows in, over {@link ROUTE_GROW_DURATION_MS}; anything
+   * else (a new route, or fewer points than before) redraws instantly.
+   */
   showRoute(points: WorldPoint[]): void {
-    this.clearRoute();
-    if (points.length < 2) return;
-    // Straight segments between waypoints, not a smoothed spline: a smoothed
-    // curve looks vague and can bow away from the corridor it's meant to
-    // follow, especially at a sharp turn.
+    const previous = this.routePoints;
+    const isGrowth = previous.length > 0 && points.length > previous.length && previous.every((p, i) => p === points[i]);
+    this.routePoints = points;
+    if (isGrowth) this.startGrow(previous, points);
+    else this.rebuildRoute(points);
+  }
+
+  /** Removes every segment drawn by {@link showRoute}, if any, and any markers drawn by {@link setRouteMarkers}. */
+  clearRoute(): void {
+    this.growing = null;
+    this.routePoints = [];
+    this.disposeSegments();
+    this.setRouteMarkers([]);
+  }
+
+  /** Replaces the shown turn/stairs markers with one small, fully coloured sphere per marker, at its exact point. A real mesh, not a CSS2DObject, so it's hidden behind a wall the same way the route tube is. */
+  setRouteMarkers(markers: readonly RouteMarkerDot[]): void {
+    for (const mesh of this.routeMarkers) {
+      this.scene.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as MeshBasicMaterial).dispose();
+    }
+    this.routeMarkers = markers.map(({ position, colour }) => {
+      const mesh = new Mesh(new SphereGeometry(ROUTE_MARKER_RADIUS, 16, 16), new MeshBasicMaterial({ color: colour }));
+      mesh.position.copy(position);
+      this.scene.add(mesh);
+      return mesh;
+    });
+  }
+
+  /** A tube mesh along straight segments between `points`, not a smoothed spline: a smoothed curve looks vague and can bow away from the corridor it's meant to follow, especially at a sharp turn. */
+  private buildTube(points: WorldPoint[]): Mesh {
     const lifted = points.map((p) => new Vector3(p.x, p.y + ROUTE_Y_OFFSET, p.z));
     const curve = new CurvePath<Vector3>();
     for (let i = 1; i < lifted.length; i++) curve.add(new LineCurve3(lifted[i - 1], lifted[i]));
     const geometry = new TubeGeometry(curve, Math.max(points.length * 2, 4), ROUTE_RADIUS, 8, false);
-    const material = new MeshBasicMaterial({ color: ROUTE_COLOUR });
-    this.route = new Mesh(geometry, material);
-    this.scene.add(this.route);
+    return new Mesh(geometry, new MeshBasicMaterial({ color: ROUTE_COLOUR }));
   }
 
-  /** Removes a route drawn by {@link showRoute}, if any. */
-  clearRoute(): void {
-    if (!this.route) return;
-    this.scene.remove(this.route);
-    this.route.geometry.dispose();
-    (this.route.material as MeshBasicMaterial).dispose();
-    this.route = null;
+  private rebuildRoute(points: WorldPoint[]): void {
+    this.growing = null;
+    this.disposeSegments();
+    if (points.length < 2) return;
+    const mesh = this.buildTube(points);
+    this.scene.add(mesh);
+    this.segments.push(mesh);
+  }
+
+  private disposeSegments(): void {
+    for (const mesh of this.segments) {
+      this.scene.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as MeshBasicMaterial).dispose();
+    }
+    this.segments = [];
+  }
+
+  /**
+   * Starts growing `newPoints`' tail in from the end of `oldPoints`, which
+   * stays exactly as already drawn, as its own segment, never touched again.
+   * The tail's own geometry (and the Frenet frames `buildTube` derives it
+   * from) is built once, up front, at its final, full length — only its
+   * `drawRange` changes per animation frame — rather than being rebuilt from
+   * a changing, partial point list on every frame, which is what used to
+   * make the tube visibly twist and wobble while it grew in (three.js
+   * recomputes frames fresh each time, and that's numerically unstable for a
+   * straight-segment path with sharp corners).
+   */
+  private startGrow(oldPoints: WorldPoint[], newPoints: WorldPoint[]): void {
+    this.settleGrowing();
+    const tailFull = [oldPoints[oldPoints.length - 1], ...newPoints.slice(oldPoints.length)];
+    if (tailFull.length < 2) return;
+    const mesh = this.buildTube(tailFull);
+    const totalIndexCount = mesh.geometry.getIndex()?.count ?? 0;
+    mesh.geometry.setDrawRange(0, 0);
+    this.scene.add(mesh);
+    this.segments.push(mesh);
+    this.growing = { mesh, totalIndexCount, start: performance.now() };
+  }
+
+  /** Snaps an in-flight reveal to fully drawn and stops animating it, so starting another grow (or clearing the route) leaves it exactly as it is instead of cutting it off mid-way. */
+  private settleGrowing(): void {
+    if (!this.growing) return;
+    this.growing.mesh.geometry.setDrawRange(0, this.growing.totalIndexCount);
+    this.growing = null;
+  }
+
+  private updateGrow(): void {
+    if (!this.growing) return;
+    const { mesh, totalIndexCount, start } = this.growing;
+    const t = Math.min(1, (performance.now() - start) / ROUTE_GROW_DURATION_MS);
+    // Reveal whole rings' worth of triangles (6 indices each), matching how buildTube indexes the tube.
+    const revealedIndexCount = Math.round((totalIndexCount / 6) * easeOutCubic(t)) * 6;
+    mesh.geometry.setDrawRange(0, revealedIndexCount);
+    if (t >= 1) this.growing = null; // finished — stays exactly as drawn until the next showRoute call
   }
 
   /**

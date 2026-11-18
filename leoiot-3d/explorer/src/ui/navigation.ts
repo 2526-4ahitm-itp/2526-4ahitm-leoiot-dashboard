@@ -13,11 +13,15 @@ export class Navigation {
   private readonly suggestions = el('ul', 'nav-suggestions');
   private readonly goButton = el('button', 'button', strings.navigation.go);
   private readonly clearButton = el('button', 'button', strings.navigation.clear);
+  // Its own fixed, bottom-centre control, not tucked into the collapsible search
+  // panel: it stays usable while advancing through a route even with the panel closed.
+  private readonly nextFloorButton = el('button', 'button next-floor', strings.navigation.nextFloor);
   private readonly error = el('p', 'nav-error');
   private rooms: readonly string[] = [];
 
   onNavigate: (room: string) => void = () => undefined;
   onClear: () => void = () => undefined;
+  onNextFloor: () => void = () => undefined;
 
   constructor() {
     this.input.type = 'text';
@@ -25,6 +29,7 @@ export class Navigation {
     this.input.autocomplete = 'off';
     this.error.hidden = true;
     this.panel.hidden = true;
+    this.nextFloorButton.hidden = true;
 
     this.toggle.setAttribute('aria-expanded', 'false');
     this.toggle.addEventListener('click', () => this.setOpen(this.panel.hidden));
@@ -34,11 +39,12 @@ export class Navigation {
       this.hideError();
       this.onClear();
     });
+    this.nextFloorButton.addEventListener('click', () => this.onNextFloor());
 
     const actions = el('div', 'nav-actions');
     actions.append(this.goButton, this.clearButton);
     this.panel.append(this.input, this.suggestions, actions, this.error);
-    this.element.append(this.toggle, this.panel);
+    this.element.append(this.toggle, this.panel, this.nextFloorButton);
   }
 
   /** The room ids a search can match; set once the models are loaded. */
@@ -54,6 +60,11 @@ export class Navigation {
 
   hideError(): void {
     this.error.hidden = true;
+  }
+
+  /** Shows or hides "Next floor" — visible only while an active route continues onto a floor not yet shown. */
+  setNextFloorAvailable(available: boolean): void {
+    this.nextFloorButton.hidden = !available;
   }
 
   private setOpen(open: boolean): void {
