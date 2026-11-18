@@ -77,11 +77,15 @@ Wherever the displayed portion of a route bends by more than a small threshold w
 - **THEN** the marker is hidden the same way that point on the route line is, not visible through the wall
 
 ### Requirement: Visible controls to start and clear navigation
-The explorer SHALL provide a visible, non-hidden control to choose a destination room and start navigation to it, and a visible control to clear the active route, consistent with providing clear navigation/actions without hidden primary controls.
+The explorer SHALL provide a visible, non-hidden control to choose a destination room and start navigation to it, and a visible control to clear the active route, consistent with providing clear navigation/actions without hidden primary controls. A selected room's info panel SHALL also offer a visible control to start navigation to that room directly, as a second way into the same navigation.
 
 #### Scenario: Starting navigation from the visible control
 - **WHEN** a user opens the navigation control and picks a destination room
 - **THEN** the system starts navigation and displays the resulting path without requiring any hidden menu or gesture
+
+#### Scenario: Starting navigation from the room's info panel
+- **WHEN** a user selects a room and activates the "navigate here" control on its info panel
+- **THEN** the system starts navigation to that room, the same as choosing it through the search control
 
 #### Scenario: Clearing an active route
 - **WHEN** a user activates the clear/cancel control while a route is displayed

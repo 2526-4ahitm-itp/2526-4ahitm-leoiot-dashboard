@@ -47,6 +47,7 @@ export class App {
   ) {
     viewer.onPick = (room) => (room === null ? this.deselect() : this.select(room));
     panel.onClose = () => this.deselect();
+    panel.onNavigate = (room) => this.navigate(room);
     controls.onView = (v) => this.setView(v);
     controls.onReset = () => this.reset();
     controls.onHeatmap = (k) => this.toggleHeatmap(k);

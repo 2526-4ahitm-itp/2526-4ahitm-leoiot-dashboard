@@ -26,6 +26,7 @@ export const strings = {
   },
   panel: {
     close: 'Close',
+    navigate: 'Navigate here',
     co2: 'CO₂',
     temperature: 'Temperature',
     unknown: '–',
