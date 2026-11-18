@@ -4,7 +4,6 @@ import {
   ACESFilmicToneMapping,
   AmbientLight,
   Box3,
-  Color,
   CurvePath,
   DirectionalLight,
   LineCurve3,
@@ -88,7 +87,11 @@ export class Viewer {
   onPick: (room: string | null) => void = () => undefined;
 
   constructor(private readonly container: HTMLElement) {
-    this.renderer = new WebGLRenderer({ antialias: true });
+    // alpha + no clear colour: the canvas is transparent where the scene
+    // shows no geometry, so the room-number watermark behind it (ui/watermark.ts)
+    // shows through there, while the opaque building still occludes it.
+    this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setClearColor(0x000000, 0);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -99,7 +102,6 @@ export class Viewer {
     this.labelRenderer.domElement.className = 'labels';
     container.appendChild(this.labelRenderer.domElement);
 
-    this.scene.background = new Color('#3a3d42');
     this.scene.add(new AmbientLight('#ffffff', 1.4));
     const sun = new DirectionalLight('#ffffff', 0.8);
     sun.position.set(200, 300, 100);

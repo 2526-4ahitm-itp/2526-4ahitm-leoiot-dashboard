@@ -12,6 +12,7 @@
   --shadow-bold: 0 8px 28px rgba(0, 0, 0, 0.6); /* strong elevation under floating chrome panels */
   --weight-bold: 800; /* heavy type weight for chrome labels and values */
   --tracking-bold: 0.02em; /* slight letter-spacing to carry the heavier weight */
+  --highlight: #f1c40f; /* matches scene/materials.ts HIGHLIGHT_COLOUR, for the selected-room watermark */
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
 }
@@ -27,6 +28,30 @@ body,
   height: 100%;
   overflow: hidden;
   background: var(--bg);
+}
+
+/* The selected room's number, giant and behind the model (model3d/visual-design):
+   the canvas above it is transparent except where the building itself draws, so
+   this only shows through the "sky" around the building, never over it. */
+.room-watermark {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 85vh;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--highlight);
+  opacity: 0.5;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.room-watermark[hidden] {
+  display: none;
 }
 
 .stage {

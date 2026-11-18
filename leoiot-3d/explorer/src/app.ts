@@ -16,6 +16,7 @@ import type { Navigation } from './ui/navigation';
 import { InfoPanel, statusBadge } from './ui/panel';
 import type { LegendSection, RouteLegend } from './ui/routeLegend';
 import { strings } from './ui/strings';
+import type { RoomWatermark } from './ui/watermark';
 import { type MeshStandardMaterial, Vector3 } from 'three';
 
 // Lifts a route marker's dot clear of the drawn route tube (radius 0.25), so it sits just above it.
@@ -44,6 +45,7 @@ export class App {
     private readonly panel: InfoPanel,
     private readonly navigation: Navigation,
     private readonly routeLegend: RouteLegend,
+    private readonly watermark: RoomWatermark,
   ) {
     viewer.onPick = (room) => (room === null ? this.deselect() : this.select(room));
     panel.onClose = () => this.deselect();
@@ -198,8 +200,13 @@ export class App {
     }
     this.viewer.setLabels(labels);
 
-    if (this.selected === null) this.panel.hide();
-    else this.panel.show(this.selected, this.store.get(this.selected), now);
+    if (this.selected === null) {
+      this.panel.hide();
+      this.watermark.hide();
+    } else {
+      this.panel.show(this.selected, this.store.get(this.selected), now);
+      this.watermark.show(this.selected);
+    }
   }
 
   /**

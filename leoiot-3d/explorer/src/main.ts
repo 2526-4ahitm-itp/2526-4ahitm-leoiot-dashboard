@@ -11,9 +11,11 @@ import { Navigation } from './ui/navigation';
 import { InfoPanel } from './ui/panel';
 import { RouteLegend } from './ui/routeLegend';
 import { strings } from './ui/strings';
+import { RoomWatermark } from './ui/watermark';
 
 document.title = strings.title;
 const root = document.getElementById('app')!;
+const watermark = new RoomWatermark();
 const stage = el('main', 'stage');
 const controls = new Controls();
 const panel = new InfoPanel();
@@ -22,7 +24,10 @@ const routeLegend = new RouteLegend();
 const loading = new LoadingScreen();
 const dock = el('div', 'dock');
 dock.append(controls.element, controls.overlaysElement, navigation.element);
-root.append(stage, panel.element, dock, navigation.nextFloorElement, routeLegend.element, loading.element);
+// watermark comes before stage: the canvas is transparent (see Viewer) where the
+// scene shows no geometry, so the watermark shows through there and is otherwise
+// occluded by the opaque building, painted on top of it in DOM order.
+root.append(watermark.element, stage, panel.element, dock, navigation.nextFloorElement, routeLegend.element, loading.element);
 
 const viewer = new Viewer(stage);
 const store = new RoomStore();
@@ -41,7 +46,7 @@ async function load(): Promise<void> {
     return;
   }
   loading.hide();
-  new App(viewer, models, store, controls, panel, navigation, routeLegend);
+  new App(viewer, models, store, controls, panel, navigation, routeLegend, watermark);
 }
 
 loading.onRetry = () => void load();

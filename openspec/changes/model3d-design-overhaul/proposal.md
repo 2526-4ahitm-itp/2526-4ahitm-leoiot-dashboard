@@ -13,6 +13,7 @@ The 3D building explorer's UI chrome (panels, buttons, overlays, loading screen,
 - The 3D building model itself (materials, textures, camera, lighting) is **not** restyled; it keeps its current appearance.
 - The semantic data colours already specified for the temperature heatmap, the CO₂ heatmap and the route legend markers are **not** changed; only the chrome around them (panel backgrounds, borders, button states, typography) is restyled.
 - No feature is removed, hidden or renamed; every button, panel and interaction that exists today keeps working exactly as before — including the visible, non-hidden search control required by `model3d/room-navigation` ("Visible controls to start and clear navigation"): the dock's Search toggle and its popover are always reachable, never a hidden gesture.
+- Selecting a room now also shows its number as a giant watermark behind the 3D model, nearly the height of the screen: visible around the building's silhouette, occluded by the building itself where it's solid, so it reads as sitting behind the model rather than on top of it. Hidden whenever nothing is selected (deselecting, switching to a heatmap, or changing floor away from the room).
 
 ## Capabilities
 
@@ -24,6 +25,6 @@ The 3D building explorer's UI chrome (panels, buttons, overlays, loading screen,
 
 ## Impact
 
-- Code: `leoiot-3d/explorer/src/ui/*.ts` (`controls.ts`, `loading.ts`, `navigation.ts`, `panel.ts`, `routeLegend.ts`, `strings.ts`, `dom.ts`) and `leoiot-3d/explorer/src/ui/styles.css`; no changes to `leoiot-3d/explorer/src/scene/*` or `leoiot-3d/explorer/src/core/*`.
+- Code: `leoiot-3d/explorer/src/ui/*.ts` (`controls.ts`, `loading.ts`, `navigation.ts`, `panel.ts`, `routeLegend.ts`, `strings.ts`, `dom.ts`, new `watermark.ts`), `leoiot-3d/explorer/src/ui/styles.css`, `leoiot-3d/explorer/src/main.ts`, `leoiot-3d/explorer/src/app.ts`; and `leoiot-3d/explorer/src/scene/viewer.ts` (the renderer now clears to transparent instead of an opaque scene background, so the watermark can show through where the scene draws no geometry).
 - No API, broker, data-contract or backend changes; this is a front-end-only visual change within `leoiot-3d`.
 - Overlaps in the same files with the other in-flight `model3d-*` changes (`model3d-building-explorer`, `model3d-room-navigation`, `model3d-route-wayfinding`, `model3d-floor-arrow-keys`); whichever change merges later should rebase its chrome markup/CSS on the other rather than reverting it.

@@ -62,3 +62,18 @@ Consolidating search into the dock's Search group SHALL NOT make it a hidden con
 #### Scenario: Search popover while a route is active
 - **WHEN** a user starts navigation to a room from the search popover
 - **THEN** the popover closes and the "Next floor" control (when shown) is fully visible, not obscured by the popover
+
+### Requirement: Selecting a room shows its number as a giant watermark behind the model
+When a room is selected, the explorer SHALL show that room's number as very large, bold text positioned behind the 3D building model, sized close to the full height of the screen. The watermark SHALL be occluded by the building model wherever the model is opaque, so it reads as sitting behind the model rather than drawn on top of it, and SHALL NOT be shown while no room is selected.
+
+#### Scenario: Selecting a room
+- **WHEN** a user selects a room
+- **THEN** that room's number appears as giant bold text behind the model, nearly the height of the screen, visible where the model doesn't cover it and hidden where the model does
+
+#### Scenario: Deselecting
+- **WHEN** a user deselects the room (closing the info panel, clicking elsewhere, or switching to a heatmap)
+- **THEN** the watermark is no longer shown
+
+#### Scenario: The model's own appearance is unaffected
+- **WHEN** the watermark is shown or hidden
+- **THEN** the building model's materials, textures and lighting are unchanged, consistent with "The 3D building model's appearance is unchanged"
