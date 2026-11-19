@@ -4,6 +4,8 @@ import '@fontsource/lexend/latin-700.css';
 import './styles/tokens.css';
 import './styles/app.css';
 import { startApp } from './app';
+import { startListApp } from './listApp';
+import { roomFromSearch } from './core/room';
 import { liveUrl } from './core/live';
 import { createQuery } from './data/api';
 import type { MqttLike } from './data/feed';
@@ -16,24 +18,28 @@ try {
   storage = null;
 }
 
-const app = startApp({
+const connect = async () => {
+  // Anonymous, read-only access to the room messages through the platform's /mqtt route.
+  const { default: mqtt } = await import('mqtt');
+  return mqtt.connect(liveUrl(location), {
+    reconnectPeriod: 5000,
+    connectTimeout: 10_000,
+    clientId: `leoiot-sensors-${Math.random().toString(16).slice(2, 10)}`,
+  }) as unknown as MqttLike;
+};
+const shared = {
   doc: document,
-  search: location.search,
   storage,
   prefersDark: () => dark.matches,
   query: createQuery(),
-  // Anonymous, read-only access to the room messages through the platform's /mqtt route.
-  connect: async () => {
-    const { default: mqtt } = await import('mqtt');
-    return mqtt.connect(liveUrl(location), {
-      reconnectPeriod: 5000,
-      connectTimeout: 10_000,
-      clientId: `leoiot-sensors-${Math.random().toString(16).slice(2, 10)}`,
-    }) as unknown as MqttLike;
-  },
-  charts: async () => (await import('./ui/echartsApi')).echartsApi,
+  connect,
   now: () => Date.now(),
-  onSchemeChange: (listener) => dark.addEventListener('change', listener),
-});
+  onSchemeChange: (listener: () => void) => dark.addEventListener('change', listener),
+};
+
+// A room in the address starts the room page, no room starts the room list.
+const app = roomFromSearch(location.search)
+  ? startApp({ ...shared, search: location.search, charts: async () => (await import('./ui/echartsApi')).echartsApi, navigate: (href) => location.assign(href) })
+  : startListApp(shared);
 
 addEventListener('pagehide', () => app.dispose());

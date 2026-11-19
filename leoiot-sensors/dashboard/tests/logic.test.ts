@@ -116,7 +116,7 @@ describe('live messages and fallback', () => {
     const timers = new FakeTimers();
     let polls = 0;
     const modes: string[] = [];
-    const feed = startFeed({ room: '105', connect: () => mqtt, poll: async () => void polls++, onReading: () => {}, onMode: (m) => modes.push(m), timers });
+    const feed = startFeed({ topic: 'leoiot/room-climate/105', connect: () => mqtt, poll: async () => void polls++, onMessage: () => {}, onMode: (m) => modes.push(m), timers });
     await Promise.resolve();
     mqtt.emit('connect');
     expect(modes).toEqual(['live']);
@@ -135,7 +135,7 @@ describe('live messages and fallback', () => {
   it('falls back when the first connection never completes', async () => {
     const timers = new FakeTimers();
     let polls = 0;
-    const feed = startFeed({ room: '105', connect: () => new FakeMqtt(), poll: async () => void polls++, onReading: () => {}, onMode: () => {}, timers });
+    const feed = startFeed({ topic: 'leoiot/room-climate/105', connect: () => new FakeMqtt(), poll: async () => void polls++, onMessage: () => {}, onMode: () => {}, timers });
     await Promise.resolve();
     timers.advance(9000);
     expect(feed.mode()).toBe('fallback');
@@ -155,5 +155,29 @@ describe('texts', () => {
   it('numbers follow the language', () => {
     expect(makeFormat('de').number(21.5, 1)).toBe('21,5');
     expect(makeFormat('en').number(21.5, 1)).toBe('21.5');
+  });
+});
+
+describe('feed subscription', () => {
+  it('subscribes to the given topic filter and hands every message on with its topic', async () => {
+    const mqtt = new FakeMqtt();
+    const got: string[] = [];
+    const feed = startFeed({ topic: 'leoiot/room-climate/#', connect: () => mqtt, poll: async () => {}, onMessage: (topic, payload) => got.push(`${topic}:${payload.length}`), onMode: () => {}, timers: new FakeTimers() });
+    await Promise.resolve();
+    mqtt.emit('connect');
+    expect(mqtt.subscribed).toEqual(['leoiot/room-climate/#']);
+    mqtt.message('leoiot/room-climate/E10', { a: 1 });
+    mqtt.emit('message', 'leoiot/room-climate/105', new Uint8Array(0));
+    expect(got).toEqual(['leoiot/room-climate/E10:7', 'leoiot/room-climate/105:0']);
+    feed.stop();
+  });
+  it.each([128, 135])('a subscription granted with QoS %d is refused: fallback', async (qos) => {
+    const mqtt = new FakeMqtt();
+    mqtt.grantQos = qos;
+    const feed = startFeed({ topic: 'x', connect: () => mqtt, poll: async () => {}, onMessage: () => {}, onMode: () => {}, timers: new FakeTimers() });
+    await Promise.resolve();
+    mqtt.emit('connect');
+    expect(feed.mode()).toBe('fallback');
+    feed.stop();
   });
 });

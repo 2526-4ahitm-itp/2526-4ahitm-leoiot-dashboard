@@ -4,6 +4,7 @@
 import type { ChartInput } from '../core/chartOptions';
 import { makeFormat, type Format } from '../core/format';
 import { texts, type Lang } from '../core/i18n';
+import { floorOf } from '../core/floors';
 import { displayRoomId, type RoomChoice } from '../core/room';
 import { rangeBounds, type RangeId } from '../core/ranges';
 import type { Quantity } from '../core/snapshot';
@@ -17,6 +18,9 @@ export interface Dom {
   doc: Document;
   app: HTMLElement;
   crumb: HTMLElement;
+  allRooms: HTMLElement;
+  roomSelect: HTMLSelectElement;
+  link3d: HTMLElement;
   brand: HTMLElement;
   brandSub: HTMLElement;
   rangeGroup: HTMLElement;
@@ -53,7 +57,7 @@ export function bindDom(doc: Document): Dom {
   const cell = (q: string) => ({ value: el(`v${q}`), unknown: el(`u${q}`), label: el(`k${q}`) });
   return {
     doc,
-    app: el('app'), crumb: el('crumb'), brand: el('brand'), brandSub: el('brandSub'),
+    app: el('app'), crumb: el('crumb'), allRooms: el('allRooms'), roomSelect: el('roomSelect') as HTMLSelectElement, link3d: el('link3d'), brand: el('brand'), brandSub: el('brandSub'),
     rangeGroup: el('rangeGroup'), langGroup: el('langGroup'), theme: el('theme'),
     roomWord: el('roomWord'), roomId: el('roomId'), ident: el('ident'), light: el('light'),
     status: el('status'), why: el('why'), fresh: el('fresh'), warn: el('warnIcon'),
@@ -75,7 +79,8 @@ function setAttr(el: Element, name: string, value: string): void {
 
 export interface Frame {
   lang: Lang;
-  room: RoomChoice;
+  /** The room page's room; null on the room list view. */
+  room: RoomChoice | null;
   range: RangeId;
   /** The theme in effect, for the label of the theme button. */
   theme: Theme;
@@ -84,12 +89,29 @@ export interface Frame {
 /** Labels that depend on language, room, range and theme only. */
 export function renderFrame(dom: Dom, f: Frame): void {
   const t = texts(f.lang);
-  const shown = displayRoomId(f.room.id);
+  const shown = f.room === null ? '' : displayRoomId(f.room.id);
   dom.doc.documentElement.lang = f.lang;
-  dom.doc.title = t.title(shown);
+  dom.doc.title = f.room === null ? t.titleList : t.title(shown);
+  dom.app.dataset.view = f.room === null ? 'list' : 'room';
   setText(dom.brand, t.brand);
   setText(dom.brandSub, t.brandSub);
-  setText(dom.crumb, t.room(shown));
+  // Room navigation: "Alle Räume" is the current page on the list (no link), a link on a room page.
+  setAttr(dom.crumb, 'aria-label', t.nav);
+  setText(dom.allRooms, t.allRooms);
+  if (f.room === null) {
+    dom.allRooms.removeAttribute('href');
+    setAttr(dom.allRooms, 'aria-current', 'page');
+  } else {
+    setAttr(dom.allRooms, 'href', './');
+    dom.allRooms.removeAttribute('aria-current');
+  }
+  setAttr(dom.roomSelect, 'aria-label', t.roomChoice);
+  dom.roomSelect.hidden = f.room === null;
+  dom.rangeGroup.hidden = f.room === null;
+  // The link to the room in the 3D explorer (the host's /3d/, not relative to /sensors/), only for rooms of a known floor.
+  setText(dom.link3d, t.show3d);
+  if (f.room !== null) setAttr(dom.link3d, 'href', `/3d/?room=${encodeURIComponent(f.room.id)}`);
+  dom.link3d.hidden = f.room === null || !f.room.valid || floorOf(f.room.id) === null;
   setText(dom.roomWord, `${t.roomLabel} `);
   setText(dom.roomId, shown);
   setAttr(dom.rangeGroup, 'aria-label', t.range);

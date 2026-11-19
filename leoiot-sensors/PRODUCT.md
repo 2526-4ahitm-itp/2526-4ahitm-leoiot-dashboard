@@ -47,7 +47,7 @@ The values come from the school's own sensors in its own rooms, collected contin
 - **Data sources:** only the room-climate interfaces of `openspec/specs/platform/data-contract/`: measurement `room_climate` in InfluxDB for history, retained messages on `leoiot/room-climate/<room>` read anonymously over MQTT over WebSocket at `/mqtt` for live values. Legacy measurements and topics are never read.
 - **Devices:** desktop first; phone and tablet layouts follow in a later release (confirmed 2026-10-22).
 - **No control:** viewing and monitoring only; no building automation, no opening or closing of windows.
-- **Undecided:** the URL path of the dashboard; whether the first release covers only room 105 or all rooms; the sensor overview's layout.
+- **Undecided:** the URL path of the dashboard; the sensor overview's layout.
 
 ## Evidence on Hand
 

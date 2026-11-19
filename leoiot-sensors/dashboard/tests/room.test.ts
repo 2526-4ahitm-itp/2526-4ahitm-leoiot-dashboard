@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { assertRoomId, displayRoomId, isValidRoomId, MAX_ROOM_LENGTH, roomFromSearch } from '../src/core/room';
 
 describe('room id from the address', () => {
-  it('plain address shows room 105', () => {
-    expect(roomFromSearch('')).toEqual({ id: '105', valid: true });
-    expect(roomFromSearch('?room=')).toEqual({ id: '105', valid: true });
-    expect(roomFromSearch('?other=1')).toEqual({ id: '105', valid: true });
+  it('plain address has no room: the dashboard shows the room list', () => {
+    expect(roomFromSearch('')).toBeNull();
+    expect(roomFromSearch('?room=')).toBeNull();
+    expect(roomFromSearch('?other=1')).toBeNull();
   });
   it('keeps the room id exactly as written', () => {
     expect(roomFromSearch('?room=E10')).toEqual({ id: 'E10', valid: true });

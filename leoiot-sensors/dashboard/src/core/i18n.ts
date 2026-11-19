@@ -1,6 +1,8 @@
 // All texts of the page in German (default) and English. The English table must have exactly the
 // keys of the German one; the type below and tests/i18n.test.ts both check it.
 
+import type { FloorId } from './floors';
+
 export type Lang = 'de' | 'en';
 export const LANGS: readonly Lang[] = ['de', 'en'];
 export const DEFAULT_LANG: Lang = 'de';
@@ -20,7 +22,10 @@ const de = {
   title: (room: string) => `Raum ${room} · LeoIoT Raumklima`,
   brand: 'LeoIoT',
   brandSub: 'Raumklima',
-  room: (id: string) => `Raum ${id}`,
+  titleList: 'Räume · LeoIoT Raumklima',
+  nav: 'Raumauswahl',
+  allRooms: 'Alle Räume',
+  roomChoice: 'Raum wählen',
   roomLabel: 'Raum',
   range: 'Zeitraum',
   range24h: '24 h',
@@ -61,8 +66,16 @@ const de = {
   lampOff: 'Ampel aus',
   warning: 'Warnung',
   noDataTitle: (id: string) => `Keine Daten für Raum ${id}`,
-  noDataText: 'Für diesen Raum liegen keine Messwerte vor. Sobald die Sensorbox wieder sendet, erscheinen sie hier.',
+  noDataText: 'Für diesen Raum liegen keine Messwerte vor.',
   invalidRoomText: 'Dieser Raumname ist ungültig. Erlaubt sind Buchstaben, Ziffern und Punkte, zum Beispiel 105 oder E10.',
+  roomsTitle: 'Räume mit Messwerten',
+  floorName: (floor: FloorId | null): string =>
+    floor === 'U' ? 'Untergeschoss' : floor === 'E' ? 'Erdgeschoss' : floor === '1' ? '1. Stock' : floor === '2' ? '2. Stock' : floor === 'T' ? 'Turnsaal' : 'Weitere Räume',
+  listStale: 'Nicht aktuell',
+  listNoCo2: 'Kein CO₂-Wert',
+  noRooms: 'Derzeit sendet kein Raum Messwerte.',
+  listFallback: 'Aktualisierung jede Minute',
+  show3d: 'Im Gebäude zeigen',
   loadErrorTitle: 'Daten nicht erreichbar',
   loadErrorText: 'Die Messwerte konnten nicht geladen werden. Die Seite versucht es jede Minute erneut.',
   historyEmpty: 'In diesem Zeitraum liegen keine Werte vor.',
@@ -76,7 +89,10 @@ const en: Texts = {
   title: (room) => `Room ${room} · LeoIoT Room climate`,
   brand: 'LeoIoT',
   brandSub: 'Room climate',
-  room: (id) => `Room ${id}`,
+  titleList: 'Rooms · LeoIoT Room climate',
+  nav: 'Room navigation',
+  allRooms: 'All rooms',
+  roomChoice: 'Choose room',
   roomLabel: 'Room',
   range: 'Time range',
   range24h: '24 h',
@@ -116,8 +132,16 @@ const en: Texts = {
   lampOff: 'Light off',
   warning: 'Warning',
   noDataTitle: (id) => `No data for room ${id}`,
-  noDataText: 'There are no readings for this room. They appear here as soon as the sensor box sends again.',
+  noDataText: 'There are no readings for this room.',
   invalidRoomText: 'This room name is not valid. Letters, digits and dots are allowed, for example 105 or E10.',
+  roomsTitle: 'Rooms with readings',
+  floorName: (floor) =>
+    floor === 'U' ? 'Basement' : floor === 'E' ? 'Ground floor' : floor === '1' ? 'Floor 1' : floor === '2' ? 'Floor 2' : floor === 'T' ? 'Gym' : 'Other rooms',
+  listStale: 'Not current',
+  listNoCo2: 'No CO₂ value',
+  noRooms: 'No room is sending readings at the moment.',
+  listFallback: 'Updated every minute',
+  show3d: 'Show in the building',
   loadErrorTitle: 'Data not reachable',
   loadErrorText: 'The readings could not be loaded. The page tries again every minute.',
   historyEmpty: 'There are no values in this period.',

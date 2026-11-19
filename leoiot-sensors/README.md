@@ -11,6 +11,7 @@ New sensor ingestion and room-climate views (CO₂, temperature and humidity per
 ## Layout
 
 - `collector/`: the collector (Node 22, TypeScript, Vitest, `mqtt`). It reads the devices of its mapping `collector/devices.json` (today `nili3` in room `105`), stores every reading in `room_climate` and publishes the room's retained live message, both as `platform/data-contract` specifies.
+- `dashboard/`: the web dashboard. `/sensors/` is the room list (every room with live data, grouped by floor); `/sensors/?room=<id>` is the page of one room, with a room choice in the header and a link to the room in the 3D explorer.
 - `compose.yaml`: the Compose project `leoiot-sensors`. It holds the collector; the dashboard service is added with the dashboard.
 - `.env.example`: names of the variables of the unit, without values.
 - `PRODUCT.md`, `.impeccable/surfaces/dashboard.md`: product facts and the design direction of the coming dashboard.
@@ -117,7 +118,7 @@ export SENSORS_DEV_MQTT_WS_URL="ws://127.0.0.1:$(node -p "require('$stack').wsPo
 npm run dev
 ```
 
-Open `http://localhost:8092/sensors/`: room 105 shows the values of the last round of `stack:publish`. Stop the dev server with Ctrl-C.
+Open `http://localhost:8092/sensors/` for the room list, or `http://localhost:8092/sensors/?room=105`: room 105 shows the values of the last round of `stack:publish`. Stop the dev server with Ctrl-C.
 
 Read-only against vm23, through an SSH tunnel. On vm23, InfluxDB answers on port 8086 of the host (`/influx/` of `leoiot-platform/proxy/nginx.conf`) and the browser listener of the broker on `127.0.0.1:9001` (`leoiot-platform/compose.yaml`). Forward them to free local ports, so that they do not clash with a local stack:
 

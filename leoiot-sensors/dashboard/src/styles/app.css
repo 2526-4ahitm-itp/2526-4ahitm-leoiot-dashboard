@@ -21,7 +21,12 @@ button { font: inherit; color: inherit; }
 .bar { min-height: 60px; background: var(--panel); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 20px; padding: 0 40px; }
 .brand { font-weight: 700; font-size: 18px; white-space: nowrap; }
 .brand #brandSub { font-weight: 400; color: var(--ink-3); }
-.crumb { font-size: 16px; color: var(--ink-2); padding-left: 20px; border-left: 1px solid var(--line); white-space: nowrap; max-width: 24ch; overflow: hidden; text-overflow: ellipsis; }
+.crumb { font-size: 16px; color: var(--ink-2); padding-left: 20px; border-left: 1px solid var(--line); display: flex; align-items: center; gap: 14px; min-width: 0; }
+.crumb a { color: var(--ink-2); white-space: nowrap; text-underline-offset: 3px; }
+.crumb a:hover { color: var(--ink); }
+.crumb a[aria-current='page'] { color: var(--ink); font-weight: 700; text-decoration: none; }
+.crumb select { font: inherit; font-size: 15px; color: var(--ink); padding: 0 10px; max-width: 14ch; cursor: pointer; }
+.crumb select:hover { background: var(--ground); }
 .ctl { height: 36px; border: 1px solid var(--line-ctl); border-radius: var(--r-ctl); background: var(--panel); }
 .seg { display: inline-flex; padding: 0; overflow: hidden; }
 .seg button { border: 0; background: none; padding: 0 14px; cursor: pointer; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease); }
@@ -50,6 +55,8 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 .room-id { font-size: 128px; font-weight: 700; line-height: 0.86; letter-spacing: -0.035em; overflow-wrap: anywhere; }
 .ident { color: var(--ink-3); font-size: 14px; margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
 .ident .tag { color: var(--ink); }
+.link3d { display: inline-block; margin-top: 12px; font-size: 15px; color: var(--ink-2); text-underline-offset: 3px; }
+.link3d:hover { color: var(--ink); }
 [data-source='simulated'] .ident .tag { border: 1px dashed var(--line-ctl); border-radius: 99px; padding: 0 8px; }
 
 .light { background: var(--housing); border-radius: 38px; padding: 14px; display: grid; gap: 12px; justify-items: center; }
@@ -94,6 +101,35 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 [data-state='nodata'] .room, [data-state='nodata'] .charts,
 [data-state='error'] .room, [data-state='error'] .charts { display: none; }
 [data-state='nodata'] .empty, [data-state='error'] .empty { display: block; }
+/* Without charts the time range has nothing to switch. */
+body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='error']) #rangeGroup { display: none; }
+
+/* Room list: compact rows in a responsive grid, one link per room */
+.rooms { display: none; background: var(--panel); border-radius: var(--r-panel); padding: 28px 36px 32px; }
+[data-view='list'] .rooms,
+[data-view='room'][data-state='nodata'] .rooms, [data-view='room'][data-state='error'] .rooms { display: block; }
+[data-view='list'] .room, [data-view='list'] .charts, [data-view='list'] .empty { display: none; }
+.rooms > h2 { font-size: 22px; }
+.rooms .note, .rooms-msg { color: var(--ink-2); font-size: 15px; margin-top: 8px; padding: 0; }
+.floor { margin-top: 22px; }
+.floor h3 { font-size: 15px; font-weight: 400; color: var(--ink-3); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.floor ul { list-style: none; padding: 0; margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.floor a { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; column-gap: 10px; row-gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-ctl); color: inherit; text-decoration: none; transition: background-color var(--dur) var(--ease); }
+.floor a:hover { background: var(--ground); }
+.floor a:focus-visible { outline-offset: 2px; border-radius: var(--r-ctl); }
+.lamp-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--lamp-off); grid-row: 1 / span 2; }
+[data-air='good'] > a .lamp-dot { background: var(--g); }
+[data-air='soon'] > a .lamp-dot { background: var(--y); }
+[data-air='bad'] > a .lamp-dot { background: var(--r); }
+.rid { font-weight: 700; font-size: 17px; overflow-wrap: anywhere; }
+.rstate { grid-column: 2; font-size: 13px; color: var(--ink-2); }
+.rco2 { grid-column: 3; grid-row: 1 / span 2; text-align: right; font-weight: 700; font-size: 17px; }
+.rco2 .u { font-weight: 400; font-size: 13px; color: var(--ink-3); margin-left: 3px; }
+[data-air='good'] > a .rco2 { color: var(--g-ink); }
+[data-air='soon'] > a .rco2 { color: var(--y-ink); }
+[data-air='bad'] > a .rco2 { color: var(--r-ink); }
+[data-fresh='stale'] > a .rco2 { color: var(--ink-3); }
+.rtag { grid-column: 2; justify-self: start; font-size: 12px; border: 1px dashed var(--line-ctl); border-radius: 99px; padding: 0 8px; color: var(--ink); }
 
 @media (max-width: 1100px) {
   .charts { grid-template-columns: 1fr; }
@@ -102,7 +138,9 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 }
 @media (max-width: 640px) {
   .bar { padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
-  .crumb { padding-left: 10px; }
+  .crumb { padding-left: 10px; gap: 10px; }
+  .rooms { padding: 20px 16px 24px; }
+  .floor ul { grid-template-columns: 1fr; }
   main { padding: 16px; gap: 16px; }
   .room { padding: 20px; gap: 20px; }
   .room-id { font-size: 84px; }
