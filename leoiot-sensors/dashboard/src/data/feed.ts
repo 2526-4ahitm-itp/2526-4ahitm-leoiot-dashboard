@@ -2,8 +2,6 @@
 // from `/mqtt`; whenever that channel is not working, the latest values are fetched from the stored
 // readings once a minute, until the channel works again. The client and the timers are injected, so
 // that tests need neither a broker nor real time.
-import { liveTopic, parseLiveMessage } from '../core/live';
-import type { LiveReading } from '../core/snapshot';
 
 /** The few members of an mqtt.js client that are used. */
 export interface MqttLike {
@@ -23,12 +21,14 @@ export interface Timers {
 export type FeedMode = 'connecting' | 'live' | 'fallback';
 
 export interface FeedOptions {
-  room: string;
+  /** The topic (or topic filter) to subscribe to. */
+  topic: string;
   /** Opens the connection; may load the MQTT library first. A rejection starts the fallback. */
   connect: () => MqttLike | Promise<MqttLike>;
   /** Fetches the latest values from the stored readings and applies them. */
   poll: () => Promise<void>;
-  onReading: (reading: LiveReading) => void;
+  /** Every message of the subscription, unparsed; an empty payload is a cleared retained message. */
+  onMessage: (topic: string, payload: Uint8Array) => void;
   onMode: (mode: FeedMode) => void;
   timers?: Timers;
   pollMs?: number;
@@ -47,7 +47,6 @@ export interface Feed {
 export function startFeed(options: FeedOptions): Feed {
   const timers: Timers = options.timers ?? (globalThis as unknown as Timers);
   const pollMs = options.pollMs ?? POLL_MS;
-  const topic = liveTopic(options.room);
   let mode: FeedMode = 'connecting';
   let poller: unknown = null;
   let grace: unknown = null;
@@ -82,9 +81,9 @@ export function startFeed(options: FeedOptions): Feed {
     if (stopped) return void c.end(true);
     client = c;
     c.on('connect', () => {
-      c.subscribe(topic, (error, granted) => {
-        // A refused subscription (QoS 128) is as bad as no connection.
-        if (error || (granted ?? []).some((g) => g.qos === 128)) return startFallback();
+      c.subscribe(options.topic, (error, granted) => {
+        // A refused subscription (QoS 128 or above) is as bad as no connection.
+        if (error || (granted ?? []).some((g) => g.qos >= 128)) return startFallback();
         if (grace !== null) timers.clearTimeout(grace);
         grace = null;
         stopFallback();
@@ -92,10 +91,7 @@ export function startFeed(options: FeedOptions): Feed {
       });
     });
     for (const event of ['close', 'offline', 'error'] as const) c.on(event, startFallback);
-    c.on('message', (_topic: string, payload: Uint8Array) => {
-      const reading = parseLiveMessage(payload, options.room);
-      if (reading) options.onReading(reading);
-    });
+    c.on('message', (topic: string, payload: Uint8Array) => options.onMessage(topic, payload));
   };
   try {
     Promise.resolve(options.connect()).then(attach, startFallback);

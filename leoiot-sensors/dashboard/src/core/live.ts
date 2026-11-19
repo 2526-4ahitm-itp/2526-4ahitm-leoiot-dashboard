@@ -3,6 +3,9 @@ import { isSource } from './flux';
 import { assertRoomId } from './room';
 import { QUANTITIES, type LiveReading } from './snapshot';
 
+/** Filter for every room; the room list and the room page's header choice need all of them. */
+export const ROOMS_TOPIC = 'leoiot/room-climate/#';
+
 export function liveTopic(room: string): string {
   return `leoiot/room-climate/${assertRoomId(room)}`;
 }

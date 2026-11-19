@@ -2,17 +2,21 @@
 // once-a-second clock, the room panel and the charts. All outside things are passed in, so tests
 // can run the page against fake data and a fake clock.
 import { isRangeId, DEFAULT_RANGE, type RangeId } from './core/ranges';
-import { roomFromSearch } from './core/room';
+import { parseLiveMessage, liveTopic } from './core/live';
+import { roomFromSearch, type RoomChoice } from './core/room';
+import { listEntries } from './core/roomList';
 import { applyLive, EMPTY_SNAPSHOT, mergeSnapshots, type HistoryPoint, type Snapshot } from './core/snapshot';
 import { deriveRoomView } from './core/view';
 import { makeFormat } from './core/format';
 import { isLang, type Lang } from './core/i18n';
 import type { Query } from './data/api';
-import { startFeed, POLL_MS, type Feed, type FeedMode, type MqttLike, type Timers } from './data/feed';
+import { POLL_MS, type FeedMode, type MqttLike, type Timers } from './data/feed';
 import { loadHistory, loadLatest } from './data/load';
+import { startRoomsSource, type RoomsSource } from './data/roomsSource';
 import { createCharts, type Charts, type EchartsApi } from './ui/charts';
 import { readPalette } from './ui/palette';
 import { effectiveTheme, KEY_LANG, KEY_THEME, loadPrefs, write, type Theme } from './ui/prefs';
+import { bindRoomListDom, renderRoomChoice, renderRoomList } from './ui/roomList';
 import { bindDom, chartInput, renderChartFrame, renderFrame, renderRoom, type HistoryStatus } from './ui/render';
 
 export interface AppDeps {
@@ -29,6 +33,8 @@ export interface AppDeps {
   timers?: Timers;
   /** Called when the colour scheme of the system changes, to redraw the charts. */
   onSchemeChange?: (listener: () => void) => void;
+  /** Opens an address (the header's room choice). Default: the browser's location.assign. */
+  navigate?: (href: string) => void;
 }
 
 export interface App {
@@ -45,7 +51,11 @@ interface HistoryState {
 export function startApp(deps: AppDeps): App {
   const timers: Timers = deps.timers ?? (globalThis as unknown as Timers);
   const dom = bindDom(deps.doc);
-  const room = roomFromSearch(deps.search);
+  const found = roomFromSearch(deps.search);
+  if (found === null) throw new Error('startApp needs a room in the address; the list view is startListApp');
+  const room: RoomChoice = found;
+  const listDom = bindRoomListDom(deps.doc);
+  const navigate = deps.navigate ?? ((href: string) => deps.doc.defaultView?.location.assign(href));
   const prefs = loadPrefs(deps.storage);
 
   let lang: Lang = prefs.lang;
@@ -59,7 +69,7 @@ export function startApp(deps: AppDeps): App {
     '7d': { status: 'loading', points: [], source: null, loadedAt: 0 },
   };
   const inFlight: Record<RangeId, number> = { '24h': 0, '7d': 0 };
-  let feed: Feed | null = null;
+  let rooms: RoomsSource | null = null;
   let disposed = false;
   let charts: Charts | null = null;
   let resizer: ResizeObserver | null = null;
@@ -100,11 +110,20 @@ export function startApp(deps: AppDeps): App {
     renderFrame(dom, { lang, room, range, theme: theme() });
   }
 
+  /** The room list (shown below the "no data" panel) and the room choice in the header. */
+  function drawRooms(): void {
+    const state = rooms?.state ?? new Map();
+    renderRoomChoice(listDom, [...state.keys()], room.id, lang);
+    const visible = dom.app.dataset.state === 'nodata' || dom.app.dataset.state === 'error';
+    if (visible) renderRoomList(listDom, { entries: listEntries(state, deps.now()), ready: rooms?.ready() ?? false, feed: feedMode, lang }, makeFormat(lang));
+  }
+
   function drawRoom(): void {
     const now = deps.now();
     const status = !room.valid ? 'invalid' : latest;
     const view = deriveRoomView({ snapshot, series24h: history['24h'].points, now, status });
     renderRoom(dom, view, { lang, room, now, feed: feedMode }, makeFormat(lang));
+    drawRooms();
   }
 
   async function refreshLatest(): Promise<void> {
@@ -162,6 +181,10 @@ export function startApp(deps: AppDeps): App {
     }
   };
   deps.doc.querySelector('header')?.addEventListener('click', onClick);
+  const onChoose = () => {
+    if (listDom.select.value !== '') navigate(`?room=${encodeURIComponent(listDom.select.value)}`);
+  };
+  listDom.select.addEventListener('change', onChoose);
   deps.onSchemeChange?.(() => {
     drawFrame();
     drawCharts();
@@ -174,27 +197,33 @@ export function startApp(deps: AppDeps): App {
 
   let clock: unknown = null;
   let refresher: unknown = null;
+  // One subscription to every room: the header choice and the list under "no data" need all of
+  // them; the messages of the shown room also feed the room panel.
+  const shownTopic = room.valid ? liveTopic(room.id) : null;
+  rooms = startRoomsSource({
+    connect: deps.connect,
+    query: deps.query,
+    timers,
+    extraPoll: room.valid ? refreshLatest : undefined,
+    onMessage: (topic, payload) => {
+      if (topic !== shownTopic || payload.length === 0) return; // a cleared message only concerns the list
+      const reading = parseLiveMessage(payload, room.id);
+      if (!reading) return;
+      const sourceBefore = snapshot.source;
+      snapshot = applyLive(snapshot, reading);
+      latest = latest === 'error' ? 'ok' : latest;
+      drawRoom();
+      if (snapshot.source !== sourceBefore) {
+        void refreshHistory('24h');
+        if (range !== '24h') void refreshHistory(range);
+      }
+    },
+    onChange: () => {
+      feedMode = rooms?.mode() ?? feedMode;
+      drawRoom();
+    },
+  });
   if (room.valid) {
-    feed = startFeed({
-      room: room.id,
-      connect: deps.connect,
-      poll: refreshLatest,
-      onReading: (reading) => {
-        const sourceBefore = snapshot.source;
-        snapshot = applyLive(snapshot, reading);
-        latest = latest === 'error' ? 'ok' : latest;
-        drawRoom();
-        if (snapshot.source !== sourceBefore) {
-          void refreshHistory('24h');
-          if (range !== '24h') void refreshHistory(range);
-        }
-      },
-      onMode: (mode) => {
-        feedMode = mode;
-        drawRoom();
-      },
-      timers,
-    });
     void refreshLatest();
     // The charts and the five-minute series follow the clock; a failed first load is tried again.
     refresher = timers.setInterval(() => {
@@ -204,18 +233,19 @@ export function startApp(deps: AppDeps): App {
         if (range !== '24h') void refreshHistory(range);
       }
     }, POLL_MS);
-    clock = timers.setInterval(drawRoom, 1000);
   }
+  clock = timers.setInterval(drawRoom, 1000);
 
   return {
     dispose() {
       disposed = true;
-      feed?.stop();
+      rooms?.stop();
       if (clock !== null) timers.clearInterval(clock);
       if (refresher !== null) timers.clearInterval(refresher);
       resizer?.disconnect();
       charts?.dispose();
       deps.doc.querySelector('header')?.removeEventListener('click', onClick);
+      listDom.select.removeEventListener('change', onChoose);
     },
   };
 }

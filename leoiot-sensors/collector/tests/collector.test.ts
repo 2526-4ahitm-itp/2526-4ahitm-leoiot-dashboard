@@ -109,7 +109,7 @@ describe('Live message', () => {
     mqtt.client.deliver(NILI3_TEMPERATURE, '22.4');
     const last = mqtt.client.published.at(-1)!;
     expect(last.topic).toBe('leoiot/room-climate/105');
-    expect(last.options).toEqual({ qos: 1, retain: true });
+    expect(last.options).toEqual({ qos: 1, retain: true, properties: { messageExpiryInterval: 2_592_000 } });
     expect(JSON.parse(last.payload)).toEqual({
       room: '105',
       device: 'nili3',
@@ -148,6 +148,25 @@ describe('Live message', () => {
     expect(fake.accepted).toHaveLength(before.points);
     expect(mqtt.client.published).toHaveLength(before.live);
     expect(collector.status().healthy).toBe(true);
+  });
+
+  it('expires after 30 days: the broker connection uses MQTT 5 and every live message carries the expiry', async () => {
+    const { mqtt } = await setup();
+    expect(mqtt.options()?.protocolVersion).toBe(5);
+    mqtt.client.deliver(NILI3_CO2, '868');
+    mqtt.client.deliver(NILI3_HUMIDITY, '47');
+    expect(mqtt.client.published).toHaveLength(2);
+    for (const p of mqtt.client.published) expect(p.options.properties?.messageExpiryInterval).toBe(30 * 24 * 60 * 60);
+  });
+});
+
+describe('Subscription refused', () => {
+  it('logs a topic the broker refuses with an MQTT 5 reason code', async () => {
+    const { mqtt, lines } = await setup();
+    mqtt.client.subackCodes[NILI3_CO2] = 135; // MQTT 5: not authorized
+    mqtt.client.drop();
+    mqtt.client.open();
+    expect(lines).toContain(`Broker refused the subscription to: ${NILI3_CO2}`);
   });
 });
 

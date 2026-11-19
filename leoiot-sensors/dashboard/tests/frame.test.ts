@@ -32,10 +32,12 @@ describe('served at /sensors/', () => {
     expect(calls[0].init.method).toBe('POST');
     expect(JSON.stringify(calls[0].init.headers)).not.toMatch(/authorization|token/i);
   });
-  it('plain address: the dashboard shows room 105', async () => {
-    const t = await startTestApp({ search: '' });
+  it('room 105 in the address: the dashboard shows room 105', async () => {
+    const t = await startTestApp({ search: '?room=105' });
     expect(t.$('roomId').textContent).toBe('105');
-    expect(t.$('crumb').textContent).toBe('Raum 105');
+    expect(t.$('app').dataset.view).toBe('room');
+    expect(t.$('allRooms').textContent).toBe('Alle Räume');
+    expect(t.$('roomSelect').getAttribute('aria-label')).toBe('Raum wählen');
     expect(document.title).toBe('Raum 105 · LeoIoT Raumklima');
     expect(t.queries.every((q) => q.includes('r.room == "105"'))).toBe(true);
     expect(t.$('app').dataset.state).toBe('live');
@@ -43,7 +45,7 @@ describe('served at /sensors/', () => {
   it('room in the address: the id is shown exactly as on the door sign', async () => {
     const t = await startTestApp({ search: '?room=E10', latest: fixture('latestE10.csv') });
     expect(t.$('roomId').textContent).toBe('E10');
-    expect(t.$('crumb').textContent).toBe('Raum E10');
+    expect((t.$('roomSelect') as HTMLSelectElement).value).toBe('E10');
     expect(t.queries[0]).toContain('r.room == "E10"');
     expect(t.$('app').dataset.state).not.toBe('nodata');
   });
@@ -135,7 +137,8 @@ describe('language and theme are kept in the browser', () => {
     expect(t.$('kTemp').textContent).toBe('Temperature');
     expect(t.$('kHum').textContent).toBe('Humidity');
     expect(t.$('brandSub').textContent).toBe('Room climate');
-    expect(t.$('crumb').textContent).toBe('Room 105');
+    expect(t.$('allRooms').textContent).toBe('All rooms');
+    expect(t.$('roomSelect').getAttribute('aria-label')).toBe('Choose room');
     expect(t.$('rangeGroup').querySelector('[data-range="7d"]')!.textContent).toBe('7 days');
     expect(t.$('fresh').textContent).toMatch(/^As of 07:36:08 · \d+ s ago$/);
     expect(t.$('winA').textContent).toMatch(/^\d+\/\d+, \d\d:\d\d – \d+\/\d+, \d\d:\d\d · °C$/);

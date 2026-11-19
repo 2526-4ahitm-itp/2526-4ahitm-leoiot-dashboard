@@ -1,5 +1,7 @@
 // Runs the whole page (startApp) in a DOM against fake data, a fake broker and a fake clock.
 import { startApp, type App } from '../src/app';
+import { roomFromSearch } from '../src/core/room';
+import { startListApp } from '../src/listApp';
 import type { EchartsApi } from '../src/ui/charts';
 import { FakeMqtt, FakeTimers, fixture, flush, loadPage } from './helpers';
 
@@ -62,13 +64,19 @@ export function fakeEcharts() {
   return { api, charts, connected };
 }
 
+/** The query for the latest values of every room (no room in its filter). */
+const isRoomsQuery = (flux: string) => flux.includes('last()') && !flux.includes('r.room ==');
+
 export interface TestAppOptions {
+  /** The address's query string; default room 105. An address without a room starts the room list. */
   search?: string;
   storage?: MemoryStorage | BrokenStorage | null;
   prefersDark?: boolean;
   latest?: string;
   history?: string;
   echarts?: EchartsApi | null;
+  /** Answer of the latest-values query for all rooms (the room list's fallback). Default: no rows. */
+  rooms?: string;
   /** The stored readings cannot be reached (every query fails). */
   failing?: boolean;
 }
@@ -83,25 +91,29 @@ export async function startTestApp(o: TestAppOptions = {}) {
   const timers = new FakeTimers();
   const mqtt = new FakeMqtt();
   const queries: string[] = [];
-  const state = { latest: o.latest ?? fixture('latest105.csv'), history: o.history ?? fixture('history24h.csv'), prefersDark: o.prefersDark ?? false, fail: o.failing ?? false };
+  const state = { latest: o.latest ?? fixture('latest105.csv'), history: o.history ?? fixture('history24h.csv'), prefersDark: o.prefersDark ?? false, fail: o.failing ?? false, rooms: o.rooms ?? '' };
   const storage = o.storage === undefined ? new MemoryStorage() : o.storage;
   let schemeListener: (() => void) | null = null;
-  const app = startApp({
+  const search = o.search ?? '?room=105';
+  const navigated: string[] = [];
+  const deps = {
     doc: document,
-    search: o.search ?? '',
     storage: storage as unknown as Storage | null,
     prefersDark: () => state.prefersDark,
-    query: async (flux) => {
+    query: async (flux: string) => {
       queries.push(flux);
       if (state.fail) throw new Error('HTTP 502');
+      if (isRoomsQuery(flux)) return state.rooms;
       return flux.includes('last()') ? state.latest : state.history;
     },
     connect: () => mqtt,
     charts: o.echarts ? async () => o.echarts as EchartsApi : null,
     now: () => BASE + timers.now,
     timers,
-    onSchemeChange: (l) => void (schemeListener = l),
-  });
+    onSchemeChange: (l: () => void) => void (schemeListener = l),
+  };
+  // A room in the address starts the room page, none the room list (as src/main.ts does).
+  const app = roomFromSearch(search) ? startApp({ ...deps, search, navigate: (href) => void navigated.push(href) }) : startListApp(deps);
   apps.push(app);
   await flush();
   const $ = (id: string) => document.getElementById(id) as HTMLElement;
@@ -114,11 +126,13 @@ export async function startTestApp(o: TestAppOptions = {}) {
     timers,
     mqtt,
     queries,
+    navigated,
     state,
     storage,
     $,
     click,
-    latestQueries: () => queries.filter((q) => q.includes('last()')).length,
+    latestQueries: () => queries.filter((q) => q.includes('last()') && !isRoomsQuery(q)).length,
+    roomsQueries: () => queries.filter(isRoomsQuery).length,
     historyQueries: () => queries.filter((q) => !q.includes('last()')),
     /** The broker connection comes up (the subscription is granted at once). */
     async connect() {

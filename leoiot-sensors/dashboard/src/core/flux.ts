@@ -34,6 +34,21 @@ export function latestQuery(room: string): string {
 }
 
 /**
+ * Like `latestQuery`, for every room: the newest value of each field per series (room, device and
+ * source). The room list takes its rooms from this while the live channel is down.
+ */
+export function roomsLatestQuery(): string {
+  return [
+    `from(bucket: "${BUCKET}")`,
+    `  |> range(start: -${LATEST_LOOKBACK})`,
+    `  |> filter(fn: (r) => r._measurement == "${MEASUREMENT}")`,
+    `  |> filter(fn: (r) => ${FIELDS})`,
+    `  |> last()`,
+    `  |> keep(columns: ["_time", "_value", "_field", "room", "device", "source"])`,
+  ].join('\n');
+}
+
+/**
  * Means of fixed windows (five minutes for 24 h, thirty for 7 days), all devices of the room and
  * source merged, empty windows kept so that they come back as gaps, one row per window with the
  * fields as columns. The window's time is its end.

@@ -2,7 +2,6 @@
 // MQTT topic, so it is checked against the room id rule of platform/data-contract
 // ("only letters, digits and dots") before it is used for anything else.
 
-export const DEFAULT_ROOM = '105';
 export const MAX_ROOM_LENGTH = 32;
 
 const ROOM_ID = /^[A-Za-z0-9.]+$/;
@@ -19,16 +18,16 @@ export function assertRoomId(id: string): string {
 }
 
 export interface RoomChoice {
-  /** The id as written in the address (or the default), never changed. */
+  /** The id as written in the address, never changed. */
   id: string;
   /** False when the id breaks the room id rule; nothing is queried for such a room. */
   valid: boolean;
 }
 
-/** Reads `?room=` from a location search string. No room (or an empty one) means room 105. */
-export function roomFromSearch(search: string): RoomChoice {
-  const given = new URLSearchParams(search).get('room');
-  const id = given === null || given === '' ? DEFAULT_ROOM : given;
+/** Reads `?room=` from a location search string. No room (or an empty one) means the room list: null. */
+export function roomFromSearch(search: string): RoomChoice | null {
+  const id = new URLSearchParams(search).get('room');
+  if (id === null || id === '') return null;
   return { id, valid: isValidRoomId(id) };
 }
 
