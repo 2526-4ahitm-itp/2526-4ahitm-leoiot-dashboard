@@ -47,10 +47,10 @@ button { font: inherit; color: inherit; }
   :root:not([data-theme='light']) .icon-btn .i-moon { display: none; }
 }
 
-main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; margin: 0 auto; }
+main { padding: 20px 40px 20px; display: grid; gap: 16px; max-width: 1520px; margin: 0 auto; }
 
 /* Room panel: identity line on top, then housing | state | Heute */
-.room { background: var(--panel); border-radius: var(--r-panel); padding: 24px 36px 28px; display: grid; grid-template-columns: 76px minmax(0, 1fr) 260px; grid-template-areas: 'identity identity identity' 'light state today'; gap: 20px 32px; align-items: center; }
+.room { background: var(--panel); border-radius: var(--r-panel); padding: 20px 32px 20px; display: grid; grid-template-columns: 76px minmax(0, 1fr) 260px; grid-template-areas: 'identity identity identity' 'light state today'; gap: 12px 32px; align-items: center; }
 .identity { grid-area: identity; min-width: 0; align-self: start; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; }
 .room-id { font-size: 20px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
 .link3d { font-size: 15px; color: var(--ink-2); text-underline-offset: 3px; }
@@ -64,10 +64,10 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 [data-air='good'] .lamp.g { background: var(--g); box-shadow: 0 0 0 5px color-mix(in srgb, var(--g) 28%, transparent); }
 
 .state { grid-area: state; min-width: 0; }
-.status { font-size: 44px; font-weight: 700; line-height: 1.1; text-wrap: balance; overflow-wrap: anywhere; }
+.status { font-size: 40px; font-weight: 700; line-height: 1.1; text-wrap: balance; overflow-wrap: anywhere; }
 .why { font-size: 17px; color: var(--ink-2); margin-top: 6px; max-width: 62ch; min-height: 1.4em; }
-.cells { display: grid; grid-template-columns: repeat(3, minmax(0, 210px)); margin-top: 22px; border-top: 1px solid var(--line); }
-.cell { padding-top: 14px; }
+.cells { display: grid; grid-template-columns: repeat(3, minmax(0, 210px)); margin-top: 16px; border-top: 1px solid var(--line); }
+.cell { padding-top: 12px; }
 .cell dt { font-size: 13px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
 .cell dd { margin: 0; }
 .cell .v { font-size: 34px; font-weight: 700; display: inline-block; min-width: 0; }
@@ -109,16 +109,16 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 [data-state='loading'] .today { visibility: hidden; }
 
 /* Charts */
-.charts { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 24px; }
+.charts { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 16px; }
 .panel-co2 { grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column; }
 .panel-temp { grid-column: 2; grid-row: 1; }
 .panel-hum { grid-column: 2; grid-row: 2; }
-.panel { background: var(--panel); border-radius: var(--r-panel); padding: 22px 26px 12px; min-width: 0; }
+.panel { background: var(--panel); border-radius: var(--r-panel); padding: 14px 22px 6px; min-width: 0; }
 .panel h2 { font-size: 17px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
 .panel h2 .h { display: inline-flex; align-items: center; gap: 8px; }
 .panel .qi { color: var(--ink-3); }
 .panel .win { font-weight: 400; color: var(--ink-3); font-size: 14px; }
-.chart { height: 220px; margin-top: 8px; }
+.chart { height: 220px; margin-top: 6px; }
 .panel-co2 .chart { flex: 1; height: auto; min-height: 340px; }
 .panel-hum .chart { height: 140px; }
 .note { font-size: 14px; color: var(--ink-2); padding: 0 0 10px; }
@@ -160,6 +160,25 @@ body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='e
 [data-fresh='stale'] > a .rco2 { color: var(--ink-3); }
 .rtag { grid-column: 2; justify-self: start; font-size: 12px; border: 1px dashed var(--line-ctl); border-radius: 99px; padding: 0 8px; color: var(--ink); }
 
+/* From 1101 px the page is as high as the window: the charts take what the room panel leaves. Minimum
+   chart heights keep them readable; below them the page grows and scrolls (body has min-height, not height). */
+@media (min-width: 1101px) {
+  body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+  .bar { flex: none; }
+  /* align-content: start keeps the room list and the no-data page at their natural height. */
+  main { flex: 1; width: 100%; align-content: start; }
+  main[data-view='room']:not([data-state='nodata']):not([data-state='error']) { grid-template-rows: auto minmax(0, 1fr); }
+  /* contain: size keeps the 3fr/2fr rows from inflating the chart area's content height (a row's
+     minimum is divided by its share, so humidity's 80px minimum would claim 337px instead of 303px);
+     the window then sets the height, and min-height holds the right column's real minimum:
+     both minimum charts, the 16px gap and two panel heads (48.3px each, rounded up). */
+  main[data-view='room']:not([data-state='nodata']):not([data-state='error']) .charts { grid-template-rows: 3fr 2fr; contain: size; min-height: calc(110px + 80px + 16px + 2 * 49px); }
+  .panel-co2, .panel-temp, .panel-hum { display: flex; flex-direction: column; }
+  .panel-co2 .chart, .panel-temp .chart, .panel-hum .chart { flex: 1 1 0; height: auto; }
+  .panel-co2 .chart { min-height: 240px; }
+  .panel-temp .chart { min-height: 110px; }
+  .panel-hum .chart { min-height: 80px; }
+}
 @media (max-width: 1100px) {
   .charts { grid-template-columns: 1fr; grid-template-rows: none; }
   .panel-co2, .panel-temp, .panel-hum { grid-column: 1; grid-row: auto; }
