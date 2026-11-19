@@ -3,6 +3,7 @@
 
 import { REJUDGE_EVERY_MS } from './core/age';
 import { cell, HEATMAP_FLOORS, heatmapRooms, type HeatmapKind } from './core/heatmap';
+import { resolveRoom } from './core/roomAddress';
 import { FLOOR_ORDER, type FloorId } from './core/rooms';
 import type { RoomStore } from './core/store';
 import { markerColour, routeMarkers, type RouteMarker } from './nav/markers';
@@ -119,6 +120,20 @@ export class App {
     this.heatmap = null;
     this.selected = room;
     this.render();
+  }
+
+  /**
+   * Opens the room the address names (spec platform/room-links): its floor is shown and the room
+   * selected with its info panel, as if clicked. A room the model does not have is reported.
+   */
+  openRoom(room: string): void {
+    const target = resolveRoom(room, (floor, id) => this.models.get(floor)?.rooms.has(id) ?? false);
+    if (!target.found) {
+      this.navigation.reportNotFound(room);
+      return;
+    }
+    this.setView(target.floor);
+    this.select(room);
   }
 
   deselect(): void {

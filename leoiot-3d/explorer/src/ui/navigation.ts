@@ -58,6 +58,13 @@ export class Navigation {
     this.error.textContent = message;
   }
 
+  /** A room from the address that the model does not have: the search opens with it and says so. */
+  reportNotFound(room: string): void {
+    this.input.value = room;
+    this.setOpen(true);
+    this.showError(strings.navigation.notFound);
+  }
+
   hideError(): void {
     this.error.hidden = true;
   }

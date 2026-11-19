@@ -1,5 +1,6 @@
 import './ui/styles.css';
 import { App } from './app';
+import { roomFromAddress } from './core/roomAddress';
 import { RoomStore } from './core/store';
 import { connectBroker } from './live/broker';
 import { LoadError, loadModels, type Model, type ViewId } from './scene/models';
@@ -39,7 +40,10 @@ async function load(): Promise<void> {
     return;
   }
   loading.hide();
-  new App(viewer, models, store, controls, panel, navigation, routeLegend);
+  const app = new App(viewer, models, store, controls, panel, navigation, routeLegend);
+  // `/3d/?room=<id>` opens that room once the models are there (spec platform/room-links)
+  const room = roomFromAddress(location.search);
+  if (room !== null) app.openRoom(room);
 }
 
 loading.onRetry = () => void load();

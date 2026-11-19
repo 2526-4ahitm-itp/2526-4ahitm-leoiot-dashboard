@@ -31,7 +31,7 @@
 
 ## 5. 3D explorer and temporary simulator (`leoiot-3d/`, by or with the 3D team)
 
-- [ ] 5.1 Read `?room=` once after the model has loaded and select that room as if clicked (floor shown, panel open); show the "room cannot be found" message for an unknown room; verify with unit tests for `153`, `U74.1` and `X99`
+- [x] 5.1 Read `?room=` once after the model has loaded and select that room as if clicked (floor shown, panel open); show the "room cannot be found" message for an unknown room; verify with unit tests for `153`, `U74.1` and `X99`
 - [ ] 5.2 Add the link "Show history" to `/sensors/?room=<id>` in the info panel when a live message for the room has been received; verify with tests for a room with and without a message
 - [ ] 5.3 Publish the temporary simulator's messages over MQTT 5 with the same expiry, and note in its README that `--clear` also empties rooms with real devices until their next reading; verify with its tests (`npm test`)
 - [ ] 5.4 Run the explorer's and the simulator's checks as listed in `AGENTS.md`; open the pull request and verify `ci-ok` is green
