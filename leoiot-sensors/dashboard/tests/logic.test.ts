@@ -52,6 +52,32 @@ describe('room view', () => {
   it('unknown quantity is null, never zero', () => {
     expect(view(snap(700, at), at).values).toEqual({ co2: 700, temperature: null, humidity: null });
   });
+  it('small lamps: live readings light them, outdated readings switch all lamps off, loading shows none', () => {
+    const both = (when: number) => snap(900, when, { temperature: { value: 17, at: when }, humidity: { value: 45, at: when } });
+    expect(view(both(at), at).comfort).toEqual({ temperature: { lamp: 'amber', direction: 'low' }, humidity: { lamp: 'green', direction: 'ok' } });
+    const stale = view(both(vienna('10:29')), at);
+    expect(stale).toMatchObject({ state: 'stale', air: null });
+    expect(stale.comfort).toEqual({ temperature: { lamp: 'off', direction: null }, humidity: { lamp: 'off', direction: null } });
+    expect(stale.values.temperature).toBe(17); // the greyed value stays
+    const loading = deriveRoomView({ snapshot: EMPTY_SNAPSHOT, series24h: null, now: at, status: 'loading' });
+    expect(loading.comfort.temperature.lamp).toBe('off');
+    expect(deriveRoomView({ snapshot: EMPTY_SNAPSHOT, series24h: null, now: at, status: 'ok' }).comfort.humidity.lamp).toBe('off');
+  });
+  it('no CO2 value: the CO2 lamp is off, the small lamps stay', () => {
+    const v = view(snap(undefined, at, { temperature: { value: 21, at }, humidity: { value: 30, at } }), at);
+    expect(v).toMatchObject({ air: null, noCo2: true });
+    expect(v.comfort).toEqual({ temperature: { lamp: 'green', direction: 'ok' }, humidity: { lamp: 'amber', direction: 'low' } });
+  });
+  it('the day: none while the series is not loaded; the summary stays for outdated readings; none without a room', () => {
+    expect(view(snap(700, at), at).today).toBeNull();
+    const series = [{ t: vienna('10:35'), co2: 1100 }, { t: vienna('10:40'), co2: 1100 }];
+    const live = deriveRoomView({ snapshot: snap(700, at), series24h: series, now: at, status: 'ok', peak: { value: 1450, at: vienna('10:38') } });
+    expect(live.today).toMatchObject({ empty: false, aboveMinutes: 10, peak: { value: 1450 } });
+    const stale = deriveRoomView({ snapshot: snap(700, vienna('09:00')), series24h: series, now: at, status: 'ok' });
+    expect(stale.state).toBe('stale');
+    expect(stale.today).toMatchObject({ aboveMinutes: 10 });
+    expect(deriveRoomView({ snapshot: EMPTY_SNAPSHOT, series24h: [], now: at, status: 'ok' }).today).toBeNull();
+  });
   it('simulated readings are marked', () => {
     expect(view(snap(700, at, {}, 'simulated'), at).source).toBe('simulated');
   });

@@ -49,31 +49,37 @@ button { font: inherit; color: inherit; }
 
 main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; margin: 0 auto; }
 
-/* Room panel */
-.room { background: var(--panel); border-radius: var(--r-panel); padding: 28px 36px; display: grid; grid-template-columns: auto 76px minmax(0, 1fr); gap: 40px; align-items: center; }
-.identity { min-width: 0; }
-.room-id { font-size: 128px; font-weight: 700; line-height: 0.86; letter-spacing: -0.035em; overflow-wrap: anywhere; }
-.ident { color: var(--ink-3); font-size: 14px; margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
-.ident .tag { color: var(--ink); }
-.link3d { display: inline-block; margin-top: 12px; font-size: 15px; color: var(--ink-2); text-underline-offset: 3px; }
+/* Room panel: identity line on top, then housing | state | Heute */
+.room { background: var(--panel); border-radius: var(--r-panel); padding: 24px 36px 28px; display: grid; grid-template-columns: 76px minmax(0, 1fr) 260px; grid-template-areas: 'identity identity identity' 'light state today'; gap: 20px 32px; align-items: center; }
+.identity { grid-area: identity; min-width: 0; align-self: start; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; }
+.room-id { font-size: 20px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.link3d { font-size: 15px; color: var(--ink-2); text-underline-offset: 3px; }
 .link3d:hover { color: var(--ink); }
-[data-source='simulated'] .ident .tag { border: 1px dashed var(--line-ctl); border-radius: 99px; padding: 0 8px; }
+.tag { font-size: 13px; color: var(--ink); border: 1px dashed var(--line-ctl); border-radius: 99px; padding: 0 8px; }
 
-.light { background: var(--housing); border-radius: 38px; padding: 14px; display: grid; gap: 12px; justify-items: center; }
+.light { grid-area: light; background: var(--housing); border-radius: 38px; padding: 14px; display: grid; gap: 12px; justify-items: center; }
 .lamp { width: 44px; height: 44px; border-radius: 50%; background: var(--lamp-off); transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
 [data-air='bad'] .lamp.r { background: var(--r); box-shadow: 0 0 0 5px color-mix(in srgb, var(--r) 28%, transparent); }
 [data-air='soon'] .lamp.y { background: var(--y); box-shadow: 0 0 0 5px color-mix(in srgb, var(--y) 28%, transparent); }
 [data-air='good'] .lamp.g { background: var(--g); box-shadow: 0 0 0 5px color-mix(in srgb, var(--g) 28%, transparent); }
 
-.state { min-width: 0; }
+.state { grid-area: state; min-width: 0; }
 .status { font-size: 44px; font-weight: 700; line-height: 1.1; text-wrap: balance; overflow-wrap: anywhere; }
 .why { font-size: 17px; color: var(--ink-2); margin-top: 6px; max-width: 62ch; min-height: 1.4em; }
-.cells { display: grid; grid-template-columns: repeat(3, minmax(170px, 210px)); margin-top: 22px; border-top: 1px solid var(--line); }
+.cells { display: grid; grid-template-columns: repeat(3, minmax(0, 210px)); margin-top: 22px; border-top: 1px solid var(--line); }
 .cell { padding-top: 14px; }
 .cell dt { font-size: 13px; color: var(--ink-3); }
 .cell dd { margin: 0; }
 .cell .v { font-size: 34px; font-weight: 700; display: inline-block; min-width: 0; }
 .cell .u { font-size: 16px; color: var(--ink-3); margin-left: 4px; }
+/* Temperature and humidity: a small lamp (dot), the value in the lamp's ink colour, and a word on a
+   reserved second line, so that the cell keeps its height whether or not a word is shown. */
+.cdot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--lamp-off); margin-right: 8px; vertical-align: middle; position: relative; top: -2px; transition: background-color var(--dur) var(--ease); }
+.cell[data-lamp='green'] .cdot { background: var(--g); }
+.cell[data-lamp='amber'] .cdot { background: var(--y); }
+.cell[data-lamp='green'] .v { color: var(--g-ink); }
+.cell[data-lamp='amber'] .v { color: var(--y-ink); }
+.cell .dir { font-size: 14px; color: var(--ink-2); min-height: 1.4em; margin-top: 2px; overflow-wrap: anywhere; }
 [data-air='soon'] .cell.co2 .v { color: var(--y-ink); }
 [data-air='bad'] .cell.co2 .v { color: var(--r-ink); }
 [data-air='good'] .cell.co2 .v { color: var(--g-ink); }
@@ -85,6 +91,20 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 [data-fresh='stale'] .fresh { color: var(--ink); }
 [data-fresh='stale'] .cell .v { color: var(--ink-3); }
 [data-state='loading'] .fresh .dot { background: var(--lamp-off); }
+
+/* Heute: the day so far, a column with a hairline on its left */
+.today { grid-area: today; min-width: 0; align-self: stretch; border-left: 1px solid var(--line); padding-left: 32px; display: flex; flex-direction: column; justify-content: center; }
+.today .cap { font-size: 13px; font-weight: 400; color: var(--ink-3); }
+.today-empty { font-size: 17px; color: var(--ink-2); margin-top: 10px; }
+.today-list { display: grid; gap: 16px; margin-top: 12px; }
+.pair { min-width: 0; }
+.pair dt { font-size: 13px; color: var(--ink-3); }
+.pair dd { margin: 0; }
+.today .v { font-size: 22px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.today .u { font-size: 15px; color: var(--ink-3); margin-left: 6px; }
+.today .est { display: block; font-size: 13px; color: var(--ink-3); min-height: 1.4em; }
+[data-fresh='stale'] .today .v { color: var(--ink-3); }
+[data-state='loading'] .today { visibility: hidden; }
 
 /* Charts */
 .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
@@ -133,8 +153,13 @@ body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='e
 
 @media (max-width: 1100px) {
   .charts { grid-template-columns: 1fr; }
-  .room { grid-template-columns: auto 76px; }
-  .room > .state { grid-column: 1 / -1; }
+  .room { grid-template-columns: 76px minmax(0, 1fr); grid-template-areas: 'identity identity' 'light state' 'today today'; }
+  .today { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0 0; }
+  .today-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+}
+@media (max-width: 760px) {
+  .room { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'identity' 'light' 'state' 'today'; }
+  .light { grid-auto-flow: column; justify-self: start; padding: 14px 18px; }
 }
 @media (max-width: 640px) {
   .bar { padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
@@ -143,11 +168,13 @@ body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='e
   .floor ul { grid-template-columns: 1fr; }
   main { padding: 16px; gap: 16px; }
   .room { padding: 20px; gap: 20px; }
-  .room-id { font-size: 84px; }
   .status { font-size: 32px; }
   .cells { grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .cell .v { font-size: 24px; min-width: 0; }
   .cell .u { display: block; margin-left: 0; font-size: 13px; }
+  .cdot { margin-right: 6px; }
+  .cell .dir { font-size: 13px; }
+  .today-list { grid-template-columns: 1fr; gap: 14px; }
   .panel { padding: 16px 12px 8px; }
   .empty { padding: 32px 20px; }
   .empty h2 { font-size: 22px; }

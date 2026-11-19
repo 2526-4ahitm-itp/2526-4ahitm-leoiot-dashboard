@@ -28,13 +28,20 @@ export interface Dom {
   theme: HTMLElement;
   roomWord: HTMLElement;
   roomId: HTMLElement;
-  ident: HTMLElement;
+  simTag: HTMLElement;
   light: HTMLElement;
   status: HTMLElement;
   why: HTMLElement;
   fresh: HTMLElement;
   warn: HTMLElement;
   cells: Record<Quantity, { value: HTMLElement; unknown: HTMLElement; label: HTMLElement }>;
+  /** Temperature and humidity: the cell (carries the lamp state) and the line for the direction word. */
+  small: Record<'temperature' | 'humidity', { cell: HTMLElement; dir: HTMLElement }>;
+  today: {
+    title: HTMLElement; empty: HTMLElement; list: HTMLElement;
+    kAbove: HTMLElement; vAbove: HTMLElement; kPeak: HTMLElement; vPeak: HTMLElement; uPeak: HTMLElement;
+    kAired: HTMLElement; vAired: HTMLElement; airedNote: HTMLElement;
+  };
   hTemp: HTMLElement;
   hAir: HTMLElement;
   winA: HTMLElement;
@@ -59,9 +66,15 @@ export function bindDom(doc: Document): Dom {
     doc,
     app: el('app'), crumb: el('crumb'), allRooms: el('allRooms'), roomSelect: el('roomSelect') as HTMLSelectElement, link3d: el('link3d'), brand: el('brand'), brandSub: el('brandSub'),
     rangeGroup: el('rangeGroup'), langGroup: el('langGroup'), theme: el('theme'),
-    roomWord: el('roomWord'), roomId: el('roomId'), ident: el('ident'), light: el('light'),
+    roomWord: el('roomWord'), roomId: el('roomId'), simTag: el('simTag'), light: el('light'),
     status: el('status'), why: el('why'), fresh: el('fresh'), warn: el('warnIcon'),
     cells: { co2: cell('Co2'), temperature: cell('Temp'), humidity: cell('Hum') },
+    small: { temperature: { cell: el('cellTemp'), dir: el('dTemp') }, humidity: { cell: el('cellHum'), dir: el('dHum') } },
+    today: {
+      title: el('todayTitle'), empty: el('todayEmpty'), list: el('todayList'),
+      kAbove: el('kAbove'), vAbove: el('vAbove'), kPeak: el('kPeak'), vPeak: el('vPeak'), uPeak: el('uPeak'),
+      kAired: el('kAired'), vAired: el('vAired'), airedNote: el('airedNote'),
+    },
     hTemp: el('hTemp'), hAir: el('hAir'), winA: el('winA'), winB: el('winB'),
     chartTemp: el('chartTemp'), chartAir: el('chartAir'), noteA: el('noteA'), noteB: el('noteB'),
     empty: el('empty'), emptyTitle: el('emptyTitle'), emptyText: el('emptyText'),
@@ -126,6 +139,10 @@ export function renderFrame(dom: Dom, f: Frame): void {
   setText(dom.cells.co2.label, t.co2);
   setText(dom.cells.temperature.label, t.temperature);
   setText(dom.cells.humidity.label, t.humidity);
+  setText(dom.today.title, t.todayTitle);
+  setText(dom.today.kAbove, t.aboveLabel);
+  setText(dom.today.kPeak, t.peakLabel);
+  setText(dom.today.kAired, t.airedLabel);
   setText(dom.hTemp, t.temperature);
   setText(dom.hAir, t.co2Humidity);
   setAttr(dom.warn, 'aria-label', t.warning);
@@ -151,24 +168,9 @@ export function renderRoom(dom: Dom, view: RoomView, c: RoomContext, format: For
 
   setAttr(dom.light, 'aria-label', view.air === 'good' ? t.lampGood : view.air === 'soon' ? t.lampSoon : view.air === 'bad' ? t.lampBad : t.lampOff);
 
-  // Identity line: device names and where the readings come from.
-  const names = view.devices.join(', ');
-  const device = names === '' ? '' : simulated ? t.deviceOther(names) : t.deviceSensor(names);
-  const origin = view.source === null ? '' : simulated ? t.simulated : t.measured;
-  const identKey = `${device}|${origin}`;
-  if (dom.ident.dataset.key !== identKey) {
-    dom.ident.dataset.key = identKey;
-    dom.ident.replaceChildren();
-    const parts = [device ? ['', device] : null, device && origin ? ['sep', '·'] : null, origin ? ['tag', origin] : null];
-    for (const p of parts) {
-      if (!p) continue;
-      const span = dom.doc.createElement('span');
-      if (p[0]) span.className = p[0];
-      if (p[0] === 'sep') span.setAttribute('aria-hidden', 'true');
-      span.textContent = p[1];
-      dom.ident.append(span);
-    }
-  }
+  // Identity line: the room (set by renderFrame), the link, and the pill for simulated readings only.
+  setText(dom.simTag, simulated ? t.simulated : '');
+  dom.simTag.hidden = !simulated;
 
   // Status sentence and its reason.
   let status = '';
@@ -203,6 +205,16 @@ export function renderRoom(dom: Dom, view: RoomView, c: RoomContext, format: For
     setText(dom.cells[q].unknown, v === null ? t.unknownValue : '');
   }
 
+  // Small lamps: the state is the dot's colour, the value's ink colour and the word below the value.
+  const words = { low: [t.tooCold, t.tooDry], high: [t.tooWarm, t.tooHumid], ok: [t.inRange, t.inRange] } as const;
+  for (const [q, i] of [['temperature', 0], ['humidity', 1]] as const) {
+    const c = view.comfort[q];
+    setAttr(dom.small[q].cell, 'data-lamp', c.lamp);
+    setText(dom.small[q].dir, c.direction === null ? '' : words[c.direction][i]);
+  }
+
+  renderToday(dom, view, t, format);
+
   // Age line.
   let fresh = '';
   if (view.state === 'stale') fresh = t.freshStale(format.time(lastAt));
@@ -220,6 +232,22 @@ export function renderRoom(dom: Dom, view: RoomView, c: RoomContext, format: For
     setText(dom.emptyTitle, t.noDataTitle(shown));
     setText(dom.emptyText, c.room.valid ? t.noDataText : t.invalidRoomText);
   }
+}
+
+/** The summary of the day; the layout keeps its place whatever it shows. */
+function renderToday(dom: Dom, view: RoomView, t: ReturnType<typeof texts>, format: Format): void {
+  const d = dom.today;
+  const td = view.today;
+  const none = td !== null && td.empty;
+  setText(d.empty, none ? t.todayEmpty : '');
+  d.empty.hidden = !none;
+  d.list.hidden = none;
+  if (none) return;
+  setText(d.vAbove, td === null ? t.unknown : td.aboveMinutes === 0 ? t.aboveNone : format.ageShort(td.aboveMinutes * 60_000));
+  setText(d.vPeak, td?.peak ? format.number(td.peak.value, 0) : t.unknown);
+  setText(d.uPeak, td?.peak ? `ppm · ${format.time(td.peak.at)}` : '');
+  setText(d.vAired, td === null ? t.unknown : td.airedAt === null ? t.airedNone : t.airedAt(format.time(td.airedAt)));
+  setText(d.airedNote, td !== null && td.airedAt !== null ? t.airedNote : '');
 }
 
 /** Window texts above the charts, the notes below them and the accessible names of the charts. */

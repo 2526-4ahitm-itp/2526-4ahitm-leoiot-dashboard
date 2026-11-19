@@ -3,6 +3,23 @@ import type { Lang } from './i18n';
 
 export const TIME_ZONE = 'Europe/Vienna';
 
+/** Offset of the school's time zone to UTC at an instant, in ms (summer time +2 h, winter time +1 h). */
+function zoneOffset(ms: number): number {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: TIME_ZONE, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' }).formatToParts(ms);
+  const n = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  return Date.UTC(n('year'), n('month') - 1, n('day'), n('hour'), n('minute'), n('second')) - Math.floor(ms / 1000) * 1000;
+}
+
+/** The instant of the most recent local midnight (Europe/Vienna), also on days with a clock change. */
+export function startOfLocalDay(ms: number): number {
+  const local = new Date(ms + zoneOffset(ms));
+  const wallMidnight = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate());
+  // The offset at midnight can differ from the one at `ms` (clock change during the day): settle on it.
+  let guess = wallMidnight - zoneOffset(wallMidnight);
+  guess = wallMidnight - zoneOffset(guess);
+  return guess;
+}
+
 const LOCALES: Record<Lang, string> = { de: 'de-AT', en: 'en-GB' };
 
 export interface Format {

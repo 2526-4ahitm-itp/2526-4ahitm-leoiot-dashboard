@@ -40,9 +40,9 @@ try {
 <main id="app" data-view="room" data-state="loading" data-air="off" data-fresh="live" data-source="sensor">
   <section class="room" id="roomPanel">
     <div class="identity">
-      <h1 class="room-id"><span class="sr-only" id="roomWord">Raum </span><span id="roomId">105</span></h1>
-      <p class="ident" id="ident"></p>
+      <h1 class="room-id"><span id="roomWord">Raum </span><span id="roomId">105</span></h1>
       <a class="link3d" id="link3d" href="/3d/" hidden>Im Gebäude zeigen</a>
+      <span class="tag" id="simTag" hidden>simuliert</span>
     </div>
     <div class="light" role="img" id="light" aria-label="Ampel aus">
       <div class="lamp r"></div><div class="lamp y"></div><div class="lamp g"></div>
@@ -54,8 +54,8 @@ try {
       </div>
       <dl class="cells">
         <div class="cell co2"><dt class="k" id="kCo2">CO₂</dt><dd><span class="v" id="vCo2">–</span><span class="u">ppm</span><span class="sr-only" id="uCo2"></span></dd></div>
-        <div class="cell"><dt class="k" id="kTemp">Temperatur</dt><dd><span class="v" id="vTemp">–</span><span class="u">°C</span><span class="sr-only" id="uTemp"></span></dd></div>
-        <div class="cell"><dt class="k" id="kHum">Luftfeuchte</dt><dd><span class="v" id="vHum">–</span><span class="u">%</span><span class="sr-only" id="uHum"></span></dd></div>
+        <div class="cell" id="cellTemp" data-lamp="off"><dt class="k" id="kTemp">Temperatur</dt><dd><span class="cdot" aria-hidden="true"></span><span class="v" id="vTemp">–</span><span class="u">°C</span><span class="sr-only" id="uTemp"></span></dd><dd class="dir" id="dTemp"></dd></div>
+        <div class="cell" id="cellHum" data-lamp="off"><dt class="k" id="kHum">Luftfeuchte</dt><dd><span class="cdot" aria-hidden="true"></span><span class="v" id="vHum">–</span><span class="u">%</span><span class="sr-only" id="uHum"></span></dd><dd class="dir" id="dHum"></dd></div>
       </dl>
       <p class="fresh">
         <span class="dot" aria-hidden="true"></span>
@@ -63,6 +63,15 @@ try {
         <span id="fresh"></span>
       </p>
     </div>
+    <aside class="today" id="today" aria-labelledby="todayTitle">
+      <h2 class="cap" id="todayTitle">Heute</h2>
+      <p class="today-empty" id="todayEmpty" hidden></p>
+      <dl class="today-list" id="todayList">
+        <div class="pair"><dt id="kAbove">Über 1000 ppm</dt><dd><span class="v" id="vAbove">–</span></dd></div>
+        <div class="pair"><dt id="kPeak">Höchstwert</dt><dd><span class="v" id="vPeak">–</span><span class="u" id="uPeak"></span></dd></div>
+        <div class="pair"><dt id="kAired">Zuletzt gelüftet</dt><dd><span class="v" id="vAired">–</span><span class="est" id="airedNote"></span></dd></div>
+      </dl>
+    </aside>
   </section>
 
   <div class="charts" id="charts">
