@@ -42,14 +42,18 @@ export interface Dom {
     kAbove: HTMLElement; vAbove: HTMLElement; kPeak: HTMLElement; vPeak: HTMLElement; uPeak: HTMLElement;
     kAired: HTMLElement; vAired: HTMLElement; airedNote: HTMLElement;
   };
+  hCo2: HTMLElement;
   hTemp: HTMLElement;
-  hAir: HTMLElement;
-  winA: HTMLElement;
-  winB: HTMLElement;
+  hHum: HTMLElement;
+  winCo2: HTMLElement;
+  winTemp: HTMLElement;
+  winHum: HTMLElement;
+  chartCo2: HTMLElement;
   chartTemp: HTMLElement;
-  chartAir: HTMLElement;
-  noteA: HTMLElement;
-  noteB: HTMLElement;
+  chartHum: HTMLElement;
+  noteCo2: HTMLElement;
+  noteTemp: HTMLElement;
+  noteHum: HTMLElement;
   empty: HTMLElement;
   emptyTitle: HTMLElement;
   emptyText: HTMLElement;
@@ -75,8 +79,10 @@ export function bindDom(doc: Document): Dom {
       kAbove: el('kAbove'), vAbove: el('vAbove'), kPeak: el('kPeak'), vPeak: el('vPeak'), uPeak: el('uPeak'),
       kAired: el('kAired'), vAired: el('vAired'), airedNote: el('airedNote'),
     },
-    hTemp: el('hTemp'), hAir: el('hAir'), winA: el('winA'), winB: el('winB'),
-    chartTemp: el('chartTemp'), chartAir: el('chartAir'), noteA: el('noteA'), noteB: el('noteB'),
+    hCo2: el('hCo2'), hTemp: el('hTemp'), hHum: el('hHum'),
+    winCo2: el('winCo2'), winTemp: el('winTemp'), winHum: el('winHum'),
+    chartCo2: el('chartCo2'), chartTemp: el('chartTemp'), chartHum: el('chartHum'),
+    noteCo2: el('noteCo2'), noteTemp: el('noteTemp'), noteHum: el('noteHum'),
     empty: el('empty'), emptyTitle: el('emptyTitle'), emptyText: el('emptyText'),
   };
 }
@@ -143,8 +149,9 @@ export function renderFrame(dom: Dom, f: Frame): void {
   setText(dom.today.kAbove, t.aboveLabel);
   setText(dom.today.kPeak, t.peakLabel);
   setText(dom.today.kAired, t.airedLabel);
+  setText(dom.hCo2, t.co2);
   setText(dom.hTemp, t.temperature);
-  setText(dom.hAir, t.co2Humidity);
+  setText(dom.hHum, t.humidity);
   setAttr(dom.warn, 'aria-label', t.warning);
 }
 
@@ -256,15 +263,17 @@ export function renderChartFrame(dom: Dom, f: { lang: Lang; range: RangeId; now:
   const format = makeFormat(f.lang);
   const { start, end } = rangeBounds(f.range, f.now);
   const win = format.window(start, end);
-  setText(dom.winA, `${win} · °C`);
-  setText(dom.winB, win);
+  setText(dom.winCo2, `${win} · ppm`);
+  setText(dom.winTemp, `${win} · °C`);
+  setText(dom.winHum, `${win} · %`);
   const note = f.history === 'error' ? t.historyError : f.history === 'loading' ? t.historyLoading : f.empty ? t.historyEmpty : '';
-  for (const n of [dom.noteA, dom.noteB]) {
+  for (const n of [dom.noteCo2, dom.noteTemp, dom.noteHum]) {
     setText(n, note);
     n.hidden = note === '';
   }
+  setAttr(dom.chartCo2, 'aria-label', `${t.co2}, ${win}`);
   setAttr(dom.chartTemp, 'aria-label', `${t.temperature}, ${win}`);
-  setAttr(dom.chartAir, 'aria-label', `${t.co2Humidity}, ${win}`);
+  setAttr(dom.chartHum, 'aria-label', `${t.humidity}, ${win}`);
 }
 
 /** What the chart builders need beyond the points. */

@@ -29,7 +29,7 @@ button { font: inherit; color: inherit; }
 .crumb select:hover { background: var(--ground); }
 .ctl { height: 36px; border: 1px solid var(--line-ctl); border-radius: var(--r-ctl); background: var(--panel); }
 .seg { display: inline-flex; padding: 0; overflow: hidden; }
-.seg button { border: 0; background: none; padding: 0 14px; cursor: pointer; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+.seg button { border: 0; background: none; padding: 0 14px; white-space: nowrap; cursor: pointer; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease); }
 .seg button:hover { background: var(--ground); }
 .seg button[aria-pressed='true'] { background: var(--ink); color: var(--panel); }
 .seg button + button { border-left: 1px solid var(--line-ctl); }
@@ -68,7 +68,7 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 .why { font-size: 17px; color: var(--ink-2); margin-top: 6px; max-width: 62ch; min-height: 1.4em; }
 .cells { display: grid; grid-template-columns: repeat(3, minmax(0, 210px)); margin-top: 22px; border-top: 1px solid var(--line); }
 .cell { padding-top: 14px; }
-.cell dt { font-size: 13px; color: var(--ink-3); }
+.cell dt { font-size: 13px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
 .cell dd { margin: 0; }
 .cell .v { font-size: 34px; font-weight: 700; display: inline-block; min-width: 0; }
 .cell .u { font-size: 16px; color: var(--ink-3); margin-left: 4px; }
@@ -98,7 +98,9 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 .today-empty { font-size: 17px; color: var(--ink-2); margin-top: 10px; }
 .today-list { display: grid; gap: 16px; margin-top: 12px; }
 .pair { min-width: 0; }
-.pair dt { font-size: 13px; color: var(--ink-3); }
+.pair dt { font-size: 13px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
+/* Quantity icons: neutral like their label (colour means state only), the stroke of the theme icons. */
+.qi { width: 16px; height: 16px; flex: none; }
 .pair dd { margin: 0; }
 .today .v { font-size: 22px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
 .today .u { font-size: 15px; color: var(--ink-3); margin-left: 6px; }
@@ -107,11 +109,18 @@ main { padding: 28px 40px 40px; display: grid; gap: 24px; max-width: 1520px; mar
 [data-state='loading'] .today { visibility: hidden; }
 
 /* Charts */
-.charts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.charts { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 24px; }
+.panel-co2 { grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column; }
+.panel-temp { grid-column: 2; grid-row: 1; }
+.panel-hum { grid-column: 2; grid-row: 2; }
 .panel { background: var(--panel); border-radius: var(--r-panel); padding: 22px 26px 12px; min-width: 0; }
 .panel h2 { font-size: 17px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.panel h2 .h { display: inline-flex; align-items: center; gap: 8px; }
+.panel .qi { color: var(--ink-3); }
 .panel .win { font-weight: 400; color: var(--ink-3); font-size: 14px; }
-.chart { height: 340px; margin-top: 8px; }
+.chart { height: 220px; margin-top: 8px; }
+.panel-co2 .chart { flex: 1; height: auto; min-height: 340px; }
+.panel-hum .chart { height: 140px; }
 .note { font-size: 14px; color: var(--ink-2); padding: 0 0 10px; }
 
 /* Rooms without data, and load errors */
@@ -152,7 +161,11 @@ body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='e
 .rtag { grid-column: 2; justify-self: start; font-size: 12px; border: 1px dashed var(--line-ctl); border-radius: 99px; padding: 0 8px; color: var(--ink); }
 
 @media (max-width: 1100px) {
-  .charts { grid-template-columns: 1fr; }
+  .charts { grid-template-columns: 1fr; grid-template-rows: none; }
+  .panel-co2, .panel-temp, .panel-hum { grid-column: 1; grid-row: auto; }
+  .panel-co2 .chart { flex: none; height: 340px; }
+  .panel-temp .chart { height: 260px; }
+  .panel-hum .chart { height: 200px; }
   .room { grid-template-columns: 76px minmax(0, 1fr); grid-template-areas: 'identity identity' 'light state' 'today today'; }
   .today { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0 0; }
   .today-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }

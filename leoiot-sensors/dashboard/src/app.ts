@@ -92,12 +92,11 @@ export function startApp(deps: AppDeps): App {
       deps.charts().then(
         (api) => {
           if (disposed) return;
-          charts = createCharts(api, dom.chartTemp, dom.chartAir);
+          charts = createCharts(api, dom.chartCo2, dom.chartTemp, dom.chartHum);
           // The charts follow the size of their panels (layout changes), not only of the window.
           if (typeof ResizeObserver !== 'undefined') {
             resizer = new ResizeObserver(() => charts?.resize());
-            resizer.observe(dom.chartTemp);
-            resizer.observe(dom.chartAir);
+            for (const el of [dom.chartCo2, dom.chartTemp, dom.chartHum]) resizer.observe(el);
           }
           drawCharts();
         },
