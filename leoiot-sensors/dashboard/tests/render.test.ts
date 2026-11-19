@@ -9,7 +9,7 @@ import { makeFormat } from '../src/core/format';
 import type { Air } from '../src/core/air';
 import { applyLive, EMPTY_SNAPSHOT, type Snapshot } from '../src/core/snapshot';
 import { deriveRoomView, type RoomView } from '../src/core/view';
-import { bindDom, renderRoom, type Dom } from '../src/ui/render';
+import { bindDom, renderFrame, renderRoom, type Dom } from '../src/ui/render';
 import { loadPage, vienna } from './helpers';
 
 const css = readFileSync(resolve(__dirname, '..', 'src/styles/app.css'), 'utf8');
@@ -37,6 +37,7 @@ function show(view: RoomView, now: number, lang: Lang = 'de', room = { id: '105'
 }
 const live = (s: Snapshot, now: number, series24h: { t: number; co2: number | null }[] | null = null) => deriveRoomView({ snapshot: s, series24h, now, status: 'ok' });
 const text = (el: HTMLElement) => el.textContent;
+const panel = () => document.getElementById('roomPanel') as HTMLElement;
 
 /** The lamps the stylesheet lights for a value of `data-air`. */
 function litLamps(air: string): string[] {
@@ -258,30 +259,228 @@ describe('Rooms without data say so', () => {
   });
 });
 
+describe('The room is named in one line', () => {
+  const h1 = () => document.querySelector('h1') as HTMLElement;
+  it('"Raum 105" as the main heading, the link next to it, no device, no "gemessen"', () => {
+    renderFrame(dom, { lang: 'de', room: { id: '105', valid: true }, range: '24h', theme: 'light' });
+    show(live(snap(700, at), at), at);
+    expect(text(h1())).toBe('Raum 105');
+    expect(dom.app.dataset.source).toBe('sensor');
+    expect(dom.link3d.hidden).toBe(false);
+    expect(dom.simTag.hidden).toBe(true);
+    expect(text(panel())).not.toMatch(/gemessen|Sensorbox|nili3|Gerät/);
+    expect(document.querySelectorAll('h1')).toHaveLength(1);
+  });
+  it('English: "Room E10"; the room id stays as written', () => {
+    renderFrame(dom, { lang: 'en', room: { id: 'E10', valid: true }, range: '24h', theme: 'light' });
+    expect(text(h1())).toBe('Room E10');
+  });
+  it('the display size is gone', () => {
+    expect(css).not.toMatch(/128px/);
+  });
+});
+
 describe('Simulated readings are marked', () => {
-  it('"simuliert" next to the room id instead of "gemessen"; the page carries the source for the stylesheet', () => {
+  it('"simuliert" next to the room id; the page carries the source for the stylesheet', () => {
+    renderFrame(dom, { lang: 'de', room: { id: 'E10', valid: true }, range: '24h', theme: 'light' });
     show(live(snap(700, at, {}, 'simulated', ['sim-e10']), at), at, 'de', { id: 'E10', valid: true });
     expect(dom.app.dataset.source).toBe('simulated');
-    expect(text(dom.ident)).toBe('Gerät sim-e10·simuliert');
-    expect(text(dom.ident)).not.toContain('gemessen');
-    expect(dom.ident.querySelector('.tag')!.textContent).toBe('simuliert');
-    expect(css).toMatch(/\[data-source='simulated'\] \.ident \.tag \{ border: 1px dashed/);
+    expect(dom.simTag.hidden).toBe(false);
+    expect(text(dom.simTag)).toBe('simuliert');
+    expect(text(panel())).not.toContain('gemessen');
+    expect(text(panel())).not.toContain('sim-e10');
+    expect(css).toMatch(/\.tag \{[^}]*border: 1px dashed/);
     show(live(snap(700, at, {}, 'simulated', ['sim-e10']), at), at, 'en');
-    expect(dom.ident.querySelector('.tag')!.textContent).toBe('simulated');
+    expect(text(dom.simTag)).toBe('simulated');
   });
-  it('measured readings say "gemessen" with the sensor box', () => {
+  it('measured readings get no pill', () => {
     show(live(snap(700, at), at), at);
-    expect(dom.app.dataset.source).toBe('sensor');
-    expect(dom.ident.querySelector('.tag')!.textContent).toBe('gemessen');
-    expect(text(dom.ident)).toContain('Sensorbox nili3');
-    expect(text(dom.ident)).not.toContain('simuliert');
+    expect(dom.simTag.hidden).toBe(true);
+    expect(text(dom.simTag)).toBe('');
   });
-  it('the identity line is rebuilt only when it changes', () => {
+  it('the pill is the same element, shown and hidden in place', () => {
+    const tag = dom.simTag;
     show(live(snap(700, at), at), at);
-    const tag = dom.ident.querySelector('.tag');
-    show(live(snap(900, at + 1000), at + 1000), at + 1000);
-    expect(dom.ident.querySelector('.tag')).toBe(tag);
     show(live(snap(900, at, {}, 'simulated', ['sim-e10']), at), at);
-    expect(dom.ident.querySelector('.tag')).not.toBe(tag);
+    expect(dom.simTag).toBe(tag);
+    expect(tag.hidden).toBe(false);
+  });
+});
+
+describe('Temperature and humidity have their own lamps', () => {
+  const full = (temperature: number, humidity: number, co2 = 426) => snap(co2, at, { temperature: { value: temperature, at }, humidity: { value: humidity, at } });
+  const lamp = (q: 'temperature' | 'humidity') => dom.small[q].cell.dataset.lamp;
+  const word = (q: 'temperature' | 'humidity') => text(dom.small[q].dir);
+
+  it.each([
+    [18.9, 'amber', 'zu kalt', 'too cold'],
+    [19.0, 'green', 'im Bereich', 'in range'],
+    [25.0, 'green', 'im Bereich', 'in range'],
+    [25.1, 'amber', 'zu warm', 'too warm'],
+  ] as const)('temperature %s: lamp %s, "%s"', (v, l, de, en) => {
+    show(live(full(v, 50), at), at);
+    expect(lamp('temperature')).toBe(l);
+    expect(word('temperature')).toBe(de);
+    show(live(full(v, 50), at), at, 'en');
+    expect(word('temperature')).toBe(en);
+  });
+  it.each([
+    [39, 'amber', 'zu trocken'],
+    [40, 'green', 'im Bereich'],
+    [70, 'green', 'im Bereich'],
+    [71, 'amber', 'zu feucht'],
+  ] as const)('humidity %s: lamp %s, "%s"', (v, l, de) => {
+    show(live(full(21, v), at), at);
+    expect(lamp('humidity')).toBe(l);
+    expect(word('humidity')).toBe(de);
+  });
+  it('dry room with good air: CO₂ stays green and its sentence stays "Luft gut"', () => {
+    show(live(full(20.2, 28, 426), at), at);
+    expect(dom.app.dataset.air).toBe('good');
+    expect(text(dom.status)).toBe('Luft gut');
+    expect(text(dom.why)).toBe('CO₂ liegt unter 800 ppm.');
+    expect(lamp('temperature')).toBe('green');
+    expect(lamp('humidity')).toBe('amber');
+    expect(word('humidity')).toBe('zu trocken');
+  });
+  it('the value takes the ink colour of its lamp, the dot its lamp colour (stylesheet)', () => {
+    expect(css).toMatch(/\.cell\[data-lamp='green'\] \.v \{ color: var\(--g-ink\)/);
+    expect(css).toMatch(/\.cell\[data-lamp='amber'\] \.v \{ color: var\(--y-ink\)/);
+    expect(css).toMatch(/\.cell\[data-lamp='green'\] \.cdot \{ background: var\(--g\)/);
+    expect(css).toMatch(/\.cell\[data-lamp='amber'\] \.cdot \{ background: var\(--y\)/);
+    expect(css).toMatch(/\.cdot \{[^}]*background: var\(--lamp-off\)/);
+    expect(css).toMatch(/\.cell \.dir \{[^}]*min-height: 1\.4em/); // the word's line is reserved
+  });
+  it('the dot is decorative; the state is a word in the cell', () => {
+    expect(dom.small.temperature.cell.querySelector('.cdot')!.getAttribute('aria-hidden')).toBe('true');
+    expect(dom.small.temperature.cell.contains(dom.small.temperature.dir)).toBe(true);
+  });
+  it('no humidity value: unknown, lamp off, no word', () => {
+    show(live(snap(700, at, { temperature: { value: 21, at } }), at), at);
+    expect(lamp('humidity')).toBe('off');
+    expect(word('humidity')).toBe('');
+    expect(text(dom.cells.humidity.value)).toBe('–');
+  });
+  it('outdated readings: all lamps off, the words are gone', () => {
+    const last = vienna('10:29');
+    const old = snap(900, last, { temperature: { value: 15, at: last }, humidity: { value: 80, at: last } });
+    show(live(old, at), at);
+    expect(dom.app.dataset.air).toBe('off');
+    expect(lamp('temperature')).toBe('off');
+    expect(lamp('humidity')).toBe('off');
+    expect(word('temperature')).toBe('');
+    expect(text(dom.cells.temperature.value)).toBe('15,0');
+  });
+  it('loading and no data: no small lamp', () => {
+    show(deriveRoomView({ snapshot: EMPTY_SNAPSHOT, series24h: null, now: at, status: 'loading' }), at);
+    expect(lamp('temperature')).toBe('off');
+    show(deriveRoomView({ snapshot: EMPTY_SNAPSHOT, series24h: null, now: at, status: 'ok' }), at);
+    expect(lamp('humidity')).toBe('off');
+  });
+  it('no CO₂ value: the small lamps stay on', () => {
+    show(live(snap(undefined, at, { temperature: { value: 21.2, at }, humidity: { value: 40, at } }), at), at);
+    expect(dom.app.dataset.air).toBe('off');
+    expect(lamp('temperature')).toBe('green');
+    expect(lamp('humidity')).toBe('green');
+  });
+  it('a new reading changes the cells in place', () => {
+    show(live(full(21, 50), at), at);
+    const before = [...dom.app.querySelectorAll('*')];
+    show(live(full(17, 30), at), at);
+    expect([...dom.app.querySelectorAll('*')]).toEqual(before);
+    expect(lamp('temperature')).toBe('amber');
+  });
+});
+
+describe('The day is summarised next to the values', () => {
+  const full = snap(700, at, { temperature: { value: 21, at }, humidity: { value: 50, at } });
+  // No CO2 reading today at all (temperature and humidity only).
+  const noCo2 = { ...full, samples: { temperature: full.samples.temperature, humidity: full.samples.humidity } };
+  const day = (co2: (i: number) => number | null, end = at) => {
+    const from = vienna('00:05');
+    const n = (end - from) / 300_000;
+    return Array.from({ length: n + 1 }, (_, i) => ({ t: from + i * 300_000, co2: co2(i) }));
+  };
+  const rows = () => [dom.today.vAbove, dom.today.vPeak, dom.today.uPeak, dom.today.vAired, dom.today.airedNote].map(text);
+
+  it('a school day: time above 1000 ppm, highest value with its time, estimated airing with its caption', () => {
+    // 14 windows of 1100 ppm (08:00 to 09:05) and two above 1000 ppm in the fall: sixteen in all
+    const now = vienna('13:10');
+    const s = day((i) => {
+      const t = vienna('00:05') + i * 300_000;
+      if (t === vienna('10:45')) return 1380;
+      if (t === vienna('10:50')) return 1000;
+      if (t === vienna('10:55')) return 1020;
+      if (t > vienna('10:55')) return 1000; // stays at 1000 ppm afterwards: no further fall
+      return t >= vienna('08:00') && t <= vienna('09:05') ? 1100 : 600;
+    }, now);
+    const view = deriveRoomView({ snapshot: snap(700, now, { temperature: { value: 21, at: now }, humidity: { value: 50, at: now } }), series24h: s, now, status: 'ok', peak: { value: 1450, at: vienna('13:05') } });
+    show(view, now);
+    expect(text(dom.today.title)).toBe('Heute');
+    expect([rows()[0], ...rows().slice(2)]).toEqual(['1 h 20 min', 'ppm · 13:05', 'ca. 10:45', 'geschätzt aus dem CO₂-Verlauf']);
+    expect(text(dom.today.vPeak).replace(/\s/g, '')).toBe('1450');
+    expect(text(dom.today.kAbove)).toBe('Über 1000 ppm');
+    expect(text(dom.today.kPeak)).toBe('Höchstwert');
+    expect(text(dom.today.kAired)).toBe('Zuletzt gelüftet');
+    show(view, now, 'en');
+    expect(text(dom.today.vAired)).toBe('about 10:45');
+    expect(text(dom.today.airedNote)).toBe('estimated from the CO₂ curve');
+    expect(text(dom.today.vPeak)).toBe('1,450');
+  });
+  it('early morning: not above 1000 ppm, no airing, the highest value so far', () => {
+    const view = deriveRoomView({ snapshot: full, series24h: day(() => 600), now: at, status: 'ok', peak: { value: 760, at: vienna('02:10') } });
+    show(view, at);
+    expect(rows()).toEqual(['noch nicht', '760', 'ppm · 02:10', 'heute nicht erkannt', '']);
+    show(view, at, 'en');
+    expect(text(dom.today.vAbove)).toBe('not yet');
+    expect(text(dom.today.vAired)).toBe('none detected today');
+  });
+  it('no highest value known: a dash', () => {
+    show(deriveRoomView({ snapshot: noCo2, series24h: day(() => 600), now: at, status: 'ok' }), at);
+    expect(text(dom.today.vPeak)).toBe('–');
+    expect(text(dom.today.uPeak)).toBe('');
+  });
+  it('no reading today: one line instead of the pairs', () => {
+    const view = deriveRoomView({ snapshot: noCo2, series24h: day(() => null), now: at, status: 'ok' });
+    show(view, at);
+    expect(text(dom.today.empty)).toBe('Heute noch keine Werte');
+    expect(dom.today.empty.hidden).toBe(false);
+    expect(dom.today.list.hidden).toBe(true);
+    show(view, at, 'en');
+    expect(text(dom.today.empty)).toBe('No readings today yet');
+    show(deriveRoomView({ snapshot: full, series24h: day(() => 600), now: at, status: 'ok' }), at);
+    expect(dom.today.empty.hidden).toBe(true);
+    expect(dom.today.list.hidden).toBe(false);
+  });
+  it('a current reading without history yet: it is the highest value, not "no readings today"', () => {
+    show(deriveRoomView({ snapshot: full, series24h: day(() => null), now: at, status: 'ok' }), at);
+    expect(dom.today.empty.hidden).toBe(true);
+    expect(text(dom.today.vPeak)).toBe('700');
+  });
+  it('not loaded yet: dashes, the pairs keep their place', () => {
+    show(live(full, at), at);
+    expect(rows()).toEqual(['–', '–', '', '–', '']);
+    expect(dom.today.list.hidden).toBe(false);
+  });
+  it('outdated room: the summary stays; the stylesheet greys it', () => {
+    const last = vienna('10:29');
+    const old = snap(900, last, { temperature: { value: 21, at: last } });
+    const view = deriveRoomView({ snapshot: old, series24h: day(() => 1100), now: at, status: 'ok' });
+    show(view, at);
+    expect(dom.app.dataset.state).toBe('stale');
+    expect(text(dom.today.vAbove)).not.toBe('–');
+    expect(css).toMatch(/\[data-fresh='stale'\] \.today \.v \{ color: var\(--ink-3\)/);
+  });
+  it('rooms without panel: nothing to show for no data', () => {
+    show(deriveRoomView({ snapshot: EMPTY_SNAPSHOT, series24h: [], now: at, status: 'ok' }), at);
+    expect(dom.app.dataset.state).toBe('nodata'); // the stylesheet hides the room panel for this state
+    expect(css).toMatch(/\[data-state='nodata'\] \.room/);
+  });
+  it('the values change in place', () => {
+    const s = day(() => 600);
+    show(deriveRoomView({ snapshot: full, series24h: s, now: at, status: 'ok' }), at);
+    const before = [...dom.app.querySelectorAll('*')];
+    show(deriveRoomView({ snapshot: full, series24h: s, now: at, status: 'ok', peak: { value: 900, at: vienna('09:00') } }), at);
+    expect([...dom.app.querySelectorAll('*')]).toEqual(before);
   });
 });
