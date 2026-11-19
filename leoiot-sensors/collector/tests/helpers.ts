@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { MqttConnect, MqttLike } from '../src/broker.js';
+import type { MqttConnect, MqttLike, PublishOptions } from '../src/broker.js';
 import { loadConfig, type Config } from '../src/config.js';
 import { parseDevices, type Device } from '../src/devices.js';
 
@@ -51,16 +51,18 @@ export function testConfig(overrides: Partial<Config> = {}, env: Record<string, 
 export class FakeMqtt extends EventEmitter implements MqttLike {
   connected = false;
   subscriptions: string[][] = [];
-  published: { topic: string; payload: string; options: { qos: number; retain: boolean } }[] = [];
+  published: { topic: string; payload: string; options: PublishOptions }[] = [];
+  /** SUBACK code per topic; default 1 (granted with QoS 1). */
+  subackCodes: Record<string, number> = {};
   ended = false;
 
   subscribe(topics: string[], _options: { qos: 0 | 1 | 2 }, callback?: (e: Error | null, g?: { topic: string; qos: number }[]) => void): this {
     this.subscriptions.push([...topics]);
-    callback?.(null, topics.map((topic) => ({ topic, qos: 1 })));
+    callback?.(null, topics.map((topic) => ({ topic, qos: this.subackCodes[topic] ?? 1 })));
     return this;
   }
 
-  publish(topic: string, payload: string, options: { qos: 0 | 1 | 2; retain: boolean }, callback?: (e?: Error | null) => void): this {
+  publish(topic: string, payload: string, options: PublishOptions, callback?: (e?: Error | null) => void): this {
     this.published.push({ topic, payload, options });
     callback?.(null);
     return this;
@@ -95,14 +97,22 @@ export class FakeMqtt extends EventEmitter implements MqttLike {
   }
 }
 
-export function fakeConnect(): { connect: MqttConnect; client: FakeMqtt; connects: () => number } {
+export function fakeConnect(): {
+  connect: MqttConnect;
+  client: FakeMqtt;
+  connects: () => number;
+  options: () => Parameters<MqttConnect>[1] | undefined;
+} {
   const client = new FakeMqtt();
   let count = 0;
+  let last: Parameters<MqttConnect>[1] | undefined;
   return {
     client,
     connects: () => count,
-    connect: () => {
+    options: () => last,
+    connect: (_url, options) => {
       count++;
+      last = options;
       return client;
     },
   };

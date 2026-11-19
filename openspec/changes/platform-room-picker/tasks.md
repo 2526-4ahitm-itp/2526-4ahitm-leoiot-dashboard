@@ -2,13 +2,13 @@
 
 ## 1. Contract
 
-- [ ] 1.1 Merge this change on its own before any code relies on it; verify `openspec validate platform-room-picker --strict` passes and `ci-ok` is green on its pull request
+- [x] 1.1 Merge this change on its own before any code relies on it; verify `openspec validate platform-room-picker --strict` passes and `ci-ok` is green on its pull request
 
 ## 2. Collector: expiry (`leoiot-sensors/collector/`)
 
-- [ ] 2.1 Connect to the broker with MQTT 5 (`protocolVersion: 5`) and publish every live message with `messageExpiryInterval` 2 592 000; verify with a unit test on the publish options in `tests/` and `npm test`
-- [ ] 2.2 Check that subscriptions to the device topics and the handling of retained device messages are unchanged under MQTT 5; verify with the integration tests (`vitest.integration.config.ts`) against the local stack
-- [ ] 2.3 Add an integration test that a published live message reaches an MQTT 5 subscriber with the expiry property set; verify it passes against the local Mosquitto 2.1.2
+- [x] 2.1 Connect to the broker with MQTT 5 (`protocolVersion: 5`) and publish every live message with `messageExpiryInterval` 2 592 000; verify with a unit test on the publish options in `tests/` and `npm test`
+- [x] 2.2 Check that subscriptions to the device topics and the handling of retained device messages are unchanged under MQTT 5; verify with the integration tests (`vitest.integration.config.ts`) against the local stack
+- [x] 2.3 Add an integration test that a published live message reaches an MQTT 5 subscriber with the expiry property set; verify it passes against the local Mosquitto 2.1.2
 - [ ] 2.4 Run `npm ci && npm test && npm run build` and `.github/ci/image-build.sh leoiot-sensors/collector`; open the pull request and verify `ci-ok` is green
 
 ## 3. Dashboard: room list (`leoiot-sensors/dashboard/`)
