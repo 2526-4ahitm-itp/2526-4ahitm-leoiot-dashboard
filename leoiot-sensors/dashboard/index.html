@@ -53,9 +53,9 @@ try {
         <p class="why" id="why"></p>
       </div>
       <dl class="cells">
-        <div class="cell co2"><dt class="k" id="kCo2">CO₂</dt><dd><span class="v" id="vCo2">–</span><span class="u">ppm</span><span class="sr-only" id="uCo2"></span></dd></div>
-        <div class="cell" id="cellTemp" data-lamp="off"><dt class="k" id="kTemp">Temperatur</dt><dd><span class="cdot" aria-hidden="true"></span><span class="v" id="vTemp">–</span><span class="u">°C</span><span class="sr-only" id="uTemp"></span></dd><dd class="dir" id="dTemp"></dd></div>
-        <div class="cell" id="cellHum" data-lamp="off"><dt class="k" id="kHum">Luftfeuchte</dt><dd><span class="cdot" aria-hidden="true"></span><span class="v" id="vHum">–</span><span class="u">%</span><span class="sr-only" id="uHum"></span></dd><dd class="dir" id="dHum"></dd></div>
+        <div class="cell co2"><dt class="k"><svg class="qi qi-co2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><circle cx="3.9" cy="12" r="2.6"/><circle cx="20.1" cy="12" r="2.6"/><path d="M6.5 12h1.9M15.6 12h1.9"/></svg><span id="kCo2">CO₂</span></dt><dd><span class="v" id="vCo2">–</span><span class="u">ppm</span><span class="sr-only" id="uCo2"></span></dd></div>
+        <div class="cell" id="cellTemp" data-lamp="off"><dt class="k"><svg class="qi qi-temp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/></svg><span id="kTemp">Temperatur</span></dt><dd><span class="cdot" aria-hidden="true"></span><span class="v" id="vTemp">–</span><span class="u">°C</span><span class="sr-only" id="uTemp"></span></dd><dd class="dir" id="dTemp"></dd></div>
+        <div class="cell" id="cellHum" data-lamp="off"><dt class="k"><svg class="qi qi-hum" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5c3 3.7 6 7.2 6 10.5a6 6 0 0 1-12 0c0-3.3 3-6.8 6-10.5z"/></svg><span id="kHum">Luftfeuchte</span></dt><dd><span class="cdot" aria-hidden="true"></span><span class="v" id="vHum">–</span><span class="u">%</span><span class="sr-only" id="uHum"></span></dd><dd class="dir" id="dHum"></dd></div>
       </dl>
       <p class="fresh">
         <span class="dot" aria-hidden="true"></span>
@@ -69,7 +69,7 @@ try {
       <dl class="today-list" id="todayList">
         <div class="pair"><dt id="kAbove">Über 1000 ppm</dt><dd><span class="v" id="vAbove">–</span></dd></div>
         <div class="pair"><dt id="kPeak">Höchstwert</dt><dd><span class="v" id="vPeak">–</span><span class="u" id="uPeak"></span></dd></div>
-        <div class="pair"><dt id="kAired">Zuletzt gelüftet</dt><dd><span class="v" id="vAired">–</span><span class="est" id="airedNote"></span></dd></div>
+        <div class="pair"><dt><svg class="qi qi-window" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="1"/><path d="M12 3.5v17M4 12h16"/></svg><span id="kAired">Zuletzt gelüftet</span></dt><dd><span class="v" id="vAired">–</span><span class="est" id="airedNote"></span></dd></div>
       </dl>
     </aside>
   </section>

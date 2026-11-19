@@ -246,6 +246,7 @@ Neutral, quiet controls that never take an air colour.
 
 ### Value cells
 - **Style:** caption label above, value in the value style, unit at 16px in muted slate.
+- **Quantity icons:** a 16px line icon before each label, 6px gap: a molecule (O=C=O) for CO₂, a thermometer for temperature, a drop for humidity. Authored inline SVG on a 24px grid with the stroke of the theme icons (1.8, round caps and joins), in muted slate like the label, never in a state colour, and `aria-hidden` (the label names the quantity).
 - **State:** the CO₂ value takes the ink form of the current lamp colour. Temperature and humidity take the ink form of their small lamp (green or amber); neutral ink when the lamp is off. When the reading is outdated, all values turn muted slate and all lamps go off.
 - **Empty value:** an en dash.
 
@@ -262,6 +263,7 @@ Neutral, quiet controls that never take an air colour.
 - **Simulated:** only simulated readings add a dashed pill "simuliert" after the link, and every chart line is dashed. Simulated values are never drawn as measurements.
 
 ### Heute column
+- **Icon:** "Zuletzt gelüftet" carries a 16px window icon (frame with cross bars) before its label, drawn like the quantity icons. The other two pairs have none.
 - **Content:** the day since local midnight (Europe/Vienna): a caption heading "Heute", then three label and value pairs: "Über 1000 ppm" (time as "1 h 20 min", or "noch nicht"), "Höchstwert" (value, unit and time) and "Zuletzt gelüftet" ("ca. 10:45" or "heute nicht erkannt", with the caption "geschätzt aus dem CO₂-Verlauf" under a time). Without a reading today one line "Heute noch keine Werte".
 - **Style:** caption labels, values at 22px, 700, ink; units and the note in muted slate. A hairline on the column's left (on top below 1100px). When the room is outdated, the values turn muted slate; the summary stays because it describes the past.
 - **Not a KPI tile:** no sparkline, no colour; the charts below carry the curve.
