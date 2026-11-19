@@ -25,7 +25,7 @@ colors:
 typography:
   headline:
     fontFamily: "Lexend, system-ui, sans-serif"
-    fontSize: "44px"
+    fontSize: "40px"
     fontWeight: 700
     lineHeight: 1.1
   value:
@@ -58,20 +58,20 @@ rounded:
 spacing:
   hair: "8px"
   tight: "12px"
-  cell: "14px"
-  gutter: "24px"
-  panel-y: "28px"
-  panel-x: "36px"
+  cell: "12px"
+  gutter: "16px"
+  panel-y: "20px"
+  panel-x: "32px"
   page-x: "40px"
 components:
   room-panel:
     backgroundColor: "{colors.panel}"
     rounded: "{rounded.panel}"
-    padding: "24px 36px 28px"
+    padding: "20px 32px 20px"
   chart-panel:
     backgroundColor: "{colors.panel}"
     rounded: "{rounded.panel}"
-    padding: "22px 26px 12px"
+    padding: "14px 22px 6px"
   lamp-housing:
     backgroundColor: "{colors.housing}"
     rounded: "{rounded.housing}"
@@ -188,7 +188,7 @@ A neutral housing-grey palette with three traffic-light hues that appear only wh
 **Character:** One friendly, wide sans for everything. Weight 700 carries hierarchy; 400 carries prose. The body sets `font-variant-numeric: tabular-nums`, so numbers do not jump when they change.
 
 ### Hierarchy
-- **Headline** (700, 44px, 1.1, balanced wrapping): the status sentence. 32px below 640px.
+- **Headline** (700, 40px, 1.1, balanced wrapping): the status sentence. 32px below 640px.
 - **Value** (700, 34px): the three value cells. 24px below 640px. In the Heute column values are 22px.
 - **Empty title** (700, 28px): the heading of the no-data and error panel. 22px below 640px.
 - **Brand** (700, 18px): "LeoIoT" in the top bar, followed by "Raumklima" at 400 in muted slate.
@@ -204,12 +204,12 @@ A neutral housing-grey palette with three traffic-light hues that appear only wh
 
 ## Layout
 
-A single column, at most 1520px wide and centred. Page padding is 28px on top and 40px at the sides and bottom; sections are 24px apart.
+A single column, at most 1520px wide and centred. Page padding is 20px on top and bottom and 40px at the sides; sections are 16px apart. From 1100px width a room page with readings is exactly one window high: the room panel keeps its natural height (about 290px) and the charts take the rest, so the page fits a 1280 × 720 window at 100 % zoom. A lower window scrolls; the room list and the no-data page keep their natural height.
 
 - **Top bar:** 60px high, white, a hairline below, 40px side padding. Brand, room breadcrumb (behind a hairline divider), the 24 h / 7 Tage segment, a spacer, the DE / EN segment, the theme button.
 - **Room panel:** the identity line on top, then a three-column grid: the 76px lamp housing, the state column (status, reason, value cells, freshness line) and the Heute column (about 260px, a hairline on its left). Columns are 32px apart.
 - **Value cells:** three columns of up to 210px under a hairline. Temperature and humidity reserve a second line for the direction word, so the cells keep their height whether or not a word is shown. They never reflow while values update.
-- **Charts:** three boxes in a two-column grid with 24px gaps. Left: CO₂ at the full height of the chart area (at least 340px). Right: temperature (chart 220px) above humidity (chart 140px). One synced pointer runs through all three.
+- **Charts:** three boxes in a two-column grid with 16px gaps, filling the height the room panel leaves. Left: CO₂ at the full height of the chart area (chart at least 240px). Right: temperature above humidity in a 3 : 2 ratio (charts at least 110px and 80px). At 1440 × 789 the charts are about 330, 170 and 100px high; at 1920 × 960 about 500, 275 and 165px. One synced pointer runs through all three.
 
 Responsive steps:
 - **Below 1100px:** the charts stack in the order CO₂ (340px), temperature (260px), humidity (200px); the Heute block moves below the cells and spans the panel, its three pairs in a row.
@@ -269,7 +269,7 @@ Neutral, quiet controls that never take an air colour.
 - **Not a KPI tile:** no sparkline, no colour; the charts below carry the curve.
 
 ### Chart panels
-- **Container:** white panel, 14px corners, padding 22px 26px 12px.
+- **Container:** white panel, 14px corners, padding 14px 22px 6px.
 - **Boxes:** three, one per quantity: CO₂ on the left at the full height of the chart area, temperature above humidity on the right. Humidity has its own box.
 - **Heading:** the same 16px quantity icon as the value cell and the title ("CO₂", "Temperatur", "Luftfeuchte") on the left, time window with its unit (`· ppm`, `· °C`, `· %`) in label style on the right.
 - **Lines:** 2.2px, no symbols, gaps where readings are missing. Temperature and CO₂ are ink; humidity is muted steel blue.
