@@ -75,15 +75,20 @@ try {
   </section>
 
   <div class="charts" id="charts">
-    <section class="panel" aria-labelledby="hTemp">
-      <h2><span class="h" id="hTemp">Temperatur</span><span class="win" id="winA"></span></h2>
-      <div class="chart" id="chartTemp" role="img"></div>
-      <p class="note" id="noteA" hidden></p>
+    <section class="panel panel-co2" id="panelCo2" aria-labelledby="hCo2">
+      <h2><span class="h"><svg class="qi qi-co2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><circle cx="3.9" cy="12" r="2.6"/><circle cx="20.1" cy="12" r="2.6"/><path d="M6.5 12h1.9M15.6 12h1.9"/></svg><span id="hCo2">CO₂</span></span><span class="win" id="winCo2"></span></h2>
+      <div class="chart" id="chartCo2" role="img"></div>
+      <p class="note" id="noteCo2" hidden></p>
     </section>
-    <section class="panel" aria-labelledby="hAir">
-      <h2><span class="h" id="hAir">CO₂ und Luftfeuchte</span><span class="win" id="winB"></span></h2>
-      <div class="chart" id="chartAir" role="img"></div>
-      <p class="note" id="noteB" hidden></p>
+    <section class="panel panel-temp" id="panelTemp" aria-labelledby="hTemp">
+      <h2><span class="h"><svg class="qi qi-temp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/></svg><span id="hTemp">Temperatur</span></span><span class="win" id="winTemp"></span></h2>
+      <div class="chart" id="chartTemp" role="img"></div>
+      <p class="note" id="noteTemp" hidden></p>
+    </section>
+    <section class="panel panel-hum" id="panelHum" aria-labelledby="hHum">
+      <h2><span class="h"><svg class="qi qi-hum" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5c3 3.7 6 7.2 6 10.5a6 6 0 0 1-12 0c0-3.3 3-6.8 6-10.5z"/></svg><span id="hHum">Luftfeuchte</span></span><span class="win" id="winHum"></span></h2>
+      <div class="chart" id="chartHum" role="img"></div>
+      <p class="note" id="noteHum" hidden></p>
     </section>
   </div>
 

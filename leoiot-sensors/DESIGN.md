@@ -139,7 +139,7 @@ The tokens are defined in `dashboard/src/styles/tokens.css`. That file is the so
 
 A room's air state is a lit lamp, not a number to read. A dark housing holds three round lamps (red, amber, green). One lamp is lit, and one sentence next to it says what to do: "Luft gut", "Bald lüften", "Jetzt lüften". The charts carry the same lamps as background bands.
 
-Everything else is matte and neutral: a cool grey ground, white panels, near-black ink. Colour means the state of a value and nothing else. Controls stay grey. The page is dense but calm: the panel reads in order: the room (one line), the air state, the values with their own small lamps, and the day so far in a column on the right. Then two chart panels.
+Everything else is matte and neutral: a cool grey ground, white panels, near-black ink. Colour means the state of a value and nothing else. Controls stay grey. The page is dense but calm: the panel reads in order: the room (one line), the air state, the values with their own small lamps, and the day so far in a column on the right. Then three chart panels: CO₂ large on the left, temperature and humidity stacked on the right.
 
 The layout refuses a wall of KPI tiles with sparklines. Values sit in fixed cells that keep their place and their width; only the content changes.
 
@@ -161,7 +161,7 @@ A neutral housing-grey palette with three traffic-light hues that appear only wh
 - **Lamp Bands** (band-good, band-soon, band-bad): the same three hues at 8 to 14 % opacity, as background bands below 800, 800 to 1000 and above 1000 ppm in the CO₂ chart.
 
 ### Secondary
-- **Muted Steel Blue** (humidity): the humidity line in the lower chart panel. It is the only hue that is not an air state, and it exists only to tell the second series apart.
+- **Muted Steel Blue** (humidity): the humidity line in its own chart panel. It is the only hue that is not an air state, and it keeps humidity apart from the ink-coloured CO₂ and temperature lines.
 
 ### Neutral
 - **Housing Grey** (ground): page ground and hover fill of controls.
@@ -209,10 +209,10 @@ A single column, at most 1520px wide and centred. Page padding is 28px on top an
 - **Top bar:** 60px high, white, a hairline below, 40px side padding. Brand, room breadcrumb (behind a hairline divider), the 24 h / 7 Tage segment, a spacer, the DE / EN segment, the theme button.
 - **Room panel:** the identity line on top, then a three-column grid: the 76px lamp housing, the state column (status, reason, value cells, freshness line) and the Heute column (about 260px, a hairline on its left). Columns are 32px apart.
 - **Value cells:** three columns of up to 210px under a hairline. Temperature and humidity reserve a second line for the direction word, so the cells keep their height whether or not a word is shown. They never reflow while values update.
-- **Charts:** two panels side by side. Left: temperature. Right: CO₂ above humidity, one shared time axis and one synced pointer. Charts are 340px high.
+- **Charts:** three boxes in a two-column grid with 24px gaps. Left: CO₂ at the full height of the chart area (at least 340px). Right: temperature (chart 220px) above humidity (chart 140px). One synced pointer runs through all three.
 
 Responsive steps:
-- **Below 1100px:** the charts stack; the Heute block moves below the cells and spans the panel, its three pairs in a row.
+- **Below 1100px:** the charts stack in the order CO₂ (340px), temperature (260px), humidity (200px); the Heute block moves below the cells and spans the panel, its three pairs in a row.
 - **Below 760px:** the panel is one column; the lamp housing lies horizontally under the identity line.
 - **Below 640px:** the top bar wraps with 16px padding; page padding and gaps drop to 16px; the room panel pads 20px; the unit moves below the value; the Heute pairs stack.
 
@@ -270,10 +270,11 @@ Neutral, quiet controls that never take an air colour.
 
 ### Chart panels
 - **Container:** white panel, 14px corners, padding 22px 26px 12px.
-- **Heading:** title on the left, time window in label style on the right.
+- **Boxes:** three, one per quantity: CO₂ on the left at the full height of the chart area, temperature above humidity on the right. Humidity has its own box.
+- **Heading:** the same 16px quantity icon as the value cell and the title ("CO₂", "Temperatur", "Luftfeuchte") on the left, time window with its unit (`· ppm`, `· °C`, `· %`) in label style on the right.
 - **Lines:** 2.2px, no symbols, gaps where readings are missing. Temperature and CO₂ are ink; humidity is muted steel blue.
 - **CO₂ bands and limits:** the three lamp bands behind the CO₂ line, and dashed control-edge lines (3 on, 4 off) at 800 and 1000 ppm.
-- **Axes and tooltip:** muted-slate labels, hairline grid, no ticks. The tooltip is a white panel with a hairline border; the pointer is a muted-slate line through both panels.
+- **Axes and tooltip:** muted-slate labels, hairline grid, no ticks. The tooltip is a white panel with a hairline border; the pointer is a muted-slate line through all three charts, shared by connecting them; each tooltip shows its own quantity.
 - **Notes:** "no values", loading and error notes in 14px slate below the chart.
 
 ### Empty and error panel
