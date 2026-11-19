@@ -1,0 +1,8 @@
+,result,table,_time,_value,_field,room,device,source
+,_result,0,2026-11-03T06:36:08Z,1070,co2,105,nili3,sensor
+,_result,1,2026-11-03T06:36:08.002Z,35,humidity,105,nili3,sensor
+,_result,2,2026-11-03T06:36:08.001Z,21.5,temperature,105,nili3,sensor
+,_result,3,2026-11-03T06:35:38Z,713,co2,E10,sim-e10,simulated
+,_result,4,2026-11-03T06:35:38.001Z,20.5,temperature,E10,sim-e10,simulated
+,_result,5,2026-11-03T06:36:00Z,500,co2,bad/room,sim-x,simulated
+

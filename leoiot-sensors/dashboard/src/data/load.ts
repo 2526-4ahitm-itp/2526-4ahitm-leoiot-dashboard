@@ -1,6 +1,6 @@
 // Loading: a query, its CSV answer, the parsed result.
-import { parseAnnotatedCsv } from '../core/csv';
-import { historyQuery, latestQuery, type Source } from '../core/flux';
+import { parseAnnotatedCsv, type CsvRecord } from '../core/csv';
+import { historyQuery, latestQuery, roomsLatestQuery, type Source } from '../core/flux';
 import type { RangeId } from '../core/ranges';
 import { parseHistory, parseLatest, type HistoryPoint, type Snapshot } from '../core/snapshot';
 import type { Query } from './api';
@@ -11,4 +11,9 @@ export async function loadLatest(query: Query, room: string): Promise<Snapshot> 
 
 export async function loadHistory(query: Query, room: string, source: Source, range: RangeId, now: number): Promise<HistoryPoint[]> {
   return parseHistory(parseAnnotatedCsv(await query(historyQuery(room, source, range, now))));
+}
+
+/** The stored latest values of every room, as records with their `room` column (for the room list). */
+export async function loadRooms(query: Query): Promise<CsvRecord[]> {
+  return parseAnnotatedCsv(await query(roomsLatestQuery()));
 }

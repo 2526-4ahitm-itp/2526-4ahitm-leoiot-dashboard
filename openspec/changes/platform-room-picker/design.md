@@ -77,7 +77,7 @@ The dashboard now groups by floor too. Under rule 2 of `openspec/specs/README.md
 - [The explorer is the 3D team's code.] → The 3D tasks are done by the 3D team or with their agreement, in their own pull request.
 - [Messages published before the collector switches carry no expiry.] → Each is replaced by the next reading of its room; rooms that no longer send need one manual clear, as on 2026-11-19.
 - [`temporary-simulator --clear` publishes an empty message to every room of the model, including room 105.] → Its README says so; the real message comes back with nili3's next reading about 10 seconds later.
-- [Subscribing to all rooms costs more traffic as rooms are added.] At 50 rooms with one message every 10 seconds that is 5 small messages per second per open list. → Acceptable; the room page keeps its single-room subscription.
+- [Subscribing to all rooms costs more traffic as rooms are added.] At 50 rooms with one message every 10 seconds that is 5 small messages per second per open list. → Acceptable. The room page subscribes to all rooms too, because its header choice needs the list; at 50 rooms that is about 5 small messages per second.
 
 ## Migration Plan
 
