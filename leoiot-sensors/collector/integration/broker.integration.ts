@@ -1,6 +1,7 @@
 // Task 2.5: the broker side against a throwaway Mosquitto 2.1 with accounts and
 // ACL like production (spec sensors/collector: Topic outside the mapping,
 // Broker restarted; spec platform/broker: Retained messages survive a restart).
+import mqtt from 'mqtt';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   docker,
@@ -96,6 +97,22 @@ describe('Broker side against a throwaway Mosquitto', () => {
       expect(JSON.parse(message.payload)).toMatchObject({ room: '105', device: 'nili3', source: 'sensor', co2: 600 });
     } finally {
       await reader.close();
+    }
+  });
+
+  it('Room live messages expire after 30 days: an MQTT 5 subscriber sees the expiry on the retained message', async () => {
+    const client = mqtt.connect(stack.env.SENSORS_MQTT_URL!, { ...collectorAuth(), protocolVersion: 5, reconnectPeriod: 200 });
+    const expiries: (number | undefined)[] = [];
+    client.on('error', () => {});
+    client.on('message', (_t, _p, packet) => expiries.push(packet.properties?.messageExpiryInterval));
+    client.on('connect', () => client.subscribe(LIVE));
+    try {
+      const expiry = await waitFor('the retained message over MQTT 5', () => expiries[0]);
+      // The broker sends the remaining time: at most 30 days, minus the seconds since publishing.
+      expect(expiry).toBeLessThanOrEqual(2_592_000);
+      expect(expiry).toBeGreaterThan(2_592_000 - 120);
+    } finally {
+      await client.endAsync(true);
     }
   });
 

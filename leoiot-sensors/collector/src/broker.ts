@@ -1,11 +1,25 @@
 // MQTT side: subscribes to exactly the mapped topics (never a pattern) and
-// publishes the live messages retained with QoS 1. The client is replaceable
-// for tests.
+// publishes the live messages retained with QoS 1 and an expiry (MQTT 5,
+// platform/data-contract "Room live messages expire after 30 days"). The client
+// is replaceable for tests.
 import { randomBytes } from 'node:crypto';
 import mqtt from 'mqtt';
 import { describeUrl } from './config.js';
 import type { Log } from './log.js';
 import type { LiveMessage } from './live.js';
+
+/** Seconds after which the broker drops a room's retained live message (30 days). */
+export const LIVE_EXPIRY_S = 30 * 24 * 60 * 60;
+
+/** Options of a live message: retained, QoS 1, expiring. */
+export interface PublishOptions {
+  qos: 0 | 1 | 2;
+  retain: boolean;
+  properties?: { messageExpiryInterval?: number };
+}
+
+/** From this SUBACK code on a subscription was refused (MQTT 3.1.1: 128; MQTT 5: 128 to 162). */
+const SUBACK_FAILURE = 128;
 
 /** The part of the MQTT client this module needs. */
 export interface MqttLike {
@@ -19,7 +33,7 @@ export interface MqttLike {
   publish(
     topic: string,
     payload: string,
-    options: { qos: 0 | 1 | 2; retain: boolean },
+    options: PublishOptions,
     callback?: (error?: Error | null) => void,
   ): unknown;
   end(force?: boolean, callback?: () => void): unknown;
@@ -27,7 +41,7 @@ export interface MqttLike {
 
 export type MqttConnect = (
   url: string,
-  options: { username: string; password: string; reconnectPeriod: number; clientId: string },
+  options: { username: string; password: string; reconnectPeriod: number; clientId: string; protocolVersion: 5 },
 ) => MqttLike;
 
 export interface BrokerOptions {
@@ -58,7 +72,7 @@ export function createBroker(options: BrokerOptions) {
         options.log(`Subscribing failed: ${error.message}`);
         return;
       }
-      const refused = (granted ?? []).filter((g) => g.qos === 128).map((g) => g.topic);
+      const refused = (granted ?? []).filter((g) => g.qos >= SUBACK_FAILURE).map((g) => g.topic);
       if (refused.length > 0) options.log(`Broker refused the subscription to: ${refused.join(', ')}`);
       else options.log(`Subscribed to ${options.topics.length} topic(s)`);
     });
@@ -73,6 +87,8 @@ export function createBroker(options: BrokerOptions) {
         // The client reconnects by itself while the broker is gone.
         reconnectPeriod: options.reconnectMs,
         clientId: `sensors-collector-${randomBytes(4).toString('hex')}`,
+        // MQTT 5 for the message expiry of the live messages.
+        protocolVersion: 5,
       });
       client = current;
       current.on('connect', () => {
@@ -92,10 +108,11 @@ export function createBroker(options: BrokerOptions) {
       });
     },
 
-    /** Publishes a live message retained with QoS 1; never throws. */
+    /** Publishes a live message retained with QoS 1 and the expiry; never throws. */
     publish(message: LiveMessage): void {
+      const publishOptions: PublishOptions = { qos: 1, retain: true, properties: { messageExpiryInterval: LIVE_EXPIRY_S } };
       try {
-        client?.publish(message.topic, message.payload, { qos: 1, retain: true }, (error) => {
+        client?.publish(message.topic, message.payload, publishOptions, (error) => {
           if (error) options.log(`Publishing ${message.topic} failed: ${error.message}`);
         });
       } catch (error) {
