@@ -27,7 +27,7 @@
 - [x] 4.3 Add the link "Im Gebäude zeigen" to `/3d/?room=<id>` on the room page for rooms of a known floor; verify with render tests for `105` (link) and `X99` (none)
 - [x] 4.4 Check the list and the room page at 1280 and 360 pixels width, light and dark, in the browser; verify no horizontal scrolling and attach screenshots to the pull request
 - [x] 4.5 Update `leoiot-sensors/README.md` and the "Undecided" line of `leoiot-sensors/PRODUCT.md` (the dashboard covers all rooms with data); verify the docs mention `/sensors/` as the room list
-- [ ] 4.6 Run `npm ci && npm test && npm run build` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green
+- [x] 4.6 Run `npm ci && npm test && npm run build` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green
 
 ## 5. 3D explorer and temporary simulator (`leoiot-3d/`, by or with the 3D team)
 
@@ -38,6 +38,6 @@
 
 ## 6. Release and check on vm23
 
-- [ ] 6.1 Ship steps 2 to 5 through a promotion pull request `main` → `release` when Elias asks; verify the deploy run's smoke routes pass
-- [ ] 6.2 On vm23, verify with an MQTT 5 subscriber that room 105's retained message carries an expiry interval of about 2 592 000 s
-- [ ] 6.3 In the browser, verify that `/sensors/` lists room 105 under floor 1, that the header choice and "Alle Räume" work, that `/sensors/?room=X99` shows the list, and that "Im Gebäude zeigen" and "Show history" lead to each other for room 105
+- [ ] 6.1 Ship steps 2 to 5 through a promotion pull request `main` → `release` when Elias asks; verify the deploy run's smoke routes pass (Steps 2 to 4 shipped with the promotion #169 on 2026-11-19, smoke routes passed; step 5 follows.)
+- [x] 6.2 On vm23, verify with an MQTT 5 subscriber that room 105's retained message carries an expiry interval of about 2 592 000 s
+- [ ] 6.3 In the browser, verify that `/sensors/` lists room 105 under floor 1, that the header choice and "Alle Räume" work, that `/sensors/?room=X99` shows the list, and that "Im Gebäude zeigen" and "Show history" lead to each other for room 105 (The sensors part was verified on vm23 on 2026-11-19; "Show history" follows with step 5.)
