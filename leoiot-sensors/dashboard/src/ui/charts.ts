@@ -1,6 +1,6 @@
-// The two chart instances and their link. ECharts itself is injected (see echartsApi.ts), so that
+// The three chart instances and their link. ECharts itself is injected (see echartsApi.ts), so that
 // tests can check the wiring without a browser.
-import { airOption, CHART_GROUP, temperatureOption, type ChartInput } from '../core/chartOptions';
+import { co2Option, CHART_GROUP, humidityOption, temperatureOption, type ChartInput } from '../core/chartOptions';
 
 export interface ChartInstance {
   group: string;
@@ -20,25 +20,23 @@ export interface Charts {
   dispose(): void;
 }
 
-/** Both charts join one group and are connected: a pointer in any of the three panels marks all three. */
-export function createCharts(api: EchartsApi, tempEl: HTMLElement, airEl: HTMLElement): Charts {
-  const temp = api.init(tempEl);
-  const air = api.init(airEl);
-  temp.group = CHART_GROUP;
-  air.group = CHART_GROUP;
+/** The three charts join one group and are connected: a pointer in any of them marks all three. */
+export function createCharts(api: EchartsApi, co2El: HTMLElement, tempEl: HTMLElement, humEl: HTMLElement): Charts {
+  const all = [api.init(co2El), api.init(tempEl), api.init(humEl)];
+  for (const c of all) c.group = CHART_GROUP;
   api.connect(CHART_GROUP);
+  const [co2, temp, hum] = all;
   return {
     render(input) {
+      co2.setOption(co2Option(input), true);
       temp.setOption(temperatureOption(input), true);
-      air.setOption(airOption(input), true);
+      hum.setOption(humidityOption(input), true);
     },
     resize() {
-      temp.resize();
-      air.resize();
+      for (const c of all) c.resize();
     },
     dispose() {
-      temp.dispose();
-      air.dispose();
+      for (const c of all) c.dispose();
     },
   };
 }

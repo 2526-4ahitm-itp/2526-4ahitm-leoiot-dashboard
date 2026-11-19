@@ -141,7 +141,12 @@ describe('language and theme are kept in the browser', () => {
     expect(t.$('roomSelect').getAttribute('aria-label')).toBe('Choose room');
     expect(t.$('rangeGroup').querySelector('[data-range="7d"]')!.textContent).toBe('7 days');
     expect(t.$('fresh').textContent).toMatch(/^As of 07:36:08 · \d+ s ago$/);
-    expect(t.$('winA').textContent).toMatch(/^\d+\/\d+, \d\d:\d\d – \d+\/\d+, \d\d:\d\d · °C$/);
+    expect(t.$('winTemp').textContent).toMatch(/^\d+\/\d+, \d\d:\d\d – \d+\/\d+, \d\d:\d\d · °C$/);
+    expect(t.$('hCo2').textContent).toBe('CO₂');
+    expect(t.$('hTemp').textContent).toBe('Temperature');
+    expect(t.$('hHum').textContent).toBe('Humidity');
+    expect(t.$('chartHum').getAttribute('aria-label')).toMatch(/^Humidity, /);
+    expect(t.$('panelHum').querySelector('svg.qi-hum')).not.toBeNull();
     expect(document.title).toBe('Room 105 · LeoIoT Room climate');
 
     disposeApps();
@@ -164,13 +169,17 @@ describe('top bar: range', () => {
     const t = await startTestApp();
     const buttons = () => ['24h', '7d'].map((r) => t.$('rangeGroup').querySelector(`[data-range="${r}"]`)!.getAttribute('aria-pressed'));
     expect(buttons()).toEqual(['true', 'false']);
-    expect(t.$('winA').textContent).toBe('2.11., 07:36 – 3.11., 07:36 · °C');
-    expect(t.$('winB').textContent).toBe('2.11., 07:36 – 3.11., 07:36');
+    expect(t.$('winCo2').textContent).toBe('2.11., 07:36 – 3.11., 07:36 · ppm');
+    expect(t.$('winTemp').textContent).toBe('2.11., 07:36 – 3.11., 07:36 · °C');
+    expect(t.$('winHum').textContent).toBe('2.11., 07:36 – 3.11., 07:36 · %');
     await t.click('[data-range="7d"]');
     expect(buttons()).toEqual(['false', 'true']);
-    expect(t.$('winA').textContent).toBe('27.10., 07:36 – 3.11., 07:36 · °C');
-    expect(t.$('winB').textContent).toBe('27.10., 07:36 – 3.11., 07:36');
-    expect(t.$('chartAir').getAttribute('aria-label')).toBe('CO₂ und Luftfeuchte, 27.10., 07:36 – 3.11., 07:36');
+    expect(t.$('winCo2').textContent).toBe('27.10., 07:36 – 3.11., 07:36 · ppm');
+    expect(t.$('winTemp').textContent).toBe('27.10., 07:36 – 3.11., 07:36 · °C');
+    expect(t.$('winHum').textContent).toBe('27.10., 07:36 – 3.11., 07:36 · %');
+    expect(t.$('chartCo2').getAttribute('aria-label')).toBe('CO₂, 27.10., 07:36 – 3.11., 07:36');
+    expect(t.$('chartTemp').getAttribute('aria-label')).toBe('Temperatur, 27.10., 07:36 – 3.11., 07:36');
+    expect(t.$('chartHum').getAttribute('aria-label')).toBe('Luftfeuchte, 27.10., 07:36 – 3.11., 07:36');
     expect(t.historyQueries().at(-1)).toContain('every: 30m');
     await t.click('[data-range="24h"]');
     expect(buttons()).toEqual(['true', 'false']);

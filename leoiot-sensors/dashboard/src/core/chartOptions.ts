@@ -1,5 +1,5 @@
-// ECharts options for the two charts, as plain objects built from data and a palette: the
-// temperature chart (one panel) and the CO2/humidity chart (two panels on one shared time axis).
+// ECharts options for the three charts (CO2, temperature, humidity), as plain objects built from
+// data and a palette. One panel and one time axis each.
 // Pure functions, so tests can check bands, gaps and line styles without a browser.
 import type { Format } from './format';
 import type { Lang } from './i18n';
@@ -8,7 +8,7 @@ import { LIMIT_BAD, LIMIT_SOON } from './air';
 import { rangeBounds, type RangeId } from './ranges';
 import type { HistoryPoint } from './snapshot';
 
-/** The charts share this group, so that one pointer runs through all three panels (`echarts.connect`). */
+/** The charts share this group, so that one pointer runs through all three charts (`echarts.connect`). */
 export const CHART_GROUP = 'room-climate';
 
 /** Colours read from the page's CSS variables, so that the theme decides them. */
@@ -160,11 +160,13 @@ export function temperatureOption(i: ChartInput): Opt {
   return {
     animationDuration: 300,
     textStyle: { fontFamily: p.font },
-    grid: { left: 40, right: 12, top: 16, bottom: 28 },
+    // Same frame as the CO2 and humidity charts: the unit above the axis, the plot at the same left edge
+    grid: { left: 48, right: 12, top: 26, bottom: 28 },
     tooltip: tooltip(i),
     xAxis: timeAxis(i, 0, true),
     yAxis: valueAxis(i, { scale: true, minInterval: 1 }),
     series: [line(i, 'temperature', t.temperature, p.ink)],
+    graphic: [{ type: 'text', left: 4, top: 0, style: { text: '°C', fill: p.ink3, font: `12px ${p.font}` } }],
   };
 }
 
@@ -174,29 +176,20 @@ export function co2Bands(extent: { min: number; max: number }, p: Palette): Opt[
   return [band(extent.min, LIMIT_SOON, p.bandGood), band(LIMIT_SOON, LIMIT_BAD, p.bandSoon), band(LIMIT_BAD, extent.max, p.bandBad)];
 }
 
-export function airOption(i: ChartInput): Opt {
+/** CO2 chart: lamp bands, dashed limit lines, ppm axis. */
+export function co2Option(i: ChartInput): Opt {
   const t = texts(i.lang);
   const { palette: p } = i;
   const co2 = co2Extent(i.points);
-  const hum = humidityExtent(i.points);
   return {
     animationDuration: 300,
     textStyle: { fontFamily: p.font },
     tooltip: tooltip(i),
-    axisPointer: { link: [{ xAxisIndex: 'all' }] },
-    grid: [
-      { left: 48, right: 12, top: 26, height: '50%' },
-      { left: 48, right: 12, top: '70%', bottom: 28 },
-    ],
-    xAxis: [timeAxis(i, 0, false), timeAxis(i, 1, true)],
-    yAxis: [
-      valueAxis(i, { gridIndex: 0, min: co2.min, max: co2.max, interval: 200 }),
-      valueAxis(i, { gridIndex: 1, min: hum.min, max: hum.max, interval: 20 }),
-    ],
+    grid: { left: 48, right: 12, top: 26, bottom: 28 },
+    xAxis: timeAxis(i, 0, true),
+    yAxis: valueAxis(i, { min: co2.min, max: co2.max, interval: 200 }),
     series: [
       line(i, 'co2', t.co2, p.ink, {
-        xAxisIndex: 0,
-        yAxisIndex: 0,
         markArea: { silent: true, data: co2Bands(co2, p) },
         markLine: {
           silent: true,
@@ -206,11 +199,24 @@ export function airOption(i: ChartInput): Opt {
           data: [{ yAxis: LIMIT_SOON }, { yAxis: LIMIT_BAD }],
         },
       }),
-      line(i, 'humidity', t.humidity, p.humidity, { xAxisIndex: 1, yAxisIndex: 1 }),
     ],
-    graphic: [
-      { type: 'text', left: 4, top: 0, style: { text: 'ppm', fill: p.ink3, font: `12px ${p.font}` } },
-      { type: 'text', left: 4, top: '66%', style: { text: '%', fill: p.ink3, font: `12px ${p.font}` } },
-    ],
+    graphic: [{ type: 'text', left: 4, top: 0, style: { text: 'ppm', fill: p.ink3, font: `12px ${p.font}` } }],
+  };
+}
+
+/** Humidity chart: one muted line, % axis. */
+export function humidityOption(i: ChartInput): Opt {
+  const t = texts(i.lang);
+  const { palette: p } = i;
+  const hum = humidityExtent(i.points);
+  return {
+    animationDuration: 300,
+    textStyle: { fontFamily: p.font },
+    tooltip: tooltip(i),
+    grid: { left: 48, right: 12, top: 26, bottom: 28 },
+    xAxis: timeAxis(i, 0, true),
+    yAxis: valueAxis(i, { min: hum.min, max: hum.max, interval: 20 }),
+    series: [line(i, 'humidity', t.humidity, p.humidity)],
+    graphic: [{ type: 'text', left: 4, top: 0, style: { text: '%', fill: p.ink3, font: `12px ${p.font}` } }],
   };
 }

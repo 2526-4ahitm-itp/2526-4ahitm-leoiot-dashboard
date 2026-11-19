@@ -65,7 +65,8 @@ describe('the page loads and uses the stored readings', () => {
     const measured = fakeEcharts();
     await startTestApp({ echarts: measured.api });
     expect(measured.connected).toHaveLength(1);
-    const airOpt = measured.charts[1].options.at(-1) as any;
+    expect(measured.charts).toHaveLength(3);
+    const airOpt = measured.charts[0].options.at(-1) as any;
     expect(airOpt.series[0].lineStyle.type).toBe('solid');
     expect(airOpt.series[0].data.some(([, v]: [number, number | null]) => v === null)).toBe(true);
     expect(airOpt.series[0].connectNulls).toBe(false);
@@ -73,9 +74,7 @@ describe('the page loads and uses the stored readings', () => {
 
     const simulated = fakeEcharts();
     await startTestApp({ search: '?room=E10', latest: fixture('latestE10.csv'), echarts: simulated.api });
-    const simOpt = simulated.charts[1].options.at(-1) as any;
-    expect(simOpt.series.map((s: any) => s.lineStyle.type)).toEqual(['dashed', 'dashed']);
-    expect((simulated.charts[0].options.at(-1) as any).series[0].lineStyle.type).toBe('dashed');
+    for (const c of simulated.charts) expect((c.options.at(-1) as any).series.map((s: any) => s.lineStyle.type)).toEqual(['dashed']);
   });
   it('a room without readings shows no charts and loads no history', async () => {
     const e = fakeEcharts();

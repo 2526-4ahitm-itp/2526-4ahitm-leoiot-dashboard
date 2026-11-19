@@ -9,7 +9,7 @@ related_targets: []
 
 Scope: `leoiot-sensors/dashboard/` (planned; first try shows room 105 only). Mode: Operate. Audience and product truth: `leoiot-sensors/PRODUCT.md`. Direction chosen by Elias Pointinger on 2026-10-23 (Classroom Air Light, the roll); the alternative "The School Day" (lesson grid as time axis) was not taken.
 
-Job: anyone at the school sees within seconds whether the air in a room is fine now, how current the values are, and how temperature, CO₂ and humidity developed over the last 24 hours or 7 days. Charts: temperature alone; CO₂ and humidity as two panels on one shared time axis with a synced pointer. Ranges: 24 h (default) and 7 days. States that matter: live, outdated (no reading for 5 minutes), no data, simulated.
+Job: anyone at the school sees within seconds whether the air in a room is fine now, how current the values are, and how temperature, CO₂ and humidity developed over the last 24 hours or 7 days. Charts: CO₂, temperature and humidity, each in its own box on the same time range, with a synced pointer. Ranges: 24 h (default) and 7 days. States that matter: live, outdated (no reading for 5 minutes), no data, simulated.
 
 Open: URL path, room selection once more rooms have real data, the sensor overview (the split-flap board's fixed-cell rows fit it).
 
@@ -23,7 +23,7 @@ STORY: A visitor opens room 105, reads the lit lamp and the status line (Luft gu
 
 COMP: `.impeccable/previews/room-105/index.html` (sample data, not in Git) is the reference the build follows.
 
-FIRST VIEWPORT: Top bar (brand, room, 24 h / 7 Tage, DE/EN, theme). Room panel: one identity line ("Raum 105" at about 20px, link to the building model, "simuliert" pill only for simulated readings), then lamp housing, status line at about 44px, three fixed value cells (temperature and humidity with a small lamp and a direction word), freshness line, and a "Heute" column on the right (time above 1000 ppm, highest value, estimated last airing). Below, two chart panels side by side: temperature; CO₂ above humidity.
+FIRST VIEWPORT: Top bar (brand, room, 24 h / 7 Tage, DE/EN, theme). Room panel: one identity line ("Raum 105" at about 20px, link to the building model, "simuliert" pill only for simulated readings), then lamp housing, status line at about 44px, three fixed value cells (temperature and humidity with a small lamp and a direction word), freshness line, and a "Heute" column on the right (time above 1000 ppm, highest value, estimated last airing). Below the room panel, three chart boxes: CO₂ on the left at full height, temperature above humidity on the right.
 
 FORM: Classroom CO₂ traffic light with raises: fixed cells that change in place (split-flap), colour only for state (warm app), one message per line (terminal yellow), strict state vocabulary (acetate manual), fixed identity furniture (character catalog), exact time windows (j-card). Position 7 on my ordered list; seed:b4dbcad7698bbcf1 (not corroborated on this machine on 2026-11-03)
 
