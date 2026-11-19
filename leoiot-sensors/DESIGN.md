@@ -23,13 +23,6 @@ colors:
   humidity: "#4d6f91"
   selection: "#d6e4f2"
 typography:
-  display:
-    fontFamily: "Lexend, system-ui, sans-serif"
-    fontSize: "128px"
-    fontWeight: 700
-    lineHeight: 0.86
-    letterSpacing: "-0.035em"
-    fontFeature: "\"tnum\""
   headline:
     fontFamily: "Lexend, system-ui, sans-serif"
     fontSize: "44px"
@@ -74,7 +67,7 @@ components:
   room-panel:
     backgroundColor: "{colors.panel}"
     rounded: "{rounded.panel}"
-    padding: "28px 36px"
+    padding: "24px 36px 28px"
   chart-panel:
     backgroundColor: "{colors.panel}"
     rounded: "{rounded.panel}"
@@ -116,6 +109,17 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.ctl}"
     size: "36px"
+  identity-line:
+    textColor: "{colors.ink}"
+    typography: "{typography.title}"
+  small-lamp:
+    backgroundColor: "{colors.lamp-off}"
+    rounded: "{rounded.round}"
+    size: "12px"
+  today-column:
+    backgroundColor: "{colors.panel}"
+    width: "260px"
+    padding: "0 0 0 32px"
   value-cell:
     textColor: "{colors.ink}"
     typography: "{typography.value}"
@@ -135,13 +139,13 @@ The tokens are defined in `dashboard/src/styles/tokens.css`. That file is the so
 
 A room's air state is a lit lamp, not a number to read. A dark housing holds three round lamps (red, amber, green). One lamp is lit, and one sentence next to it says what to do: "Luft gut", "Bald lüften", "Jetzt lüften". The charts carry the same lamps as background bands.
 
-Everything else is matte and neutral: a cool grey ground, white panels, near-black ink. Colour means air state and nothing else. Controls stay grey. The page is dense but calm: one large room id, one status line, three fixed value cells, a freshness line, and two chart panels.
+Everything else is matte and neutral: a cool grey ground, white panels, near-black ink. Colour means the state of a value and nothing else. Controls stay grey. The page is dense but calm: the panel reads in order: the room (one line), the air state, the values with their own small lamps, and the day so far in a column on the right. Then two chart panels.
 
 The layout refuses a wall of KPI tiles with sparklines. Values sit in fixed cells that keep their place and their width; only the content changes.
 
 **Key Characteristics:**
-- One lit lamp per room; unlit lamps stay dark grey.
-- Colour only for air state; controls, text and the temperature line are ink.
+- One lit lamp per room for CO₂; unlit lamps stay dark grey. Temperature and humidity get a small two-state lamp each.
+- Colour only for the state of a value; controls, text and the chart lines are ink.
 - Lexend throughout, tabular numerals everywhere.
 - Flat panels on a grey ground; no drop shadows.
 - Simulated data is dashed, never hidden.
@@ -151,8 +155,8 @@ The layout refuses a wall of KPI tiles with sparklines. Values sit in fixed cell
 A neutral housing-grey palette with three traffic-light hues that appear only when they mean an air state.
 
 ### Primary
-- **Lamp Green** (lamp-green): the lit lamp when CO₂ is below 800 ppm. Its darker **Green Ink** (green-ink) colours the CO₂ value in the same state, so text keeps contrast on white.
-- **Lamp Amber** (lamp-amber): the lit lamp from 800 to 1000 ppm. **Amber Ink** (amber-ink) is its text form.
+- **Lamp Green** (lamp-green): the lit lamp when CO₂ is below 800 ppm, and the small lamp of temperature or humidity inside its range. Its darker **Green Ink** (green-ink) colours the value in the same state, so text keeps contrast on white.
+- **Lamp Amber** (lamp-amber): the lit lamp from 800 to 1000 ppm, and the small lamp of temperature or humidity outside its range. **Amber Ink** (amber-ink) is its text form.
 - **Lamp Red** (lamp-red): the lit lamp above 1000 ppm. **Red Ink** (red-ink) is its text form.
 - **Lamp Bands** (band-good, band-soon, band-bad): the same three hues at 8 to 14 % opacity, as background bands below 800, 800 to 1000 and above 1000 ppm in the CO₂ chart.
 
@@ -171,28 +175,27 @@ A neutral housing-grey palette with three traffic-light hues that appear only wh
 - **Selection Tint** (selection): text selection only.
 
 ### Named Rules
-**The Lamp-Only Colour Rule.** Green, amber and red appear only as the current air state: the lit lamp, the CO₂ value, and the chart bands. The freshness dot, the controls and the other values stay neutral. The one exception in the build is the warning triangle of an outdated reading, drawn in amber ink.
+**The Lamp-Only Colour Rule.** Green, amber and red mean the state of a value and nothing else. CO₂ has three steps (green, amber, red): the lamp housing, the value and the chart bands. Temperature and humidity have two (green inside the range, amber outside; no red, because the source, § 28 B-AStV, gives one range): the small lamp and the value. Controls, text and chart lines stay neutral; so do the freshness dot and the Heute column. The small lamps never change the CO₂ lamp or the status sentence, and the direction word ("zu kalt", "zu trocken") carries the state, so colour is never the only signal. The one other exception in the build is the warning triangle of an outdated reading, drawn in amber ink.
 
 **The Two Schemes Rule.** Every colour exists in a light and a dark form with the same name. Light is the default; the system scheme applies until the visitor picks one with the theme button.
 
 ## Typography
 
-**Display Font:** Lexend (with system-ui, sans-serif), self-hosted through `@fontsource/lexend`
+**Display Font:** none; Lexend (with system-ui, sans-serif), self-hosted through `@fontsource/lexend`
 **Body Font:** Lexend
 **Label/Mono Font:** none; Lexend with tabular numerals
 
 **Character:** One friendly, wide sans for everything. Weight 700 carries hierarchy; 400 carries prose. The body sets `font-variant-numeric: tabular-nums`, so numbers do not jump when they change.
 
 ### Hierarchy
-- **Display** (700, 128px, line-height 0.86, -0.035em): the room id, exactly as on the door sign. 84px below 640px.
 - **Headline** (700, 44px, 1.1, balanced wrapping): the status sentence. 32px below 640px.
-- **Value** (700, 34px): the three value cells. 24px below 640px.
+- **Value** (700, 34px): the three value cells. 24px below 640px. In the Heute column values are 22px.
 - **Empty title** (700, 28px): the heading of the no-data and error panel. 22px below 640px.
 - **Brand** (700, 18px): "LeoIoT" in the top bar, followed by "Raumklima" at 400 in muted slate.
-- **Title** (700, 17px): chart panel headings.
+- **Title** (700, 17px): chart panel headings. The identity line "Raum 105" is a title at 20px.
 - **Body** (400, 17px, max 62ch): the reason under the status. The breadcrumb and units use 16px.
-- **Label** (400, 14px): identity line, freshness line, chart window, notes.
-- **Caption** (400, 13px): value cell labels. Chart axis labels and the ppm and % axis names use 12px.
+- **Label** (400, 14px): the direction word under a value, freshness line, chart window, notes.
+- **Caption** (400, 13px): value cell labels, the Heute heading and its labels, the estimate note. Chart axis labels and the ppm and % axis names use 12px.
 
 ### Named Rules
 **The Tabular Rule.** Every number is set in tabular figures. A value that changes keeps its width.
@@ -204,13 +207,14 @@ A neutral housing-grey palette with three traffic-light hues that appear only wh
 A single column, at most 1520px wide and centred. Page padding is 28px on top and 40px at the sides and bottom; sections are 24px apart.
 
 - **Top bar:** 60px high, white, a hairline below, 40px side padding. Brand, room breadcrumb (behind a hairline divider), the 24 h / 7 Tage segment, a spacer, the DE / EN segment, the theme button.
-- **Room panel:** a three-column grid: identity (room id and identity line), the 76px lamp housing, and the state column (status, reason, value cells, freshness line). Columns are 40px apart.
-- **Value cells:** three columns of 170 to 210px under a hairline. They never reflow while values update.
+- **Room panel:** the identity line on top, then a three-column grid: the 76px lamp housing, the state column (status, reason, value cells, freshness line) and the Heute column (about 260px, a hairline on its left). Columns are 32px apart.
+- **Value cells:** three columns of up to 210px under a hairline. Temperature and humidity reserve a second line for the direction word, so the cells keep their height whether or not a word is shown. They never reflow while values update.
 - **Charts:** two panels side by side. Left: temperature. Right: CO₂ above humidity, one shared time axis and one synced pointer. Charts are 340px high.
 
 Responsive steps:
-- **Below 1100px:** the charts stack; the state column moves below identity and lamp.
-- **Below 640px:** the top bar wraps with 16px padding; page padding and gaps drop to 16px; the room panel pads 20px; the unit moves below the value.
+- **Below 1100px:** the charts stack; the Heute block moves below the cells and spans the panel, its three pairs in a row.
+- **Below 760px:** the panel is one column; the lamp housing lies horizontally under the identity line.
+- **Below 640px:** the top bar wraps with 16px padding; page padding and gaps drop to 16px; the room panel pads 20px; the unit moves below the value; the Heute pairs stack.
 
 ## Elevation & Depth
 
@@ -242,16 +246,25 @@ Neutral, quiet controls that never take an air colour.
 
 ### Value cells
 - **Style:** caption label above, value in the value style, unit at 16px in muted slate.
-- **State:** the CO₂ value takes the ink form of the current lamp colour. When the reading is outdated, all values turn muted slate.
+- **State:** the CO₂ value takes the ink form of the current lamp colour. Temperature and humidity take the ink form of their small lamp (green or amber); neutral ink when the lamp is off. When the reading is outdated, all values turn muted slate and all lamps go off.
 - **Empty value:** an en dash.
+
+### Small lamp
+- **Shape:** a 12px dot in front of the temperature or humidity value (the size of the room list's dots), dark grey when off, green or amber when lit, no halo. It is decorative (`aria-hidden`); the direction word below the value (14px slate: "im Bereich", "zu kalt", "zu warm", "zu trocken", "zu feucht") is the accessible state.
+- **Ranges:** § 28 B-AStV: temperature 19 to 25 °C, humidity 40 to 70 % (guide value); the bounds belong to the range; compared on the shown, rounded value.
 
 ### Freshness line
 - **Live:** an 8px muted-slate dot, then "Stand 10:42 · vor 12 s".
 - **Outdated (no reading for 5 minutes):** the dot becomes a 16px warning triangle in amber ink and the text turns ink: "Zuletzt 10:42". The status reads "Keine aktuellen Werte".
 
 ### Identity line and simulated data
-- **Style:** 14px muted slate: "Sensorbox nili3 · gemessen".
-- **Simulated:** the source word gets a dashed pill outline, and every chart line is dashed. Simulated values are never drawn as measurements.
+- **Style:** one line at the top of the room panel: the room as the page's `<h1>` ("Raum 105", title style at 20px, 700), then the link "Im Gebäude zeigen" in 15px slate. No device name and no "gemessen".
+- **Simulated:** only simulated readings add a dashed pill "simuliert" after the link, and every chart line is dashed. Simulated values are never drawn as measurements.
+
+### Heute column
+- **Content:** the day since local midnight (Europe/Vienna): a caption heading "Heute", then three label and value pairs: "Über 1000 ppm" (time as "1 h 20 min", or "noch nicht"), "Höchstwert" (value, unit and time) and "Zuletzt gelüftet" ("ca. 10:45" or "heute nicht erkannt", with the caption "geschätzt aus dem CO₂-Verlauf" under a time). Without a reading today one line "Heute noch keine Werte".
+- **Style:** caption labels, values at 22px, 700, ink; units and the note in muted slate. A hairline on the column's left (on top below 1100px). When the room is outdated, the values turn muted slate; the summary stays because it describes the past.
+- **Not a KPI tile:** no sparkline, no colour; the charts below carry the curve.
 
 ### Chart panels
 - **Container:** white panel, 14px corners, padding 22px 26px 12px.
@@ -268,14 +281,15 @@ White panel, 56px by 36px padding, a 28px title and a slate paragraph of at most
 
 ### Do:
 - **Do** show the air state as exactly one lit lamp plus one sentence from the fixed vocabulary (Luft gut, Bald lüften, Jetzt lüften / Air is fine, Air the room soon, Air the room now).
-- **Do** use the CO₂ limits 800 and 1000 ppm everywhere a state colour appears.
+- **Do** use the CO₂ limits 800 and 1000 ppm everywhere a CO₂ state colour appears, and the ranges of § 28 B-AStV for the small lamps.
 - **Do** set every number in tabular Lexend and keep value cells at a fixed width.
 - **Do** dash simulated data: the source tag outline and every chart line.
 - **Do** show how current every value is, and mark outdated values in muted slate with the warning triangle.
 - **Do** read chart colours from the CSS variables, so both schemes apply.
 
 ### Don't:
-- **Don't** use green, amber or red for anything other than the air state: not for controls, links, the freshness dot or decoration.
+- **Don't** use green, amber or red for anything other than the state of a value: not for controls, links, the freshness dot, the Heute column or decoration.
+- **Don't** let the small lamps of temperature and humidity drive the status sentence or the CO₂ lamp, and don't add a red step to them.
 - **Don't** add shadows to panels or controls; the lamp halo is the only shadow.
 - **Don't** replace the lamp with a KPI tile, a gauge or a sparkline.
 - **Don't** show a missing value as zero; show an en dash and a gap in the chart.

@@ -1,7 +1,10 @@
 // From what is known (snapshot, history) and the clock to what the room panel shows. No DOM here.
 import { airOf, LIMIT_BAD, LIMIT_SOON, sinceAbove, STALE_AFTER_MS, type Air, type CO2Point, type Since } from './air';
+import { COMFORT_OFF, humidityComfort, temperatureComfort, type Comfort } from './comfort';
 import type { Source } from './flux';
+import { startOfLocalDay } from './format';
 import { QUANTITIES, type Quantity, type Snapshot } from './snapshot';
+import { deriveToday, withCurrent, type Peak, type TodayView } from './today';
 
 export type RoomState =
   /** Nothing is known yet (queries running). */
@@ -29,6 +32,10 @@ export interface RoomView {
   ageMs: number | null;
   /** Since when CO2 has been above the limit of the lit lamp (yellow: 800, red: 1000). */
   since: Since | null;
+  /** The two-state lamps of temperature and humidity; off when outdated, loading or unknown. */
+  comfort: { temperature: Comfort; humidity: Comfort };
+  /** The day so far; null while nothing is known or loaded (and for rooms without a panel). */
+  today: TodayView | null;
 }
 
 export interface ViewInput {
@@ -36,6 +43,8 @@ export interface ViewInput {
   /** Five-minute series of the last 24 hours (windows without readings are null). */
   series24h: readonly CO2Point[] | null;
   now: number;
+  /** The day's highest CO2 reading since local midnight; null: none known (yet). */
+  peak?: Peak | null;
   /** The room id broke the room id rule or the loading failed or is still running. */
   status: 'ok' | 'invalid' | 'loading' | 'error';
 }
@@ -52,6 +61,8 @@ export function deriveRoomView(input: ViewInput): RoomView {
     lastAt: snapshot.at,
     ageMs: snapshot.at === null ? null : Math.max(0, now - snapshot.at),
     since: null,
+    comfort: { temperature: COMFORT_OFF, humidity: COMFORT_OFF },
+    today: null,
   };
   if (input.status === 'invalid') return { ...base, state: 'nodata', source: null, devices: [], lastAt: null, ageMs: null };
   if (snapshot.at === null) {
@@ -68,15 +79,21 @@ export function deriveRoomView(input: ViewInput): RoomView {
     // An outdated page shows the last values greyed; a live page shows no value older than five minutes.
     if (s && (stale || now - s.at <= STALE_AFTER_MS)) values[q] = s.value;
   }
-  if (stale) return { ...base, state: 'stale', values };
+  // The summary describes the past, so it stays when the readings are outdated.
+  const midnight = startOfLocalDay(now);
+  const peak = withCurrent(input.peak ?? null, snapshot.samples.co2, midnight);
+  const today = input.series24h === null ? null : deriveToday(input.series24h, peak, midnight, now);
+  // Outdated readings switch every lamp off, the small ones too.
+  if (stale) return { ...base, state: 'stale', values, today };
 
+  const comfort = { temperature: temperatureComfort(values.temperature), humidity: humidityComfort(values.humidity) };
   const co2 = values.co2;
-  if (co2 === null) return { ...base, state: 'live', values, noCo2: true };
+  if (co2 === null) return { ...base, state: 'live', values, noCo2: true, comfort, today };
   const air = airOf(co2);
   let since: Since | null = null;
   if (air !== 'good') {
     const at = (snapshot.samples.co2 as { at: number }).at;
     since = sinceAbove(input.series24h ?? [], air === 'bad' ? LIMIT_BAD : LIMIT_SOON, { at, value: co2 });
   }
-  return { ...base, state: 'live', values, air, since };
+  return { ...base, state: 'live', values, air, since, comfort, today };
 }

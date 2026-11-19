@@ -23,7 +23,7 @@ STORY: A visitor opens room 105, reads the lit lamp and the status line (Luft gu
 
 COMP: `.impeccable/previews/room-105/index.html` (sample data, not in Git) is the reference the build follows.
 
-FIRST VIEWPORT: Top bar (brand, room, 24 h / 7 Tage, DE/EN, theme). Room panel: room id at about 128px, lamp housing, status line at about 44px, three fixed value cells, freshness line. Below, two chart panels side by side: temperature; CO₂ above humidity.
+FIRST VIEWPORT: Top bar (brand, room, 24 h / 7 Tage, DE/EN, theme). Room panel: one identity line ("Raum 105" at about 20px, link to the building model, "simuliert" pill only for simulated readings), then lamp housing, status line at about 44px, three fixed value cells (temperature and humidity with a small lamp and a direction word), freshness line, and a "Heute" column on the right (time above 1000 ppm, highest value, estimated last airing). Below, two chart panels side by side: temperature; CO₂ above humidity.
 
 FORM: Classroom CO₂ traffic light with raises: fixed cells that change in place (split-flap), colour only for state (warm app), one message per line (terminal yellow), strict state vocabulary (acetate manual), fixed identity furniture (character catalog), exact time windows (j-card). Position 7 on my ordered list; seed:b4dbcad7698bbcf1 (not corroborated on this machine on 2026-11-03)
 

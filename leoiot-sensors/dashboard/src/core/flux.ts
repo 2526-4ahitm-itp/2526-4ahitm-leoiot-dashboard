@@ -69,3 +69,22 @@ export function historyQuery(room: string, source: Source, range: RangeId, now: 
     `  |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")`,
   ].join('\n');
 }
+
+/**
+ * The highest single CO2 reading of the room and source from `startMs` (local midnight) until
+ * `endMs` (now), all devices merged, with the time it was taken.
+ */
+export function peakQuery(room: string, source: Source, startMs: number, endMs: number): string {
+  assertRoomId(room);
+  if (!isSource(source)) throw new Error('invalid source');
+  const iso = (ms: number) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  return [
+    `from(bucket: "${BUCKET}")`,
+    `  |> range(start: ${iso(startMs)}, stop: ${iso(endMs)})`,
+    `  |> filter(fn: (r) => r._measurement == "${MEASUREMENT}" and r.room == "${room}" and r.source == "${source}")`,
+    `  |> filter(fn: (r) => r._field == "co2")`,
+    `  |> group()`,
+    `  |> max()`,
+    `  |> keep(columns: ["_time", "_value"])`,
+  ].join('\n');
+}
