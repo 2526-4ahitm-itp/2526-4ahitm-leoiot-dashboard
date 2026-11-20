@@ -87,7 +87,7 @@ The dashboard SHALL offer the last 24 hours, the default, and the last 7 days, b
 
 #### Scenario: Switching to 7 days
 - **WHEN** a visitor switches to 7 days on Friday 23 October 2026 at 10:41
-- **THEN** both charts show 16 October 10:41 to 23 October 10:41 and state that range
+- **THEN** all three charts show 16 October 10:41 to 23 October 10:41 and state that range
 
 ### Requirement: Simulated readings are marked
 When the shown readings carry the source `simulated`, the dashboard SHALL say "simuliert" ("simulated") next to the room id and SHALL draw the chart lines dashed. Measured readings SHALL get no such word.
@@ -171,15 +171,19 @@ Next to the temperature and the humidity value, the dashboard SHALL show one sma
 ### Requirement: The day is summarised next to the values
 The room panel SHALL show a summary of the current day, from midnight in the school's local time (Europe/Vienna) until now, whatever time range the charts show. It SHALL contain:
 
-- the time CO₂ was above 1000 ppm today, counted in the five-minute windows of the history whose mean is above 1000 ppm, or a text saying it has not been above 1000 ppm today;
+- the time CO₂ was above 1000 ppm today, counted in whole minutes in which the highest stored reading of the shown source is above 1000 ppm, or a text saying it has not been above 1000 ppm today; when today's highest value, including the current reading, is above 1000 ppm, the time SHALL be at least one minute;
 - the highest single CO₂ reading of today and the time it was taken, from the stored readings of the shown source;
 - the time the room was last aired, estimated from the five-minute history as the start of the latest fall of CO₂ by at least 200 ppm within at most fifteen minutes today, marked as an estimate in its text, or a text saying no airing was detected today.
 
 The summary SHALL be updated at least once a minute. When the room has no reading today, the summary SHALL say so. When the readings are simulated, the summary SHALL be shown like the other values of a simulated room.
 
 #### Scenario: A school day
-- **WHEN** room 105 was above 1000 ppm in sixteen five-minute windows today, its highest reading today was 1450 ppm at 13:05, and CO₂ fell from 1380 to 1020 ppm between 10:45 and 10:55
+- **WHEN** room 105 had readings above 1000 ppm in eighty different minutes today, its highest reading today was 1450 ppm at 13:05, and CO₂ fell from 1380 to 1020 ppm between 10:45 and 10:55
 - **THEN** the summary says above 1000 ppm for 1 h 20 min, highest value 1450 ppm at 13:05, and last aired at about 10:45, marked as an estimate
+
+#### Scenario: A short spike
+- **WHEN** one reading of 1034 ppm at 12:46 is the only reading above 1000 ppm today
+- **THEN** the summary says above 1000 ppm for 1 min and highest value 1034 ppm at 12:46
 
 #### Scenario: Early morning
 - **WHEN** it is 06:30 and CO₂ has stayed below 1000 ppm since midnight without a fall of 200 ppm
