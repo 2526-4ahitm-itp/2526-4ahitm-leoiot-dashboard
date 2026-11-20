@@ -39,6 +39,18 @@ services:
     networks:
       - platform
 
+  # DEMO, see demo/README.md. Off unless COMPOSE_PROFILES=demo is set in .env.
+  # Delete this service together with the demo folder.
+  demo:
+    build: ./demo
+    profiles: ["demo"]
+    restart: unless-stopped
+    env_file:
+      - path: ${SENSORS_COLLECTOR_ENV_FILE:-/home/solmqadmin/leoiot-host-secrets/sensors-collector.env}
+        required: false
+    networks:
+      - platform
+
 networks:
   # The broker and InfluxDB run on the shared network of the platform unit
   # (platform/broker), which this unit joins as an external network.
