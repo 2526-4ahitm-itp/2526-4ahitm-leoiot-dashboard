@@ -2,7 +2,7 @@
 
 ## 1. Spec
 
-- [ ] 1.1 Merge this change before code relies on it; verify `openspec validate sensors-room-panel --strict` passes and `ci-ok` is green on its pull request
+- [x] 1.1 Merge this change before code relies on it; verify `openspec validate sensors-room-panel --strict` passes and `ci-ok` is green on its pull request
 
 ## 2. Logic (`leoiot-sensors/dashboard/src/core/`)
 
@@ -22,5 +22,5 @@
 ## 4. Docs and release
 
 - [x] 4.1 Update `leoiot-sensors/PRODUCT.md` (ranges and source, box LED shows CO₂ only), `leoiot-sensors/DESIGN.md` (hierarchy, colour rule, new components, no display style) and the FIRST VIEWPORT of `leoiot-sensors/.impeccable/surfaces/dashboard.md`; verify the documents match the built page
-- [ ] 4.2 Run `npm ci && npm test && npm run build` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green
+- [x] 4.2 Run `npm ci && npm test && npm run build` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green
 - [x] 4.3 After the next promotion to `release`, check room 105 on vm23 in the browser: identity line, lamps and Heute column with real data

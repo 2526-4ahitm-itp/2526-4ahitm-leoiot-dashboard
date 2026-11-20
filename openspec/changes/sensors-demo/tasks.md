@@ -8,5 +8,5 @@
 
 ## 2. Ship and run
 
-- [ ] 2.1 Run the affected checks, open the pull request, `ci-ok` is green
-- [ ] 2.2 After the release, with Elias Pointinger's OK: set `COMPOSE_PROFILES=demo` in `leoiot-sensors/.env` on vm23 and start the service; verify the 3D maps and the dashboard show all rooms
+- [x] 2.1 Run the affected checks, open the pull request, `ci-ok` is green
+- [x] 2.2 After the release, with Elias Pointinger's OK: set `COMPOSE_PROFILES=demo` in `leoiot-sensors/.env` on vm23 and start the service; verify the 3D maps and the dashboard show all rooms
