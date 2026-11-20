@@ -16,6 +16,8 @@ New sensor ingestion and room-climate views (CO₂, temperature and humidity per
 - `.env.example`: names of the variables of the unit, without values.
 - `PRODUCT.md`, `.impeccable/surfaces/dashboard.md`: product facts and the design direction of the coming dashboard.
 
+`demo/`: **DEMO, not permanent.** Generated readings for every room of the 3D model, off unless `COMPOSE_PROFILES=demo` is set in `.env`; see `demo/README.md` (it also describes how to remove it).
+
 Each application is its own folder with its own `package.json` and `Dockerfile`; there is no workspace.
 
 ## Dependency rule

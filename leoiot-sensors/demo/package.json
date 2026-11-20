@@ -1,0 +1,15 @@
+{
+  "name": "leoiot-sensors-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DEMO: generated room-climate readings for every room of the 3D model, for showing the project. Not a permanent part of the system; delete it afterwards.",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "mqtt": "^5.15.0"
+  }
+}
