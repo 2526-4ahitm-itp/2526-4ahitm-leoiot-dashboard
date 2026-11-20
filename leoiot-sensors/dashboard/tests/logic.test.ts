@@ -71,11 +71,11 @@ describe('room view', () => {
   it('the day: none while the series is not loaded; the summary stays for outdated readings; none without a room', () => {
     expect(view(snap(700, at), at).today).toBeNull();
     const series = [{ t: vienna('10:35'), co2: 1100 }, { t: vienna('10:40'), co2: 1100 }];
-    const live = deriveRoomView({ snapshot: snap(700, at), series24h: series, now: at, status: 'ok', peak: { value: 1450, at: vienna('10:38') } });
-    expect(live.today).toMatchObject({ empty: false, aboveMinutes: 10, peak: { value: 1450 } });
-    const stale = deriveRoomView({ snapshot: snap(700, vienna('09:00')), series24h: series, now: at, status: 'ok' });
+    const live = deriveRoomView({ snapshot: snap(700, at), series24h: series, now: at, status: 'ok', peak: { value: 1450, at: vienna('10:38') }, aboveMinutes: 7 });
+    expect(live.today).toMatchObject({ empty: false, aboveMinutes: 7, peak: { value: 1450 } });
+    const stale = deriveRoomView({ snapshot: snap(700, vienna('09:00')), series24h: series, now: at, status: 'ok', aboveMinutes: 7 });
     expect(stale.state).toBe('stale');
-    expect(stale.today).toMatchObject({ aboveMinutes: 10 });
+    expect(stale.today).toMatchObject({ aboveMinutes: 7 });
     expect(deriveRoomView({ snapshot: EMPTY_SNAPSHOT, series24h: [], now: at, status: 'ok' }).today).toBeNull();
   });
   it('simulated readings are marked', () => {
