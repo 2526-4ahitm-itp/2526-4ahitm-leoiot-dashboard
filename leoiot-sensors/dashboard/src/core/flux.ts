@@ -1,5 +1,6 @@
 // The Flux queries (design D10). Only fixed text plus the room id and the source go into them, and
 // both are checked here, whatever the caller did before.
+import { LIMIT_BAD } from './air';
 import { assertRoomId } from './room';
 import { RANGES, rangeBounds, type RangeId } from './ranges';
 
@@ -86,5 +87,27 @@ export function peakQuery(room: string, source: Source, startMs: number, endMs: 
     `  |> group()`,
     `  |> max()`,
     `  |> keep(columns: ["_time", "_value"])`,
+  ].join('\n');
+}
+
+/**
+ * The number of whole minutes from `startMs` (local midnight) until `endMs` (now) in which the
+ * highest stored CO2 reading of the room and source (all devices merged) is above the red limit.
+ * One row with the count, or no row when there is no such minute.
+ */
+export function aboveMinutesQuery(room: string, source: Source, startMs: number, endMs: number): string {
+  assertRoomId(room);
+  if (!isSource(source)) throw new Error('invalid source');
+  const iso = (ms: number) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  return [
+    `from(bucket: "${BUCKET}")`,
+    `  |> range(start: ${iso(startMs)}, stop: ${iso(endMs)})`,
+    `  |> filter(fn: (r) => r._measurement == "${MEASUREMENT}" and r.room == "${room}" and r.source == "${source}")`,
+    `  |> filter(fn: (r) => r._field == "co2")`,
+    `  |> group()`,
+    `  |> aggregateWindow(every: 1m, fn: max, createEmpty: false)`,
+    `  |> filter(fn: (r) => r._value > ${LIMIT_BAD}.0)`,
+    `  |> count()`,
+    `  |> keep(columns: ["_value"])`,
   ].join('\n');
 }

@@ -45,6 +45,8 @@ export interface ViewInput {
   now: number;
   /** The day's highest CO2 reading since local midnight; null: none known (yet). */
   peak?: Peak | null;
+  /** Minutes of today above 1000 ppm in the stored readings; 0: none known (yet). */
+  aboveMinutes?: number;
   /** The room id broke the room id rule or the loading failed or is still running. */
   status: 'ok' | 'invalid' | 'loading' | 'error';
 }
@@ -82,7 +84,7 @@ export function deriveRoomView(input: ViewInput): RoomView {
   // The summary describes the past, so it stays when the readings are outdated.
   const midnight = startOfLocalDay(now);
   const peak = withCurrent(input.peak ?? null, snapshot.samples.co2, midnight);
-  const today = input.series24h === null ? null : deriveToday(input.series24h, peak, midnight, now);
+  const today = input.series24h === null ? null : deriveToday(input.series24h, peak, input.aboveMinutes ?? 0, midnight, now);
   // Outdated readings switch every lamp off, the small ones too.
   if (stale) return { ...base, state: 'stale', values, today };
 

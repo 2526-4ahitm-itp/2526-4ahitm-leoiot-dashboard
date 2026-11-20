@@ -10,4 +10,4 @@
 
 - [x] 2.1 Lay out CO₂ left at full height and temperature above humidity on the right, stacking below 1100 px; check 1440, 1100 and 360 pixels, light and dark, in the browser against a local stack and verify no horizontal scrolling
 - [x] 2.2 Update the chart panels in `leoiot-sensors/DESIGN.md` and the FIRST VIEWPORT of `leoiot-sensors/.impeccable/surfaces/dashboard.md`; verify they match the built page
-- [ ] 2.3 Run `npm ci && npm test && npm run build` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green
+- [x] 2.3 Run `npm ci && npm test && npm run build` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green

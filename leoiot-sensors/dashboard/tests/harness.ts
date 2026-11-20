@@ -65,6 +65,8 @@ export function fakeEcharts() {
 }
 
 /** The query for the latest values of every room (no room in its filter). */
+/** The query counting the minutes above 1000 ppm (one-minute windows). */
+const isAboveQuery = (flux: string) => flux.includes('every: 1m');
 const isRoomsQuery = (flux: string) => flux.includes('last()') && !flux.includes('r.room ==');
 
 export interface TestAppOptions {
@@ -79,6 +81,8 @@ export interface TestAppOptions {
   rooms?: string;
   /** Answer of the day's peak query (`max()`). Default: room 105's recorded answer. */
   peak?: string;
+  /** Answer of the minutes-above-1000-ppm query (`count()`). Default: no row (none). */
+  above?: string;
   /** The stored readings cannot be reached (every query fails). */
   failing?: boolean;
 }
@@ -93,7 +97,7 @@ export async function startTestApp(o: TestAppOptions = {}) {
   const timers = new FakeTimers();
   const mqtt = new FakeMqtt();
   const queries: string[] = [];
-  const state = { latest: o.latest ?? fixture('latest105.csv'), history: o.history ?? fixture('history24h.csv'), prefersDark: o.prefersDark ?? false, fail: o.failing ?? false, rooms: o.rooms ?? '', peak: o.peak ?? fixture('peak105.csv') };
+  const state = { latest: o.latest ?? fixture('latest105.csv'), history: o.history ?? fixture('history24h.csv'), prefersDark: o.prefersDark ?? false, fail: o.failing ?? false, rooms: o.rooms ?? '', peak: o.peak ?? fixture('peak105.csv'), above: o.above ?? '' };
   const storage = o.storage === undefined ? new MemoryStorage() : o.storage;
   let schemeListener: (() => void) | null = null;
   const search = o.search ?? '?room=105';
@@ -106,6 +110,7 @@ export async function startTestApp(o: TestAppOptions = {}) {
       queries.push(flux);
       if (state.fail) throw new Error('HTTP 502');
       if (isRoomsQuery(flux)) return state.rooms;
+      if (isAboveQuery(flux)) return state.above;
       if (flux.includes('max()')) return state.peak;
       return flux.includes('last()') ? state.latest : state.history;
     },
@@ -136,7 +141,8 @@ export async function startTestApp(o: TestAppOptions = {}) {
     click,
     latestQueries: () => queries.filter((q) => q.includes('last()') && !isRoomsQuery(q)).length,
     roomsQueries: () => queries.filter(isRoomsQuery).length,
-    historyQueries: () => queries.filter((q) => !q.includes('last()') && !q.includes('max()')),
+    historyQueries: () => queries.filter((q) => !q.includes('last()') && !q.includes('max()') && !isAboveQuery(q)),
+    aboveQueries: () => queries.filter(isAboveQuery),
     peakQueries: () => queries.filter((q) => q.includes('max()')),
     /** The broker connection comes up (the subscription is granted at once). */
     async connect() {
