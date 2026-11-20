@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { parseAnnotatedCsv } from '../src/core/csv';
-import { peakQuery } from '../src/core/flux';
+import { aboveMinutesQuery, peakQuery } from '../src/core/flux';
 import { makeFormat, startOfLocalDay } from '../src/core/format';
-import { AIRING_DROP_PPM, AIRING_WITHIN_WINDOWS, deriveToday, lastAiring, minutesAbove, parsePeak, todaysWindows, withCurrent } from '../src/core/today';
-import { loadPeak } from '../src/data/load';
+import { AIRING_DROP_PPM, AIRING_WITHIN_WINDOWS, deriveToday, lastAiring, parseAboveMinutes, parsePeak, todaysWindows, withCurrent } from '../src/core/today';
+import { loadAboveMinutes, loadPeak } from '../src/data/load';
 import { fixture } from './helpers';
 
 const STEP = 5 * 60_000;
@@ -33,19 +33,12 @@ describe('midnight in Europe/Vienna', () => {
 /** A five-minute series from `from` (window end) with a value per window index. */
 const series = (from: string, n: number, co2: (i: number) => number | null) => Array.from({ length: n }, (_, i) => ({ t: utc(from) + i * STEP, co2: co2(i) }));
 
-describe('time above 1000 ppm', () => {
+describe('todays windows', () => {
   const midnight = utc('2026-11-18T23:00:00Z'); // 19 November, Vienna
-  it('counts five minutes per window whose mean is above 1000; 1000 itself is not above', () => {
-    const s = series('2026-11-19T07:00:00Z', 20, (i) => (i < 5 ? 1000 : i < 21 ? 1001 : 0));
-    expect(minutesAbove(s)).toBe(15 * 5);
-  });
   it('windows of yesterday are ignored; a window ending at midnight is yesterday\'s', () => {
     const s = series('2026-11-18T22:50:00Z', 6, () => 1500); // ends 22:50, 22:55, 23:00, 23:05, ... UTC
     const today = todaysWindows(s, midnight, utc('2026-11-19T10:00:00Z'));
     expect(today.map((p) => p.t)).toEqual([utc('2026-11-18T23:05:00Z'), utc('2026-11-18T23:10:00Z'), utc('2026-11-18T23:15:00Z')]);
-  });
-  it('gaps (null) are ignored', () => {
-    expect(minutesAbove(series('2026-11-19T07:00:00Z', 4, (i) => (i % 2 ? null : 1200)))).toBe(10);
   });
 });
 
@@ -84,7 +77,7 @@ describe('last airing (parameters are design parameters, not health limits)', ()
 describe('the day', () => {
   const midnight = utc('2026-11-18T23:00:00Z');
   const now = utc('2026-11-19T12:10:00Z'); // 13:10 Vienna
-  it('a school day: 1 h 20 min above 1000 ppm, last aired at 10:45, peak as given', () => {
+  it('a school day: the stored 80 minutes (1 h 20 min), last aired at 10:45, peak as given', () => {
     const s = series('2026-11-18T23:05:00Z', (now - midnight) / STEP, (i) => {
       const t = midnight + (i + 1) * STEP;
       if (t === utc('2026-11-19T09:45:00Z')) return 1380;
@@ -94,21 +87,21 @@ describe('the day', () => {
       return t >= utc('2026-11-19T07:00:00Z') && t <= utc('2026-11-19T08:05:00Z') ? 1100 : 600;
     });
     const peak = { value: 1450, at: utc('2026-11-19T12:05:00Z') };
-    expect(deriveToday(s, peak, midnight, now)).toEqual({ empty: false, aboveMinutes: 80, peak, airedAt: utc('2026-11-19T09:45:00Z') });
+    expect(deriveToday(s, peak, 80, midnight, now)).toEqual({ empty: false, aboveMinutes: 80, peak, airedAt: utc('2026-11-19T09:45:00Z') });
   });
   it('early morning: not above 1000 ppm, nothing aired, peak so far', () => {
     const peak = { value: 640, at: utc('2026-11-19T01:10:00Z') };
     const s = series('2026-11-18T23:05:00Z', 15, () => 600);
-    expect(deriveToday(s, peak, midnight, utc('2026-11-19T00:15:00Z'))).toEqual({ empty: false, aboveMinutes: 0, peak, airedAt: null });
+    expect(deriveToday(s, peak, 0, midnight, utc('2026-11-19T00:15:00Z'))).toEqual({ empty: false, aboveMinutes: 0, peak, airedAt: null });
   });
   it('yesterday does not count', () => {
     const s = series('2026-11-18T21:00:00Z', 24, () => 1500); // up to 22:55 UTC: all yesterday
-    expect(deriveToday(s, null, midnight, utc('2026-11-18T23:30:00Z'))).toMatchObject({ empty: true, aboveMinutes: 0, airedAt: null });
+    expect(deriveToday(s, null, 0, midnight, utc('2026-11-18T23:30:00Z'))).toMatchObject({ empty: true, aboveMinutes: 0, airedAt: null });
   });
   it('no reading today: empty; a peak alone is a reading', () => {
     const s = series('2026-11-18T23:05:00Z', 12, () => null);
-    expect(deriveToday(s, null, midnight, now).empty).toBe(true);
-    expect(deriveToday(s, { value: 700, at: now }, midnight, now).empty).toBe(false);
+    expect(deriveToday(s, null, 0, midnight, now).empty).toBe(true);
+    expect(deriveToday(s, { value: 700, at: now }, 0, midnight, now).empty).toBe(false);
   });
   it('the current reading counts: a higher one becomes the peak, one from yesterday does not', () => {
     const stored = { value: 900, at: utc('2026-11-19T08:00:00Z') };
@@ -120,12 +113,75 @@ describe('the day', () => {
   });
   it('a live reading without history yet is not "no readings today"', () => {
     const s = series('2026-11-18T23:05:00Z', 12, () => null);
-    expect(deriveToday(s, withCurrent(null, { value: 1490, at: now }, midnight), midnight, now)).toMatchObject({ empty: false, peak: { value: 1490 } });
+    expect(deriveToday(s, withCurrent(null, { value: 1490, at: now }, midnight), 0, midnight, now)).toMatchObject({ empty: false, peak: { value: 1490 } });
   });
   it('day change in summer time: midnight is 22:00 UTC', () => {
     const m = startOfLocalDay(utc('2026-07-01T09:00:00Z'));
     const s = series('2026-06-30T21:55:00Z', 6, () => 1200); // 21:55 UTC is 23:55 Vienna on 30 June
     expect(todaysWindows(s, m, utc('2026-07-01T00:00:00Z')).map((p) => p.t)).toEqual([utc('2026-06-30T22:05:00Z'), utc('2026-06-30T22:10:00Z'), utc('2026-06-30T22:15:00Z'), utc('2026-06-30T22:20:00Z')]);
+  });
+});
+
+describe('minutes above 1000 ppm', () => {
+  const midnight = utc('2026-11-18T23:00:00Z');
+  const now = utc('2026-11-19T12:10:00Z');
+  const s = series('2026-11-18T23:05:00Z', 12, () => 600);
+  const minutes = (peak: number | null, stored: number, current?: number) =>
+    deriveToday(s, withCurrent(peak === null ? null : { value: peak, at: now - 60_000 }, current === undefined ? undefined : { value: current, at: now }, midnight), stored, midnight, now).aboveMinutes;
+  it('a short spike: one stored minute is 1 min', () => {
+    expect(minutes(1034, 1)).toBe(1);
+  });
+  it('the stored count is used as it is', () => {
+    expect(minutes(1450, 80)).toBe(80);
+  });
+  it('the floor: stored 0 but the live reading 1034 today is 1', () => {
+    expect(minutes(900, 0, 1034)).toBe(1);
+    expect(minutes(null, 0, 1034)).toBe(1);
+  });
+  it('the floor never lowers a stored count', () => {
+    expect(minutes(1034, 7, 1034)).toBe(7);
+  });
+  it('exactly 1000 ppm is not above: no floor', () => {
+    expect(minutes(1000, 0)).toBe(0);
+    expect(minutes(900, 0, 1000)).toBe(0);
+    expect(minutes(1000.4, 0)).toBe(0); // rounds to 1000
+    expect(minutes(1001, 0)).toBe(1);
+  });
+  it('a live reading from yesterday does not set the floor', () => {
+    expect(deriveToday(s, withCurrent(null, { value: 1500, at: midnight - 1000 }, midnight), 0, midnight, now).aboveMinutes).toBe(0);
+  });
+});
+
+describe('minutes query and answer', () => {
+  const start = utc('2026-11-18T23:00:00Z');
+  const end = utc('2026-11-19T12:10:07.500Z');
+  it('one-minute maximum windows of one room and source, co2 only, above 1000, counted', () => {
+    const q = aboveMinutesQuery('105', 'sensor', start, end);
+    expect(q).toContain('range(start: 2026-11-18T23:00:00Z, stop: 2026-11-19T12:10:07Z)');
+    expect(q).toContain('r._measurement == "room_climate" and r.room == "105" and r.source == "sensor"');
+    expect(q).toContain('r._field == "co2"');
+    expect(q).toContain('|> group()');
+    expect(q).toContain('aggregateWindow(every: 1m, fn: max, createEmpty: false)');
+    expect(q).toContain('filter(fn: (r) => r._value > 1000.0)');
+    expect(q).toContain('|> count()');
+    expect(q).toContain('keep(columns: ["_value"])');
+  });
+  it('refuses rooms and sources that could break out of the query', () => {
+    expect(() => aboveMinutesQuery('105" or true', 'sensor', start, end)).toThrow();
+    expect(() => aboveMinutesQuery('a/b', 'sensor', start, end)).toThrow();
+    expect(() => aboveMinutesQuery('105', 'x" or true' as never, start, end)).toThrow();
+  });
+  it('parses one row; no row is 0', () => {
+    expect(parseAboveMinutes(parseAnnotatedCsv(',result,table,_value\n,_result,0,80\n'))).toBe(80);
+    expect(parseAboveMinutes(parseAnnotatedCsv(''))).toBe(0);
+    expect(parseAboveMinutes([])).toBe(0);
+    expect(parseAboveMinutes([{ _value: '' }])).toBe(0);
+  });
+  it('the loader asks the query and returns the count', async () => {
+    const asked: string[] = [];
+    expect(await loadAboveMinutes(async (q) => (asked.push(q), ',result,table,_value\n,_result,0,1\n'), '105', 'sensor', start, end)).toBe(1);
+    expect(asked).toHaveLength(1);
+    expect(await loadAboveMinutes(async () => '', '105', 'sensor', start, end)).toBe(0);
   });
 });
 

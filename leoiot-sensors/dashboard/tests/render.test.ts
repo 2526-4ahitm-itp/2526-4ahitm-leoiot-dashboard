@@ -404,7 +404,7 @@ describe('The day is summarised next to the values', () => {
   const rows = () => [dom.today.vAbove, dom.today.vPeak, dom.today.uPeak, dom.today.vAired, dom.today.airedNote].map(text);
 
   it('a school day: time above 1000 ppm, highest value with its time, estimated airing with its caption', () => {
-    // 14 windows of 1100 ppm (08:00 to 09:05) and two above 1000 ppm in the fall: sixteen in all
+    // the stored readings were above 1000 ppm in eighty different minutes
     const now = vienna('13:10');
     const s = day((i) => {
       const t = vienna('00:05') + i * 300_000;
@@ -414,7 +414,7 @@ describe('The day is summarised next to the values', () => {
       if (t > vienna('10:55')) return 1000; // stays at 1000 ppm afterwards: no further fall
       return t >= vienna('08:00') && t <= vienna('09:05') ? 1100 : 600;
     }, now);
-    const view = deriveRoomView({ snapshot: snap(700, now, { temperature: { value: 21, at: now }, humidity: { value: 50, at: now } }), series24h: s, now, status: 'ok', peak: { value: 1450, at: vienna('13:05') } });
+    const view = deriveRoomView({ snapshot: snap(700, now, { temperature: { value: 21, at: now }, humidity: { value: 50, at: now } }), series24h: s, now, status: 'ok', peak: { value: 1450, at: vienna('13:05') }, aboveMinutes: 80 });
     show(view, now);
     expect(text(dom.today.title)).toBe('Heute');
     expect([rows()[0], ...rows().slice(2)]).toEqual(['1 h 20 min', 'ppm · 13:05', 'ca. 10:45', 'geschätzt aus dem CO₂-Verlauf']);

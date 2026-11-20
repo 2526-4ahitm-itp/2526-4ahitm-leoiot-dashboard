@@ -9,4 +9,4 @@
 ## 2. Docs and checks
 
 - [x] 2.1 Update spacing and layout in `leoiot-sensors/DESIGN.md` and the FIRST VIEWPORT of `leoiot-sensors/.impeccable/surfaces/dashboard.md`; verify they match the built page
-- [ ] 2.2 Run `npm ci && npm test && npm run build` in `leoiot-sensors/dashboard` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green
+- [x] 2.2 Run `npm ci && npm test && npm run build` in `leoiot-sensors/dashboard` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green

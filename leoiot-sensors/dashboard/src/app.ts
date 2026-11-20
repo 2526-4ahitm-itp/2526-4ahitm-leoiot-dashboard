@@ -11,7 +11,7 @@ import { makeFormat } from './core/format';
 import { isLang, type Lang } from './core/i18n';
 import type { Query } from './data/api';
 import { POLL_MS, type FeedMode, type MqttLike, type Timers } from './data/feed';
-import { loadHistory, loadLatest, loadPeak } from './data/load';
+import { loadAboveMinutes, loadHistory, loadLatest, loadPeak } from './data/load';
 import { startOfLocalDay } from './core/format';
 import type { Peak } from './core/today';
 import { startRoomsSource, type RoomsSource } from './data/roomsSource';
@@ -72,6 +72,8 @@ export function startApp(deps: AppDeps): App {
   };
   /** The day's highest CO2 reading, loaded with the 24 h history; the last good one stays on errors. */
   let peak: { source: string; value: Peak | null } | null = null;
+  /** The minutes above 1000 ppm today, loaded with the peak; the last good one stays on errors. */
+  let aboveMinutes: { source: string; value: number } | null = null;
   const inFlight: Record<RangeId, number> = { '24h': 0, '7d': 0 };
   let rooms: RoomsSource | null = null;
   let disposed = false;
@@ -127,7 +129,8 @@ export function startApp(deps: AppDeps): App {
     const h24 = history['24h'];
     const shownPeak = peak !== null && peak.source === snapshot.source ? peak.value : null;
     // While the 24 h series is not loaded the summary shows dashes (series null), not "no readings".
-    const view = deriveRoomView({ snapshot, series24h: h24.status === 'ok' ? h24.points : null, now, status, peak: shownPeak });
+    const shownMinutes = aboveMinutes !== null && aboveMinutes.source === snapshot.source ? aboveMinutes.value : 0;
+    const view = deriveRoomView({ snapshot, series24h: h24.status === 'ok' ? h24.points : null, now, status, peak: shownPeak, aboveMinutes: shownMinutes });
     renderRoom(dom, view, { lang, room, now, feed: feedMode }, makeFormat(lang));
     drawRooms();
   }
@@ -150,13 +153,16 @@ export function startApp(deps: AppDeps): App {
     if (source === null || !room.valid) return;
     const seq = ++inFlight[r];
     const now = deps.now();
-    // The day's peak is read together with the 24 h series; its failure alone keeps the last good value.
+    // The day's peak and minutes above 1000 ppm are read together with the 24 h series; the failure of either alone keeps its last good value.
+    const aboveLoad = r === '24h' ? loadAboveMinutes(deps.query, room.id, source, startOfLocalDay(now), now).then((value) => ({ value }), () => null) : null;
     const peakLoad = r === '24h' ? loadPeak(deps.query, room.id, source, startOfLocalDay(now), now).then((value) => ({ value }), () => null) : null;
     try {
       const points = await loadHistory(deps.query, room.id, source, r, now);
       const peakAnswer = await peakLoad;
+      const aboveAnswer = await aboveLoad;
       if (disposed || seq !== inFlight[r]) return;
       if (peakAnswer !== null) peak = { source, value: peakAnswer.value };
+      if (aboveAnswer !== null) aboveMinutes = { source, value: aboveAnswer.value };
       history[r] = { status: 'ok', points, source, loadedAt: now };
     } catch {
       if (disposed || seq !== inFlight[r]) return;

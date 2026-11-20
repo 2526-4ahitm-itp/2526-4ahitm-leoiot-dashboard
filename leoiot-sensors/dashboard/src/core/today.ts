@@ -1,5 +1,5 @@
 // The summary of the current day: time above 1000 ppm, the highest value and the estimated last
-// airing, from the five-minute series and one peak query. Pure, no DOM.
+// airing, from the five-minute series, one peak query and one query counting minutes above 1000 ppm. Pure, no DOM.
 import { exceeds, LIMIT_BAD, type CO2Point } from './air';
 import type { CsvRecord } from './csv';
 import { cellNumber } from './snapshot';
@@ -23,7 +23,7 @@ export interface Peak {
 export interface TodayView {
   /** No CO2 reading at all today. */
   empty: boolean;
-  /** Minutes above 1000 ppm, counted in five-minute windows. */
+  /** Whole minutes above 1000 ppm (stored readings), at least 1 when today's peak is above 1000 ppm. */
   aboveMinutes: number;
   peak: Peak | null;
   /** Start (window time) of the latest fall that looks like airing; null if none was detected. */
@@ -33,10 +33,6 @@ export interface TodayView {
 /** Windows of today: the window's time is its end, so a window ending at midnight is still yesterday's. */
 export function todaysWindows(points: readonly CO2Point[], midnight: number, now: number): CO2Point[] {
   return points.filter((p) => p.t > midnight && p.t <= now);
-}
-
-export function minutesAbove(windows: readonly CO2Point[]): number {
-  return windows.filter((p) => p.co2 !== null && exceeds(LIMIT_BAD, p.co2)).length * (WINDOW_MS / 60_000);
 }
 
 /** The latest window i with a later window j (i < j <= i + 3, five minutes apart) at least 200 ppm lower. */
@@ -52,12 +48,12 @@ export function lastAiring(windows: readonly CO2Point[]): number | null {
   return null;
 }
 
-export function deriveToday(points: readonly CO2Point[], peak: Peak | null, midnight: number, now: number): TodayView {
+export function deriveToday(points: readonly CO2Point[], peak: Peak | null, storedMinutes: number, midnight: number, now: number): TodayView {
   const windows = todaysWindows(points, midnight, now);
   const any = windows.some((p) => p.co2 !== null);
   return {
     empty: !any && peak === null,
-    aboveMinutes: minutesAbove(windows),
+    aboveMinutes: peak !== null && exceeds(LIMIT_BAD, peak.value) ? Math.max(storedMinutes, 1) : storedMinutes,
     peak,
     airedAt: lastAiring(windows),
   };
@@ -81,6 +77,19 @@ export function parsePeak(records: readonly CsvRecord[]): Peak | null {
     const value = cellNumber(r._value);
     if (!Number.isFinite(at) || value === null) continue;
     if (best === null || value > best.value) best = { value, at };
+  }
+  return best;
+}
+
+/**
+ * The answer of the minutes query: one row with the count; no row (or no readable count) is 0. More
+ * rows are tolerated, the highest count wins.
+ */
+export function parseAboveMinutes(records: readonly CsvRecord[]): number {
+  let best = 0;
+  for (const r of records) {
+    const n = cellNumber(r._value);
+    if (n !== null && n > best) best = Math.floor(n);
   }
   return best;
 }

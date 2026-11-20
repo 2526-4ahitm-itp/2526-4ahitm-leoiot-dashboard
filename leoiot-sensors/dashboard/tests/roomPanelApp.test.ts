@@ -2,10 +2,7 @@
 // The room panel end to end (spec "The room is named in one line", "Temperature and humidity have their
 // own lamps", "The day is summarised next to the values"): the page against recorded answers and a fake clock.
 import { afterEach, describe, expect, it } from 'vitest';
-import { parseAnnotatedCsv } from '../src/core/csv';
-import { minutesAbove, todaysWindows } from '../src/core/today';
-import { makeFormat, startOfLocalDay } from '../src/core/format';
-import { parseHistory } from '../src/core/snapshot';
+import { makeFormat } from '../src/core/format';
 import { BASE, disposeApps, latestCsv, startTestApp } from './harness';
 import { fixture } from './helpers';
 
@@ -60,30 +57,53 @@ describe('small lamps', () => {
 });
 
 describe('Heute', () => {
-  it('reads the 24 h series and the peak answer, loaded together once a minute', async () => {
-    const t = await startTestApp();
+  const count = (n: number) => `,result,table,_value\n,_result,0,${n}\n`;
+  it('reads the 24 h series, the peak and the minutes above 1000 ppm, loaded together once a minute', async () => {
+    const t = await startTestApp({ above: count(80) });
     expect(t.peakQueries()).toHaveLength(1);
+    expect(t.aboveQueries()).toHaveLength(1);
     const q = t.peakQueries()[0];
     expect(q).toContain('r.room == "105" and r.source == "sensor"');
     expect(q).toContain('range(start: 2026-11-02T23:00:00Z, stop: 2026-11-03T06:36:30Z)'); // local midnight to now
-    // the recorded history's windows above 1000 ppm after local midnight
-    const pts = parseHistory(parseAnnotatedCsv(fixture('history24h.csv')));
-    const minutes = minutesAbove(todaysWindows(pts, startOfLocalDay(BASE), BASE));
-    expect(minutes).toBeGreaterThan(0);
+    expect(t.aboveQueries()[0]).toContain('r.room == "105" and r.source == "sensor"');
+    expect(t.aboveQueries()[0]).toContain('range(start: 2026-11-02T23:00:00Z, stop: 2026-11-03T06:36:30Z)');
     expect(digits(t.$('vPeak').textContent)).toBe('1450');
     expect(t.$('uPeak').textContent).toBe('ppm · 07:05');
     expect(t.$('todayTitle').textContent).toBe('Heute');
-    expect(t.$('vAbove').textContent).toBe(minutes % 60 === 0 ? `${minutes / 60} h` : minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h ${minutes % 60} min`);
+    expect(t.$('vAbove').textContent).toBe('1 h 20 min');
     expect(t.$('todayEmpty').hidden).toBe(true);
     await t.advance(60_000);
     expect(t.peakQueries().length).toBeGreaterThanOrEqual(2);
     expect(t.peakQueries()).toHaveLength(t.historyQueries().filter((h) => h.includes('every: 5m')).length); // always together
+    expect(t.aboveQueries()).toHaveLength(t.peakQueries().length);
   });
-  it('the last good peak stays when the query fails', async () => {
-    const t = await startTestApp();
-    t.state.peak = 'error,reference\nboom,1\n'; // an error table of InfluxDB
-    await t.advance(60_000);
+  it('a short spike: one stored minute shows 1 min next to the peak', async () => {
+    const t = await startTestApp({ above: count(1) });
+    expect(t.$('vAbove').textContent).toBe('1 min');
     expect(digits(t.$('vPeak').textContent)).toBe('1450');
+  });
+  it('no minute stored but a peak above 1000 ppm: at least 1 min', async () => {
+    const t = await startTestApp({ above: '' });
+    expect(t.$('vAbove').textContent).toBe('1 min');
+  });
+  it('a peak of exactly 1000 ppm and no stored minute: not above 1000 ppm today', async () => {
+    const t = await startTestApp({ above: '', peak: fixture('peak105.csv').replace(',1450', ',1000'), latest: latestCsv(900) });
+    expect(t.$('vAbove').textContent).toBe('noch nicht');
+  });
+  it('the last good count and peak stay when their queries fail', async () => {
+    const t = await startTestApp({ above: count(80) });
+    t.state.peak = 'error,reference\nboom,1\n'; // an error table of InfluxDB
+    t.state.above = 'error,reference\nboom,1\n';
+    await t.advance(60_000);
+    expect(t.aboveQueries().length).toBeGreaterThanOrEqual(2);
+    expect(digits(t.$('vPeak').textContent)).toBe('1450');
+    expect(t.$('vAbove').textContent).toBe('1 h 20 min');
+  });
+  it('a new count replaces the old one', async () => {
+    const t = await startTestApp({ above: count(80) });
+    t.state.above = count(85);
+    await t.advance(60_000);
+    expect(t.$('vAbove').textContent).toBe('1 h 25 min');
   });
   it('7-day range: the summary still covers today', async () => {
     const t = await startTestApp();
