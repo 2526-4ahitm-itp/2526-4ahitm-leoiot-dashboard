@@ -85,3 +85,36 @@ export function listEntries(state: ReadonlyMap<string, Snapshot>, now: number): 
   }
   return groupByFloor([...entries.keys()]).map((g: FloorGroup) => ({ floor: g.floor, rooms: g.rooms.map((id) => entries.get(id) as RoomEntry) }));
 }
+
+export interface Counts {
+  rooms: number;
+  /** Live rooms with CO₂ above the upper limit ("Jetzt lüften"). */
+  bad: number;
+  /** Live rooms between the limits ("Bald lüften"). */
+  soon: number;
+  /** Rooms whose newest reading is outdated. */
+  stale: number;
+}
+
+export interface ListSummary {
+  total: Counts;
+  floors: { floor: FloorId | null; counts: Counts }[];
+}
+
+function countsOf(rooms: readonly RoomEntry[]): Counts {
+  const c: Counts = { rooms: rooms.length, bad: 0, soon: 0, stale: 0 };
+  for (const r of rooms) {
+    if (r.state === 'stale') c.stale++;
+    else if (r.air === 'bad') c.bad++;
+    else if (r.air === 'soon') c.soon++;
+  }
+  return c;
+}
+
+/** Room counts for the whole list and per floor; bad and soon count live rooms only, stale the outdated ones. */
+export function summarise(entries: readonly FloorEntries[]): ListSummary {
+  return {
+    total: countsOf(entries.flatMap((g) => g.rooms)),
+    floors: entries.map((g) => ({ floor: g.floor, counts: countsOf(g.rooms) })),
+  };
+}

@@ -6,7 +6,7 @@ import type { Format } from '../core/format';
 import { texts, type Lang } from '../core/i18n';
 import { groupByFloor, type FloorId } from '../core/floors';
 import { displayRoomId } from '../core/room';
-import type { FloorEntries, RoomEntry } from '../core/roomList';
+import { summarise, type FloorEntries, type RoomEntry } from '../core/roomList';
 import type { FeedMode } from '../data/feed';
 import { setText } from './render';
 
@@ -14,7 +14,10 @@ export interface RoomListDom {
   doc: Document;
   section: HTMLElement;
   title: HTMLElement;
-  note: HTMLElement;
+  summary: HTMLElement;
+  fresh: HTMLElement;
+  freshText: HTMLElement;
+  legend: HTMLElement;
   msg: HTMLElement;
   body: HTMLElement;
   select: HTMLSelectElement;
@@ -31,12 +34,13 @@ interface RoomItem {
   state: HTMLElement;
   value: HTMLElement;
   unit: HTMLElement;
-  tag: HTMLElement;
 }
 
 interface FloorBlock {
   section: HTMLElement;
   heading: HTMLElement;
+  name: HTMLElement;
+  counts: HTMLElement;
   list: HTMLUListElement;
 }
 
@@ -48,7 +52,8 @@ export function bindRoomListDom(doc: Document): RoomListDom {
   };
   return {
     doc,
-    section: el('rooms'), title: el('roomsTitle'), note: el('roomsNote'), msg: el('roomsMsg'), body: el('roomsBody'),
+    section: el('rooms'), title: el('roomsTitle'), summary: el('roomsSummary'), fresh: el('roomsFresh'), freshText: el('roomsFreshText'), legend: el('roomsLegend'),
+    msg: el('roomsMsg'), body: el('roomsBody'),
     select: el('roomSelect') as HTMLSelectElement,
     items: new Map(), groups: new Map(), choiceKey: '',
   };
@@ -72,21 +77,43 @@ function span(doc: Document, className: string): HTMLElement {
   return e;
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** The 12px warning triangle of an outdated room (the paths of the room page's #warnIcon). */
+function warnIcon(doc: Document): SVGElement {
+  const svg = doc.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'rwarn');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const d of ['M12 3.5 2.5 20h19L12 3.5z', 'M12 10v4.5', 'M12 17.5h.01']) {
+    const path = doc.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', d);
+    svg.append(path);
+  }
+  return svg;
+}
+
 function makeItem(doc: Document): RoomItem {
   const li = doc.createElement('li');
   const link = doc.createElement('a');
   const lamp = span(doc, 'lamp-dot');
   lamp.setAttribute('aria-hidden', 'true');
+  const main = span(doc, 'rmain');
   const id = span(doc, 'rid');
   const state = span(doc, 'rstate');
+  main.append(id, state);
   const co2 = span(doc, 'rco2');
   const value = span(doc, 'v');
   const unit = span(doc, 'u');
   co2.append(value, unit);
-  const tag = span(doc, 'rtag');
-  link.append(lamp, id, state, co2, tag);
+  link.append(lamp, warnIcon(doc), main, co2);
   li.append(link);
-  return { li, link, id, state, value, unit, tag };
+  return { li, link, id, state, value, unit };
 }
 
 export interface ListModel {
@@ -94,13 +121,30 @@ export interface ListModel {
   /** False until the first answer (message, stored readings or a short wait) is in. */
   ready: boolean;
   feed: FeedMode;
+  /** The last load of the stored readings failed. */
+  failed: boolean;
+  /** Time of the last successful load of the stored readings. */
+  lastLoadAt: number | null;
   lang: Lang;
 }
 
-function stateText(e: RoomEntry, t: ReturnType<typeof texts>, format: Format): string {
-  if (e.state === 'stale') return `${t.listStale} · ${format.time(e.lastAt)}`;
+type T = ReturnType<typeof texts>;
+
+function airText(e: RoomEntry, t: T): string {
   if (e.air === null) return t.listNoCo2;
   return e.air === 'good' ? t.statusGood : e.air === 'soon' ? t.statusSoon : t.statusBad;
+}
+
+/** The word shown after the id: only for rooms that need attention, no CO₂ value or outdated values. */
+function stateText(e: RoomEntry, t: T, format: Format): string {
+  return e.state === 'stale' ? t.freshStale(format.time(e.lastAt)) : airText(e, t);
+}
+
+/** What a screen reader says for the link: the visible id first, then state, value and source. */
+function linkLabel(e: RoomEntry, t: T, format: Format): string {
+  const parts = [displayRoomId(e.room), stateText(e, t, format), e.co2 === null ? t.unknown : `${format.number(e.co2, 0)} ppm`];
+  if (e.simulated) parts.push(t.simulated);
+  return parts.join(', ');
 }
 
 /** The room list: floors with their rooms, or the "no room is sending" text. */
@@ -108,11 +152,19 @@ export function renderRoomList(dom: RoomListDom, m: ListModel, format: Format): 
   const t = texts(m.lang);
   setText(dom.title, t.roomsTitle);
   const empty = m.entries.length === 0;
-  const msg = !m.ready ? t.statusLoading : empty ? t.noRooms : '';
+  const msg = !m.ready ? t.statusLoading : empty ? (m.failed ? t.listLoadError : t.noRooms) : '';
   setText(dom.msg, msg);
   dom.msg.hidden = msg === '';
-  setText(dom.note, t.listFallback);
-  dom.note.hidden = m.feed !== 'fallback';
+
+  const summary = summarise(m.entries);
+  setText(dom.summary, empty ? '' : t.listCounts(summary.total));
+  dom.summary.hidden = empty;
+  const freshText = m.feed === 'live' ? t.listLive : m.feed === 'fallback' ? t.listFallbackAt(m.lastLoadAt === null ? null : format.time(m.lastLoadAt)) : '';
+  setText(dom.freshText, freshText);
+  dom.fresh.hidden = freshText === '';
+  const anySimulated = m.entries.some((g) => g.rooms.some((r) => r.simulated));
+  setText(dom.legend, anySimulated ? t.listLegend : '');
+  dom.legend.hidden = !anySimulated;
 
   const seen = new Set<string>();
   const blocks: HTMLElement[] = [];
@@ -123,12 +175,17 @@ export function renderRoomList(dom: RoomListDom, m: ListModel, format: Format): 
       const section = dom.doc.createElement('section');
       section.className = 'floor';
       const heading = dom.doc.createElement('h3');
+      const name = dom.doc.createElement('span');
+      const counts = span(dom.doc, 'fcount');
+      heading.append(name, counts);
       const list = dom.doc.createElement('ul');
       section.append(heading, list);
-      block = { section, heading, list };
+      block = { section, heading, name, counts, list };
       dom.groups.set(key, block);
     }
-    setText(block.heading, t.floorName(group.floor));
+    setText(block.name, t.floorName(group.floor));
+    const floorCounts = summary.floors[m.entries.indexOf(group)].counts;
+    setText(block.counts, ` · ${t.listCounts(floorCounts)}`);
     const items: HTMLElement[] = [];
     for (const e of group.rooms) {
       seen.add(e.room);
@@ -142,11 +199,11 @@ export function renderRoomList(dom: RoomListDom, m: ListModel, format: Format): 
       item.li.dataset.source = e.simulated ? 'simulated' : 'sensor';
       setAttr(item.link, 'href', `?room=${encodeURIComponent(e.room)}`);
       setText(item.id, displayRoomId(e.room));
+      setAttr(item.link, 'aria-label', linkLabel(e, t, format));
       setText(item.state, stateText(e, t, format));
+      item.state.className = e.state === 'live' && e.air === 'good' ? 'rstate sr-only' : 'rstate';
       setText(item.value, e.co2 === null ? t.unknown : format.number(e.co2, 0));
       setText(item.unit, e.co2 === null ? '' : 'ppm');
-      setText(item.tag, e.simulated ? t.simulated : '');
-      item.tag.hidden = !e.simulated;
       items.push(item.li);
     }
     syncChildren(block.list, items);
