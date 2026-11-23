@@ -4,7 +4,6 @@ import {
   ACESFilmicToneMapping,
   AmbientLight,
   Box3,
-  Color,
   CurvePath,
   DirectionalLight,
   LineCurve3,
@@ -45,6 +44,11 @@ const ROUTE_GROW_DURATION_MS = 600;
 // 2026-10-30: often 0.15–0.5 units apart). Hits this close to the nearest one
 // count as the same surface, so the room wins over the slab under it.
 const SAME_SURFACE = 0.5;
+// Direction of a printed floor picture's camera from the route it frames: steeper than the start view, so corridors read like a plan.
+const PRINT_DIRECTION = new Vector3(0.25, 1, 0.4).normalize();
+// Camera distance per world unit of the framed route's size, and the smallest size framed, so a short route keeps some surroundings.
+const PRINT_DISTANCE_PER_UNIT = 1.5;
+const PRINT_MIN_SIZE = 40;
 
 /** Smoother finish than a linear draw-in. */
 function easeOutCubic(t: number): number {
@@ -88,7 +92,8 @@ export class Viewer {
   onPick: (room: string | null) => void = () => undefined;
 
   constructor(private readonly container: HTMLElement) {
-    this.renderer = new WebGLRenderer({ antialias: true });
+    // Transparent, so the room watermark behind the canvas shows through and a printed picture has no background
+    this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -99,7 +104,6 @@ export class Viewer {
     this.labelRenderer.domElement.className = 'labels';
     container.appendChild(this.labelRenderer.domElement);
 
-    this.scene.background = new Color('#3a3d42');
     this.scene.add(new AmbientLight('#ffffff', 1.4));
     const sun = new DirectionalLight('#ffffff', 0.8);
     sun.position.set(200, 300, 100);
@@ -186,12 +190,53 @@ export class Viewer {
       mesh.geometry.dispose();
       (mesh.material as MeshBasicMaterial).dispose();
     }
-    this.routeMarkers = markers.map(({ position, colour }) => {
-      const mesh = new Mesh(new SphereGeometry(ROUTE_MARKER_RADIUS, 16, 16), new MeshBasicMaterial({ color: colour }));
-      mesh.position.copy(position);
+    this.routeMarkers = markers.map((marker) => {
+      const mesh = this.buildMarker(marker);
       this.scene.add(mesh);
       return mesh;
     });
+  }
+
+  /**
+   * A picture of `root` with `route` and `markers` drawn fully (no grow
+   * animation), seen from above and framed on the route, as a PNG data URL — for the
+   * printed route. The live view is left exactly as it was.
+   */
+  snapshot(root: Object3D, route: WorldPoint[], markers: readonly RouteMarkerDot[]): string {
+    const live = [...this.segments, ...this.routeMarkers].filter((m) => m.visible);
+    for (const m of live) m.visible = false;
+    const shown = this.current;
+    if (shown) this.scene.remove(shown);
+    this.scene.add(root);
+    const extra = markers.map((m) => this.buildMarker(m));
+    if (route.length >= 2) extra.push(this.buildTube(route));
+    for (const m of extra) this.scene.add(m);
+
+    const box = route.length > 0 ? new Box3().setFromPoints(route.map((p) => new Vector3(p.x, p.y, p.z))) : new Box3().setFromObject(root);
+    const target = box.getCenter(new Vector3());
+    const size = Math.max(box.max.x - box.min.x, box.max.z - box.min.z, PRINT_MIN_SIZE);
+    const camera = this.camera.clone();
+    camera.position.copy(target).addScaledVector(PRINT_DIRECTION, size * PRINT_DISTANCE_PER_UNIT);
+    camera.lookAt(target);
+    // Read right after rendering, before the frame is handed to the screen (no preserveDrawingBuffer needed)
+    this.renderer.render(this.scene, camera);
+    const image = this.renderer.domElement.toDataURL('image/png');
+
+    for (const m of extra) {
+      this.scene.remove(m);
+      m.geometry.dispose();
+      (m.material as MeshBasicMaterial).dispose();
+    }
+    this.scene.remove(root);
+    if (shown) this.scene.add(shown);
+    for (const m of live) m.visible = true;
+    return image;
+  }
+
+  private buildMarker({ position, colour }: RouteMarkerDot): Mesh {
+    const mesh = new Mesh(new SphereGeometry(ROUTE_MARKER_RADIUS, 16, 16), new MeshBasicMaterial({ color: colour }));
+    mesh.position.copy(position);
+    return mesh;
   }
 
   /** A tube mesh along straight segments between `points`, not a smoothed spline: a smoothed curve looks vague and can bow away from the corridor it's meant to follow, especially at a sharp turn. */

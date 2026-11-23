@@ -23,6 +23,8 @@ export const strings = {
     temperature: 'Temperature',
     co2: 'CO2',
     noData: 'No data',
+    legend: 'Heatmap colours',
+    outdated: 'Outdated',
   },
   panel: {
     close: 'Close',
@@ -47,7 +49,14 @@ export const strings = {
     go: 'Go',
     clear: 'Clear',
     nextFloor: 'Next floor ↑',
+    previousFloor: 'Previous floor ↓',
     notFound: 'Room not found.',
+    print: 'Print route',
+  },
+  routePrint: {
+    title: (room: string) => `Route to ${room}`,
+    start: 'Start at the entrance.',
+    arrival: (room: string) => `Arrive at ${room}.`,
   },
   routeMarker: {
     turnLeft: '↰ Left',
