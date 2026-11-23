@@ -29,7 +29,7 @@ The Wi-Fi, MQTT, OTA and fallback-hotspot credentials SHALL come only from a fil
 
 #### Scenario: Building without secrets
 - **WHEN** `esphome config nili-ldr.yaml` or a build runs in a checkout without `secrets.yaml`
-- **THEN** it fails with ESPHome's missing-secret error and does not build firmware with default credentials
+- **THEN** it fails with ESPHome's error about the missing `secrets.yaml` and does not build firmware with default credentials
 
 #### Scenario: Credentials in the repository
 - **WHEN** someone searches `leoiot-sensors/firmware/` for `password:`

@@ -12,6 +12,7 @@ New sensor ingestion and room-climate views (CO₂, temperature and humidity per
 
 - `collector/`: the collector (Node 22, TypeScript, Vitest, `mqtt`). It reads the devices of its mapping `collector/devices.json` (today `nili3` in room `105`), stores every reading in `room_climate` and publishes the room's retained live message, both as `platform/data-contract` specifies.
 - `dashboard/`: the web dashboard. `/sensors/` is the room list (every room with live data, grouped by floor); `/sensors/?room=<id>` is the page of one room, with a room choice in the header and a link to the room in the 3D explorer.
+- `firmware/`: the ESPHome firmware of the sensor box `nili3` (`firmware/nili-ldr/`), with its README and a `secrets.yaml.example`; credentials are never committed. Specified in `openspec/specs/sensors/box-firmware/`.
 - `compose.yaml`: the Compose project `leoiot-sensors`. It holds the collector; the dashboard service is added with the dashboard.
 - `.env.example`: names of the variables of the unit, without values.
 - `PRODUCT.md`, `.impeccable/surfaces/dashboard.md`: product facts and the design direction of the coming dashboard.
@@ -26,7 +27,7 @@ This sub-project may depend only on the interfaces specified in the `platform` s
 
 ## Replaces from `legacy/`
 
-- `legacy/sensorbox/`
+- `legacy/sensorbox/nili-ldr/` (now `firmware/nili-ldr/`); the rest of `legacy/sensorbox/` (`s3-mini-oled/`, `blinking-leds/`, `original-config/`) stays in `legacy/` as reference
 - `legacy/fake-sensors/`
 - `legacy/backend/sensor-data-generator/`
 - the sensor views of `legacy/dashboard-v2/`
