@@ -206,7 +206,7 @@ A neutral housing-grey palette with three traffic-light hues that appear only wh
 
 A single column, at most 1520px wide and centred. Page padding is 20px on top and bottom and 40px at the sides; sections are 16px apart. From 1100px width a room page with readings is exactly one window high: the room panel keeps its natural height (about 290px) and the charts take the rest, so the page fits a 1280 × 720 window at 100 % zoom. A lower window scrolls; the room list and the no-data page keep their natural height.
 
-- **Top bar:** 60px high, white, a hairline below, 40px side padding. Brand, room breadcrumb (behind a hairline divider), the 24 h / 7 Tage segment, a spacer, the DE / EN segment, the theme button.
+- **Top bar:** 60px high, white, a hairline below, 40px side padding. Brand, room breadcrumb (behind a hairline divider), the time-range segment (24 h, 7 Tage and the date segment "Zeitraum wählen"), a spacer, the DE / EN segment, the theme button.
 - **Room panel:** the identity line on top, then a three-column grid: the 76px lamp housing, the state column (status, reason, value cells, freshness line) and the Heute column (about 260px, a hairline on its left). Columns are 32px apart.
 - **Value cells:** three columns of up to 210px under a hairline. Temperature and humidity reserve a second line for the direction word, so the cells keep their height whether or not a word is shown. They never reflow while values update.
 - **Charts:** three boxes in a two-column grid with 16px gaps, filling the height the room panel leaves. Left: CO₂ at the full height of the chart area (chart at least 240px). Right: temperature above humidity in a 3 : 2 ratio (charts at least 110px and 80px). At 1440 × 789 the charts are about 330, 170 and 100px high; at 1920 × 960 about 500, 275 and 165px. One synced pointer runs through all three.
@@ -236,8 +236,16 @@ Soft rectangles and circles. Panels have gently rounded corners (14px); controls
 Neutral, quiet controls that never take an air colour.
 - **Shape:** 36px high, 1px control-edge border, 9px corners, white fill.
 - **Segment:** buttons share one border, divided by control-edge lines, 14px side padding. The pressed segment is ink with white text.
+- **Date segment:** the third segment of the time range. A 16px calendar line icon (stroke 1.8, ink like the text) and 6px gap before the text "Zeitraum wählen" (EN "Pick dates"). It opens the date panel. Once dates are shown it is the pressed segment (ink fill, white text) and reads the range (`16.11. – 20.11.`, one day `Di 17.11.`, with years when a day is outside this year); 24 h and 7 Tage are then released. Its accessible name is the full range with years.
 - **Hover / Focus:** hover fills with ground grey; colour and background transition in 180ms with `cubic-bezier(0.16, 1, 0.3, 1)`. Focus shows the ink ring; on a pressed segment the ring is white.
 - **Icon button:** 36px square, an 18px line icon (moon or sun, stroke 1.8) for the theme.
+
+### Date panel
+- **Container:** opens directly below the date segment (6px gap), aligned to its left edge and kept inside the window; white panel, hairline border, 9px corners, 16px padding, no shadow. Below 640px it spans the page width (16px margins).
+- **Fields:** "Von" and "Bis" side by side with a 12px gap, each a 13px slate label above a native date field in control style (36px, control-edge border, white fill, ink text). Below 640px they stack. Both fields allow the days from 13 months back up to today.
+- **Error line:** appears below the fields only when the entry is not accepted ("Der erste Tag darf nicht nach dem letzten liegen."): the 16px warning triangle in amber ink, the text in ink (not amber), so colour stays a value state with the triangle as the one allowed exception.
+- **Button:** "Anzeigen", right-aligned, 36px, in the pressed-segment style (ink fill, white text).
+- **Keyboard:** focus moves to "Von" on opening; Enter applies, Escape or a click outside closes without change; focus returns to the date segment on close and after applying.
 
 ### Room panel and lamp housing (signature)
 - **Housing:** dark capsule, 14px padding, three lamps 12px apart, red on top.

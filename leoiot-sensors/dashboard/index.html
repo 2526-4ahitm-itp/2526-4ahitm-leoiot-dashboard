@@ -25,6 +25,7 @@ try {
   <div class="ctl seg" role="group" id="rangeGroup" aria-label="Zeitraum">
     <button type="button" data-range="24h" aria-pressed="true">24 h</button>
     <button type="button" data-range="7d" aria-pressed="false">7 Tage</button>
+    <button type="button" id="datesBtn" aria-pressed="false" aria-expanded="false" aria-haspopup="dialog" aria-controls="datesPanel"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="datesText">Zeitraum wählen</span></button>
   </div>
   <div class="spacer"></div>
   <div class="ctl seg" role="group" id="langGroup" aria-label="Sprache">
@@ -36,6 +37,17 @@ try {
     <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
   </button>
 </header>
+
+<div class="dates-panel" id="datesPanel" popover="auto" role="dialog" aria-label="Zeitraum wählen" hidden>
+  <form id="datesForm" novalidate>
+    <div class="dates-fields">
+      <div class="dates-field"><label for="datesFrom" id="datesFromLabel">Von</label><input class="ctl" type="date" id="datesFrom" name="from" required></div>
+      <div class="dates-field"><label for="datesTo" id="datesToLabel">Bis</label><input class="ctl" type="date" id="datesTo" name="to" required></div>
+    </div>
+    <p class="dates-error" id="datesError" role="alert" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5"/><path d="M12 17.5h.01"/></svg><span id="datesErrorText"></span></p>
+    <div class="dates-actions"><button type="submit" class="dates-submit" id="datesSubmit">Anzeigen</button></div>
+  </form>
+</div>
 
 <main id="app" data-view="room" data-state="loading" data-air="off" data-fresh="live" data-source="sensor">
   <section class="room" id="roomPanel">

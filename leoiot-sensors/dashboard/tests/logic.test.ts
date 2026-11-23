@@ -4,7 +4,7 @@ import { historyQuery, latestQuery } from '../src/core/flux';
 import { makeFormat } from '../src/core/format';
 import { texts, LANGS } from '../src/core/i18n';
 import { liveTopic, liveUrl, parseLiveMessage } from '../src/core/live';
-import { rangeBounds } from '../src/core/ranges';
+import { selectionBounds } from '../src/core/ranges';
 import { applyLive, EMPTY_SNAPSHOT, parseHistory, parseLatest, type Snapshot } from '../src/core/snapshot';
 import { deriveRoomView } from '../src/core/view';
 import { startFeed } from '../src/data/feed';
@@ -110,16 +110,16 @@ describe('queries and recorded answers', () => {
   });
   it('window size per range and the stated range', () => {
     const now = vienna('10:41');
-    expect(historyQuery('105', 'sensor', '24h', now)).toContain('every: 5m, fn: mean, createEmpty: true');
-    expect(historyQuery('105', 'sensor', '7d', now)).toContain('every: 30m, fn: mean, createEmpty: true');
-    const { start, end } = rangeBounds('7d', now);
+    expect(historyQuery('105', 'sensor', selectionBounds({ kind: '24h' }, now), '5m')).toContain('every: 5m, fn: mean, createEmpty: true');
+    expect(historyQuery('105', 'sensor', selectionBounds({ kind: '7d' }, now), '30m')).toContain('every: 30m, fn: mean, createEmpty: true');
+    const { start, end } = selectionBounds({ kind: '7d' }, now);
     const f = makeFormat('de');
     expect(f.window(start, end)).toBe('16.10., 10:41 – 23.10., 10:41');
   });
   it('refuses rooms and sources that could break out of the query', () => {
     expect(() => latestQuery('105" or true')).toThrow();
-    expect(() => historyQuery('a/b', 'sensor', '24h', 0)).toThrow();
-    expect(() => historyQuery('105', 'x" or true' as never, '24h', 0)).toThrow();
+    expect(() => historyQuery('a/b', 'sensor', { start: 0, end: 1 }, '5m')).toThrow();
+    expect(() => historyQuery('105', 'x" or true' as never, { start: 0, end: 1 }, '5m')).toThrow();
     expect(latestQuery('E10')).toContain('r.room == "E10"');
   });
 });

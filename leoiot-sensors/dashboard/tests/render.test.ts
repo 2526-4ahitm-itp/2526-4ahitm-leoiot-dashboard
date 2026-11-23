@@ -262,7 +262,7 @@ describe('Rooms without data say so', () => {
 describe('The room is named in one line', () => {
   const h1 = () => document.querySelector('h1') as HTMLElement;
   it('"Raum 105" as the main heading, the link next to it, no device, no "gemessen"', () => {
-    renderFrame(dom, { lang: 'de', room: { id: '105', valid: true }, range: '24h', theme: 'light' });
+    renderFrame(dom, { lang: 'de', room: { id: '105', valid: true }, selection: { kind: '24h' }, now: Date.now(), theme: 'light' });
     show(live(snap(700, at), at), at);
     expect(text(h1())).toBe('Raum 105');
     expect(dom.app.dataset.source).toBe('sensor');
@@ -272,7 +272,7 @@ describe('The room is named in one line', () => {
     expect(document.querySelectorAll('h1')).toHaveLength(1);
   });
   it('English: "Room E10"; the room id stays as written', () => {
-    renderFrame(dom, { lang: 'en', room: { id: 'E10', valid: true }, range: '24h', theme: 'light' });
+    renderFrame(dom, { lang: 'en', room: { id: 'E10', valid: true }, selection: { kind: '24h' }, now: Date.now(), theme: 'light' });
     expect(text(h1())).toBe('Room E10');
   });
   it('the display size is gone', () => {
@@ -282,7 +282,7 @@ describe('The room is named in one line', () => {
 
 describe('Simulated readings are marked', () => {
   it('"simuliert" next to the room id; the page carries the source for the stylesheet', () => {
-    renderFrame(dom, { lang: 'de', room: { id: 'E10', valid: true }, range: '24h', theme: 'light' });
+    renderFrame(dom, { lang: 'de', room: { id: 'E10', valid: true }, selection: { kind: '24h' }, now: Date.now(), theme: 'light' });
     show(live(snap(700, at, {}, 'simulated', ['sim-e10']), at), at, 'de', { id: 'E10', valid: true });
     expect(dom.app.dataset.source).toBe('simulated');
     expect(dom.simTag.hidden).toBe(false);

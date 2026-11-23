@@ -20,7 +20,33 @@ export function startOfLocalDay(ms: number): number {
   return guess;
 }
 
+/** The local calendar date (Europe/Vienna) of an instant as `YYYY-MM-DD`. */
+export function localDate(ms: number): string {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(ms);
+  const n = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${n('year')}-${n('month')}-${n('day')}`;
+}
+
+/** The date `days` after (or before, when negative) a `YYYY-MM-DD` date. */
+export function shiftDate(date: string, days: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/** The instant of local midnight (Europe/Vienna) at the start of a `YYYY-MM-DD` date; 23 or 25 hours long on clock-change days. */
+export function localMidnight(date: string): number {
+  const [y, m, d] = date.split('-').map(Number);
+  const wall = Date.UTC(y, m - 1, d);
+  let guess = wall - zoneOffset(wall);
+  guess = wall - zoneOffset(guess);
+  return guess;
+}
+
 const LOCALES: Record<Lang, string> = { de: 'de-AT', en: 'en-GB' };
+
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_DE = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 export interface Format {
   /** 09:55, or 09:55:03 with seconds. */
@@ -29,6 +55,14 @@ export interface Format {
   day(ms: number): string;
   /** Mo., 19. (de) or Mon 19 (en), for the axis of the seven-day range. */
   weekdayDay(ms: number): string;
+  /** `16.11.` (de) or `16 Nov` (en). */
+  dayMonth(ms: number): string;
+  /** `16.11.2026` (de) or `16 Nov 2026` (en). */
+  dayMonthYear(ms: number): string;
+  /** `Di 17.11.` (de) or `Tue 17 Nov` (en). */
+  weekdayDate(ms: number): string;
+  /** `Di 17.11.2026` (de) or `Tue 17 Nov 2026` (en). */
+  weekdayDateYear(ms: number): string;
   /** `16.10., 10:41`. */
   dayTime(ms: number): string;
   /** `16.10., 10:41 – 23.10., 10:41`. */
@@ -57,9 +91,27 @@ export function makeFormat(lang: Lang): Format {
   const day = (ms: number) => dayFmt.format(ms);
   const dayTime = (ms: number) => `${day(ms)}, ${time(ms)}`;
 
+  const ymd = (ms: number) => {
+    const [y, m, d] = localDate(ms).split('-').map(Number);
+    return { y, m, d, wd: new Date(Date.UTC(y, m - 1, d)).getUTCDay() };
+  };
+  const dayMonth = (ms: number) => {
+    const { m, d } = ymd(ms);
+    return lang === 'de' ? `${d}.${m}.` : `${d} ${MONTHS_EN[m - 1]}`;
+  };
+  const dayMonthYear = (ms: number) => {
+    const { y, m, d } = ymd(ms);
+    return lang === 'de' ? `${d}.${m}.${y}` : `${d} ${MONTHS_EN[m - 1]} ${y}`;
+  };
+  const weekday = (ms: number) => (lang === 'de' ? WEEKDAYS_DE : WEEKDAYS_EN)[ymd(ms).wd];
+
   return {
     time,
     day,
+    dayMonth,
+    dayMonthYear,
+    weekdayDate: (ms) => `${weekday(ms)} ${dayMonth(ms)}`,
+    weekdayDateYear: (ms) => `${weekday(ms)} ${dayMonthYear(ms)}`,
     weekdayDay: (ms) => weekdayFmt.format(ms),
     dayTime,
     window: (start, end) => `${dayTime(start)} – ${dayTime(end)}`,
