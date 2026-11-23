@@ -262,6 +262,14 @@ Neutral, quiet controls that never take an air colour.
 - **Style:** one line at the top of the room panel: the room as the page's `<h1>` ("Raum 105", title style at 20px, 700), then the link "Im Gebäude zeigen" in 15px slate. No device name and no "gemessen".
 - **Simulated:** only simulated readings add a dashed pill "simuliert" after the link, and every chart line is dashed. Simulated values are never drawn as measurements.
 
+### Room list
+- **Header:** title, then a summary line in 15px ink-2 ("107 Räume · 11 jetzt lüften · 15 bald lüften · 1 nicht aktuell", states without a room left out), then a freshness line in 14px slate with the muted 8px dot ("Live-Werte", or "Aktualisierung jede Minute · Stand 11:14" while the stored readings are used; never coloured). One legend line, "Gestrichelter Rahmen: simulierte Werte", shows only while a simulated room is listed.
+- **Floors:** the floor name with a muted count after it (" · 29 Räume · 3 jetzt lüften"), rooms in a grid of at least 240px columns with 10px gaps, in a panel padded 28px 32px 32px; one column below 640px.
+- **Entry:** one line per room, a 1px bordered link with 10px padding and 8px gaps: the 12px lamp dot, the room id (17px, 700), the CO₂ value with unit, and in between a state word (13px, ink-2) only where attention is needed: "Bald lüften", "Jetzt lüften", "Kein CO₂-Wert". Good air has no visible word (it is in the DOM for screen readers), so a room with a word needs attention and a room without one does not. The word sits after the id and wraps under it only when the column is too narrow; nothing is cut off. The link's accessible name starts with the visible id ("E11, Luft gut, 726 ppm, simuliert").
+- **Simulated:** a dashed outline instead of a solid one, no pill; the legend line explains it and the accessible name says "simuliert". The room page keeps its pill.
+- **Outdated:** the lamp dot is replaced by a 12px warning triangle in amber ink, the word is "Zuletzt 11:07" and the value is muted slate at weight 400.
+- **Load error:** when the stored readings cannot be loaded and no room is known, one line says so and that the page tries again every minute; it never says that no room is sending. Rooms already shown stay.
+
 ### Heute column
 - **Icon:** "Zuletzt gelüftet" carries a 16px window icon (frame with cross bars) before its label, drawn like the quantity icons. The other two pairs have none.
 - **Content:** the day since local midnight (Europe/Vienna): a caption heading "Heute", then three label and value pairs: "Über 1000 ppm" (time as "1 h 20 min", or "noch nicht"), "Höchstwert" (value, unit and time) and "Zuletzt gelüftet" ("ca. 10:45" or "heute nicht erkannt", with the caption "geschätzt aus dem CO₂-Verlauf" under a time). Without a reading today one line "Heute noch keine Werte".

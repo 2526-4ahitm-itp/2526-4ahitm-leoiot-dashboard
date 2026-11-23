@@ -67,10 +67,14 @@ const de = {
   roomsTitle: 'Räume mit Messwerten',
   floorName: (floor: FloorId | null): string =>
     floor === 'U' ? 'Untergeschoss' : floor === 'E' ? 'Erdgeschoss' : floor === '1' ? '1. Stock' : floor === '2' ? '2. Stock' : floor === 'T' ? 'Turnsaal' : 'Weitere Räume',
-  listStale: 'Nicht aktuell',
   listNoCo2: 'Kein CO₂-Wert',
   noRooms: 'Derzeit sendet kein Raum Messwerte.',
-  listFallback: 'Aktualisierung jede Minute',
+  listCounts: (c: { rooms: number; bad: number; soon: number; stale: number }) =>
+    [`${c.rooms} ${c.rooms === 1 ? 'Raum' : 'Räume'}`, c.bad ? `${c.bad} jetzt lüften` : '', c.soon ? `${c.soon} bald lüften` : '', c.stale ? `${c.stale} nicht aktuell` : ''].filter(Boolean).join(' · '),
+  listLive: 'Live-Werte',
+  listFallbackAt: (time: string | null) => (time === null ? 'Aktualisierung jede Minute' : `Aktualisierung jede Minute · Stand ${time}`),
+  listLegend: 'Gestrichelter Rahmen: simulierte Werte',
+  listLoadError: 'Die Werte konnten nicht geladen werden. Die Seite versucht es jede Minute erneut.',
   show3d: 'Im Gebäude zeigen',
   tooCold: 'zu kalt',
   tooWarm: 'zu warm',
@@ -143,10 +147,14 @@ const en: Texts = {
   roomsTitle: 'Rooms with readings',
   floorName: (floor) =>
     floor === 'U' ? 'Basement' : floor === 'E' ? 'Ground floor' : floor === '1' ? 'Floor 1' : floor === '2' ? 'Floor 2' : floor === 'T' ? 'Gym' : 'Other rooms',
-  listStale: 'Not current',
   listNoCo2: 'No CO₂ value',
   noRooms: 'No room is sending readings at the moment.',
-  listFallback: 'Updated every minute',
+  listCounts: (c: { rooms: number; bad: number; soon: number; stale: number }) =>
+    [`${c.rooms} ${c.rooms === 1 ? 'room' : 'rooms'}`, c.bad ? `${c.bad} air now` : '', c.soon ? `${c.soon} air soon` : '', c.stale ? `${c.stale} not current` : ''].filter(Boolean).join(' · '),
+  listLive: 'Live values',
+  listFallbackAt: (time: string | null) => (time === null ? 'Updated every minute' : `Updated every minute · as of ${time}`),
+  listLegend: 'Dashed outline: simulated values',
+  listLoadError: 'The values could not be loaded. The page tries again every minute.',
   show3d: 'Show in the building',
   tooCold: 'too cold',
   tooWarm: 'too warm',

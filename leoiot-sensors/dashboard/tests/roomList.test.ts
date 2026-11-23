@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseAnnotatedCsv } from '../src/core/csv';
-import { applyRoomMessage, applyStoredRooms, listEntries, roomOfTopic, type RoomListState } from '../src/core/roomList';
+import { applyRoomMessage, applyStoredRooms, listEntries, roomOfTopic, summarise, type RoomListState } from '../src/core/roomList';
 import { roomsLatestQuery } from '../src/core/flux';
 import { fixture } from './helpers';
 
@@ -90,5 +90,25 @@ describe('room list from stored readings (fallback)', () => {
     const entries = listEntries(s, NOW);
     expect(entries[0].rooms[0]).toMatchObject({ simulated: true, co2: 713, air: 'good' });
     expect(entries[1].rooms[0]).toMatchObject({ simulated: false, co2: 1070, air: 'bad' });
+  });
+});
+
+describe('summarise', () => {
+  it('counts rooms, bad, soon and stale for the list and per floor; stale rooms are not counted as bad or soon', () => {
+    const s: RoomListState = new Map();
+    applyRoomMessage(s, T('E10'), msg('E10', { co2: 500 }));
+    applyRoomMessage(s, T('105'), msg('105', { co2: 1200 }));
+    applyRoomMessage(s, T('106'), msg('106', { co2: 900 }));
+    applyRoomMessage(s, T('107'), msg('107', { co2: 1200 }, NOW - 3600_000));
+    applyRoomMessage(s, T('108'), msg('108', { temperature: 21 }));
+    const sum = summarise(listEntries(s, NOW));
+    expect(sum.total).toEqual({ rooms: 5, bad: 1, soon: 1, stale: 1 });
+    expect(sum.floors).toEqual([
+      { floor: 'E', counts: { rooms: 1, bad: 0, soon: 0, stale: 0 } },
+      { floor: '1', counts: { rooms: 4, bad: 1, soon: 1, stale: 1 } },
+    ]);
+  });
+  it('an empty list has zero counts', () => {
+    expect(summarise([])).toEqual({ total: { rooms: 0, bad: 0, soon: 0, stale: 0 }, floors: [] });
   });
 });

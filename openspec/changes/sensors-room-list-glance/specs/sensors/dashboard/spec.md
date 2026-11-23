@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Room list entries name only what needs attention
-Each room in the room list SHALL take a single line at desktop widths, with its room id and its CO₂ value. A room whose air state is "Bald lüften" or "Jetzt lüften" SHALL show that state as visible text. A room with good air SHALL show no visible state word, and its state ("Luft gut") SHALL be available to assistive technology. A room that is live but has no CO₂ value SHALL show "Kein CO₂-Wert" as visible text. In this way the air state is never told by colour alone: a room with a word needs attention, a room without one does not.
+Each room in the room list SHALL take a single line at desktop widths when its room id has at most four characters, with its room id and its CO₂ value; with a longer id the state word SHALL wrap below the id rather than be cut off. A room whose air state is "Bald lüften" or "Jetzt lüften" SHALL show that state as visible text. A room with good air SHALL show no visible state word, and its state ("Luft gut") SHALL be available to assistive technology. A room that is live but has no CO₂ value SHALL show "Kein CO₂-Wert" as visible text. In this way the air state is never told by colour alone: a room with a word needs attention, a room without one does not.
 
 #### Scenario: Good air
 - **WHEN** room `E11`'s newest message is 1 minute old and carries `co2` = 726
@@ -15,7 +15,7 @@ Each room in the room list SHALL take a single line at desktop widths, with its 
 
 #### Scenario: Desktop width
 - **WHEN** the room list is shown in a window 1440 CSS pixels wide
-- **THEN** every room with a state word, including "Jetzt lüften" and a four-digit CO₂ value, fits on one line
+- **THEN** every room whose id has at most four characters fits on one line, including one with "Jetzt lüften" and a four-digit CO₂ value, and the state word of `UBiolab` wraps below its id without being cut off
 
 ### Requirement: Outdated rooms in the list are marked like on the room page
 A room in the list whose newest reading is older than five minutes SHALL show the warning symbol and the text "Zuletzt" with the time of that reading, as the room page does, and its CO₂ value SHALL be shown muted and no more prominent than the room id. It SHALL show no lit lamp.

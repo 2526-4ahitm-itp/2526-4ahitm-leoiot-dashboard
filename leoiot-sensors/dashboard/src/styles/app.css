@@ -134,31 +134,39 @@ main { padding: 20px 40px 20px; display: grid; gap: 16px; max-width: 1520px; mar
 body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='error']) #rangeGroup { display: none; }
 
 /* Room list: compact rows in a responsive grid, one link per room */
-.rooms { display: none; background: var(--panel); border-radius: var(--r-panel); padding: 28px 36px 32px; }
+.rooms { display: none; background: var(--panel); border-radius: var(--r-panel); padding: 28px 32px 32px; }
 [data-view='list'] .rooms,
 [data-view='room'][data-state='nodata'] .rooms, [data-view='room'][data-state='error'] .rooms { display: block; }
 [data-view='list'] .room, [data-view='list'] .charts, [data-view='list'] .empty { display: none; }
 .rooms > h2 { font-size: 22px; }
-.rooms .note, .rooms-msg { color: var(--ink-2); font-size: 15px; margin-top: 8px; padding: 0; }
+.rooms-msg { color: var(--ink-2); font-size: 15px; margin-top: 8px; padding: 0; }
+.rooms-line { color: var(--ink-2); font-size: 15px; margin-top: 8px; }
+.rooms-fresh { color: var(--ink-3); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.rooms-fresh .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
 .floor { margin-top: 22px; }
-.floor h3 { font-size: 15px; font-weight: 400; color: var(--ink-3); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-.floor ul { list-style: none; padding: 0; margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
-.floor a { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; column-gap: 10px; row-gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-ctl); color: inherit; text-decoration: none; transition: background-color var(--dur) var(--ease); }
+.floor h3 .fcount { color: var(--ink-3); }
+.floor h3 { font-size: 15px; font-weight: 400; color: var(--ink-2); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.floor ul { list-style: none; padding: 0; margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.floor a { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; column-gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: var(--r-ctl); color: inherit; text-decoration: none; transition: background-color var(--dur) var(--ease); }
 .floor a:hover { background: var(--ground); }
 .floor a:focus-visible { outline-offset: 2px; border-radius: var(--r-ctl); }
-.lamp-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--lamp-off); grid-row: 1 / span 2; }
+.lamp-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--lamp-off); }
+.rwarn { display: none; width: 12px; height: 12px; color: var(--y-ink); }
+[data-fresh='stale'] > a .lamp-dot { display: none; }
+[data-fresh='stale'] > a .rwarn { display: block; }
+[data-source='simulated'] > a { border-style: dashed; border-color: var(--line-ctl); }
+.rmain { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
 [data-air='good'] > a .lamp-dot { background: var(--g); }
 [data-air='soon'] > a .lamp-dot { background: var(--y); }
 [data-air='bad'] > a .lamp-dot { background: var(--r); }
 .rid { font-weight: 700; font-size: 17px; overflow-wrap: anywhere; }
-.rstate { grid-column: 2; font-size: 13px; color: var(--ink-2); }
-.rco2 { grid-column: 3; grid-row: 1 / span 2; text-align: right; font-weight: 700; font-size: 17px; }
+.rstate { font-size: 13px; color: var(--ink-2); }
+.rco2 { text-align: right; font-weight: 700; font-size: 17px; }
 .rco2 .u { font-weight: 400; font-size: 13px; color: var(--ink-3); margin-left: 3px; }
 [data-air='good'] > a .rco2 { color: var(--g-ink); }
 [data-air='soon'] > a .rco2 { color: var(--y-ink); }
 [data-air='bad'] > a .rco2 { color: var(--r-ink); }
-[data-fresh='stale'] > a .rco2 { color: var(--ink-3); }
-.rtag { grid-column: 2; justify-self: start; font-size: 12px; border: 1px dashed var(--line-ctl); border-radius: 99px; padding: 0 8px; color: var(--ink); }
+[data-fresh='stale'] > a .rco2 { color: var(--ink-3); font-weight: 400; }
 
 /* From 1101 px the page is as high as the window: the charts take what the room panel leaves. Minimum
    chart heights keep them readable; below them the page grows and scrolls (body has min-height, not height). */
