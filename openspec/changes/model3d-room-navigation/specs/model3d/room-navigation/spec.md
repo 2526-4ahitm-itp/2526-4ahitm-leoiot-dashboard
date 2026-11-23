@@ -39,11 +39,15 @@ Starting navigation SHALL show the floor the route itself starts on (the ground 
 - **THEN** the view switches to the ground floor — the floor the route starts on — not to floor 2
 
 ### Requirement: A multi-floor route reveals one floor at a time
-For a route that crosses more than one floor, the system SHALL show only the portion of the route on floors already shown — the current floor and everything beneath it, the same stacking rule the floor views themselves follow — and SHALL offer a visible control to advance to the route's next floor. Once the floor shown is the last floor the route crosses, that control SHALL NOT be shown. The newly-revealed portion SHALL draw in with a smooth, brief animation rather than appearing instantly, growing steadily along the route's own shape rather than visibly twisting or wobbling before settling; the portion already shown before advancing SHALL NOT be affected by that animation.
+For a route that crosses more than one floor, the system SHALL show only the portion of the route on floors already shown — the current floor and everything beneath it, the same stacking rule the floor views themselves follow — and SHALL offer a visible control to advance to the route's next floor. Once the floor shown is the last floor the route crosses, that control SHALL NOT be shown. Likewise it SHALL offer a visible control to step back to the floor the route crosses before the one shown, not shown on the route's first floor. The newly-revealed portion SHALL draw in with a smooth, brief animation rather than appearing instantly, growing steadily along the route's own shape rather than visibly twisting or wobbling before settling; the portion already shown before advancing SHALL NOT be affected by that animation.
 
 #### Scenario: Advancing through a multi-floor route
 - **WHEN** a user activates the "next floor" control while the active route continues onto a floor not yet shown
 - **THEN** the view advances to that floor and the route's segment on it draws itself in, without the already-shown portion changing
+
+#### Scenario: Stepping back a floor
+- **WHEN** a user activates the "previous floor" control while a floor after the route's first one is shown
+- **THEN** the view returns to the floor the route crosses before it, showing the route as it is on that floor
 
 #### Scenario: No further floor to advance to
 - **WHEN** the floor currently shown is the last floor the active route crosses
@@ -95,12 +99,67 @@ The explorer SHALL provide a visible, non-hidden control to choose a destination
 - **WHEN** a user activates the clear/cancel control while a route is displayed
 - **THEN** the system removes the displayed path and returns to the unguided view
 
+### Requirement: The destination is the selected room
+Starting navigation SHALL select the destination room, replacing any other selected room, with its info panel, and it SHALL stay selected while the route is stepped through its floors, its highlight showing once its own floor is shown.
+
+#### Scenario: Navigating while another room is selected
+- **WHEN** room `152` is selected and the user starts navigation to `203`
+- **THEN** `152` is no longer selected and `203` is selected with its info panel, also while the route's ground floor and floor 1 are shown
+
+### Requirement: Selecting another room ends navigation
+Selecting a room other than the active route's destination SHALL clear the active route, the same as the dedicated clear control, and select that room. Selecting the destination itself SHALL keep the route. The room search box SHALL hold the active route's destination however navigation was started, and SHALL be emptied when the route is cleared, whether by the clear control, Reset View or selecting another room.
+
+#### Scenario: Clicking another room during navigation
+- **WHEN** a route to `203` is active and the user clicks room `105`
+- **THEN** the route, its markers, the legend and the floor step controls are cleared, the search box is emptied, and `105` is selected with its info panel
+
+#### Scenario: Navigating from the info panel fills the search box
+- **WHEN** the user selects room `203` and activates "navigate here"
+- **THEN** the search box shows `203`
+
+#### Scenario: Clicking the destination during navigation
+- **WHEN** a route to `203` is active and the user clicks room `203`
+- **THEN** the route stays and `203` is selected with its info panel
+
 ### Requirement: Reset View also clears the active route
 Activating "Reset View" (`model3d/building-viewer`, "Reset View returns to the start") SHALL also clear any active navigation route, the same as the dedicated clear control, consistent with Reset View returning the explorer to its unguided start state.
 
 #### Scenario: Resetting while a route is active
 - **WHEN** a user activates "Reset View" while a navigation route is displayed
 - **THEN** the route, its markers and the legend are cleared, in addition to the whole building being shown from the start camera position
+
+### Requirement: Enter starts navigation from the search box
+Pressing Enter in the room search box SHALL start navigation to the entered room, the same as activating the "go" control.
+
+#### Scenario: Confirming the search with Enter
+- **WHEN** a user types a room id into the search box and presses Enter
+- **THEN** the system starts navigation to that room exactly as the "go" control would, including the "room not found" message for a room that does not exist
+
+### Requirement: The destination room's number is shown behind the building
+While a route is active, the system SHALL show the destination room's id behind the building model, its characters nearly as tall as the screen (narrowed if they would not fit across it), in a grey slightly brighter than the background, so it never covers the model or any control. Without an active route, the selected room's id SHALL be shown the same way; with neither, nothing is shown. When both exist, the room the user chose last — by selecting it or by starting navigation to it — SHALL be shown.
+
+#### Scenario: Navigating to a room
+- **WHEN** a user starts navigation to room `203`
+- **THEN** `203` is shown faint behind the building, nearly as tall as the screen, until the route is cleared
+
+#### Scenario: Selecting another room ends the route's number
+- **WHEN** a route to `203` is active and the user selects room `105`
+- **THEN** the route ends (see "Selecting another room ends navigation") and `105` is shown behind the building
+
+#### Scenario: Selecting a room without a route
+- **WHEN** no route is active and a user selects a room
+- **THEN** that room's id is shown behind the building until it is deselected
+
+### Requirement: The active route can be printed
+While a route is active, the explorer SHALL offer a visible control to print it. The printed route SHALL contain the destination, one section per floor the route crosses in the order the route walks them, each with a picture of that floor showing its part of the route and its markers, and that floor's turn and stairs markers as numbered steps, colour-matched to their dots, ending with the arrival at the destination. It SHALL cover the whole route, independent of how many floors have been revealed on screen. Printing through the browser's own print command SHALL produce the same printed route.
+
+#### Scenario: Printing a multi-floor route
+- **WHEN** a user activates the print control while a route from the ground floor to floor 2 is active, with only the ground floor revealed
+- **THEN** the printout shows sections for the ground floor, floor 1 and floor 2 in that order, each with its picture and numbered steps, followed by the arrival at the destination
+
+#### Scenario: Printing without a route
+- **WHEN** no route is active
+- **THEN** no print control is shown and the browser's print command prints the page as it is
 
 ### Requirement: Invalid destination does not start navigation
 If a user selects or searches for a room that does not exist, the system SHALL NOT start or display a navigation path, and SHALL show a message that the room cannot be found.

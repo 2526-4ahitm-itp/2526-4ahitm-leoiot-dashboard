@@ -53,5 +53,27 @@ export function co2Colour(ppm: number): string {
   return scale(CO2, ppm);
 }
 
+export interface ScaleStop {
+  /** The value this colour belongs to (°C or ppm). */
+  readonly value: number;
+  /** Where the value lies between the legend's ends, 0 to 1. */
+  readonly at: number;
+  readonly colour: string;
+}
+
+// The value range a legend shows; wider or narrower than the stops, the colours are those of the scale itself
+const LEGEND_RANGE = { temperature: [5, 30], co2: [400, 1600] } as const;
+
+/**
+ * The temperature or CO₂ scale as a legend shows it: both ends of its range
+ * and every stop between them, each with the colour a room of that value gets.
+ */
+export function scaleStops(kind: 'temperature' | 'co2'): ScaleStop[] {
+  const stops = kind === 'co2' ? CO2 : TEMPERATURE;
+  const [min, max] = LEGEND_RANGE[kind];
+  const values = [min, ...stops.map((s) => s.at).filter((v) => v > min && v < max), max];
+  return values.map((value) => ({ value, at: (value - min) / (max - min), colour: scale(stops, value) }));
+}
+
 /** Status symbol colours (FR-07), used in the panel and the heatmap labels. */
 export const STATUS_COLOUR = { green: '#4caf50', yellow: '#ffd54f', red: '#e53935' } as const;

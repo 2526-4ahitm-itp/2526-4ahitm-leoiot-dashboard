@@ -62,6 +62,21 @@ In the CO₂ heatmap a room with a current CO₂ value SHALL be coloured on a co
 - **WHEN** a room has 2600 ppm
 - **THEN** it has the colour of 2000 ppm and its label reads `2600 ppm` with the red status symbol
 
+### Requirement: The shown heatmap's colour scale is explained
+While a heatmap is shown, the explorer SHALL show its colour scale in a panel on the right-hand side, above the route legend when a route is active: the colours of that heatmap's own scale, exactly as rooms are coloured, over a fixed range (temperature 5–30 °C; CO₂ 400–1600 ppm) and labelled with the range's ends and the scale's stops within it (temperature: 5, 20, 25 and 30 °C; CO₂: 400, 600, 1200 and 1600 ppm), plus the grey of a stale value labelled "Outdated". Without a heatmap the scale SHALL NOT be shown.
+
+#### Scenario: CO₂ heatmap switched on
+- **WHEN** the user switches the CO₂ heatmap on
+- **THEN** a strip running from green at 400 ppm over yellow at 600 ppm and red at 1200 ppm to the darker red of 1600 ppm appears on the right, labelled with these values
+
+#### Scenario: Switching to the temperature heatmap
+- **WHEN** the CO₂ heatmap is shown and the user selects "Temperature"
+- **THEN** the strip changes to the temperature scale from 5 °C to 30 °C: blue up to 20 °C, blending to red at 25 °C, red above
+
+#### Scenario: Heatmap switched off
+- **WHEN** no heatmap is shown
+- **THEN** no colour scale is shown
+
 ### Requirement: Rooms without current data in a heatmap
 In a heatmap, a room without data for the heatmap's quantity SHALL keep its normal look and carry the label "No data". A room whose value is stale SHALL be grey and carry a warning symbol with its last value.
 

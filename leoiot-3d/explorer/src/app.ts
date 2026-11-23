@@ -15,7 +15,10 @@ import type { Controls } from './ui/controls';
 import { el } from './ui/dom';
 import type { Navigation } from './ui/navigation';
 import { InfoPanel, statusBadge } from './ui/panel';
+import type { HeatmapLegend } from './ui/heatmapLegend';
 import type { LegendSection, RouteLegend } from './ui/routeLegend';
+import type { PrintSheet, RoutePrint } from './ui/routePrint';
+import type { RoomWatermark } from './ui/roomWatermark';
 import { strings } from './ui/strings';
 import { type MeshStandardMaterial, Vector3 } from 'three';
 
@@ -36,6 +39,10 @@ export class App {
   // route one floor at a time as the user moves up/down, and to drive "Next floor".
   private activeRoute: RoutePoint[] | null = null;
   private routeFloorSequence: FloorId[] = [];
+  // The room the active route leads to
+  private destination: string | null = null;
+  // Which room the watermark shows when both exist: the one the user acted on last
+  private watermarkPrefers: 'selected' | 'destination' = 'selected';
 
   constructor(
     private readonly viewer: Viewer,
@@ -45,6 +52,9 @@ export class App {
     private readonly panel: InfoPanel,
     private readonly navigation: Navigation,
     private readonly routeLegend: RouteLegend,
+    private readonly heatmapLegend: HeatmapLegend,
+    private readonly routePrint: RoutePrint,
+    private readonly watermark: RoomWatermark,
   ) {
     viewer.onPick = (room) => (room === null ? this.deselect() : this.select(room));
     panel.onClose = () => this.deselect();
@@ -56,6 +66,10 @@ export class App {
     navigation.onNavigate = (room) => this.navigate(room);
     navigation.onClear = () => this.clearRoute();
     navigation.onNextFloor = () => this.nextFloor();
+    navigation.onPreviousFloor = () => this.previousFloor();
+    routeLegend.onPrint = () => window.print();
+    // Also covers the browser's own print command, not only the button
+    window.addEventListener('beforeprint', () => this.routePrint.update(this.printSheet()));
     window.addEventListener('keydown', (e) => this.handleKey(e));
     store.subscribe(() => this.schedule());
     // Values turn stale without a new message
@@ -74,7 +88,8 @@ export class App {
     this.view = view;
     // A heatmap follows the floor; whole building and gym have none
     if (!heatmapAllowed(view)) this.heatmap = null;
-    if (this.selected !== null && !this.model(view).rooms.has(this.selected)) this.selected = null;
+    // The destination stays selected on the floors the route passes before reaching it
+    if (this.selected !== null && this.selected !== this.destination && !this.model(view).rooms.has(this.selected)) this.selected = null;
     this.render();
   }
 
@@ -102,8 +117,7 @@ export class App {
 
   reset(): void {
     this.heatmap = null;
-    this.activeRoute = null;
-    this.routeFloorSequence = [];
+    this.dropRoute();
     this.setView('full');
     this.viewer.resetCamera();
   }
@@ -118,7 +132,10 @@ export class App {
 
   select(room: string): void {
     this.heatmap = null;
+    // Picking another room than the destination ends the navigation (spec model3d/room-navigation)
+    if (this.destination !== null && room !== this.destination) this.dropRoute();
     this.selected = room;
+    this.watermarkPrefers = 'selected';
     this.render();
   }
 
@@ -151,13 +168,26 @@ export class App {
     }
     this.activeRoute = result.points;
     this.routeFloorSequence = routeFloors(result.points);
+    this.destination = room.trim();
+    this.watermarkPrefers = 'destination';
+    // The destination becomes the selected room, replacing any other; like any selection it replaces a heatmap
+    this.selected = this.destination;
+    this.heatmap = null;
+    // The search box names the destination however navigation started (search or "Navigate here")
+    this.navigation.setQuery(this.destination);
     this.setView(this.routeFloorSequence[0]);
   }
 
   clearRoute(): void {
+    this.dropRoute();
+    this.render();
+  }
+
+  private dropRoute(): void {
+    if (this.destination !== null) this.navigation.setQuery('');
     this.activeRoute = null;
     this.routeFloorSequence = [];
-    this.render();
+    this.destination = null;
   }
 
   /** Advances to the next floor the active route crosses, revealing that floor's segment (spec model3d/room-navigation). */
@@ -166,6 +196,14 @@ export class App {
     const index = (this.routeFloorSequence as readonly string[]).indexOf(this.view);
     if (index === -1 || index >= this.routeFloorSequence.length - 1) return;
     this.setView(this.routeFloorSequence[index + 1]);
+  }
+
+  /** Steps back to the floor the active route crosses before the one shown (spec model3d/room-navigation). */
+  previousFloor(): void {
+    if (!this.activeRoute) return;
+    const index = (this.routeFloorSequence as readonly string[]).indexOf(this.view);
+    if (index <= 0) return;
+    this.setView(this.routeFloorSequence[index - 1]);
   }
 
   /** Renders at most once per frame, however many messages arrive. */
@@ -183,6 +221,7 @@ export class App {
     const model = this.model(this.view);
     this.viewer.show(model.root);
     this.controls.update(this.view, this.heatmap, heatmapAllowed(this.view));
+    this.heatmapLegend.show(this.heatmap);
 
     const coloured = new Map<string, string>();
     const labels: Label[] = [];
@@ -202,15 +241,18 @@ export class App {
       this.viewer.showRoute(visibleRoutePoints(this.activeRoute, this.view));
       const visible = this.visibleRouteMarkers();
       this.viewer.setRouteMarkers(this.routeMarkerDots(visible));
-      this.routeLegend.update(this.routeLegendSections(visible));
+      this.routeLegend.update(this.routeLegendSections(visible), true);
       const index = (this.routeFloorSequence as readonly string[]).indexOf(this.view);
       this.navigation.setNextFloorAvailable(index !== -1 && index < this.routeFloorSequence.length - 1);
+      this.navigation.setPreviousFloorAvailable(index > 0);
     } else {
       this.viewer.clearRoute();
-      this.routeLegend.update([]);
+      this.routeLegend.update([], false);
       this.navigation.setNextFloorAvailable(false);
+      this.navigation.setPreviousFloorAvailable(false);
     }
     this.viewer.setLabels(labels);
+    this.watermark.show(this.watermarkPrefers === 'selected' ? (this.selected ?? this.destination) : (this.destination ?? this.selected));
 
     if (this.selected === null) this.panel.hide();
     else this.panel.show(this.selected, this.store.get(this.selected), now);
@@ -249,6 +291,31 @@ export class App {
       title: strings.views[floor],
       entries: byFloor.get(floor)!,
     }));
+  }
+
+  /**
+   * The whole active route for paper: every floor it crosses, in the order it
+   * walks them, each pictured with its part of the route (and the floors
+   * beneath, as on screen) and its markers as numbered steps.
+   */
+  private printSheet(): PrintSheet | null {
+    const route = this.activeRoute;
+    if (!route || this.destination === null) return null;
+    const markers = routeMarkers(route).map((marker, i) => ({ marker, colour: markerColour(i) }));
+    return {
+      title: strings.routePrint.title(this.destination),
+      start: strings.routePrint.start,
+      floors: this.routeFloorSequence.map((floor) => ({
+        title: strings.views[floor],
+        image: this.viewer.snapshot(
+          this.model(floor).root,
+          visibleRoutePoints(route, floor),
+          this.routeMarkerDots(markers.filter(({ marker }) => isFloorVisible(marker.point.floor, floor))),
+        ),
+        steps: markers.filter(({ marker }) => marker.point.floor === floor).map(({ marker, colour }) => ({ colour, text: this.markerText(marker) })),
+      })),
+      arrival: strings.routePrint.arrival(this.destination),
+    };
   }
 
   private markerText(marker: RouteMarker): string {

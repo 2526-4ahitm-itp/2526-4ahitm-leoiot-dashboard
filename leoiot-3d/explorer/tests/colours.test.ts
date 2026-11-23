@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { co2Colour, hexToRgb, rgbToHex, temperatureColour } from '../src/core/colours';
+import { co2Colour, hexToRgb, rgbToHex, scaleStops, temperatureColour } from '../src/core/colours';
 
 describe('temperatureColour', () => {
   it.each([
@@ -37,3 +37,28 @@ describe('co2Colour', () => {
 });
 
 it('hex round trip', () => expect(rgbToHex(hexToRgb('#0a0b0c'))).toBe('#0a0b0c'));
+
+describe('scaleStops', () => {
+  it('shows CO₂ from 400 to 1600 ppm, with the stops in between', () => {
+    expect(scaleStops('co2').map(({ value, at }) => ({ value, at }))).toEqual([
+      { value: 400, at: 0 },
+      { value: 600, at: 1 / 6 },
+      { value: 1200, at: 2 / 3 },
+      { value: 1600, at: 1 },
+    ]);
+  });
+
+  it('shows temperature from 5 to 30 °C, with the stops in between', () => {
+    expect(scaleStops('temperature').map(({ value, at }) => ({ value, at }))).toEqual([
+      { value: 5, at: 0 },
+      { value: 20, at: 0.6 },
+      { value: 25, at: 0.8 },
+      { value: 30, at: 1 },
+    ]);
+  });
+
+  it('uses exactly the colours the heatmap paints rooms with at each stop', () => {
+    for (const s of scaleStops('co2')) expect(co2Colour(s.value)).toBe(s.colour);
+    for (const s of scaleStops('temperature')) expect(temperatureColour(s.value)).toBe(s.colour);
+  });
+});
