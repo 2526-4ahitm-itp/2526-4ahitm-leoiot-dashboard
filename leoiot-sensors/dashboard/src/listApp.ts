@@ -53,6 +53,7 @@ export function startListApp(deps: ListAppDeps): App {
     connect: deps.connect,
     query: deps.query,
     timers,
+    now: deps.now,
     onChange: () => {
       feedMode = source.mode();
       draw();
@@ -60,7 +61,7 @@ export function startListApp(deps: ListAppDeps): App {
   });
   draw = () => {
     if (disposed) return;
-    renderRoomList(listDom, { entries: listEntries(source.state, deps.now()), ready: source.ready(), feed: feedMode, lang }, makeFormat(lang));
+    renderRoomList(listDom, { entries: listEntries(source.state, deps.now()), ready: source.ready(), feed: feedMode, failed: source.failed(), lastLoadAt: source.lastLoadAt(), lang }, makeFormat(lang));
   };
   drawFrame();
   draw();

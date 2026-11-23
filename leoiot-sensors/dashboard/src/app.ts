@@ -120,7 +120,7 @@ export function startApp(deps: AppDeps): App {
     const state = rooms?.state ?? new Map();
     renderRoomChoice(listDom, [...state.keys()], room.id, lang);
     const visible = dom.app.dataset.state === 'nodata' || dom.app.dataset.state === 'error';
-    if (visible) renderRoomList(listDom, { entries: listEntries(state, deps.now()), ready: rooms?.ready() ?? false, feed: feedMode, lang }, makeFormat(lang));
+    if (visible) renderRoomList(listDom, { entries: listEntries(state, deps.now()), ready: rooms?.ready() ?? false, feed: feedMode, failed: rooms?.failed() ?? false, lastLoadAt: rooms?.lastLoadAt() ?? null, lang }, makeFormat(lang));
   }
 
   function drawRoom(): void {
@@ -220,6 +220,7 @@ export function startApp(deps: AppDeps): App {
     connect: deps.connect,
     query: deps.query,
     timers,
+    now: deps.now,
     extraPoll: room.valid ? refreshLatest : undefined,
     onMessage: (topic, payload) => {
       if (topic !== shownTopic || payload.length === 0) return; // a cleared message only concerns the list

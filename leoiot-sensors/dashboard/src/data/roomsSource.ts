@@ -20,6 +20,8 @@ export interface RoomsSourceOptions {
   onMessage?: (topic: string, payload: Uint8Array) => void;
   /** More work for each round of the fallback poll (the room page refreshes its own room). */
   extraPoll?: () => Promise<void>;
+  /** The clock (default `Date.now`); the time of the last successful load of the stored readings. */
+  now?: () => number;
 }
 
 export interface RoomsSource {
@@ -27,6 +29,10 @@ export interface RoomsSource {
   /** True once something answered (a message, the stored readings, or the short wait after connecting). */
   ready(): boolean;
   mode(): FeedMode;
+  /** The last load of the stored readings failed (cleared by the next success). */
+  failed(): boolean;
+  /** Time of the last successful load of the stored readings, or null. */
+  lastLoadAt(): number | null;
   stop(): void;
 }
 
@@ -36,6 +42,9 @@ export function startRoomsSource(o: RoomsSourceOptions): RoomsSource {
   let mode: FeedMode = 'connecting';
   let waiting: unknown = null;
   let stopped = false;
+  let failed = false;
+  let lastLoadAt: number | null = null;
+  const now = o.now ?? Date.now;
   const markReady = () => {
     if (ready || stopped) return;
     ready = true;
@@ -48,8 +57,10 @@ export function startRoomsSource(o: RoomsSourceOptions): RoomsSource {
     poll: async () => {
       try {
         applyStoredRooms(state, await loadRooms(o.query));
+        failed = false;
+        lastLoadAt = now();
       } catch {
-        // the next round tries again; the list keeps what it has
+        failed = true; // the next round tries again; the list keeps what it has
       }
       if (!stopped) {
         ready = true;
@@ -73,6 +84,8 @@ export function startRoomsSource(o: RoomsSourceOptions): RoomsSource {
     state,
     ready: () => ready,
     mode: () => mode,
+    failed: () => failed,
+    lastLoadAt: () => lastLoadAt,
     stop() {
       stopped = true;
       feed.stop();

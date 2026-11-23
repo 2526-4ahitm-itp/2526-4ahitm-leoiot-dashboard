@@ -34,7 +34,7 @@ describe('room list view (no room in the address)', () => {
     t.mqtt.message(T('E10'), reading('E10', { co2: 500 }));
     t.mqtt.message(T('1Aula'), reading('1Aula', { co2: 700 }));
     t.mqtt.message(T('X99'), reading('X99', { co2: 700 }));
-    expect(texts('#roomsBody h3')).toEqual(['Erdgeschoss', '1. Stock', 'Weitere Räume']);
+    expect(texts('#roomsBody h3 > span:first-child')).toEqual(['Erdgeschoss', '1. Stock', 'Weitere Räume']);
     expect(texts('#roomsBody .rid')).toEqual(['E10', '1Aula', '105', 'X99']);
     expect(item('105').querySelector('a')!.getAttribute('href')).toBe('?room=105');
     expect(t.$('roomsMsg').hidden).toBe(true);
@@ -49,14 +49,14 @@ describe('room list view (no room in the address)', () => {
     expect(item('105').dataset.air).toBe('bad');
     expect(item('105').querySelector('.rstate')!.textContent).toBe('Jetzt lüften');
     expect(item('105').querySelector('.rco2')!.textContent!.replace(/\s/g, '')).toBe('1120ppm');
-    expect(item('E10').querySelector('.rtag')!.textContent).toBe('simuliert');
-    expect(item('E10').querySelector<HTMLElement>('.rtag')!.hidden).toBe(false);
-    expect(item('105').querySelector<HTMLElement>('.rtag')!.hidden).toBe(true);
+    expect(item('E10').dataset.source).toBe('simulated');
+    expect(item('105').dataset.source).toBe('sensor');
+    expect(document.querySelector('.rtag')).toBeNull();
     expect(item('106').querySelector('.rstate')!.textContent).toBe('Kein CO₂-Wert');
     expect(item('106').querySelector('.rco2')!.textContent).toBe('–');
     expect(item('106').dataset.air).toBe('off');
     expect(item('107').dataset).toMatchObject({ air: 'off', fresh: 'stale' });
-    expect(item('107').querySelector('.rstate')!.textContent).toMatch(/^Nicht aktuell · \d\d:\d\d$/);
+    expect(item('107').querySelector('.rstate')!.textContent).toMatch(/^Zuletzt \d\d:\d\d$/);
     expect(item('105').querySelector('.lamp-dot')!.getAttribute('aria-hidden')).toBe('true');
   });
   it('updates live, in place: the same list element stays, a room goes stale after five minutes', async () => {
@@ -80,7 +80,7 @@ describe('room list view (no room in the address)', () => {
     t.mqtt.message(T('E10'), reading('E10', { co2: 500 }));
     t.mqtt.message(T('105'), '');
     expect(texts('#roomsBody .rid')).toEqual(['E10']);
-    expect(texts('#roomsBody h3')).toEqual(['Erdgeschoss']);
+    expect(texts('#roomsBody h3 > span:first-child')).toEqual(['Erdgeschoss']);
   });
   it('says that no room is sending when nothing arrives after connecting', async () => {
     const t = await startTestApp({ search: '' });
@@ -97,20 +97,108 @@ describe('room list view (no room in the address)', () => {
     await t.advance(9000);
     expect(t.roomsQueries()).toBe(1);
     expect(texts('#roomsBody .rid')).toEqual(['E10', '105']);
-    expect(t.$('roomsNote').hidden).toBe(false);
-    expect(t.$('roomsNote').textContent).toBe('Aktualisierung jede Minute');
+    expect(t.$('roomsFresh').hidden).toBe(false);
+    expect(t.$('roomsFreshText').textContent).toMatch(/^Aktualisierung jede Minute · Stand \d\d:\d\d$/);
     await t.advance(60_000);
     expect(t.roomsQueries()).toBe(2);
     await t.connect();
-    expect(t.$('roomsNote').hidden).toBe(true);
+    expect(t.$('roomsFreshText').textContent).toBe('Live-Werte');
+  });
+  it('visible and hidden texts: good air is hidden, attention states and outdated are visible', async () => {
+    const t = await startTestApp({ search: '' });
+    await t.connect();
+    t.mqtt.message(T('E11'), reading('E11', { co2: 726 }));
+    t.mqtt.message(T('E59'), reading('E59', { co2: 860 }));
+    t.mqtt.message(T('105'), reading('105', { co2: 1249 }));
+    t.mqtt.message(T('106'), reading('106', { temperature: 21 }));
+    t.mqtt.message(T('107'), reading('107', { co2: 900 }, BASE - 2 * 3600_000));
+    const good = item('E11').querySelector('.rstate')!;
+    expect(good.textContent).toBe('Luft gut');
+    expect(good.classList.contains('sr-only')).toBe(true);
+    expect(item('E59').querySelector('.rstate')!.classList.contains('sr-only')).toBe(false);
+    expect(item('E59').querySelector('.rstate')!.textContent).toBe('Bald lüften');
+    expect(item('105').querySelector('.rstate')!.textContent).toBe('Jetzt lüften');
+    expect(item('106').querySelector('.rstate')!.classList.contains('sr-only')).toBe(false);
+    expect(item('107').querySelector('.rstate')!.classList.contains('sr-only')).toBe(false);
+    expect(item('107').querySelector('svg.rwarn')!.getAttribute('aria-hidden')).toBe('true');
+  });
+  it('the link is labelled with the visible id first, state, value and source', async () => {
+    const t = await startTestApp({ search: '' });
+    await t.connect();
+    t.mqtt.message(T('E11'), reading('E11', { co2: 726, source: 'simulated' }));
+    t.mqtt.message(T('105'), reading('105', { co2: 1249 }));
+    t.mqtt.message(T('106'), reading('106', { temperature: 21 }));
+    const label = (r: string) => item(r).querySelector('a')!.getAttribute('aria-label')!.replace(/\s/g, ' ');
+    expect(label('E11')).toBe('E11, Luft gut, 726 ppm, simuliert');
+    expect(label('105')).toBe('105, Jetzt lüften, 1 249 ppm');
+    expect(label('106')).toBe('106, Kein CO₂-Wert, –');
+    t.mqtt.message(T('E11'), reading('E11', { co2: 900, source: 'simulated' }, BASE + 1000));
+    expect(label('E11')).toBe('E11, Bald lüften, 900 ppm, simuliert');
+  });
+  it('the legend shows only while a simulated room is listed', async () => {
+    const t = await startTestApp({ search: '' });
+    await t.connect();
+    t.mqtt.message(T('105'), reading('105', { co2: 500 }));
+    expect(t.$('roomsLegend').hidden).toBe(true);
+    t.mqtt.message(T('E10'), reading('E10', { co2: 500, source: 'simulated' }));
+    expect(t.$('roomsLegend').hidden).toBe(false);
+    expect(t.$('roomsLegend').textContent).toBe('Gestrichelter Rahmen: simulierte Werte');
+    t.mqtt.message(T('E10'), '');
+    expect(t.$('roomsLegend').hidden).toBe(true);
+  });
+  it('summary and floor counts, zero counts left out; the freshness line is live', async () => {
+    const t = await startTestApp({ search: '' });
+    await t.connect();
+    t.mqtt.message(T('E10'), reading('E10', { co2: 500 }));
+    t.mqtt.message(T('E11'), reading('E11', { co2: 500 }));
+    t.mqtt.message(T('105'), reading('105', { co2: 1200 }));
+    t.mqtt.message(T('106'), reading('106', { co2: 900 }));
+    t.mqtt.message(T('107'), reading('107', { co2: 900 }, BASE - 2 * 3600_000));
+    expect(t.$('roomsSummary').textContent).toBe('5 Räume · 1 jetzt lüften · 1 bald lüften · 1 nicht aktuell');
+    expect(texts('#roomsBody .fcount')).toEqual([' · 2 Räume', ' · 3 Räume · 1 jetzt lüften · 1 bald lüften · 1 nicht aktuell']);
+    expect(t.$('roomsFreshText').textContent).toBe('Live-Werte');
+    expect(t.$('roomsFresh').querySelector('.dot')).not.toBeNull();
+  });
+  it('a failing load of the stored readings shows the error, never "no room"', async () => {
+    const t = await startTestApp({ search: '', failing: true });
+    await t.advance(9000);
+    expect(t.$('roomsMsg').hidden).toBe(false);
+    expect(t.$('roomsMsg').textContent).toBe('Die Werte konnten nicht geladen werden. Die Seite versucht es jede Minute erneut.');
+    expect(document.body.textContent).not.toContain('Derzeit sendet kein Raum');
+    expect(t.$('roomsFreshText').textContent).toBe('Aktualisierung jede Minute');
+  });
+  it('rooms stay when a later load fails, with the time of the last success', async () => {
+    const t = await startTestApp({ search: '', rooms: fixture('latestRooms.csv') });
+    await t.advance(9000);
+    const stand = t.$('roomsFreshText').textContent;
+    expect(stand).toMatch(/Stand \d\d:\d\d$/);
+    t.state.fail = true;
+    await t.advance(60_000);
+    expect(t.roomsQueries()).toBe(2);
+    expect(texts('#roomsBody .rid')).toEqual(['E10', '105']);
+    expect(t.$('roomsMsg').hidden).toBe(true);
+    expect(t.$('roomsFreshText').textContent).toBe(stand);
+  });
+  it('a focused link keeps focus when the list is redrawn', async () => {
+    const t = await startTestApp({ search: '' });
+    await t.connect();
+    t.mqtt.message(T('105'), reading('105', { co2: 500 }));
+    const link = item('105').querySelector('a')!;
+    link.focus();
+    t.mqtt.message(T('E10'), reading('E10', { co2: 500 }));
+    t.mqtt.message(T('105'), reading('105', { co2: 900 }, BASE + 1000));
+    await t.advance(5000);
+    expect(document.activeElement).toBe(link);
   });
   it('language and theme buttons work; the list switches language', async () => {
     const t = await startTestApp({ search: '' });
     await t.connect();
     t.mqtt.message(T('E10'), reading('E10', { co2: 500 }));
     await t.click('[data-lang="en"]');
-    expect(texts('#roomsBody h3')).toEqual(['Ground floor']);
+    expect(texts('#roomsBody h3 > span:first-child')).toEqual(['Ground floor']);
     expect(item('E10').querySelector('.rstate')!.textContent).toBe('Air is fine');
+    expect(t.$('roomsSummary').textContent).toBe('1 room');
+    expect(t.$('roomsFreshText').textContent).toBe('Live values');
     expect(t.$('roomsTitle').textContent).toBe('Rooms with readings');
     expect(document.title).toBe('Rooms · LeoIoT Room climate');
     expect(t.$('allRooms').textContent).toBe('All rooms');
@@ -211,6 +299,55 @@ describe('room page', () => {
     await t.advance(9000);
     expect(t.roomsQueries()).toBe(1);
     expect(texts('#roomsBody .rid')).toEqual(['E10', '105']);
-    expect(t.$('roomsNote').hidden).toBe(false);
+    expect(t.$('roomsFresh').hidden).toBe(false);
+  });
+});
+
+describe('rooms source state', () => {
+  it('failed() is set by a failing stored-readings load, cleared by a success; lastLoadAt keeps the last success', async () => {
+    const { startRoomsSource } = await import('../src/data/roomsSource');
+    const { FakeMqtt, FakeTimers, fixture: fx, flush } = await import('./helpers');
+    const timers = new FakeTimers();
+    let fail = false;
+    const src = startRoomsSource({
+      connect: () => new FakeMqtt(),
+      query: async () => {
+        if (fail) throw new Error('HTTP 502');
+        return fx('latestRooms.csv');
+      },
+      timers,
+      now: () => 1000 + timers.now,
+      onChange: () => {},
+    });
+    expect(src.failed()).toBe(false);
+    expect(src.lastLoadAt()).toBeNull();
+    fail = true;
+    timers.advance(9000);
+    await flush();
+    expect(src.failed()).toBe(true);
+    expect(src.lastLoadAt()).toBeNull();
+    fail = false;
+    timers.advance(60_000);
+    await flush();
+    expect(src.failed()).toBe(false);
+    const at = src.lastLoadAt();
+    expect(at).not.toBeNull();
+    fail = true;
+    timers.advance(60_000);
+    await flush();
+    expect(src.failed()).toBe(true);
+    expect(src.lastLoadAt()).toBe(at);
+    src.stop();
+  });
+});
+
+describe('texts', () => {
+  it('summary counts: singular, plural, zero left out, in both languages', async () => {
+    const { texts } = await import('../src/core/i18n');
+    expect(texts('de').listCounts({ rooms: 1, bad: 0, soon: 0, stale: 0 })).toBe('1 Raum');
+    expect(texts('en').listCounts({ rooms: 1, bad: 0, soon: 0, stale: 0 })).toBe('1 room');
+    expect(texts('en').listCounts({ rooms: 107, bad: 11, soon: 15, stale: 1 })).toBe('107 rooms · 11 air now · 15 air soon · 1 not current');
+    expect(texts('en').listFallbackAt('11:14')).toBe('Updated every minute · as of 11:14');
+    expect(Object.keys(texts('en')).sort()).toEqual(Object.keys(texts('de')).sort());
   });
 });
