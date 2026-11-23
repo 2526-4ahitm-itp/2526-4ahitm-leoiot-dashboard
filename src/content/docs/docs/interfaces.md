@@ -20,7 +20,6 @@ Ein Topic ist der „Briefkasten“-Name einer MQTT-Nachricht, die Payload ihr I
 | `nili3/sensor/nili3_co2/state`, `nili3/sensor/nili3_temperature/state` | Zahl als Text | echte Sensorbox `nili3` (ESPHome); Bridge und Grafana werten diese Topics aus | `legacy/mqtt-ws-bridge/index.js`, `legacy/grafana/dashboards/main-dashboard.json` |
 | `leoenergy/solax_pv/overall_inverter` | JSON-Rohdatensatz der Solax-Cloud (Solax: Hersteller des Wechselrichters der PV-Anlage) (`realtime_data`-Ergebnis), retained (der Broker merkt sich den letzten Wert für neue Empfänger) | Collector aus `leoiot-pv/collector/` (und externer PV-Broker) | `leoiot-pv/collector/src/main.ts` |
 | `sine` | Zahl als Text (Sinuskurve, jede Sekunde), Testkanal des Quarkus-Generators (Quarkus ist ein Java-Framework) | `quarkus-app` | `application.properties` |
-| `co2/threshold/high`, `co2/threshold/middle` | Zahl (CO₂-Schwelle in ppm) | wird von der Sensorbox abonniert | `legacy/sensorbox/nili-ldr/nili-ldr.yaml` |
 
 Beispiel: Aus dem Topic `nili3/sensor/105_co2/state` erkennt die Bridge Raum `105`, aus `.../e10_co2/state` Raum `E10`, aus `.../1aula_co2/state` Raum `1Aula`. Die echte Sensorbox `nili3` gehört zu Raum `105`.
 
@@ -91,9 +90,9 @@ Grafana ist ein Programm für Diagramme. Das Dashboard liegt als Datei `legacy/g
 
 ESPHome ist eine Software, mit der die Sensorbox per Konfigurationsdatei programmiert wird. Die Kürzel (BME280, MH-Z19 usw.) sind die Typenbezeichnungen der verbauten Sensorchips.
 
-Die Konfigurationen `nili-ldr` und `s3-mini-oled` liegen unter `legacy/sensorbox/` und senden per MQTT (Broker-Zugang über ESPHome-`!secret`, nicht im Repository):
+Die Konfiguration `nili-ldr` liegt unter `leoiot-sensors/firmware/`, `s3-mini-oled` unter `legacy/sensorbox/`; beide senden per MQTT (Broker-Zugang über ESPHome-`!secret`, nicht im Repository):
 
-- `legacy/sensorbox/nili-ldr/nili-ldr.yaml` (Gerätename `nili3`): Temperatur, Luftdruck, Luftfeuchte (BME280), Helligkeit (ADC), CO₂ (MH-Z19, Sensor `nili3_CO2`), MH-Z19-Temperatur, Bewegung, WLAN-Signal. Die LED-Anzeige richtet sich nach den per MQTT empfangenen Schwellen `co2/threshold/middle` und `co2/threshold/high`. MQTT-Discovery ist abgeschaltet.
+- `leoiot-sensors/firmware/nili-ldr/nili-ldr.yaml` (Gerätename `nili3`): Temperatur, Luftdruck, Luftfeuchte (BME280), Helligkeit (ADC), CO₂ (MH-Z19, Sensor `nili3_CO2`), MH-Z19-Temperatur, Bewegung, WLAN-Signal. Die LED-Anzeige nutzt feste Grenzen von 800 und 1000 ppm und liest keine Schwellen aus MQTT. MQTT-Discovery ist abgeschaltet.
 - `legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml` (Gerätename `s3_mini_sensorbox`): SCD41 (CO₂, Temperatur, Luftfeuchte), TSL2591 (Licht), LD2410 (Präsenz), Display, Buzzer, Hintergrundbeleuchtung.
 - Weitere Varianten: `legacy/sensorbox/blinking-leds/blink.yaml`, `legacy/sensorbox/original-config/` (ältere Konfigurationen).
 
@@ -106,7 +105,7 @@ Die Konfigurationen `nili-ldr` und `s3-mini-oled` liegen unter `legacy/sensorbox
 | `legacy/dashboard-v2/dashboard.js` (CO₂-Diagramm) | Achsenvorschlag 400 bis 1200 ppm (keine Ampel) |
 
 :::note[Hinweis zu abweichenden Werten]
-Im Code und in der Präsentation gelten 800 und 1000 ppm. Die funktionale Spezifikation (`docs/functional-specification.md`, Anforderung FR-07, Akzeptanzkriterium AC-04) nennt 600 und 1200 ppm; in den Web-Oberflächen sind diese Werte nicht umgesetzt. Nur die LED der Sensorbox `nili3` startet mit genau diesen Standard-Schwellen (`legacy/sensorbox/nili-ldr/nili-ldr.yaml`), bis per MQTT neue Werte eintreffen.
+Im Code und in der Präsentation gelten 800 und 1000 ppm. Die funktionale Spezifikation (`docs/functional-specification.md`, Anforderung FR-07, Akzeptanzkriterium AC-04) nennt 600 und 1200 ppm; in den Web-Oberflächen sind diese Werte nicht umgesetzt. Die LED der Sensorbox `nili3` nutzt seit 2026-11-23 feste Grenzen von 800 und 1000 ppm (`leoiot-sensors/firmware/nili-ldr/nili-ldr.yaml`).
 :::
 
 ## Quellen im Repository
@@ -120,5 +119,5 @@ Im Code und in der Präsentation gelten 800 und 1000 ppm. Die funktionale Spezi
 - `leoiot-platform/proxy/nginx.conf`
 - `leoiot-pv/kiosk/`, `leoiot-pv/dashboard/`
 - `legacy/frontend/logic.js`, `legacy/dashboard-v2/dashboard.js`
-- `legacy/sensorbox/nili-ldr/nili-ldr.yaml`, `legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml`
+- `leoiot-sensors/firmware/nili-ldr/nili-ldr.yaml`, `legacy/sensorbox/s3-mini-oled/s3_mini_oled.yaml`
 - `docs/functional-specification.md`

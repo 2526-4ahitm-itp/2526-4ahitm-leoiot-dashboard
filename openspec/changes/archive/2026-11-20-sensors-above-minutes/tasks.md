@@ -8,4 +8,4 @@
 ## 2. Check and ship
 
 - [x] 2.1 Against the local collector stack, write one reading of 1034 ppm between readings near 400 ppm; verify in the browser that the summary shows 1 min and the peak 1034 ppm
-- [ ] 2.2 Run `npm ci && npm test && npm run build` in `leoiot-sensors/dashboard` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green
+- [x] 2.2 Run `npm ci && npm test && npm run build` in `leoiot-sensors/dashboard` and `.github/ci/image-build.sh leoiot-sensors/dashboard`; open the pull request and verify `ci-ok` is green

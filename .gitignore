@@ -36,10 +36,10 @@ Temporary Items
 dist/
 docs/slides/revealjs
 .idea/
-legacy/sensorbox/nili-ldr/secrets.yaml
+leoiot-sensors/firmware/nili-ldr/secrets.yaml
 legacy/sensorbox/s3-mini-oled/secrets.yaml
 
-legacy/sensorbox/nili-ldr/.esphome/
+leoiot-sensors/firmware/nili-ldr/.esphome/
 
 # Node
 node_modules/
