@@ -19,6 +19,6 @@
 ## 4. Check and ship
 
 - [x] 4.1 With a placeholder `secrets.yaml` outside the repository, verify `esphome config nili-ldr.yaml` says the configuration is valid; verify the build fails with the missing-secret error without one
-- [ ] 4.2 Open the pull request and verify `ci-ok` is green
+- [x] 4.2 Open the pull request and verify `ci-ok` is green
 - [x] 4.3 Flash `nili3` (Sensoren lead): set the new OTA and hotspot passwords, verify `nili3/status` is `online`, room 105 on the dashboard shows current values and the traffic light follows 800 and 1000 ppm
-- [ ] 4.4 Archive the change
+- [x] 4.4 Archive the change
