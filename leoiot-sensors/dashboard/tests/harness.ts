@@ -102,6 +102,8 @@ export async function startTestApp(o: TestAppOptions = {}) {
   let schemeListener: (() => void) | null = null;
   const search = o.search ?? '?room=105';
   const navigated: string[] = [];
+  /** The address's query string, as the list view keeps it with replaceState. */
+  const address = { search };
   const deps = {
     doc: document,
     storage: storage as unknown as Storage | null,
@@ -121,7 +123,7 @@ export async function startTestApp(o: TestAppOptions = {}) {
     onSchemeChange: (l: () => void) => void (schemeListener = l),
   };
   // A room in the address starts the room page, none the room list (as src/main.ts does).
-  const app = roomFromSearch(search) ? startApp({ ...deps, search, navigate: (href) => void navigated.push(href) }) : startListApp(deps);
+  const app = roomFromSearch(search) ? startApp({ ...deps, search, navigate: (href) => void navigated.push(href) }) : startListApp({ ...deps, search, replaceSearch: (next) => void (address.search = next) });
   apps.push(app);
   await flush();
   const $ = (id: string) => document.getElementById(id) as HTMLElement;
@@ -135,6 +137,7 @@ export async function startTestApp(o: TestAppOptions = {}) {
     mqtt,
     queries,
     navigated,
+    address,
     state,
     storage,
     $,

@@ -40,6 +40,6 @@ const shared = {
 // A room in the address starts the room page, no room starts the room list.
 const app = roomFromSearch(location.search)
   ? startApp({ ...shared, search: location.search, charts: async () => (await import('./ui/echartsApi')).echartsApi, navigate: (href) => location.assign(href) })
-  : startListApp(shared);
+  : startListApp({ ...shared, search: location.search, replaceSearch: (search) => history.replaceState(history.state, '', `${location.pathname}${search}${location.hash}`) });
 
 addEventListener('pagehide', () => app.dispose());
