@@ -29,6 +29,22 @@ Your computer has to be in the same Wi-Fi network as the box, `htlleonding-iot`;
 
 When the box is back, it publishes `nili3/status` = `online` and room 105 shows current values on the dashboard at `/sensors/?room=105`.
 
+## Connection
+
+Three settings keep the box connected to the broker (specified in `openspec/specs/sensors/box-firmware/`):
+
+- `wifi: power_save_mode: none`: the ESP32's default Wi-Fi power saving made the link lose about a fifth of all packets, and the broker dropped the box every 30 seconds.
+- `mqtt: keepalive: 60s`: a short stall does not end the session.
+- `mqtt: log_topic` at level `WARN`: only warnings and errors go to `nili3/debug`. Read them with `esphome logs nili-ldr.yaml --device MQTT` (same `uvx` prefix); the full debug log is on the serial port.
+
+To check the connection, count the box's reconnects in the broker log on vm23 (read-only):
+
+```bash
+ssh solmqadmin@vm23.htl-leonding.ac.at 'docker logs --since 1h leoiot-platform-mosquitto-1 2>&1 | grep -c "as nili3_usb"'
+```
+
+A healthy box shows 0 new connections per hour, apart from one after a restart or a flash.
+
 ## Recovery
 
 If the box cannot join the Wi-Fi network, it opens a hotspot named `nili3`, protected by the hotspot password (`ap_password`). Join it and flash through the box's fixed address:

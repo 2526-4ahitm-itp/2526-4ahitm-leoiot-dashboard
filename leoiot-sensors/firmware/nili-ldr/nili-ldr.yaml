@@ -38,6 +38,9 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
   reboot_timeout: 0s
+  # The ESP32's Wi-Fi power saving (modem sleep) made the link lose about a fifth of all packets
+  # with 35-200 ms delays, and the broker dropped the box every 30 s. The box is mains powered.
+  power_save_mode: none
   ap:
     ssid: ${name}
     password: !secret ap_password
@@ -52,6 +55,13 @@ mqtt:
   password: !secret mqtt_password
   client_id: "nili3_usb"
   discovery: false
+  # A short stall must not end the session (the default is 15 s).
+  keepalive: 60s
+  # Only warnings and errors go to the broker; the debug log of every reading stays on the serial
+  # port and the web server.
+  log_topic:
+    topic: nili3/debug
+    level: WARN
 
 captive_portal:
 
