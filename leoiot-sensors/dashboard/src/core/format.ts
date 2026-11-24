@@ -4,7 +4,7 @@ import type { Lang } from './i18n';
 export const TIME_ZONE = 'Europe/Vienna';
 
 /** Offset of the school's time zone to UTC at an instant, in ms (summer time +2 h, winter time +1 h). */
-function zoneOffset(ms: number): number {
+export function zoneOffset(ms: number): number {
   const parts = new Intl.DateTimeFormat('en-GB', { timeZone: TIME_ZONE, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' }).formatToParts(ms);
   const n = (type: string) => Number(parts.find((p) => p.type === type)?.value);
   return Date.UTC(n('year'), n('month') - 1, n('day'), n('hour'), n('minute'), n('second')) - Math.floor(ms / 1000) * 1000;
@@ -55,6 +55,8 @@ export interface Format {
   day(ms: number): string;
   /** Mo., 19. (de) or Mon 19 (en), for the axis of the seven-day range. */
   weekdayDay(ms: number): string;
+  /** `Dienstag, 24. November` (de) or `Tuesday 24 November` (en). */
+  longDate(ms: number): string;
   /** `16.11.` (de) or `16 Nov` (en). */
   dayMonth(ms: number): string;
   /** `16.11.2026` (de) or `16 Nov 2026` (en). */
@@ -80,6 +82,7 @@ export function makeFormat(lang: Lang): Format {
   const timeFmt = new Intl.DateTimeFormat(locale, { timeZone: TIME_ZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   const timeSecFmt = new Intl.DateTimeFormat(locale, { timeZone: TIME_ZONE, hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
   const dayFmt = new Intl.DateTimeFormat(locale, { timeZone: TIME_ZONE, day: 'numeric', month: 'numeric' });
+  const longDateFmt = new Intl.DateTimeFormat(locale, { timeZone: TIME_ZONE, weekday: 'long', day: 'numeric', month: 'long' });
   const weekdayFmt = new Intl.DateTimeFormat(locale, { timeZone: TIME_ZONE, weekday: 'short', day: 'numeric' });
   const numbers = new Map<number, Intl.NumberFormat>();
   const numberFmt = (decimals: number) => {
@@ -108,6 +111,7 @@ export function makeFormat(lang: Lang): Format {
   return {
     time,
     day,
+    longDate: (ms) => longDateFmt.format(ms),
     dayMonth,
     dayMonthYear,
     weekdayDate: (ms) => `${weekday(ms)} ${dayMonth(ms)}`,

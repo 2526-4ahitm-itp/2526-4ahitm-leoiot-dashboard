@@ -21,6 +21,29 @@ New sensor ingestion and room-climate views (CO₂, temperature and humidity per
 
 Each application is its own folder with its own `package.json` and `Dockerfile`; there is no workspace.
 
+## Hallway display
+
+`https://vm23.htl-leonding.ac.at/sensors/?kiosk` is a full-screen view for a TV in a corridor: the school-wide counts, a clock, the floors one after the other and a column with every room that needs airing. It has no controls and reloads itself every night at 03:30.
+
+Options in the address (combine them with `&`):
+
+| Option | Values | Default |
+|---|---|---|
+| `floor` | `U`, `E`, `1`, `2`, `T`, `other`: only that floor is paged (the counts and the attention column still cover the school) | all floors |
+| `lang` | `de`, `en` | `de` |
+| `theme` | `dark`, `light` | `dark` |
+| `seconds` | page time, 5 to 120 | `15` |
+
+Example: `/sensors/?kiosk&floor=E&lang=en&theme=light&seconds=30`. The display ignores the language and theme saved in the browser and stores nothing.
+
+To run a screen, start a browser in kiosk mode on the address, for example on a Raspberry Pi or a small PC:
+
+```
+chromium --kiosk --noerrdialogs --disable-infobars https://vm23.htl-leonding.ac.at/sensors/?kiosk
+```
+
+Set the TV to 1920 × 1080 (other landscape sizes scale), switch off its overscan or picture-size "zoom" so that the edges are not cut off, and disable the screen saver and screen blanking of the computer.
+
 ## Dependency rule
 
 This sub-project may depend only on the interfaces specified in the `platform` spec group (`openspec/specs/platform/`). It must not import, copy or mount anything from `legacy/` or from a sibling sub-project. Legacy logic is re-specified and re-implemented, never referenced.
