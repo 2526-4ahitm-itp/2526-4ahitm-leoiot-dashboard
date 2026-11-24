@@ -127,6 +127,37 @@ try {
   </section>
 </main>
 
+<div class="kiosk" id="kiosk" hidden>
+  <header class="k-head">
+    <div class="k-id">
+      <h1><span id="kioskTitle">Raumklima</span><span class="k-sub" id="kioskSub">LeoIoT · HTL Leonding</span></h1>
+      <p class="k-summary" id="kioskSummary"></p>
+    </div>
+    <div class="k-time">
+      <p class="k-clock" id="kioskClock"></p>
+      <p class="k-date" id="kioskDate"></p>
+      <p class="k-fresh" id="kioskFresh" hidden><svg class="k-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="kioskWarn" hidden><path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5"/><path d="M12 17.5h.01"/></svg><span id="kioskFreshText"></span></p>
+    </div>
+  </header>
+  <section class="k-floor" aria-labelledby="kioskFloorTitle">
+    <h2 id="kioskFloorTitle"><span id="kioskFloorName"></span><span class="k-fcount" id="kioskFloorCounts"></span><span class="k-part" id="kioskFloorPart"></span></h2>
+    <p class="k-msg" id="kioskMsg" hidden></p>
+    <ul class="k-grid" id="kioskGrid"></ul>
+  </section>
+  <aside class="k-att" id="kioskAtt">
+    <div class="k-att-list" id="kioskAttList">
+      <section id="kioskBad" hidden><h2><span id="kioskBadName"></span><span class="k-n" id="kioskBadCount"></span></h2><ul id="kioskBadList"></ul></section>
+      <section id="kioskSoon" hidden><h2><span id="kioskSoonName"></span><span class="k-n" id="kioskSoonCount"></span></h2><ul id="kioskSoonList"></ul></section>
+      <p class="k-more" id="kioskMore" hidden></p>
+      <p class="k-good" id="kioskGood" hidden></p>
+    </div>
+  </aside>
+  <footer class="k-foot">
+    <ol class="k-floors" id="kioskFloors"></ol>
+    <p class="k-legend" id="kioskLegend" hidden></p>
+  </footer>
+</div>
+
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

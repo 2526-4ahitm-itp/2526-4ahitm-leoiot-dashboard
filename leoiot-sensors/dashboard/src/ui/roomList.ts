@@ -71,19 +71,19 @@ export function bindRoomListDom(doc: Document): RoomListDom {
   };
 }
 
-function setAttr(el: Element, name: string, value: string): void {
+export function setAttr(el: Element, name: string, value: string): void {
   if (el.getAttribute(name) !== value) el.setAttribute(name, value);
 }
 
 /** Makes the children of `parent` exactly `wanted`, moving only what is out of place. */
-function syncChildren(parent: Element, wanted: Element[]): void {
+export function syncChildren(parent: Element, wanted: Element[]): void {
   wanted.forEach((child, i) => {
     if (parent.children[i] !== child) parent.insertBefore(child, parent.children[i] ?? null);
   });
   while (parent.children.length > wanted.length) parent.lastElementChild?.remove();
 }
 
-function span(doc: Document, className: string): HTMLElement {
+export function span(doc: Document, className: string): HTMLElement {
   const e = doc.createElement('span');
   e.className = className;
   return e;
@@ -92,7 +92,7 @@ function span(doc: Document, className: string): HTMLElement {
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /** The 12px warning triangle of an outdated room (the paths of the room page's #warnIcon). */
-function warnIcon(doc: Document): SVGElement {
+export function warnIcon(doc: Document): SVGElement {
   const svg = doc.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('class', 'rwarn');
   svg.setAttribute('viewBox', '0 0 24 24');
@@ -142,7 +142,7 @@ export interface ListModel {
   filter: ListFilter | null;
 }
 
-type T = ReturnType<typeof texts>;
+export type T = ReturnType<typeof texts>;
 
 function airText(e: RoomEntry, t: T): string {
   if (e.air === null) return t.listNoCo2;
@@ -150,7 +150,7 @@ function airText(e: RoomEntry, t: T): string {
 }
 
 /** The word shown after the id: only for rooms that need attention, no CO₂ value or outdated values. */
-function stateText(e: RoomEntry, t: T, format: Format): string {
+export function stateText(e: RoomEntry, t: T, format: Format): string {
   return e.state === 'stale' ? t.freshStale(format.time(e.lastAt)) : airText(e, t);
 }
 

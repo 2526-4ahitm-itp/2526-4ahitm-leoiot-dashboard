@@ -269,7 +269,7 @@ describe('The room is named in one line', () => {
     expect(dom.link3d.hidden).toBe(false);
     expect(dom.simTag.hidden).toBe(true);
     expect(text(panel())).not.toMatch(/gemessen|Sensorbox|nili3|Gerät/);
-    expect(document.querySelectorAll('h1')).toHaveLength(1);
+    expect(document.querySelectorAll('#app h1')).toHaveLength(1);
   });
   it('English: "Room E10"; the room id stays as written', () => {
     renderFrame(dom, { lang: 'en', room: { id: 'E10', valid: true }, selection: { kind: '24h' }, now: Date.now(), theme: 'light' });
