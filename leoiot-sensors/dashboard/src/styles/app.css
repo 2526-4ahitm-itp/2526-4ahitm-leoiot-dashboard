@@ -37,15 +37,42 @@ button { font: inherit; color: inherit; }
 .seg button[aria-pressed='true']:focus-visible { outline-color: var(--panel); }
 #datesBtn { display: inline-flex; align-items: center; gap: 6px; }
 #datesBtn svg { width: 16px; height: 16px; flex: none; }
+/* Icon only while no dates are shown: compact side padding, about square. */
+#datesBtn[aria-pressed='false'] { padding: 0 10px; }
 
 /* Date panel under the date segment: flat, hairline border, no shadow */
-.dates-panel { position: fixed; inset: auto; margin: 0; width: 340px; max-width: calc(100vw - 32px); padding: 16px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-ctl); }
-.dates-fields { display: flex; gap: 12px; }
-.dates-field { flex: 1; min-width: 0; display: grid; gap: 4px; }
-.dates-field label { font-size: 13px; color: var(--ink-3); }
-.dates-field input { width: 100%; min-width: 0; padding: 0 10px; font: inherit; font-size: 15px; color: var(--ink); background: var(--panel); color-scheme: light dark; }
-:root[data-theme='light'] .dates-field input { color-scheme: light; }
-:root[data-theme='dark'] .dates-field input { color-scheme: dark; }
+.dates-panel { position: fixed; inset: auto; margin: 0; width: 568px; max-width: calc(100vw - 32px); padding: 16px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-ctl); }
+.cal-status { font-size: 14px; color: var(--ink-2); min-height: 1.4em; margin-bottom: 10px; }
+.cal-months { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.cal-months[data-cols='1'] { grid-template-columns: minmax(0, 1fr); }
+.cal-month-head { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; align-items: center; height: 36px; margin-bottom: 4px; }
+.cal-title { text-align: center; font-size: 15px; font-weight: 700; }
+.cal-nav { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; cursor: pointer; border: 1px solid var(--line-ctl); border-radius: var(--r-ctl); background: var(--panel); color: var(--ink); transition: background-color var(--dur) var(--ease); }
+.cal-nav:hover:not(:disabled) { background: var(--ground); }
+.cal-nav:disabled { opacity: 0.4; cursor: default; }
+.cal-grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.cal-grid th { height: 28px; font-size: 13px; font-weight: 400; color: var(--ink-3); text-align: center; }
+.cal-day { padding: 0; height: 36px; text-align: center; }
+.cal-day button { width: 100%; height: 36px; padding: 0; border: 0; border-radius: var(--r-ctl); background: none; font-size: 15px; color: var(--ink); cursor: pointer; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+.cal-day button:hover { background: var(--ground); }
+.cal-day button:focus-visible { outline-offset: -4px; }
+.cal-day[data-today='true'] button { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.cal-day button[aria-disabled='true'] { opacity: 0.4; cursor: default; background: none; }
+/* The range: first and last day are ink squares, the days between a ground-grey band (lighter while it is only a preview). */
+.dates-panel { --cal-band: var(--line); --cal-preview: color-mix(in srgb, var(--line) 50%, var(--panel)); }
+.cal-day[data-role='inside'] { background: var(--cal-band); }
+.cal-day[data-role='inside'] button { border-radius: 0; }
+.cal-day[data-role='inside'] button:hover { background: color-mix(in srgb, var(--ink) 12%, var(--cal-band)); }
+.cal-day[data-role='start'] { background: linear-gradient(to right, transparent 50%, var(--cal-band) 50%); }
+.cal-day[data-role='end'] { background: linear-gradient(to left, transparent 50%, var(--cal-band) 50%); }
+.cal-day[data-preview='true'][data-role='inside'] { background: var(--cal-preview); }
+.cal-day[data-preview='true'][data-role='start'] { background: linear-gradient(to right, transparent 50%, var(--cal-preview) 50%); }
+.cal-day[data-preview='true'][data-role='end'] { background: linear-gradient(to left, transparent 50%, var(--cal-preview) 50%); }
+.cal-day[data-role='start'] button, .cal-day[data-role='end'] button, .cal-day[data-role='single'] button { background: var(--ink); color: var(--panel); }
+.cal-day[data-role='start'] button { border-radius: var(--r-ctl) 0 0 var(--r-ctl); }
+.cal-day[data-role='end'] button { border-radius: 0 var(--r-ctl) var(--r-ctl) 0; }
+.cal-day[data-preview='true'][data-role='end'] button { background: none; color: var(--ink); }
+.cal-day[data-role='start'] button:focus-visible, .cal-day[data-role='end'] button:focus-visible, .cal-day[data-role='single'] button:focus-visible { outline-color: var(--panel); }
 .dates-error { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; font-size: 14px; color: var(--ink); }
 .dates-error svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--y-ink); }
 .dates-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
@@ -150,7 +177,7 @@ main { padding: 20px 40px 20px; display: grid; gap: 16px; max-width: 1520px; mar
 body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='error']) #rangeGroup { display: none; }
 
 /* Room list: compact rows in a responsive grid, one link per room */
-.rooms { display: none; background: var(--panel); border-radius: var(--r-panel); padding: 28px 32px 32px; }
+.rooms { display: none; min-width: 0; background: var(--panel); border-radius: var(--r-panel); padding: 28px 32px 32px; }
 [data-view='list'] .rooms,
 [data-view='room'][data-state='nodata'] .rooms, [data-view='room'][data-state='error'] .rooms { display: block; }
 [data-view='list'] .room, [data-view='list'] .charts, [data-view='list'] .empty { display: none; }
@@ -159,6 +186,17 @@ body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='e
 .rooms-line { color: var(--ink-2); font-size: 15px; margin-top: 8px; }
 .rooms-fresh { color: var(--ink-3); font-size: 14px; display: flex; align-items: center; gap: 8px; }
 .rooms-fresh .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
+/* Toolbar: search field and floor segment, then the result line or the no-match message */
+.rooms-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: 16px; }
+.rooms-search { position: relative; width: 240px; max-width: 100%; }
+.rooms-search svg { position: absolute; left: 11px; top: 10px; width: 16px; height: 16px; color: var(--ink-3); pointer-events: none; }
+.rooms-search input { width: 100%; padding: 0 10px 0 34px; font: inherit; font-size: 15px; color: var(--ink); background: var(--panel); }
+.rooms-search input::placeholder { color: var(--ink-3); opacity: 1; }
+.rooms-floors { position: relative; max-width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.rooms-floors button { flex: none; }
+.rooms-nomatch { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.rooms-reset { padding: 0 14px; font: inherit; font-size: 15px; color: var(--ink); cursor: pointer; transition: background-color var(--dur) var(--ease); }
+.rooms-reset:hover { background: var(--ground); }
 .floor { margin-top: 22px; }
 .floor h3 .fcount { color: var(--ink-3); }
 .floor h3 { font-size: 15px; font-weight: 400; color: var(--ink-2); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
@@ -220,10 +258,11 @@ body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='e
 @media (max-width: 640px) {
   .bar { padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
   .dates-panel { width: auto; max-width: none; }
-  .dates-fields { flex-direction: column; }
   .crumb { padding-left: 10px; gap: 10px; }
   .rooms { padding: 20px 16px 24px; }
   .floor ul { grid-template-columns: 1fr; }
+  .rooms-search { width: 100%; }
+  .rooms-floors { width: 100%; }
   main { padding: 16px; gap: 16px; }
   .room { padding: 20px; gap: 20px; }
   .status { font-size: 32px; }
