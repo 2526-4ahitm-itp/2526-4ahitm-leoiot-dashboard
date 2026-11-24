@@ -82,12 +82,44 @@ The dashboard SHALL show the history in three charts, each in its own box: CO₂
 - **WHEN** the dashboard is opened at 1440 pixels width
 - **THEN** the CO₂ chart is on the left at the full height of the chart area, and the temperature chart is on the right above the humidity chart
 
-### Requirement: Two time ranges
-The dashboard SHALL offer the last 24 hours, the default, and the last 7 days, both ending now. Each chart SHALL state the start and end of the shown range. The last 24 hours SHALL be shown as means of five-minute windows and the last 7 days as means of thirty-minute windows. Times SHALL be shown in the school's local time (Europe/Vienna).
+### Requirement: Time ranges and chosen dates
+The dashboard SHALL offer the last 24 hours, the default, and the last 7 days, both ending now, and a range of chosen dates. The dates SHALL be chosen in a control placed with the two ranges and styled like them, by a first and a last day; one day SHALL be a range whose first and last day are the same. Every day from 13 months before today up to today SHALL be allowed, and a first day after the last day SHALL NOT be accepted. A chosen range SHALL be shown from 00:00 of the first day to 24:00 of the last day in local time; when the last day is today it SHALL end now and keep updating like the last 24 hours. Exactly one of the two ranges or the chosen dates SHALL be selected at a time, and the control SHALL show which one, for chosen dates with the dates. Each chart SHALL state the start and end of the shown range. The last 24 hours SHALL be shown as means of five-minute windows and the last 7 days as means of thirty-minute windows; chosen dates SHALL be shown as means of five-minute windows up to 2 days, thirty-minute windows up to 14 days, four-hour windows up to 93 days and one-day windows beyond, with windows aligned to local time. The selected range SHALL change only the charts; the current values, the air state and the day summary SHALL stay on the present. Times SHALL be shown in the school's local time (Europe/Vienna).
 
 #### Scenario: Switching to 7 days
 - **WHEN** a visitor switches to 7 days on Friday 23 October 2026 at 10:41
 - **THEN** all three charts show 16 October 10:41 to 23 October 10:41 and state that range
+
+#### Scenario: Choosing several past days
+- **WHEN** a visitor on room `105` chooses 16 November 2026 to 20 November 2026
+- **THEN** all three charts show 16 November 00:00 to 21 November 00:00 as thirty-minute means and state that range, the control shows the dates as selected, "24 h" and "7 Tage" are not, and the lamp and the current values still show the present
+
+#### Scenario: Choosing one day
+- **WHEN** a visitor chooses 17 November 2026 as first and last day
+- **THEN** the charts show 17 November 2026 from 00:00 to 24:00 as five-minute means
+
+#### Scenario: Range ending today
+- **WHEN** a visitor chooses 20 November 2026 to today, 23 November 2026, at 10:41
+- **THEN** the charts show 20 November 00:00 to 23 November 10:41 and keep adding new readings
+
+#### Scenario: A long range
+- **WHEN** a visitor chooses 1 January 2026 to 31 October 2026
+- **THEN** the charts show one-day means, each day from 00:00 to 24:00 local time
+
+#### Scenario: Back to the last 24 hours
+- **WHEN** chosen dates are shown and the visitor chooses "24 h"
+- **THEN** the charts show the last 24 hours and the control shows no dates
+
+#### Scenario: First day after the last day
+- **WHEN** a visitor enters 20 November 2026 as first day and 17 November 2026 as last day
+- **THEN** the range is not shown and the control says that the first day must not be after the last day
+
+#### Scenario: Days outside the allowed span
+- **WHEN** a visitor chooses dates on 23 November 2026
+- **THEN** days after 23 November 2026 and before 23 October 2025 cannot be chosen
+
+#### Scenario: Range without readings
+- **WHEN** a visitor chooses a range in which the room delivered nothing
+- **THEN** each chart says that there are no values in that range, never a line at zero
 
 ### Requirement: Simulated readings are marked
 When the shown readings carry the source `simulated`, the dashboard SHALL say "simuliert" ("simulated") next to the room id and SHALL draw the chart lines dashed. Measured readings SHALL get no such word.
