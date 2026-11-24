@@ -38,13 +38,14 @@ Rules for coding agents and people working in this repository. Read all of it be
   ```
 
 - To hand unfinished work to a later session, save a continuation prompt in `docs/continuations/`. The rules are in `docs/continuations/README.md`.
-- Push your branch and open a pull request into `main` (`gh pr create --base main`). CI runs only the components the change touches; the aggregate check `ci-ok` must be green before it merges. Merge only when your user asks you to.
+- Push your branch and open a pull request into `main` (`gh pr create --base main`). CI runs only the components the change touches; the aggregate check `ci-ok` must be green before it merges. Merge it yourself only when your user asks you to (`gh pr merge <number> --merge`, or the merge method the repository allows).
 - **Never push to `main` or `release`** (both are protected) and never force-push a shared branch. `main` must always be shippable: do not merge unfinished work.
 
 ## Shipping
 
 - A merge into `main` does not deploy. Shipping is a pull request `main` → `release`, merged with a merge commit once `ci-ok` is green. It needs no approval: the person who opened it may merge it. The push to `release` starts the deployment to vm23 (`.github/workflows/deploy.yml`, details in `src/content/docs/en/docs/operations.md`). One promotion ships everything on `main`.
-- You may open a promotion pull request when your user asks. You never approve or merge a pull request into `release`.
+- You may open a promotion pull request when your user asks, and merge it yourself when your user explicitly asks you to. Merge only with a merge commit (`gh pr merge <number> --merge`), only once `ci-ok` is green, and never past a required check or a ruleset (no `--admin`). After the merge, follow the deploy run (`gh run list --branch release`) and tell your user whether it succeeded.
+- You never approve a pull request, and you never merge into `release` on your own initiative.
 - Without the explicit instruction of your user, do not change rulesets, the runner, the `production` environment, the deploy workflow's targets or anything on vm23, and do not log in to vm23.
 
 ## Run the checks locally
