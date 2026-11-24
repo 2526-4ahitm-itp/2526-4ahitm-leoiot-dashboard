@@ -285,6 +285,17 @@ Neutral, quiet controls that never take an air colour.
 - **Outdated:** the lamp dot is replaced by a 12px warning triangle in amber ink, the word is "Zuletzt 11:07" and the value is muted slate at weight 400.
 - **Load error:** when the stored readings cannot be loaded and no room is known, one line says so and that the page tries again every minute; it never says that no room is sending. Rooms already shown stay.
 
+### Hallway display (`?kiosk`)
+
+A full-screen view for a landscape TV in a corridor, designed for 1920 × 1080 and read from a few metres. No controls, no scrolling, no top bar; the visitor's saved theme and language are ignored (the address chooses; dark and German by default). Every size is a multiple of one design pixel (`--u`, the smaller of 1/1920 of the width and 1/1080 of the height), so 1280 × 720 and 3840 × 2160 look the same, only smaller or larger.
+
+- **Grid:** header (title 40px/700, summary 24px, clock 64px/700 tabular, date, freshness line), floor page and attention column (420px wide, a panel) side by side, footer; 32px outer padding for overscan.
+- **Tile:** panel, 1px hairline, 14px corners, three stacked lines so that six tiles fit side by side: the 20px lamp dot and the room id (32px/700, one line, cut with an ellipsis only if it cannot fit), the CO₂ value below it (32px/700, in the ink form of the lamp colour) with the unit 18px muted, then the state word. The state word (20px) appears only for "Bald lüften", "Jetzt lüften" and "Kein CO₂-Wert"; "Luft gut" stays screen-reader-only. An outdated room shows the amber triangle instead of the lamp, "Zuletzt 11:07" and the value muted at 400. Simulated rooms keep the dashed outline, with the legend in the footer.
+- **Colour:** the lamp states and the warning triangle only, as everywhere. The progress line and the current floor are ink. No shadows, no halo.
+- **Attention column:** every live room of the school that needs airing, "Jetzt lüften" before "Bald lüften", highest CO₂ first, in lines of equal height; what does not fit becomes "+ N weitere". Outdated rooms are counted in the header, not listed.
+- **Footer:** the floors as words; the current one in ink 700, the others muted, with a 3px ink progress line that fills over the page time. With `prefers-reduced-motion: reduce` the line is static and full.
+- **Motion:** none besides the progress line; pages change without a transition.
+
 ### Heute column
 - **Icon:** "Zuletzt gelüftet" carries a 16px window icon (frame with cross bars) before its label, drawn like the quantity icons. The other two pairs have none.
 - **Content:** the day since local midnight (Europe/Vienna): a caption heading "Heute", then three label and value pairs: "Über 1000 ppm" (time as "1 h 20 min", or "noch nicht"), "Höchstwert" (value, unit and time) and "Zuletzt gelüftet" ("ca. 10:45" or "heute nicht erkannt", with the caption "geschätzt aus dem CO₂-Verlauf" under a time). Without a reading today one line "Heute noch keine Werte".

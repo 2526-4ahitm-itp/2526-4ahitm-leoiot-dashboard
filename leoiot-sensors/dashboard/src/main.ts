@@ -5,6 +5,8 @@ import './styles/tokens.css';
 import './styles/app.css';
 import { startApp } from './app';
 import { startListApp } from './listApp';
+import { startKioskApp } from './kioskApp';
+import { isKioskSearch } from './core/kiosk';
 import { roomFromSearch } from './core/room';
 import { liveUrl } from './core/live';
 import { createQuery } from './data/api';
@@ -37,9 +39,11 @@ const shared = {
   onSchemeChange: (listener: () => void) => dark.addEventListener('change', listener),
 };
 
-// A room in the address starts the room page, no room starts the room list.
+// A room in the address starts the room page, `kiosk` the hallway display, otherwise the room list.
 const app = roomFromSearch(location.search)
   ? startApp({ ...shared, search: location.search, charts: async () => (await import('./ui/echartsApi')).echartsApi, navigate: (href) => location.assign(href) })
-  : startListApp({ ...shared, search: location.search, replaceSearch: (search) => history.replaceState(history.state, '', `${location.pathname}${search}${location.hash}`) });
+  : isKioskSearch(location.search)
+    ? startKioskApp({ doc: document, query: shared.query, connect, now: shared.now, search: location.search, reload: () => location.reload() })
+    : startListApp({ ...shared, search: location.search, replaceSearch: (search) => history.replaceState(history.state, '', `${location.pathname}${search}${location.hash}`) });
 
 addEventListener('pagehide', () => app.dispose());
