@@ -15,4 +15,4 @@ The box SHALL keep one MQTT connection to the broker for as long as its Wi-Fi ne
 
 #### Scenario: A restart
 - **WHEN** the box restarts
-- **THEN** after it is back, `nili3/text_sensor/nili3_reset_reason/state` holds the reason of that restart and the uptime on `nili3/sensor/nili3_uptime/state` starts again from zero
+- **THEN** after it is back, `nili3/sensor/nili3_reset_reason/state` holds the reason of that restart and the uptime on `nili3/sensor/nili3_uptime/state` starts again from zero

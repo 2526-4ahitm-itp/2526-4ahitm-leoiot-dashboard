@@ -40,7 +40,7 @@ These settings keep the box connected to the broker (specified in `openspec/spec
 - `mqtt: idf_send_async: true`: the MQTT task sends the messages, so a stalled connection cannot block the main loop and trip the watchdog.
 - `mqtt: log_topic` at level `WARN`: only warnings and errors go to `nili3/debug`. Read them with `esphome logs nili-ldr.yaml --device MQTT` (same `uvx` prefix); the full debug log is on the serial port and on the box's web page.
 
-The box also reports why it last restarted and how much memory it has left, so that a restart can be explained from the broker alone: `nili3/text_sensor/nili3_reset_reason/state` (retained), `nili3/sensor/nili3_uptime/state`, `nili3/sensor/nili3_heap_free/state` and `nili3/sensor/nili3_heap_max_block/state`. The collector ignores these topics.
+The box also reports why it last restarted and how much memory it has left, so that a restart can be explained from the broker alone: `nili3/sensor/nili3_reset_reason/state` (retained), `nili3/sensor/nili3_uptime/state`, `nili3/sensor/nili3_heap_free/state` and `nili3/sensor/nili3_heap_max_block/state`. The collector ignores these topics.
 
 To check the connection, count the box's reconnects in the broker log on vm23 (read-only):
 

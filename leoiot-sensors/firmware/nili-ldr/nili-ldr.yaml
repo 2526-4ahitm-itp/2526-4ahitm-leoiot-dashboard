@@ -76,7 +76,7 @@ mqtt:
 
 captive_portal:
 
-# Reports why the box last restarted (retained on nili3/text_sensor/nili3_reset_reason/state) and
+# Reports why the box last restarted (retained on nili3/sensor/nili3_reset_reason/state) and
 # its free memory, so that a restart can be explained from the broker alone.
 debug:
   update_interval: 60s
