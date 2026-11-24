@@ -31,11 +31,16 @@ When the box is back, it publishes `nili3/status` = `online` and room 105 shows 
 
 ## Connection
 
-Three settings keep the box connected to the broker (specified in `openspec/specs/sensors/box-firmware/`):
+These settings keep the box connected to the broker (specified in `openspec/specs/sensors/box-firmware/`):
 
 - `wifi: power_save_mode: none`: the ESP32's default Wi-Fi power saving made the link lose about a fifth of all packets, and the broker dropped the box every 30 seconds.
+- `wifi: post_connect_roaming: false`: ESPHome otherwise scans for a better access point five minutes after every connect. The box never moves; on 2026-11-24 it stopped answering about 20 seconds after such a scan and restarted.
 - `mqtt: keepalive: 60s`: a short stall does not end the session.
-- `mqtt: log_topic` at level `WARN`: only warnings and errors go to `nili3/debug`. Read them with `esphome logs nili-ldr.yaml --device MQTT` (same `uvx` prefix); the full debug log is on the serial port.
+- `mqtt: clean_session: true`: every connect starts a new session. With a kept session the broker carried old subscriptions and unacknowledged messages from one connection to the next and logged "exceeded its receive-maximum quota" after each reconnect.
+- `mqtt: idf_send_async: true`: the MQTT task sends the messages, so a stalled connection cannot block the main loop and trip the watchdog.
+- `mqtt: log_topic` at level `WARN`: only warnings and errors go to `nili3/debug`. Read them with `esphome logs nili-ldr.yaml --device MQTT` (same `uvx` prefix); the full debug log is on the serial port and on the box's web page.
+
+The box also reports why it last restarted and how much memory it has left, so that a restart can be explained from the broker alone: `nili3/text_sensor/nili3_reset_reason/state` (retained), `nili3/sensor/nili3_uptime/state`, `nili3/sensor/nili3_heap_free/state` and `nili3/sensor/nili3_heap_max_block/state`. The collector ignores these topics.
 
 To check the connection, count the box's reconnects in the broker log on vm23 (read-only):
 
@@ -43,7 +48,7 @@ To check the connection, count the box's reconnects in the broker log on vm23 (r
 ssh solmqadmin@vm23.htl-leonding.ac.at 'docker logs --since 1h leoiot-platform-mosquitto-1 2>&1 | grep -c "as nili3_usb"'
 ```
 
-A healthy box shows 0 new connections per hour, apart from one after a restart or a flash.
+A healthy box shows 0 new connections per hour, apart from one after a restart or a flash. "session taken over" in that log means the box opened a new connection before the broker noticed the old one was gone; a falling uptime means it restarted.
 
 ## Recovery
 
