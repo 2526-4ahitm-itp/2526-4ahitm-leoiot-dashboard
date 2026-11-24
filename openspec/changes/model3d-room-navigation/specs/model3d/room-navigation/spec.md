@@ -151,11 +151,19 @@ While a route is active, the system SHALL show the destination room's id behind 
 - **THEN** that room's id is shown behind the building until it is deselected
 
 ### Requirement: The active route can be printed
-While a route is active, the explorer SHALL offer a visible control to print it. The printed route SHALL contain the destination, one section per floor the route crosses in the order the route walks them, each with a picture of that floor showing its part of the route and its markers, and that floor's turn and stairs markers as numbered steps, colour-matched to their dots, ending with the arrival at the destination. It SHALL cover the whole route, independent of how many floors have been revealed on screen. Printing through the browser's own print command SHALL produce the same printed route.
+While a route is active, the explorer SHALL offer a visible control to print it. The printed route SHALL contain the destination, one section per floor the route crosses in the order the route walks them, each with that floor's turn and stairs markers as numbered steps, ending with the arrival at the destination. Unless the route only passes through a floor's own stairwell between the stairs above and below with nothing else on that floor, each section SHALL also show a picture of that floor seen from directly above, with its walls, each of its rooms labelled by its id, its part of the route and, over each marker, its own step number. The printed route and its markers SHALL print in black, not their on-screen colours. It SHALL cover the whole route, independent of how many floors have been revealed on screen. Printing through the browser's own print command SHALL produce the same printed route.
 
 #### Scenario: Printing a multi-floor route
 - **WHEN** a user activates the print control while a route from the ground floor to floor 2 is active, with only the ground floor revealed
-- **THEN** the printout shows sections for the ground floor, floor 1 and floor 2 in that order, each with its picture and numbered steps, followed by the arrival at the destination
+- **THEN** the printout shows sections for the ground floor, floor 1 and floor 2 in that order, each with its numbered steps, followed by the arrival at the destination
+
+#### Scenario: A floor's picture only shows that floor
+- **WHEN** a floor's section is pictured, and the building model for that floor also carries the floors beneath it
+- **THEN** only that floor's own walls and room labels are drawn; the floors beneath show through only where the picture has nothing drawn over them, as on screen
+
+#### Scenario: A floor that's only a stairwell pass-through has no picture
+- **WHEN** a route climbs straight from one floor's stairs to the next floor's stairs, at the same stairwell, without visiting anything else on the floor in between
+- **THEN** that floor's section shows its title and its one numbered step (the stairs onward) but no picture
 
 #### Scenario: Printing without a route
 - **WHEN** no route is active

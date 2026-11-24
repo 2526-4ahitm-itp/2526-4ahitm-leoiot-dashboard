@@ -1,16 +1,16 @@
 // The printed form of the active route: one section per floor in the order
-// the route walks them, each with a picture of that floor's route and its
-// numbered, colour-matched turns and stairs (spec model3d/room-navigation,
-// "The active route can be printed"). Only visible on paper, see styles.css.
+// the route walks them, each with its numbered turns and stairs and, unless
+// the floor is only passed straight through between two stairs, a picture of
+// that floor's part of the route (spec model3d/room-navigation, "The active
+// route can be printed"). Only visible on paper, see styles.css.
 
 import { el } from './dom';
-import type { LegendEntry } from './routeLegend';
 
 export interface PrintFloor {
   readonly title: string;
-  /** A picture of the floor with its part of the route, as a data URL. */
-  readonly image: string;
-  readonly steps: readonly LegendEntry[];
+  /** A picture of the floor with its part of the route, as a data URL — omitted for a floor the route only passes straight through between two stairs, nothing on it worth a picture. */
+  readonly image: string | null;
+  readonly steps: readonly string[];
 }
 
 export interface PrintSheet {
@@ -40,22 +40,20 @@ export class RoutePrint {
       el('p', 'route-print-start', sheet.start),
       ...sheet.floors.map(({ title, image, steps }) => {
         const floor = el('div', 'route-print-floor');
-        const picture = el('img', 'route-print-image');
-        picture.src = image;
-        picture.alt = title;
+        const picture = image === null ? null : el('img', 'route-print-image');
+        if (picture) {
+          picture.src = image!;
+          picture.alt = title;
+        }
         const list = el('ol', 'route-print-steps');
         list.start = step + 1;
         list.append(
-          ...steps.map(({ colour, text }) => {
+          ...steps.map((text) => {
             step++;
-            const item = el('li', 'route-print-step');
-            const swatch = el('span', 'route-legend-swatch');
-            swatch.style.backgroundColor = colour;
-            item.append(swatch, el('span', undefined, text));
-            return item;
+            return el('li', 'route-print-step', text);
           }),
         );
-        floor.append(el('h2', 'route-print-floor-title', title), picture, list);
+        floor.append(el('h2', 'route-print-floor-title', title), ...(picture ? [picture] : []), list);
         return floor;
       }),
       el('p', 'route-print-arrival', sheet.arrival),

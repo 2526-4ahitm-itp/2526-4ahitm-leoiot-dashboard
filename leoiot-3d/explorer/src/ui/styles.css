@@ -569,6 +569,10 @@ body,
   display: none;
 }
 
+@page {
+  margin: 16mm 14mm;
+}
+
 @media print {
   html,
   body,
@@ -586,29 +590,39 @@ body,
   .route-print:not([hidden]) {
     display: block;
     font-size: 12pt;
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
   }
 
   .route-print-title {
-    margin: 0 0 4pt;
-    font-size: 22pt;
+    margin: 0 0 14pt;
+    padding-bottom: 8pt;
+    border-bottom: 1px solid #000;
+    font-size: 24pt;
+    font-weight: 700;
   }
 
-  .route-print-start,
-  .route-print-arrival {
-    margin: 6pt 0;
-    font-weight: 600;
+  .route-print-start {
+    margin: 0 0 14pt;
+    font-style: italic;
+    color: #555;
   }
 
   .route-print-floor {
     break-inside: avoid;
-    margin-top: 12pt;
+    margin-top: 18pt;
+    padding-top: 12pt;
+    border-top: 1px solid #ddd;
+  }
+
+  .route-print-floor:first-of-type {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
   }
 
   .route-print-floor-title {
-    margin: 0 0 4pt;
-    font-size: 15pt;
+    margin: 0 0 8pt;
+    font-size: 14pt;
+    font-weight: 700;
     border-bottom: 1px solid #999;
   }
 
@@ -617,21 +631,26 @@ body,
     width: 100%;
     max-height: 60vh;
     object-fit: contain;
+    border: 1px solid #ccc;
+    border-radius: 2pt;
+    margin-bottom: 8pt;
   }
 
   .route-print-steps {
-    margin: 6pt 0 0;
+    margin: 0;
     padding-left: 22pt;
+    line-height: 1.5;
   }
 
   .route-print-step {
     margin: 3pt 0;
   }
 
-  .route-print-step .route-legend-swatch {
-    display: inline-block;
-    margin-right: 6pt;
-    vertical-align: middle;
-    border-color: #555;
+  .route-print-arrival {
+    margin: 18pt 0 0;
+    padding-top: 10pt;
+    border-top: 1px solid #000;
+    font-size: 13pt;
+    font-weight: 700;
   }
 }

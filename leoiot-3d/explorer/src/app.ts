@@ -4,13 +4,13 @@
 import { REJUDGE_EVERY_MS } from './core/age';
 import { cell, HEATMAP_FLOORS, heatmapRooms, type HeatmapKind } from './core/heatmap';
 import { resolveRoom } from './core/roomAddress';
-import { FLOOR_ORDER, type FloorId } from './core/rooms';
+import { FLOOR_ORDER, floorOf, type FloorId } from './core/rooms';
 import type { RoomStore } from './core/store';
 import { markerColour, routeMarkers, type RouteMarker } from './nav/markers';
 import { isFloorVisible, knownRooms, routeFloors, routeTo, visibleRoutePoints, type RoutePoint } from './nav/route';
 import { HIGHLIGHT_COLOUR, ROOM_BASE_COLOUR } from './scene/materials';
 import type { Model, ViewId } from './scene/models';
-import type { Label, RouteMarkerDot, Viewer } from './scene/viewer';
+import type { Label, RoomLabel, RouteMarkerDot, Viewer } from './scene/viewer';
 import type { Controls } from './ui/controls';
 import { el } from './ui/dom';
 import type { Navigation } from './ui/navigation';
@@ -294,26 +294,38 @@ export class App {
   }
 
   /**
-   * The whole active route for paper: every floor it crosses, in the order it
-   * walks them, each pictured with its part of the route (and the floors
-   * beneath, as on screen) and its markers as numbered steps.
+   * The whole active route for paper: every floor it crosses, in the order
+   * it walks them, each with its markers as numbered steps and, unless the
+   * route only passes straight through that floor between two stairs (same
+   * stairwell, nothing else happens there, so a picture would show nothing
+   * worth seeing), pictured with its part of the route (and the floors
+   * beneath, as on screen), that floor's rooms labelled by id, and each
+   * marker's step number printed over it.
    */
   private printSheet(): PrintSheet | null {
     const route = this.activeRoute;
     if (!route || this.destination === null) return null;
-    const markers = routeMarkers(route).map((marker, i) => ({ marker, colour: markerColour(i) }));
+    const markers = routeMarkers(route).map((marker, i) => ({ marker, colour: markerColour(i), step: i + 1 }));
     return {
       title: strings.routePrint.title(this.destination),
       start: strings.routePrint.start,
-      floors: this.routeFloorSequence.map((floor) => ({
-        title: strings.views[floor],
-        image: this.viewer.snapshot(
-          this.model(floor).root,
-          visibleRoutePoints(route, floor),
-          this.routeMarkerDots(markers.filter(({ marker }) => isFloorVisible(marker.point.floor, floor))),
-        ),
-        steps: markers.filter(({ marker }) => marker.point.floor === floor).map(({ marker, colour }) => ({ colour, text: this.markerText(marker) })),
-      })),
+      floors: this.routeFloorSequence.map((floor) => {
+        const model = this.model(floor);
+        const rooms = [...model.centres].filter(([id]) => floorOf(id) === floor).map(([id, position]) => ({ id, position }));
+        const floorMarkers = markers.filter(({ marker }) => isFloorVisible(marker.point.floor, floor));
+        const markerLabels: RoomLabel[] = floorMarkers.map(({ marker, step }) => ({
+          id: String(step),
+          position: new Vector3(marker.point.x, marker.point.y + MARKER_Y_OFFSET, marker.point.z),
+        }));
+        const walkedHere = route.filter((p) => p.floor === floor).length > 1;
+        return {
+          title: strings.views[floor],
+          image: walkedHere
+            ? this.viewer.snapshot(model.root, floor, visibleRoutePoints(route, floor), this.routeMarkerDots(floorMarkers), rooms, markerLabels)
+            : null,
+          steps: markers.filter(({ marker }) => marker.point.floor === floor).map(({ marker }) => this.markerText(marker)),
+        };
+      }),
       arrival: strings.routePrint.arrival(this.destination),
     };
   }

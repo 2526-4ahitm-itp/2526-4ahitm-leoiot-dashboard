@@ -1,5 +1,5 @@
 import type { Object3D } from 'three';
-import { roomIdOf } from '../core/rooms';
+import { floorOf, type FloorId, roomIdOf } from '../core/rooms';
 
 /**
  * The node name as written in the glTF file. GLTFLoader keeps it in
@@ -16,4 +16,25 @@ export function nodeName(obj: Object3D): string {
 
 export function roomOf(obj: Object3D): string | null {
   return roomIdOf(nodeName(obj));
+}
+
+// A structure (non-room) node's own floor, by the prefix the model files give it (checked 2026-11-24 across all models/*.gltf).
+const STRUCTURE_FLOOR_PREFIX: Record<string, FloorId> = {
+  cellar: 'U',
+  ground_floor: 'E',
+  first_floor: '1',
+  second_floor: '2',
+};
+
+/**
+ * The floor a node belongs to: a room's own floor, or a structure node's by
+ * its name prefix. Null for a node that is neither (the gym model stacks no
+ * floors, so every one of its nodes is null here).
+ */
+export function floorOfNode(obj: Object3D): FloorId | null {
+  const room = roomOf(obj);
+  if (room !== null) return floorOf(room);
+  const name = nodeName(obj);
+  const prefix = Object.keys(STRUCTURE_FLOOR_PREFIX).find((p) => name.startsWith(p));
+  return prefix ? STRUCTURE_FLOOR_PREFIX[prefix] : null;
 }
