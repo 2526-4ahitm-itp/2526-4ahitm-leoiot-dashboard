@@ -1,26 +1,15 @@
-// The panel under the date segment: two date fields, validation, apply. It uses the browser's
-// popover when there is one and a plain hidden/shown panel with its own Escape and outside-click
-// handling otherwise. The pure helpers are exported for tests.
-import { localDate, localMidnight, makeFormat, shiftDate } from '../core/format';
+// The panel under the date segment: the range calendar, the "no day picked" error and apply. It uses
+// the browser's popover when there is one and a plain hidden/shown panel with its own Escape and
+// outside-click handling otherwise. The pure helpers are exported for tests.
+import { NO_PICK, type Pick } from '../core/calendar';
 import { texts, type Lang } from '../core/i18n';
-import { allowedDates, validateDates, type DatesCheck, type Selection } from '../core/ranges';
+import { validateDates, type Selection } from '../core/ranges';
 import type { Dom } from './render';
+import { createRangeCalendar } from './rangeCalendar';
 
-/** The days the fields start with: the shown dates, else 7 days ago to today. */
-export function prefillDates(sel: Selection, now: number): { from: string; to: string } {
-  if (sel.kind === 'dates') return { from: sel.from, to: sel.to };
-  const to = localDate(now);
-  return { from: shiftDate(to, -7), to };
-}
-
-/** The error line for a failed check; '' when the check passed. */
-export function errorText(check: DatesCheck, lang: Lang, now: number): string {
-  const t = texts(lang);
-  if (check === 'ok') return '';
-  if (check === 'order') return t.datesErrorOrder;
-  const f = makeFormat(lang);
-  const { min, max } = allowedDates(now);
-  return t.datesErrorSpan(f.dayMonthYear(localMidnight(min)), f.dayMonthYear(localMidnight(max)));
+/** The pick the calendar starts with: the shown dates, else nothing (the calendar then shows the current month). */
+export function prefillDates(sel: Selection): Pick {
+  return sel.kind === 'dates' ? { from: sel.from, to: sel.to } : NO_PICK;
 }
 
 /** Where the fixed panel goes: 6 px below the button, clamped into the viewport; full width below 640 px. */
@@ -43,7 +32,7 @@ export interface DatesPanel {
   toggle(): void;
   close(): void;
   isOpen(): boolean;
-  /** Re-sets the texts that depend on the language (the error line). */
+  /** Re-sets the texts that depend on the language (calendar, error line). */
   relabel(): void;
   dispose(): void;
 }
@@ -55,20 +44,28 @@ export function createDatesPanel(deps: DatesPanelDeps): DatesPanel {
   const win = doc.defaultView;
   const native = typeof (d.panel as HTMLElement & { showPopover?: unknown }).showPopover === 'function';
   let open = false;
-  let lastCheck: DatesCheck = 'ok';
+  let errorShown = false;
   let closedAt = -Infinity;
   if (native) d.panel.hidden = false;
 
-  const showError = (check: DatesCheck) => {
-    lastCheck = check;
-    const text = errorText(check, deps.lang(), deps.now());
-    d.errorText.textContent = text;
-    d.error.hidden = text === '';
-  };
+  const calendar = createRangeCalendar({
+    root: d.cal,
+    status: d.status,
+    doc,
+    lang: deps.lang,
+    now: deps.now,
+    onPick: () => showError(false),
+  });
+
+  function showError(on: boolean) {
+    errorShown = on;
+    d.errorText.textContent = on ? texts(deps.lang()).datesErrorNone : '';
+    d.error.hidden = !on;
+  }
 
   const position = () => {
     const r = d.btn.getBoundingClientRect();
-    const p = panelPosition(r, d.panel.offsetWidth || 340, win?.innerWidth ?? 1024);
+    const p = panelPosition(r, d.panel.offsetWidth || 568, win?.innerWidth ?? 1024);
     d.panel.style.top = `${p.top}px`;
     d.panel.style.left = `${p.left}px`;
     d.panel.style.right = p.right === null ? '' : `${p.right}px`;
@@ -84,20 +81,14 @@ export function createDatesPanel(deps: DatesPanelDeps): DatesPanel {
   };
 
   const show = () => {
-    const now = deps.now();
-    const { min, max } = allowedDates(now);
-    const pre = prefillDates(deps.selection(), now);
-    d.from.min = d.to.min = min;
-    d.from.max = d.to.max = max;
-    d.from.value = pre.from;
-    d.to.value = pre.to;
-    showError('ok');
+    calendar.reset(prefillDates(deps.selection()));
+    showError(false);
     open = true;
     d.btn.setAttribute('aria-expanded', 'true');
     if (native) (d.panel as HTMLElement & { showPopover(): void }).showPopover();
     else d.panel.hidden = false;
     position();
-    d.from.focus();
+    calendar.focusDay();
   };
 
   const close = () => {
@@ -112,22 +103,28 @@ export function createDatesPanel(deps: DatesPanelDeps): DatesPanel {
     markClosed(true);
   };
 
-  const onSubmit = (e: Event) => {
-    e.preventDefault();
-    const check = validateDates(d.from.value, d.to.value, deps.now());
-    if (check !== 'ok') {
-      showError(check);
+  /** Shows the picked range; one picked day is a range of that day. */
+  function submit() {
+    const { from, to } = calendar.pick();
+    // The calendar cannot produce a bad range; the check stays as a guard.
+    if (from === null || validateDates(from, to ?? from, deps.now()) !== 'ok') {
+      showError(true);
       return;
     }
-    const from = d.from.value;
-    const to = d.to.value;
     close();
-    deps.apply(from, to);
+    deps.apply(from, to ?? from);
+  }
+  const onSubmit = (e: Event) => {
+    e.preventDefault();
+    submit();
   };
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && open) {
       e.preventDefault();
       close();
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && open) {
+      e.preventDefault();
+      submit();
     }
   };
   // Light dismiss done by the browser: only the state and the focus need following.
@@ -160,9 +157,12 @@ export function createDatesPanel(deps: DatesPanelDeps): DatesPanel {
     close,
     isOpen: () => open,
     relabel() {
-      if (open) showError(lastCheck);
+      if (!open) return;
+      calendar.relabel();
+      showError(errorShown);
     },
     dispose() {
+      calendar.dispose();
       d.form.removeEventListener('submit', onSubmit);
       d.panel.removeEventListener('keydown', onKey);
       d.panel.removeEventListener('toggle', onToggle);

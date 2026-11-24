@@ -2,9 +2,9 @@
 // `leoiot/room-climate/#` (or, while the live channel is down, from the stored readings). No DOM here.
 import type { Air } from './air';
 import type { CsvRecord } from './csv';
-import { floorOf, groupByFloor, type FloorGroup, type FloorId } from './floors';
+import { floorOf, FLOORS, groupByFloor, type FloorGroup, type FloorId } from './floors';
 import { parseLiveMessage } from './live';
-import { isValidRoomId } from './room';
+import { displayRoomId, isValidRoomId } from './room';
 import { EMPTY_SNAPSHOT, mergeSnapshots, parseLatest, snapshotOfLive, type Snapshot } from './snapshot';
 import { deriveRoomView } from './view';
 
@@ -117,4 +117,39 @@ export function summarise(entries: readonly FloorEntries[]): ListSummary {
     total: countsOf(entries.flatMap((g) => g.rooms)),
     floors: entries.map((g) => ({ floor: g.floor, counts: countsOf(g.rooms) })),
   };
+}
+
+/** The floor filter: every floor, one floor, or the rooms of no known floor. */
+export type FloorFilter = FloorId | 'other' | 'all';
+
+export interface ListFilter {
+  floor: FloorFilter;
+  /** What the visitor typed; matched without case and spaces. */
+  query: string;
+}
+
+export const NO_FILTER: ListFilter = { floor: 'all', query: '' };
+
+/** The filter key of a floor group (`other` for rooms of no known floor). */
+export const floorKey = (floor: FloorId | null): FloorId | 'other' => floor ?? 'other';
+
+/** A floor from the address; anything unknown means all floors. */
+export function floorFromParam(value: string | null): FloorFilter {
+  return value === 'other' || (FLOORS as readonly string[]).includes(value ?? '') ? (value as FloorFilter) : 'all';
+}
+
+/** Lower case, no spaces: "e 10" finds "E10". */
+export const normaliseQuery = (query: string): string => query.toLowerCase().replace(/\s+/g, '');
+
+/** True while the filter hides something. */
+export const isFiltered = (f: ListFilter): boolean => f.floor !== 'all' || normaliseQuery(f.query) !== '';
+
+/** The entries that match the floor and contain the query in their id; floors left without a room are dropped. */
+export function filterEntries(entries: readonly FloorEntries[], filter: ListFilter): FloorEntries[] {
+  const q = normaliseQuery(filter.query);
+  const match = (e: RoomEntry) => q === '' || e.room.toLowerCase().includes(q) || displayRoomId(e.room).toLowerCase().includes(q);
+  return entries
+    .filter((g) => filter.floor === 'all' || floorKey(g.floor) === filter.floor)
+    .map((g) => ({ floor: g.floor, rooms: g.rooms.filter(match) }))
+    .filter((g) => g.rooms.length > 0);
 }

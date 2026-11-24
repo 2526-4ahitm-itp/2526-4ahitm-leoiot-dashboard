@@ -27,7 +27,7 @@ export interface Dom {
   rangeGroup: HTMLElement;
   dates: {
     btn: HTMLElement; text: HTMLElement; panel: HTMLElement; form: HTMLFormElement;
-    from: HTMLInputElement; to: HTMLInputElement; fromLabel: HTMLElement; toLabel: HTMLElement;
+    status: HTMLElement; cal: HTMLElement;
     error: HTMLElement; errorText: HTMLElement; submit: HTMLElement;
   };
   langGroup: HTMLElement;
@@ -78,7 +78,7 @@ export function bindDom(doc: Document): Dom {
     rangeGroup: el('rangeGroup'),
     dates: {
       btn: el('datesBtn'), text: el('datesText'), panel: el('datesPanel'), form: el('datesForm') as HTMLFormElement,
-      from: el('datesFrom') as HTMLInputElement, to: el('datesTo') as HTMLInputElement, fromLabel: el('datesFromLabel'), toLabel: el('datesToLabel'),
+      status: el('datesStatus'), cal: el('datesCal'),
       error: el('datesError'), errorText: el('datesErrorText'), submit: el('datesSubmit'),
     }, langGroup: el('langGroup'), theme: el('theme'),
     roomWord: el('roomWord'), roomId: el('roomId'), simTag: el('simTag'), light: el('light'),
@@ -154,18 +154,22 @@ export function renderFrame(dom: Dom, f: Frame): void {
   }
   const d = dom.dates;
   const format = makeFormat(f.lang);
+  // Icon only while no dates are shown: the accessible name (and the tooltip) says what it is.
   if (f.selection.kind === 'dates') {
+    const name = t.datesButtonAria(datesRangeFull(f.selection, format));
     setText(d.text, datesSegmentText(f.selection, f.now, format));
-    setAttr(d.btn, 'aria-label', t.datesButtonAria(datesRangeFull(f.selection, format)));
+    d.text.hidden = false;
+    setAttr(d.btn, 'aria-label', name);
+    setAttr(d.btn, 'title', name);
     setAttr(d.btn, 'aria-pressed', 'true');
   } else {
-    setText(d.text, t.datesPick);
-    d.btn.removeAttribute('aria-label');
+    setText(d.text, '');
+    d.text.hidden = true;
+    setAttr(d.btn, 'aria-label', t.datesPick);
+    setAttr(d.btn, 'title', t.datesPick);
     setAttr(d.btn, 'aria-pressed', 'false');
   }
   setAttr(d.panel, 'aria-label', t.datesPanel);
-  setText(d.fromLabel, t.datesFrom);
-  setText(d.toLabel, t.datesTo);
   setText(d.submit, t.datesShow);
   for (const b of dom.langGroup.querySelectorAll<HTMLElement>('[data-lang]')) setAttr(b, 'aria-pressed', String(b.dataset.lang === f.lang));
   setAttr(dom.theme, 'aria-label', f.theme === 'dark' ? t.themeToLight : t.themeToDark);

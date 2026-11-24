@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseAnnotatedCsv } from '../src/core/csv';
-import { applyRoomMessage, applyStoredRooms, listEntries, roomOfTopic, summarise, type RoomListState } from '../src/core/roomList';
+import { applyRoomMessage, applyStoredRooms, filterEntries, floorFromParam, isFiltered, listEntries, NO_FILTER, roomOfTopic, summarise, type ListFilter, type RoomListState } from '../src/core/roomList';
 import { roomsLatestQuery } from '../src/core/flux';
 import { fixture } from './helpers';
 
@@ -110,5 +110,58 @@ describe('summarise', () => {
   });
   it('an empty list has zero counts', () => {
     expect(summarise([])).toEqual({ total: { rooms: 0, bad: 0, soon: 0, stale: 0 }, floors: [] });
+  });
+});
+
+describe('filtering the list (sensors-range-calendar-room-filter 2.1)', () => {
+  const state: RoomListState = new Map();
+  for (const r of ['E10', 'E11', '105', '106', '1Aula', '210', 'X99']) applyRoomMessage(state, T(r), msg(r, { co2: 600 }));
+  const all = listEntries(state, NOW);
+  const found = (f: Partial<ListFilter>) => filterEntries(all, { ...NO_FILTER, ...f }).map((g) => [g.floor, g.rooms.map((r) => r.room)]);
+
+  it('no filter keeps everything', () => {
+    expect(filterEntries(all, NO_FILTER)).toEqual(all);
+    expect(isFiltered(NO_FILTER)).toBe(false);
+  });
+  it('the search matches a part of the room id, grouped by floor, and drops floors without a match', () => {
+    expect(found({ query: '10' })).toEqual([['E', ['E10']], ['1', ['105', '106']], ['2', ['210']]]);
+    expect(found({ query: 'aula' })).toEqual([['1', ['1Aula']]]);
+    expect(found({ query: '99' })).toEqual([[null, ['X99']]]);
+  });
+  it('ignores case and spaces, also inside the text', () => {
+    expect(found({ query: ' e10 ' })).toEqual([['E', ['E10']]]);
+    expect(found({ query: 'E 1 0' })).toEqual([['E', ['E10']]]);
+    expect(found({ query: '1AULA' })).toEqual([['1', ['1Aula']]]);
+    expect(found({ query: '   ' })).toEqual(all.map((g) => [g.floor, g.rooms.map((r) => r.room)]));
+    expect(isFiltered({ floor: 'all', query: '  ' })).toBe(false);
+  });
+  it('a floor keeps one group, the rooms of no known floor are "other"', () => {
+    expect(found({ floor: '1' })).toEqual([['1', ['1Aula', '105', '106']]]);
+    expect(found({ floor: 'other' })).toEqual([[null, ['X99']]]);
+    expect(found({ floor: 'U' })).toEqual([]);
+    expect(isFiltered({ floor: '1', query: '' })).toBe(true);
+  });
+  it('floor and search combine', () => {
+    expect(found({ floor: '1', query: '10' })).toEqual([['1', ['105', '106']]]);
+    expect(found({ floor: 'E', query: '10' })).toEqual([['E', ['E10']]]);
+    expect(found({ floor: '2', query: '105' })).toEqual([]);
+  });
+  it('nothing matches: an empty list', () => {
+    expect(found({ query: 'xyz' })).toEqual([]);
+  });
+  it('does not change the entries it is given, and the summary of all rooms is not affected', () => {
+    const before = JSON.stringify(all);
+    filterEntries(all, { floor: '1', query: '10' });
+    expect(JSON.stringify(all)).toBe(before);
+    expect(summarise(all).total.rooms).toBe(7);
+    expect(summarise(filterEntries(all, { floor: '1', query: '' })).total.rooms).toBe(3);
+  });
+  it('reads the floor from the address; anything unknown means all floors', () => {
+    expect(floorFromParam('1')).toBe('1');
+    expect(floorFromParam('E')).toBe('E');
+    expect(floorFromParam('other')).toBe('other');
+    expect(floorFromParam('9')).toBe('all');
+    expect(floorFromParam('')).toBe('all');
+    expect(floorFromParam(null)).toBe('all');
   });
 });
