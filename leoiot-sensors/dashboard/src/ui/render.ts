@@ -6,7 +6,8 @@ import { makeFormat, type Format } from '../core/format';
 import { texts, type Lang } from '../core/i18n';
 import { floorOf } from '../core/floors';
 import { displayRoomId, type RoomChoice } from '../core/room';
-import { rangeBounds, type RangeId } from '../core/ranges';
+import type { Selection } from '../core/ranges';
+import { datesRangeFull, datesSegmentText, windowText } from '../core/rangeLabels';
 import type { Quantity } from '../core/snapshot';
 import type { RoomView } from '../core/view';
 import type { FeedMode } from '../data/feed';
@@ -24,6 +25,11 @@ export interface Dom {
   brand: HTMLElement;
   brandSub: HTMLElement;
   rangeGroup: HTMLElement;
+  dates: {
+    btn: HTMLElement; text: HTMLElement; panel: HTMLElement; form: HTMLFormElement;
+    from: HTMLInputElement; to: HTMLInputElement; fromLabel: HTMLElement; toLabel: HTMLElement;
+    error: HTMLElement; errorText: HTMLElement; submit: HTMLElement;
+  };
   langGroup: HTMLElement;
   theme: HTMLElement;
   roomWord: HTMLElement;
@@ -69,7 +75,12 @@ export function bindDom(doc: Document): Dom {
   return {
     doc,
     app: el('app'), crumb: el('crumb'), allRooms: el('allRooms'), roomSelect: el('roomSelect') as HTMLSelectElement, link3d: el('link3d'), brand: el('brand'), brandSub: el('brandSub'),
-    rangeGroup: el('rangeGroup'), langGroup: el('langGroup'), theme: el('theme'),
+    rangeGroup: el('rangeGroup'),
+    dates: {
+      btn: el('datesBtn'), text: el('datesText'), panel: el('datesPanel'), form: el('datesForm') as HTMLFormElement,
+      from: el('datesFrom') as HTMLInputElement, to: el('datesTo') as HTMLInputElement, fromLabel: el('datesFromLabel'), toLabel: el('datesToLabel'),
+      error: el('datesError'), errorText: el('datesErrorText'), submit: el('datesSubmit'),
+    }, langGroup: el('langGroup'), theme: el('theme'),
     roomWord: el('roomWord'), roomId: el('roomId'), simTag: el('simTag'), light: el('light'),
     status: el('status'), why: el('why'), fresh: el('fresh'), warn: el('warnIcon'),
     cells: { co2: cell('Co2'), temperature: cell('Temp'), humidity: cell('Hum') },
@@ -100,7 +111,8 @@ export interface Frame {
   lang: Lang;
   /** The room page's room; null on the room list view. */
   room: RoomChoice | null;
-  range: RangeId;
+  selection: Selection;
+  now: number;
   /** The theme in effect, for the label of the theme button. */
   theme: Theme;
 }
@@ -136,10 +148,25 @@ export function renderFrame(dom: Dom, f: Frame): void {
   setAttr(dom.rangeGroup, 'aria-label', t.range);
   setAttr(dom.langGroup, 'aria-label', t.language);
   for (const b of dom.rangeGroup.querySelectorAll<HTMLElement>('[data-range]')) {
-    const id = b.dataset.range as RangeId;
+    const id = b.dataset.range;
     setText(b, id === '24h' ? t.range24h : t.range7d);
-    setAttr(b, 'aria-pressed', String(id === f.range));
+    setAttr(b, 'aria-pressed', String(id === f.selection.kind));
   }
+  const d = dom.dates;
+  const format = makeFormat(f.lang);
+  if (f.selection.kind === 'dates') {
+    setText(d.text, datesSegmentText(f.selection, f.now, format));
+    setAttr(d.btn, 'aria-label', t.datesButtonAria(datesRangeFull(f.selection, format)));
+    setAttr(d.btn, 'aria-pressed', 'true');
+  } else {
+    setText(d.text, t.datesPick);
+    d.btn.removeAttribute('aria-label');
+    setAttr(d.btn, 'aria-pressed', 'false');
+  }
+  setAttr(d.panel, 'aria-label', t.datesPanel);
+  setText(d.fromLabel, t.datesFrom);
+  setText(d.toLabel, t.datesTo);
+  setText(d.submit, t.datesShow);
   for (const b of dom.langGroup.querySelectorAll<HTMLElement>('[data-lang]')) setAttr(b, 'aria-pressed', String(b.dataset.lang === f.lang));
   setAttr(dom.theme, 'aria-label', f.theme === 'dark' ? t.themeToLight : t.themeToDark);
   setText(dom.cells.co2.label, t.co2);
@@ -258,11 +285,10 @@ function renderToday(dom: Dom, view: RoomView, t: ReturnType<typeof texts>, form
 }
 
 /** Window texts above the charts, the notes below them and the accessible names of the charts. */
-export function renderChartFrame(dom: Dom, f: { lang: Lang; range: RangeId; now: number; history: HistoryStatus; empty: boolean }): void {
+export function renderChartFrame(dom: Dom, f: { lang: Lang; selection: Selection; now: number; history: HistoryStatus; empty: boolean }): void {
   const t = texts(f.lang);
   const format = makeFormat(f.lang);
-  const { start, end } = rangeBounds(f.range, f.now);
-  const win = format.window(start, end);
+  const win = windowText(f.selection, f.now, format);
   setText(dom.winCo2, `${win} · ppm`);
   setText(dom.winTemp, `${win} · °C`);
   setText(dom.winHum, `${win} · %`);

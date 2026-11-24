@@ -142,7 +142,7 @@ Repository rulesets (not classic branch protection — they can be exported, and
 | Force push / delete | blocked | blocked |
 | Branches must be up to date | no | no |
 
-*Why 0 approvals on both branches:* agents open many small pull requests; requiring a second person for each would stall five people. `ci-ok` is the gate on `main` and on `release`. On `release` the safety net is `ci-ok` on the promotion pull request, the smoke test after the deploy, and rollback (see Rollback). Agents never approve or merge a pull request into `release`; a person merges it, and that person may be the author of the promotion pull request. `release` additionally allows merge commits only.
+*Why 0 approvals on both branches:* agents open many small pull requests; requiring a second person for each would stall five people. `ci-ok` is the gate on `main` and on `release`. On `release` the safety net is `ci-ok` on the promotion pull request, the smoke test after the deploy, and rollback (see Rollback). Agents never approve a pull request and merge one into `release` only when their user explicitly asks them to, with a merge commit and never past `ci-ok`; otherwise a person merges it, and that person may be the author of the promotion pull request. `release` additionally allows merge commits only.
 
 *Changed on 2026-10-20:* the `release` ruleset first required 1 approving review. It was dropped because a required second-person approval on every release stalled a five-person school team; `ci-ok`, the smoke test after the deploy and rollback are the safety net.
 

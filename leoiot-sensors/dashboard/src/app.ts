@@ -1,7 +1,7 @@
 // Wires everything: the address, saved choices, queries, the live channel with its fallback, the
 // once-a-second clock, the room panel and the charts. All outside things are passed in, so tests
 // can run the page against fake data and a fake clock.
-import { isRangeId, DEFAULT_RANGE, type RangeId } from './core/ranges';
+import { isLive, isRangeId, selectionBounds, selectionKey, type Selection } from './core/ranges';
 import { parseLiveMessage, liveTopic } from './core/live';
 import { roomFromSearch, type RoomChoice } from './core/room';
 import { listEntries } from './core/roomList';
@@ -18,6 +18,7 @@ import { startRoomsSource, type RoomsSource } from './data/roomsSource';
 import { createCharts, type Charts, type EchartsApi } from './ui/charts';
 import { readPalette } from './ui/palette';
 import { effectiveTheme, KEY_LANG, KEY_THEME, loadPrefs, write, type Theme } from './ui/prefs';
+import { createDatesPanel } from './ui/datesPanel';
 import { bindRoomListDom, renderRoomChoice, renderRoomList } from './ui/roomList';
 import { bindDom, chartInput, renderChartFrame, renderFrame, renderRoom, type HistoryStatus } from './ui/render';
 
@@ -62,19 +63,18 @@ export function startApp(deps: AppDeps): App {
 
   let lang: Lang = prefs.lang;
   let savedTheme: Theme | null = prefs.theme;
-  let range: RangeId = DEFAULT_RANGE;
+  let selection: Selection = { kind: '24h' };
   let snapshot: Snapshot = EMPTY_SNAPSHOT;
   let latest: 'loading' | 'ok' | 'error' = 'loading';
   let feedMode: FeedMode = 'connecting';
-  const history: Record<RangeId, HistoryState> = {
-    '24h': { status: 'loading', points: [], source: null, loadedAt: 0 },
-    '7d': { status: 'loading', points: [], source: null, loadedAt: 0 },
-  };
+  // One state per selection key: 24h, 7d and one slot for the chosen dates (replaced when other dates are chosen).
+  const history = new Map<string, HistoryState>();
+  const stateOf = (key: string): HistoryState => history.get(key) ?? { status: 'loading', points: [], source: null, loadedAt: 0 };
   /** The day's highest CO2 reading, loaded with the 24 h history; the last good one stays on errors. */
   let peak: { source: string; value: Peak | null } | null = null;
   /** The minutes above 1000 ppm today, loaded with the peak; the last good one stays on errors. */
   let aboveMinutes: { source: string; value: number } | null = null;
-  const inFlight: Record<RangeId, number> = { '24h': 0, '7d': 0 };
+  const inFlight = new Map<string, number>();
   let rooms: RoomsSource | null = null;
   let disposed = false;
   let charts: Charts | null = null;
@@ -85,9 +85,10 @@ export function startApp(deps: AppDeps): App {
   const theme = (): Theme => effectiveTheme(savedTheme, deps.prefersDark());
 
   function drawCharts(): void {
-    const h = history[range];
+    const key = selectionKey(selection);
+    const h = stateOf(key);
     const simulated = snapshot.source === 'simulated';
-    renderChartFrame(dom, { lang, range, now: h.loadedAt || deps.now(), history: h.status, empty: h.status === 'ok' && h.points.every((p) => p.co2 === null && p.temperature === null && p.humidity === null) });
+    renderChartFrame(dom, { lang, selection, now: h.loadedAt || deps.now(), history: h.status, empty: h.status === 'ok' && h.points.every((p) => p.co2 === null && p.temperature === null && p.humidity === null) });
     if (!room.valid || (latest === 'ok' && snapshot.at === null)) return;
     if (!charts && deps.charts && !chartsRequested) {
       chartsRequested = true;
@@ -103,16 +104,16 @@ export function startApp(deps: AppDeps): App {
           drawCharts();
         },
         () => {
-          history[range] = { ...history[range], status: 'error' };
-          renderChartFrame(dom, { lang, range, now: deps.now(), history: 'error', empty: false });
+          history.set(key, { ...stateOf(key), status: 'error' });
+          renderChartFrame(dom, { lang, selection, now: deps.now(), history: 'error', empty: false });
         },
       );
     }
-    charts?.render(chartInput({ points: h.points, range, now: h.loadedAt || deps.now(), lang, palette: readPalette(deps.doc.documentElement), simulated }));
+    charts?.render(chartInput({ points: h.points, selection, now: h.loadedAt || deps.now(), lang, palette: readPalette(deps.doc.documentElement), simulated }));
   }
 
   function drawFrame(): void {
-    renderFrame(dom, { lang, room, range, theme: theme() });
+    renderFrame(dom, { lang, room, selection, now: deps.now(), theme: theme() });
   }
 
   /** The room list (shown below the "no data" panel) and the room choice in the header. */
@@ -126,7 +127,7 @@ export function startApp(deps: AppDeps): App {
   function drawRoom(): void {
     const now = deps.now();
     const status = !room.valid ? 'invalid' : latest;
-    const h24 = history['24h'];
+    const h24 = stateOf('24h');
     const shownPeak = peak !== null && peak.source === snapshot.source ? peak.value : null;
     // While the 24 h series is not loaded the summary shows dashes (series null), not "no readings".
     const shownMinutes = aboveMinutes !== null && aboveMinutes.source === snapshot.source ? aboveMinutes.value : 0;
@@ -144,33 +145,45 @@ export function startApp(deps: AppDeps): App {
     }
     if (disposed) return;
     drawRoom();
-    void refreshHistory('24h');
-    if (range !== '24h') void refreshHistory(range);
+    refreshCharts();
   }
 
-  async function refreshHistory(r: RangeId): Promise<void> {
+  /** The 24-hour series always (room panel, status sentence and Heute read it), the shown selection when it still grows or was never loaded. */
+  function refreshCharts(): void {
+    void refreshHistory({ kind: '24h' });
+    if (selection.kind === '24h') return;
+    const now = deps.now();
+    const loadedAt = stateOf(selectionKey(selection)).loadedAt;
+    if (loadedAt === 0 || isLive(selection, now) || selectionBounds(selection, now).end !== selectionBounds(selection, loadedAt).end) void refreshHistory(selection);
+  }
+
+  async function refreshHistory(sel: Selection): Promise<void> {
     const source = snapshot.source;
     if (source === null || !room.valid) return;
-    const seq = ++inFlight[r];
+    const key = selectionKey(sel);
+    const is24 = sel.kind === '24h';
+    const seq = (inFlight.get(key) ?? 0) + 1;
+    inFlight.set(key, seq);
     const now = deps.now();
     // The day's peak and minutes above 1000 ppm are read together with the 24 h series; the failure of either alone keeps its last good value.
-    const aboveLoad = r === '24h' ? loadAboveMinutes(deps.query, room.id, source, startOfLocalDay(now), now).then((value) => ({ value }), () => null) : null;
-    const peakLoad = r === '24h' ? loadPeak(deps.query, room.id, source, startOfLocalDay(now), now).then((value) => ({ value }), () => null) : null;
+    const aboveLoad = is24 ? loadAboveMinutes(deps.query, room.id, source, startOfLocalDay(now), now).then((value) => ({ value }), () => null) : null;
+    const peakLoad = is24 ? loadPeak(deps.query, room.id, source, startOfLocalDay(now), now).then((value) => ({ value }), () => null) : null;
     try {
-      const points = await loadHistory(deps.query, room.id, source, r, now);
+      const points = await loadHistory(deps.query, room.id, source, sel, now);
       const peakAnswer = await peakLoad;
       const aboveAnswer = await aboveLoad;
-      if (disposed || seq !== inFlight[r]) return;
+      if (disposed || seq !== inFlight.get(key)) return;
       if (peakAnswer !== null) peak = { source, value: peakAnswer.value };
       if (aboveAnswer !== null) aboveMinutes = { source, value: aboveAnswer.value };
-      history[r] = { status: 'ok', points, source, loadedAt: now };
+      history.set(key, { status: 'ok', points, source, loadedAt: now });
     } catch {
-      if (disposed || seq !== inFlight[r]) return;
+      if (disposed || seq !== inFlight.get(key)) return;
       // Keep the points shown so far; only say so when there is nothing to show.
-      history[r] = { ...history[r], status: history[r].points.length > 0 ? 'ok' : 'error' };
+      const old = stateOf(key);
+      history.set(key, { ...old, status: old.points.length > 0 ? 'ok' : 'error' });
     }
-    if (r === range) drawCharts();
-    if (r === '24h') drawRoom(); // "since when" reads the five-minute series
+    if (key === selectionKey(selection)) drawCharts();
+    if (is24) drawRoom(); // "since when" reads the five-minute series
   }
 
   // --- controls ---
@@ -178,14 +191,20 @@ export function startApp(deps: AppDeps): App {
     const target = (e.target as Element | null)?.closest<HTMLElement>('button');
     if (!target) return;
     if (target.dataset.range && isRangeId(target.dataset.range)) {
-      range = target.dataset.range;
+      selection = { kind: target.dataset.range };
       drawFrame();
-      if (history[range].loadedAt === 0 || history[range].source !== snapshot.source) void refreshHistory(range);
+      if (selection.kind !== '24h') {
+        const h = stateOf(selectionKey(selection));
+        if (h.loadedAt === 0 || h.source !== snapshot.source) void refreshHistory(selection);
+      } else if (stateOf('24h').loadedAt === 0 || stateOf('24h').source !== snapshot.source) void refreshHistory(selection);
       drawCharts();
+    } else if (target.id === 'datesBtn') {
+      datesPanel.toggle();
     } else if (target.dataset.lang && isLang(target.dataset.lang)) {
       lang = target.dataset.lang;
       write(deps.storage, KEY_LANG, lang);
       drawFrame();
+      datesPanel.relabel();
       drawRoom();
       drawCharts();
     } else if (target.id === 'theme') {
@@ -196,6 +215,21 @@ export function startApp(deps: AppDeps): App {
       drawCharts();
     }
   };
+  const datesPanel = createDatesPanel({
+    dom,
+    lang: () => lang,
+    now: deps.now,
+    selection: () => selection,
+    apply(from, to) {
+      selection = { kind: 'dates', from, to };
+      const key = selectionKey(selection);
+      for (const k of [...history.keys()]) if (k.startsWith('dates:') && k !== key) history.delete(k);
+      drawFrame();
+      const h = stateOf(key);
+      if (h.loadedAt === 0 || h.source !== snapshot.source || isLive(selection, deps.now())) void refreshHistory(selection);
+      drawCharts();
+    },
+  });
   deps.doc.querySelector('header')?.addEventListener('click', onClick);
   const onChoose = () => {
     if (listDom.select.value !== '') navigate(`?room=${encodeURIComponent(listDom.select.value)}`);
@@ -231,8 +265,7 @@ export function startApp(deps: AppDeps): App {
       latest = latest === 'error' ? 'ok' : latest;
       drawRoom();
       if (snapshot.source !== sourceBefore) {
-        void refreshHistory('24h');
-        if (range !== '24h') void refreshHistory(range);
+        refreshCharts();
       }
     },
     onChange: () => {
@@ -245,10 +278,7 @@ export function startApp(deps: AppDeps): App {
     // The charts and the five-minute series follow the clock; a failed first load is tried again.
     refresher = timers.setInterval(() => {
       if (latest !== 'ok') void refreshLatest();
-      else {
-        void refreshHistory('24h');
-        if (range !== '24h') void refreshHistory(range);
-      }
+      else refreshCharts();
     }, POLL_MS);
   }
   clock = timers.setInterval(drawRoom, 1000);
@@ -259,6 +289,7 @@ export function startApp(deps: AppDeps): App {
       rooms?.stop();
       if (clock !== null) timers.clearInterval(clock);
       if (refresher !== null) timers.clearInterval(refresher);
+      datesPanel.dispose();
       resizer?.disconnect();
       charts?.dispose();
       deps.doc.querySelector('header')?.removeEventListener('click', onClick);

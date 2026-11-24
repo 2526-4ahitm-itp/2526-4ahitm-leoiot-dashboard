@@ -27,7 +27,7 @@ export function startListApp(deps: ListAppDeps): App {
   if (savedTheme) deps.doc.documentElement.dataset.theme = savedTheme;
   const theme = (): Theme => effectiveTheme(savedTheme, deps.prefersDark());
 
-  const drawFrame = () => renderFrame(dom, { lang, room: null, range: '24h', theme: theme() });
+  const drawFrame = () => renderFrame(dom, { lang, room: null, selection: { kind: '24h' }, now: deps.now(), theme: theme() });
   let feedMode: FeedMode = 'connecting';
   let draw = () => {};
 

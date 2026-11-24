@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CHART_GROUP, co2Bands, co2Extent, co2Option, humidityExtent, humidityOption, temperatureOption, type ChartInput, type Palette } from '../src/core/chartOptions';
 import { parseAnnotatedCsv } from '../src/core/csv';
 import { makeFormat } from '../src/core/format';
-import { rangeBounds } from '../src/core/ranges';
+import { selectionBounds } from '../src/core/ranges';
 import { parseHistory, type HistoryPoint } from '../src/core/snapshot';
 import { createCharts, type ChartInstance, type EchartsApi } from '../src/ui/charts';
 import { fixture } from './helpers';
@@ -17,7 +17,7 @@ const NOW = Date.parse('2026-11-03T06:36:39Z');
 const points24h = parseHistory(parseAnnotatedCsv(fixture('history24h.csv')));
 const points7d = parseHistory(parseAnnotatedCsv(fixture('history7d.csv')));
 const input = (o: Partial<ChartInput> = {}): ChartInput => ({
-  points: points24h, range: '24h', now: NOW, lang: 'de', format: makeFormat(o.lang ?? 'de'), palette, simulated: false, ...o,
+  points: points24h, selection: { kind: '24h' }, now: NOW, lang: 'de', format: makeFormat(o.lang ?? 'de'), palette, simulated: false, ...o,
 });
 const pt = (t: number, co2: number | null, temperature: number | null = null, humidity: number | null = null): HistoryPoint => ({ t, co2, temperature, humidity });
 
@@ -46,7 +46,7 @@ describe('CO₂ chart', () => {
     expect(o.grid).not.toBeInstanceOf(Array);
     expect(o.series).toHaveLength(1);
     expect(o.series[0]).toMatchObject({ id: 'co2', name: 'CO₂', type: 'line' });
-    const { start, end } = rangeBounds('24h', NOW);
+    const { start, end } = selectionBounds({ kind: '24h' }, NOW);
     expect(o.xAxis).toMatchObject({ type: 'time', min: start, max: end });
     expect(o.xAxis.axisLabel.show).toBe(true);
     expect(o.yAxis).toMatchObject({ min: 400, max: 1400, interval: 200 });
@@ -159,25 +159,25 @@ describe('linked pointer', () => {
 
 describe('stated range', () => {
   it('all charts use the time range for their axis: 24 hours ending now', () => {
-    const { start, end } = rangeBounds('24h', NOW);
+    const { start, end } = selectionBounds({ kind: '24h' }, NOW);
     expect(end - start).toBe(24 * 3_600_000);
     expect([temp().xAxis.min, temp().xAxis.max]).toEqual([start, end]);
     expect([co2().xAxis.min, co2().xAxis.max]).toEqual([start, end]);
     expect([hum().xAxis.min, hum().xAxis.max]).toEqual([start, end]);
   });
   it('7 days ending now, labelled with weekday and day', () => {
-    const { start, end } = rangeBounds('7d', NOW);
+    const { start, end } = selectionBounds({ kind: '7d' }, NOW);
     expect(end - start).toBe(7 * 24 * 3_600_000);
-    const t = temp({ range: '7d', points: points7d });
+    const t = temp({ selection: { kind: '7d' }, points: points7d });
     expect([t.xAxis.min, t.xAxis.max]).toEqual([start, end]);
     expect(t.xAxis.axisLabel.formatter(Date.parse('2026-10-30T12:00:00Z'))).toBe('Fr., 30.');
     expect(temp().xAxis.axisLabel.formatter(Date.parse('2026-11-03T05:30:00Z'))).toBe('06:30');
-    expect(hum({ range: '7d', points: points7d }).xAxis.axisLabel.formatter(Date.parse('2026-10-30T12:00:00Z'))).toBe('Fr., 30.');
-    expect(co2({ range: '7d', points: points7d }).xAxis.max).toBe(end);
+    expect(hum({ selection: { kind: '7d' }, points: points7d }).xAxis.axisLabel.formatter(Date.parse('2026-10-30T12:00:00Z'))).toBe('Fr., 30.');
+    expect(co2({ selection: { kind: '7d' }, points: points7d }).xAxis.max).toBe(end);
   });
   it('the axis labels use the school time (Europe/Vienna) and the language', () => {
     expect(temp().xAxis.axisLabel.formatter(Date.parse('2026-10-23T08:41:00Z'))).toBe('10:41'); // summer time
-    expect(temp({ lang: 'en', range: '7d', points: points7d }).xAxis.axisLabel.formatter(Date.parse('2026-10-30T12:00:00Z'))).toBe('Fri 30');
+    expect(temp({ lang: 'en', selection: { kind: '7d' }, points: points7d }).xAxis.axisLabel.formatter(Date.parse('2026-10-30T12:00:00Z'))).toBe('Fri 30');
   });
 });
 
@@ -215,7 +215,7 @@ describe('gaps', () => {
   it('the gap of the seven-day recording is null in every series', () => {
     const gap = (points7d.filter((p) => p.t === Date.parse('2026-11-03T02:30:00Z')));
     expect(gap).toEqual([{ t: Date.parse('2026-11-03T02:30:00Z'), co2: null, temperature: null, humidity: null }]);
-    const s = co2({ range: '7d', points: points7d }).series[0].data as [number, number | null][];
+    const s = co2({ selection: { kind: '7d' }, points: points7d }).series[0].data as [number, number | null][];
     expect(s.find(([t]) => t === gap[0].t)![1]).toBeNull();
     expect(s.some(([, v]) => v === 0)).toBe(false);
   });
