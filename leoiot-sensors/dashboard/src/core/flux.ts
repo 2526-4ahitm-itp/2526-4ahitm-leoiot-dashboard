@@ -2,7 +2,7 @@
 // both are checked here, whatever the caller did before.
 import { LIMIT_BAD } from './air';
 import { assertRoomId } from './room';
-import { RANGES, rangeBounds, type RangeId } from './ranges';
+import type { Every } from './ranges';
 
 export const BUCKET = 'server_data';
 export const MEASUREMENT = 'room_climate';
@@ -52,21 +52,24 @@ export function roomsLatestQuery(): string {
 /**
  * Means of fixed windows (five minutes for 24 h, thirty for 7 days), all devices of the room and
  * source merged, empty windows kept so that they come back as gaps, one row per window with the
- * fields as columns. The window's time is its end.
+ * fields as columns. The window's time is its end (its start for 4h and 1d windows).
  */
-export function historyQuery(room: string, source: Source, range: RangeId, now: number): string {
+export function historyQuery(room: string, source: Source, bounds: { start: number; end: number }, every: Every): string {
   assertRoomId(room);
   if (!isSource(source)) throw new Error('invalid source');
-  const { start, end } = rangeBounds(range, now);
+  const { start, end } = bounds;
   const iso = (ms: number) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  // Long windows start at local midnight (not UTC) and are stamped at their start; short ones stay as they were.
+  const long = every === '4h' || every === '1d';
   return [
+    ...(long ? [`import "timezone"`, `option location = timezone.location(name: "Europe/Vienna")`] : []),
     `from(bucket: "${BUCKET}")`,
     `  |> range(start: ${iso(start)}, stop: ${iso(end)})`,
     `  |> filter(fn: (r) => r._measurement == "${MEASUREMENT}" and r.room == "${room}" and r.source == "${source}")`,
     `  |> filter(fn: (r) => ${FIELDS})`,
     `  |> keep(columns: ["_start", "_stop", "_time", "_value", "_field"])`,
     `  |> group(columns: ["_field"])`,
-    `  |> aggregateWindow(every: ${RANGES[range].every}, fn: mean, createEmpty: true)`,
+    `  |> aggregateWindow(every: ${every}, fn: mean, createEmpty: true${long ? ', timeSrc: "_start"' : ''})`,
     `  |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")`,
   ].join('\n');
 }

@@ -1,7 +1,7 @@
 // Loading: a query, its CSV answer, the parsed result.
 import { parseAnnotatedCsv, type CsvRecord } from '../core/csv';
 import { aboveMinutesQuery, historyQuery, latestQuery, peakQuery, roomsLatestQuery, type Source } from '../core/flux';
-import type { RangeId } from '../core/ranges';
+import { selectionBounds, selectionWindow, type Selection } from '../core/ranges';
 import { parseAboveMinutes, parsePeak, type Peak } from '../core/today';
 import { parseHistory, parseLatest, type HistoryPoint, type Snapshot } from '../core/snapshot';
 import type { Query } from './api';
@@ -10,8 +10,9 @@ export async function loadLatest(query: Query, room: string): Promise<Snapshot> 
   return parseLatest(parseAnnotatedCsv(await query(latestQuery(room))));
 }
 
-export async function loadHistory(query: Query, room: string, source: Source, range: RangeId, now: number): Promise<HistoryPoint[]> {
-  return parseHistory(parseAnnotatedCsv(await query(historyQuery(room, source, range, now))));
+export async function loadHistory(query: Query, room: string, source: Source, selection: Selection, now: number): Promise<HistoryPoint[]> {
+  const flux = historyQuery(room, source, selectionBounds(selection, now), selectionWindow(selection, now).every);
+  return parseHistory(parseAnnotatedCsv(await query(flux)));
 }
 
 /** The stored latest values of every room, as records with their `room` column (for the room list). */

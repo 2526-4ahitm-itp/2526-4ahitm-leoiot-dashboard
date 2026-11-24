@@ -35,6 +35,22 @@ button { font: inherit; color: inherit; }
 .seg button + button { border-left: 1px solid var(--line-ctl); }
 .seg button:focus-visible { outline-offset: -4px; border-radius: 0; }
 .seg button[aria-pressed='true']:focus-visible { outline-color: var(--panel); }
+#datesBtn { display: inline-flex; align-items: center; gap: 6px; }
+#datesBtn svg { width: 16px; height: 16px; flex: none; }
+
+/* Date panel under the date segment: flat, hairline border, no shadow */
+.dates-panel { position: fixed; inset: auto; margin: 0; width: 340px; max-width: calc(100vw - 32px); padding: 16px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-ctl); }
+.dates-fields { display: flex; gap: 12px; }
+.dates-field { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.dates-field label { font-size: 13px; color: var(--ink-3); }
+.dates-field input { width: 100%; min-width: 0; padding: 0 10px; font: inherit; font-size: 15px; color: var(--ink); background: var(--panel); color-scheme: light dark; }
+:root[data-theme='light'] .dates-field input { color-scheme: light; }
+:root[data-theme='dark'] .dates-field input { color-scheme: dark; }
+.dates-error { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; font-size: 14px; color: var(--ink); }
+.dates-error svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--y-ink); }
+.dates-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+.dates-submit { height: 36px; padding: 0 16px; border: 1px solid var(--ink); border-radius: var(--r-ctl); background: var(--ink); color: var(--panel); cursor: pointer; }
+.dates-submit:focus-visible { outline-color: var(--ink); outline-offset: 2px; }
 .spacer { flex: 1; }
 .icon-btn { width: 36px; display: grid; place-items: center; cursor: pointer; padding: 0; }
 .icon-btn:hover { background: var(--ground); }
@@ -203,6 +219,8 @@ body:has(> main[data-state='nodata']) #rangeGroup, body:has(> main[data-state='e
 }
 @media (max-width: 640px) {
   .bar { padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
+  .dates-panel { width: auto; max-width: none; }
+  .dates-fields { flex-direction: column; }
   .crumb { padding-left: 10px; gap: 10px; }
   .rooms { padding: 20px 16px 24px; }
   .floor ul { grid-template-columns: 1fr; }

@@ -5,7 +5,7 @@ import type { Format } from './format';
 import type { Lang } from './i18n';
 import { texts } from './i18n';
 import { LIMIT_BAD, LIMIT_SOON } from './air';
-import { rangeBounds, type RangeId } from './ranges';
+import { selectionBounds, selectionWindow, type Selection } from './ranges';
 import type { HistoryPoint } from './snapshot';
 
 /** The charts share this group, so that one pointer runs through all three charts (`echarts.connect`). */
@@ -27,7 +27,7 @@ export interface Palette {
 
 export interface ChartInput {
   points: readonly HistoryPoint[];
-  range: RangeId;
+  selection: Selection;
   /** The time the range ends (now at the last refresh). */
   now: number;
   lang: Lang;
@@ -78,7 +78,8 @@ export function humidityExtent(points: readonly HistoryPoint[]): { min: number; 
 }
 
 function timeAxis(i: ChartInput, gridIndex: number, showLabels: boolean): Opt {
-  const { start, end } = rangeBounds(i.range, i.now);
+  const { start, end } = selectionBounds(i.selection, i.now);
+  const days = (end - start) / 86_400_000;
   const { palette: p, format } = i;
   return {
     type: 'time',
@@ -93,7 +94,8 @@ function timeAxis(i: ChartInput, gridIndex: number, showLabels: boolean): Opt {
       color: p.ink3,
       fontFamily: p.font,
       hideOverlap: true,
-      formatter: (v: number) => (i.range === '24h' ? format.time(v) : format.weekdayDay(v)),
+      // By span: times up to 2 days, weekday and day up to 14 days, day and month beyond.
+      formatter: (v: number) => (days <= 2 ? format.time(v) : days <= 14 ? format.weekdayDay(v) : format.dayMonth(v)),
     },
     axisPointer: { label: { show: false } },
   };
@@ -118,6 +120,18 @@ const UNITS: Record<SeriesKey, { unit: string; decimals: number }> = {
   humidity: { unit: '%', decimals: 0 },
 };
 
+/** The first line of the tooltip: the time of the point; for four-hour and one-day means the window it stands for (stamped at its start). */
+function tipHead(i: ChartInput, t: number): string {
+  const { format } = i;
+  const { every, everyMs } = selectionWindow(i.selection, i.now);
+  if (every === '4h') {
+    const end = Math.min(t + everyMs, selectionBounds(i.selection, i.now).end);
+    return `${texts(i.lang).tipMean(format.time(t), format.time(end))}<br>${format.weekdayDate(t)}`;
+  }
+  if (every === '1d') return `${texts(i.lang).tipDailyMean} · ${format.weekdayDateYear(t)}`;
+  return format.dayTime(t);
+}
+
 function tooltip(i: ChartInput): Opt {
   const { palette: p, format } = i;
   return {
@@ -134,7 +148,7 @@ function tooltip(i: ChartInput): Opt {
           return `<br>${s.seriesName}: <b>${v === null ? texts(i.lang).unknown : format.number(v, u.decimals)}</b> ${v === null ? '' : u.unit}`;
         })
         .join('');
-      return format.dayTime(params[0].value[0]) + rows;
+      return tipHead(i, params[0].value[0]) + rows;
     },
   };
 }

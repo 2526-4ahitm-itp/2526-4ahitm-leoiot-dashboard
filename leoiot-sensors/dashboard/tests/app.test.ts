@@ -4,7 +4,7 @@
 // "Live values have a fallback", "New reading arrives", "Box sends again", "Unknown room in the address".
 import { afterEach, describe, expect, it } from 'vitest';
 import { parseAnnotatedCsv } from '../src/core/csv';
-import { rangeBounds } from '../src/core/ranges';
+import { selectionBounds } from '../src/core/ranges';
 import { parseHistory } from '../src/core/snapshot';
 import { loadHistory } from '../src/data/load';
 import { BASE, disposeApps, fakeEcharts, latestCsv, startTestApp } from './harness';
@@ -21,18 +21,18 @@ describe('Two time ranges (recorded answers)', () => {
     // the last window ends at "now" instead of on the grid
     const steps = new Set(pts.slice(0, -2).map((p, i) => pts[i + 1].t - p.t));
     expect([...steps]).toEqual([5 * 60_000]);
-    expect(pts.at(-1)!.t).toBe(rangeBounds('24h', nowOfRecording).end);
+    expect(pts.at(-1)!.t).toBe(selectionBounds({ kind: '24h' }, nowOfRecording).end);
   });
   it('7 days: thirty-minute windows, ending now', () => {
     const pts = parseHistory(parseAnnotatedCsv(fixture('history7d.csv')));
     const steps = new Set(pts.slice(0, -2).map((p, i) => pts[i + 1].t - p.t));
     expect([...steps]).toEqual([30 * 60_000]);
-    expect(pts.at(-1)!.t).toBe(rangeBounds('7d', nowOfRecording).end);
-    expect(pts.every((p) => p.t > rangeBounds('7d', nowOfRecording).start)).toBe(true);
+    expect(pts.at(-1)!.t).toBe(selectionBounds({ kind: '7d' }, nowOfRecording).end);
+    expect(pts.every((p) => p.t > selectionBounds({ kind: '7d' }, nowOfRecording).start)).toBe(true);
   });
   it('the 7-day query asks for seven days back from now and thirty-minute windows, the answer is parsed', async () => {
     const asked: string[] = [];
-    const pts = await loadHistory(async (q) => (asked.push(q), fixture('history7d.csv')), '105', 'sensor', '7d', nowOfRecording);
+    const pts = await loadHistory(async (q) => (asked.push(q), fixture('history7d.csv')), '105', 'sensor', { kind: '7d' }, nowOfRecording);
     expect(asked[0]).toContain('range(start: 2026-10-27T06:36:39Z, stop: 2026-11-03T06:36:39Z)');
     expect(asked[0]).toContain('every: 30m');
     expect(pts).toHaveLength(24);
